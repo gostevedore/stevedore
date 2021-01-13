@@ -1,0 +1,124 @@
+---
+
+#
+# Images tree definition
+tree_path: test/stevedore_config.yml
+
+#
+# Builder definitions
+builder_path: test/stevedore_config.yml
+
+#
+# Lof file
+log_path: /dev/null
+
+#
+# It defines how many images could be build concurrently
+num_workers: 1
+
+#
+# Skip push the images after building them
+build_skip_push_image: true
+
+#
+# Start child building once an image build is finished
+build_on_cascade: false
+
+#
+# Directory to store docker registry credentials
+docker_registry_credentials_dir: test/stevedore_config.yml
+
+builders:
+  infrastructure:
+    driver: ansible-playbook
+    options:
+      inventory: inventory/all
+      playbook: site.yml
+    variables_mapping:
+      image_name_key: image
+  code:
+    driver: docker
+    options:
+      context:
+        path: .
+  dummy:
+
+images_tree:
+  # Ubuntu
+  ubuntu:
+    16.04:
+      builder: infrastructure
+      version: "{{ .Version }}"
+      registry: registryX
+      persistent_vars:
+        ubuntu_version: "{{ .Version }}"
+      children: 
+        php-fpm:
+          - "7.4"
+        php-cli:
+          - "7.4"
+        nginx:
+          - "1.15"
+    18.04:
+      builder: infrastructure
+      version: "{{ .Version }}"
+      registry: registry
+      persistent_vars:
+        ubuntu_version: "{{ .Version }}"
+      children: 
+        php-fpm:
+          - "7.4"
+  # PHP
+  php-fpm:
+    7.4:
+      builder: infrastructure
+      version: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
+      children: 
+        php-fpm-dev:
+          - "7.4"
+  php-cli:
+    7.4:
+      builder: infrastructure
+      version: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
+      children: 
+        php-cli-dev:
+          - "7.4"
+  php-fpm-dev:
+    7.4:
+      builder: infrastructure
+      version: "{{ .Parent.Version }}"
+  php-cli-dev:
+    7.4:
+      builder: infrastructure
+      version: "{{ .Parent.Version }}"
+  apps:
+    master:
+      builder: dummy
+      version: "{{ .Version }}"
+      children: 
+        app1:
+          - master
+        app2:
+          - master
+        app3:
+          - master
+
+  # Nginx
+  nginx:
+    1.15:
+      builder: infrastructure
+      version: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
+
+  # Applications
+  app1:
+    master:
+      builder: php-code
+      version: "{{ .Version }}"
+  app2:
+    master:
+      builder: php-code
+      version: "{{ .Version }}"
+  app3:
+    master:
+      builder: php-code
+      version: "{{ .Version }}"

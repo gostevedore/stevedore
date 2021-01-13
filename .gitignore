@@ -1,0 +1,9 @@
+*.swp
+vendor/*
+*.lock
+.vscode
+
+# binary file
+artifacts/
+
+stevedore.code-workspace
