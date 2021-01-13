@@ -3,9 +3,20 @@
 
 ---
 
-**Stevedore manages and governs the Docker's image's building process**
+**Stevedore manages and governs the Docker image's building process**
 
-## Features
+
+<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
+
+<!-- code_chunk_output -->
+# Contents
+- [Features](#features)
+- [Concepts](#concepts)
+- [Quick start](#quick-start)
+
+<!-- /code_chunk_output -->
+
+# Features
 
 - Define docker images relationship and orchestarte its building process.
 > **_use case:_**
@@ -31,7 +42,7 @@ Supose that your Docker registry needs to be secured and should only be accessed
 > **_use case:_**
 Your production environment only accept to pull images from specific Docker registry, and that docker registry is only used by your production environment. Supose that you have built and pushed an image to your staging Docker registry and you have passed all your end to end test. Then, you can promote the image from your staging Docker registry to your production one.
 
-## Concepts
+# Concepts
 
 - Driver
     - Dockerfile
@@ -40,7 +51,7 @@ Your production environment only accept to pull images from specific Docker regi
 - Image tree
 - Image
 
-## Quick start
+# Quick start
 
 1. Initialize the stevedore project
 ```
