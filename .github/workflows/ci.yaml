@@ -22,7 +22,7 @@ jobs:
       with:
         go-version: ^1.15
 
-    - name: Test tree package
+    - name: Run tests 
       run: |
         go mod download
-        go test -count=1 -cover -v
+        go test -count=1 -cover -v ./...

@@ -5,5 +5,6 @@ vendor/*
 
 # binary file
 artifacts/
+bin/
 
 stevedore.code-workspace
