@@ -1,6 +1,6 @@
 ---
 
-name: ci
+name: CI
 on:
   push:
     branches:
@@ -11,7 +11,10 @@ on:
 
 jobs:
   Test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
     - name: Checkout repository
@@ -24,5 +27,4 @@ jobs:
 
     - name: Run tests 
       run: |
-        go mod download
-        go test -count=1 -cover -v ./...
+        go test -count=1 -v ./...
