@@ -3,9 +3,10 @@ package promote
 import (
 	"context"
 	"fmt"
-	dockerpromoter "stevedore/internal/promote/promoter/docker"
-	dryrunpromoter "stevedore/internal/promote/promoter/dryrun"
-	"stevedore/internal/types"
+
+	dockerpromoter "github.com/gostevedore/stevedore/internal/promote/promoter/docker"
+	dryrunpromoter "github.com/gostevedore/stevedore/internal/promote/promoter/dryrun"
+	"github.com/gostevedore/stevedore/internal/types"
 
 	errors "github.com/apenella/go-common-utils/error"
 )

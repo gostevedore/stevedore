@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"stevedore/internal/build/varsmap"
-	"stevedore/internal/types"
-	"stevedore/internal/ui/console"
 	"testing"
+
+	"github.com/gostevedore/stevedore/internal/types"
+
+	"github.com/gostevedore/stevedore/internal/build/varsmap"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 
 	ansibler "github.com/apenella/go-ansible"
 	errors "github.com/apenella/go-common-utils/error"

@@ -2,10 +2,11 @@ package driver
 
 import (
 	"context"
-	ansibledriver "stevedore/internal/driver/ansible"
-	defaultdriver "stevedore/internal/driver/default"
-	dockerdriver "stevedore/internal/driver/docker"
-	"stevedore/internal/types"
+
+	ansibledriver "github.com/gostevedore/stevedore/internal/driver/ansible"
+	defaultdriver "github.com/gostevedore/stevedore/internal/driver/default"
+	dockerdriver "github.com/gostevedore/stevedore/internal/driver/docker"
+	"github.com/gostevedore/stevedore/internal/types"
 
 	errors "github.com/apenella/go-common-utils/error"
 )

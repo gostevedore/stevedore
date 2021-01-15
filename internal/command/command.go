@@ -1,8 +1,7 @@
 package command
 
 import (
-	"stevedore/internal/configuration"
-
+	"github.com/gostevedore/stevedore/internal/configuration"
 	"github.com/spf13/cobra"
 )
 

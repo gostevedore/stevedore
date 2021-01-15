@@ -3,9 +3,10 @@ package moo
 import (
 	"context"
 	"fmt"
-	"stevedore/internal/command"
-	"stevedore/internal/configuration"
-	"stevedore/internal/ui/console"
+
+	"github.com/gostevedore/stevedore/internal/command"
+	"github.com/gostevedore/stevedore/internal/configuration"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 
 	"github.com/spf13/cobra"
 )

@@ -5,9 +5,11 @@ import (
 	"context"
 	goerrors "errors"
 	"io"
-	"stevedore/internal/types"
-	"stevedore/internal/ui/console"
 	"testing"
+
+	"github.com/gostevedore/stevedore/internal/types"
+
+	"github.com/gostevedore/stevedore/internal/ui/console"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/stretchr/testify/assert"

@@ -6,9 +6,10 @@ import (
 	"os"
 	"os/signal"
 	"runtime/debug"
-	"stevedore/internal/command"
-	"stevedore/internal/logger"
-	"stevedore/internal/ui/console"
+
+	"github.com/gostevedore/stevedore/internal/command"
+	"github.com/gostevedore/stevedore/internal/logger"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 
 	"github.com/spf13/cobra"
 )

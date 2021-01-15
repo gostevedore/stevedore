@@ -2,10 +2,11 @@ package version
 
 import (
 	"context"
-	"stevedore/internal/command"
-	"stevedore/internal/configuration"
-	"stevedore/internal/release"
-	"stevedore/internal/ui/console"
+
+	"github.com/gostevedore/stevedore/internal/command"
+	"github.com/gostevedore/stevedore/internal/configuration"
+	"github.com/gostevedore/stevedore/internal/release"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 
 	"github.com/spf13/cobra"
 )

@@ -5,10 +5,12 @@ import (
 	"context"
 	"io"
 	"path/filepath"
-	"stevedore/internal/configuration"
-	"stevedore/internal/release"
-	"stevedore/internal/ui/console"
 	"testing"
+
+	"github.com/gostevedore/stevedore/internal/configuration"
+
+	"github.com/gostevedore/stevedore/internal/release"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 
 	"github.com/stretchr/testify/assert"
 )

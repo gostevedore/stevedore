@@ -2,9 +2,10 @@ package initialize
 
 import (
 	"context"
-	"stevedore/internal/command"
-	cmdconf "stevedore/internal/command/create/configuration"
-	"stevedore/internal/configuration"
+
+	"github.com/gostevedore/stevedore/internal/command"
+	cmdconf "github.com/gostevedore/stevedore/internal/command/create/configuration"
+	"github.com/gostevedore/stevedore/internal/configuration"
 )
 
 // NewCommmand creates a StevedoreCommand for init

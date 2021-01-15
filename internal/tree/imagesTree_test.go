@@ -2,12 +2,12 @@ package tree
 
 import (
 	"path/filepath"
-	"stevedore/internal/image"
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
 	gdsexttree "github.com/apenella/go-data-structures/extendedTree"
 	gdstree "github.com/apenella/go-data-structures/tree"
+	"github.com/gostevedore/stevedore/internal/image"
 	"github.com/stretchr/testify/assert"
 )
 

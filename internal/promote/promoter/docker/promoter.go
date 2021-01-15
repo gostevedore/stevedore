@@ -3,10 +3,11 @@ package dockerpromoter
 import (
 	"context"
 	"fmt"
-	"stevedore/internal/credentials"
-	"stevedore/internal/image"
-	"stevedore/internal/types"
-	"stevedore/internal/ui/console"
+
+	"github.com/gostevedore/stevedore/internal/credentials"
+	"github.com/gostevedore/stevedore/internal/image"
+	"github.com/gostevedore/stevedore/internal/types"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 
 	errors "github.com/apenella/go-common-utils/error"
 	dockerpush "github.com/apenella/go-docker-builder/pkg/push"

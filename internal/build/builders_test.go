@@ -2,8 +2,9 @@ package build
 
 import (
 	"path/filepath"
-	"stevedore/internal/build/varsmap"
 	"testing"
+
+	"github.com/gostevedore/stevedore/internal/build/varsmap"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/stretchr/testify/assert"

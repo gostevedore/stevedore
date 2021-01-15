@@ -1,7 +1,7 @@
 package context
 
 import (
-	gitcontext "stevedore/internal/driver/docker/context/git"
+	gitcontext "github.com/gostevedore/stevedore/internal/driver/docker/context/git"
 
 	errors "github.com/apenella/go-common-utils/error"
 	dockercontext "github.com/apenella/go-docker-builder/pkg/build/context"

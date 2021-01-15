@@ -5,10 +5,11 @@ import (
 	"context"
 	"io"
 	"path/filepath"
-	"stevedore/internal/configuration"
-	"stevedore/internal/ui/console"
 	"strings"
 	"testing"
+
+	"github.com/gostevedore/stevedore/internal/configuration"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/stretchr/testify/assert"

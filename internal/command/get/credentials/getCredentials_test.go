@@ -5,11 +5,13 @@ import (
 	"context"
 	"io"
 	"path/filepath"
-	"stevedore/internal/configuration"
-	"stevedore/internal/credentials"
-	"stevedore/internal/ui/console"
 	"strings"
 	"testing"
+
+	"github.com/gostevedore/stevedore/internal/configuration"
+
+	"github.com/gostevedore/stevedore/internal/credentials"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -2,10 +2,11 @@ package getcredentials
 
 import (
 	"context"
-	"stevedore/internal/command"
-	"stevedore/internal/configuration"
-	"stevedore/internal/credentials"
-	"stevedore/internal/ui/console"
+
+	"github.com/gostevedore/stevedore/internal/command"
+	"github.com/gostevedore/stevedore/internal/configuration"
+	"github.com/gostevedore/stevedore/internal/credentials"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/spf13/cobra"

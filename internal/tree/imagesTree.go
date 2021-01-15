@@ -2,13 +2,13 @@ package tree
 
 import (
 	"fmt"
-	"stevedore/internal/image"
 	"strings"
 
 	common "github.com/apenella/go-common-utils/data"
 	errors "github.com/apenella/go-common-utils/error"
 	gdsexttree "github.com/apenella/go-data-structures/extendedTree"
 	gdstree "github.com/apenella/go-data-structures/tree"
+	"github.com/gostevedore/stevedore/internal/image"
 )
 
 const (

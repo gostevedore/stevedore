@@ -3,12 +3,12 @@ package graph
 import (
 	"errors"
 	"fmt"
-	"stevedore/internal/image"
-	"stevedore/internal/tree"
 	"strings"
 
 	gdsexttree "github.com/apenella/go-data-structures/extendedTree"
 	gdstree "github.com/apenella/go-data-structures/tree"
+	"github.com/gostevedore/stevedore/internal/image"
+	"github.com/gostevedore/stevedore/internal/tree"
 )
 
 type Graph struct {

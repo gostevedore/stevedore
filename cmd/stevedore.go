@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"os"
-	"stevedore/internal/command/stevedore"
+
+	"github.com/gostevedore/stevedore/internal/command/stevedore"
 )
 
 func main() {

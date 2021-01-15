@@ -3,9 +3,10 @@ package build
 import (
 	"reflect"
 	"sort"
-	"stevedore/internal/build/varsmap"
-	defaultbuilder "stevedore/internal/driver/default"
 	"testing"
+
+	"github.com/gostevedore/stevedore/internal/build/varsmap"
+	defaultbuilder "github.com/gostevedore/stevedore/internal/driver/default"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/stretchr/testify/assert"

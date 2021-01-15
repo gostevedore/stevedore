@@ -2,9 +2,9 @@ package mockdriver
 
 import (
 	"context"
-	"stevedore/internal/types"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/types"
 )
 
 const (

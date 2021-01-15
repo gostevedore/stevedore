@@ -2,12 +2,13 @@ package ansibledriver
 
 import (
 	"context"
-	"stevedore/internal/build/varsmap"
-	"stevedore/internal/driver/common"
-	drivercommon "stevedore/internal/driver/common"
-	"stevedore/internal/types"
-	"stevedore/internal/ui/console"
 	"strings"
+
+	"github.com/gostevedore/stevedore/internal/build/varsmap"
+	"github.com/gostevedore/stevedore/internal/driver/common"
+	drivercommon "github.com/gostevedore/stevedore/internal/driver/common"
+	"github.com/gostevedore/stevedore/internal/types"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 
 	ansibler "github.com/apenella/go-ansible"
 	errors "github.com/apenella/go-common-utils/error"

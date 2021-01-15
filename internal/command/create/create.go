@@ -2,11 +2,12 @@ package create
 
 import (
 	"context"
-	"stevedore/internal/command"
-	cmdconf "stevedore/internal/command/create/configuration"
-	"stevedore/internal/command/create/credentials"
-	"stevedore/internal/command/middleware"
-	"stevedore/internal/configuration"
+
+	"github.com/gostevedore/stevedore/internal/command"
+	cmdconf "github.com/gostevedore/stevedore/internal/command/create/configuration"
+	"github.com/gostevedore/stevedore/internal/command/create/credentials"
+	"github.com/gostevedore/stevedore/internal/command/middleware"
+	"github.com/gostevedore/stevedore/internal/configuration"
 
 	"github.com/spf13/cobra"
 )

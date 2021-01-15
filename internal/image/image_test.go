@@ -3,9 +3,10 @@ package image
 import (
 	"io/ioutil"
 	"path/filepath"
-	build "stevedore/internal/build"
-	"stevedore/internal/ui/console"
 	"testing"
+
+	build "github.com/gostevedore/stevedore/internal/build"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/stretchr/testify/assert"

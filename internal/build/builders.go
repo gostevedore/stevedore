@@ -2,7 +2,8 @@ package build
 
 import (
 	"fmt"
-	defaultbuilder "stevedore/internal/driver/default"
+
+	defaultbuilder "github.com/gostevedore/stevedore/internal/driver/default"
 
 	common "github.com/apenella/go-common-utils/data"
 	errors "github.com/apenella/go-common-utils/error"

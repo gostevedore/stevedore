@@ -3,10 +3,9 @@ package graph
 import (
 	"errors"
 
-	"stevedore/internal/image"
-	"stevedore/internal/tree"
-
 	gdsexttree "github.com/apenella/go-data-structures/extendedTree"
+	"github.com/gostevedore/stevedore/internal/image"
+	"github.com/gostevedore/stevedore/internal/tree"
 )
 
 type GraphTemplate struct {

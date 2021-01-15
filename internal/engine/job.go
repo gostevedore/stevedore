@@ -2,7 +2,8 @@ package engine
 
 import (
 	"context"
-	"stevedore/internal/types"
+
+	"github.com/gostevedore/stevedore/internal/types"
 
 	errors "github.com/apenella/go-common-utils/error"
 )

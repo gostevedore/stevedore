@@ -2,7 +2,8 @@ package image
 
 import (
 	"fmt"
-	"stevedore/internal/ui/console"
+
+	"github.com/gostevedore/stevedore/internal/ui/console"
 
 	common "github.com/apenella/go-common-utils/data"
 	errors "github.com/apenella/go-common-utils/error"
@@ -126,7 +127,6 @@ func (i *Image) CheckCompatibility() {
 		if i.Children != nil && len(i.Children) > 0 {
 			console.Warn(fmt.Sprintf(" On '%s', 'children' value will be used instead of 'childs'", i.Name))
 		} else {
-			console.Debug("before copying " + i.Name)
 			i.Children = i.Childs
 		}
 	}

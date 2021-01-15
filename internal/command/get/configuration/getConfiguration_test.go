@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"stevedore/internal/configuration"
-	"stevedore/internal/ui/console"
 	"testing"
+
+	"github.com/gostevedore/stevedore/internal/configuration"
+
+	"github.com/gostevedore/stevedore/internal/ui/console"
 
 	"github.com/stretchr/testify/assert"
 )

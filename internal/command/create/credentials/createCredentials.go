@@ -3,11 +3,11 @@ package credentials
 import (
 	"context"
 	"fmt"
-	"stevedore/internal/command"
-	"stevedore/internal/configuration"
-	"stevedore/internal/credentials"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/command"
+	"github.com/gostevedore/stevedore/internal/configuration"
+	"github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/spf13/cobra"
 )
 

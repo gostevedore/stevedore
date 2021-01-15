@@ -2,8 +2,9 @@ package engine
 
 import (
 	"context"
-	mockdriver "stevedore/internal/driver/mock"
 	"testing"
+
+	mockdriver "github.com/gostevedore/stevedore/internal/driver/mock"
 
 	errors "github.com/apenella/go-common-utils/error"
 

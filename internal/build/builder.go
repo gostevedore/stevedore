@@ -3,8 +3,9 @@ package build
 import (
 	"fmt"
 	"sort"
-	"stevedore/internal/build/varsmap"
-	defaultbuilder "stevedore/internal/driver/default"
+
+	"github.com/gostevedore/stevedore/internal/build/varsmap"
+	defaultbuilder "github.com/gostevedore/stevedore/internal/driver/default"
 
 	errors "github.com/apenella/go-common-utils/error"
 )

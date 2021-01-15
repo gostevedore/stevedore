@@ -2,14 +2,15 @@ package dockerdriver
 
 import (
 	"context"
-	"stevedore/internal/build/varsmap"
-	"stevedore/internal/credentials"
-	drivercommon "stevedore/internal/driver/common"
-	builddockercontext "stevedore/internal/driver/docker/context"
-	"stevedore/internal/image"
-	"stevedore/internal/types"
-	"stevedore/internal/ui/console"
 	"strings"
+
+	"github.com/gostevedore/stevedore/internal/build/varsmap"
+	"github.com/gostevedore/stevedore/internal/credentials"
+	drivercommon "github.com/gostevedore/stevedore/internal/driver/common"
+	builddockercontext "github.com/gostevedore/stevedore/internal/driver/docker/context"
+	"github.com/gostevedore/stevedore/internal/image"
+	"github.com/gostevedore/stevedore/internal/types"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/apenella/go-docker-builder/pkg/build"

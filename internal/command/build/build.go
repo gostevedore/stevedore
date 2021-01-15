@@ -3,13 +3,13 @@ package build
 import (
 	"context"
 	"fmt"
-	"stevedore/internal/command"
-	"stevedore/internal/configuration"
-	"stevedore/internal/engine"
-	"stevedore/internal/types"
 	"strings"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/command"
+	"github.com/gostevedore/stevedore/internal/configuration"
+	"github.com/gostevedore/stevedore/internal/engine"
+	"github.com/gostevedore/stevedore/internal/types"
 
 	"github.com/spf13/cobra"
 )

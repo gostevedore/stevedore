@@ -2,11 +2,11 @@ package graph
 
 import (
 	"errors"
-	"stevedore/internal/image"
-	"stevedore/internal/tree"
 	"testing"
 
 	gdsexttree "github.com/apenella/go-data-structures/extendedTree"
+	"github.com/gostevedore/stevedore/internal/image"
+	"github.com/gostevedore/stevedore/internal/tree"
 	"github.com/stretchr/testify/assert"
 )
 

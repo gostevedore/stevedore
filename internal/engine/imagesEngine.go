@@ -3,21 +3,22 @@ package engine
 import (
 	"context"
 	"fmt"
-	"stevedore/internal/build"
-	factory "stevedore/internal/driver"
-	defaultbuilder "stevedore/internal/driver/default"
-	"stevedore/internal/image"
-	images "stevedore/internal/image"
-	"stevedore/internal/promote"
-	"stevedore/internal/schedule"
-	"stevedore/internal/semver"
-	"stevedore/internal/tree"
-	"stevedore/internal/types"
-	"stevedore/internal/ui/console"
 	"strings"
 
 	errors "github.com/apenella/go-common-utils/error"
 	gdstree "github.com/apenella/go-data-structures/tree"
+	"github.com/gostevedore/stevedore/internal/build"
+	factory "github.com/gostevedore/stevedore/internal/driver"
+	defaultbuilder "github.com/gostevedore/stevedore/internal/driver/default"
+	"github.com/gostevedore/stevedore/internal/image"
+
+	//images "github.com/gostevedore/stevedore/internal/image"
+	"github.com/gostevedore/stevedore/internal/promote"
+	"github.com/gostevedore/stevedore/internal/schedule"
+	"github.com/gostevedore/stevedore/internal/semver"
+	"github.com/gostevedore/stevedore/internal/tree"
+	"github.com/gostevedore/stevedore/internal/types"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 	"gopkg.in/yaml.v2"
 )
 
@@ -449,7 +450,7 @@ func (e *ImagesEngine) drawGraphRec(ctx context.Context, nodeImage *gdstree.Node
 	if nodeImage.Item == nil {
 		msg = fmt.Sprintf(" %s %s", prefix, nodeImage.Name)
 	} else {
-		i := nodeImage.Item.(*images.Image)
+		i := nodeImage.Item.(*image.Image)
 		msg = fmt.Sprintf(" %s %s:%s", prefix, i.Name, i.Version)
 	}
 	console.Print(msg)
@@ -481,15 +482,15 @@ func (e *ImagesEngine) listImagesRec(nodeImage *gdstree.Node, listImages [][]str
 	var err error
 	var array []string
 
-	image := nodeImage.Item.(*images.Image)
-	array, err = image.ToArray()
+	img := nodeImage.Item.(*image.Image)
+	array, err = img.ToArray()
 	if err != nil {
 		return nil, errors.New("(ImagesEngine::listImagesRec)", "Error listing images", err)
 	}
 
 	if nodeImage.Parent != nil {
 		if nodeImage.Parent.Item != nil {
-			p := nodeImage.Parent.Item.(*images.Image)
+			p := nodeImage.Parent.Item.(*image.Image)
 			array = append(array, p.Name+":"+p.Version)
 		}
 	} else {

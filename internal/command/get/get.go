@@ -2,14 +2,15 @@ package get
 
 import (
 	"context"
-	"stevedore/internal/command"
-	getbuilders "stevedore/internal/command/get/builders"
-	getconfiguration "stevedore/internal/command/get/configuration"
-	getcredentials "stevedore/internal/command/get/credentials"
-	getimages "stevedore/internal/command/get/images"
-	getmoo "stevedore/internal/command/get/moo"
-	"stevedore/internal/command/middleware"
-	"stevedore/internal/configuration"
+
+	"github.com/gostevedore/stevedore/internal/command"
+	getbuilders "github.com/gostevedore/stevedore/internal/command/get/builders"
+	getconfiguration "github.com/gostevedore/stevedore/internal/command/get/configuration"
+	getcredentials "github.com/gostevedore/stevedore/internal/command/get/credentials"
+	getimages "github.com/gostevedore/stevedore/internal/command/get/images"
+	getmoo "github.com/gostevedore/stevedore/internal/command/get/moo"
+	"github.com/gostevedore/stevedore/internal/command/middleware"
+	"github.com/gostevedore/stevedore/internal/configuration"
 
 	"github.com/spf13/cobra"
 )

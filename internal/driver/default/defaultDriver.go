@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"stevedore/internal/types"
-	"stevedore/internal/ui/console"
+
+	"github.com/gostevedore/stevedore/internal/types"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 )
 
 const (
