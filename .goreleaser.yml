@@ -1,0 +1,43 @@
+# This is an example .goreleaser.yml file with some sane defaults.
+# Make sure to check the documentation at http://goreleaser.com
+
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod download
+    # you may remove this if you don't need go generate
+    # - go generate ./...
+builds:
+  - id: stevedore
+    binary: stevedore
+    main: ./cmd/stevedore.go
+    ldflags: -s -w -X github.com/gostevedore/stevedore/internal/release.BuildDate={{.Date}} -X /internal/release.Version={{.Tag}} -X github.com/gostevedore/stevedore/internal/release.Commit={{ .ShortCommit }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+
+archives:
+  - id: stevedore
+    builds:
+      - stevedore
+    format: tar.gz
+    name_template: "{{.ProjectName}}_{{.Version}}_{{.Os}}-{{.Arch}}"
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      amd64: x86_64
+
+# checksum:
+#   name_template: 'checksums.txt'
+snapshot:
+  name_template: '{{.ProjectName}}_{{ .Version }}'
+# changelog:
+#   sort: asc
+#   filters:
+#     exclude:
+#       - '^docs:'
+#       - '^test:'
