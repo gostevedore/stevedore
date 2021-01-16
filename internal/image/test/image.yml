@@ -1,0 +1,19 @@
+---
+
+name: ubuntu
+registry: registry
+builder: infrastructure
+tags:
+  - 16.04
+  - xenial
+vars:
+  container_name: ubuntu
+  source_image_tag: "16.04"
+children:
+   php-builder:
+    - 7.1
+    - 7.2
+   php-fpm:
+    - 7.1
+   php-cli:
+    - 7.1

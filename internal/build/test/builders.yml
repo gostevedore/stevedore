@@ -1,0 +1,16 @@
+---
+
+builders:
+  infrastructure:
+    driver: ansible-playbook
+    options:
+      inventory: inventory/all
+      playbook: site.yml
+    variables_mapping:
+      image_name_key: image
+  php-code:
+    driver: ansible-playbook
+    options:
+      inventory: inventory/all
+      playbook: code_builder.yml
+  dummy:

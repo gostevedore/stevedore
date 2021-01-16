@@ -10,6 +10,7 @@
 
 <!-- code_chunk_output -->
 # Contents
+- [Contents](#contents)
 - [Features](#features)
 - [Concepts](#concepts)
 - [Quick start](#quick-start)

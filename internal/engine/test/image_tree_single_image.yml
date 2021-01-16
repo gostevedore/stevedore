@@ -1,0 +1,12 @@
+---
+
+builders:
+  mock-builder:
+    options:
+
+images_tree:
+  ubuntu:
+    16.04:
+      builder: mock-builder
+      registry: registry
+      namespace: namespace

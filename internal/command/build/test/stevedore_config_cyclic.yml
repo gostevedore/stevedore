@@ -1,0 +1,24 @@
+tree_path: test/stevedore_config_cyclic.yml
+builder_path: test/stevedore_config_cyclic.yml
+log_path: /dev/null
+num_workers: 1
+push_images: false
+build_on_cascade: false
+docker_registry_credentials_dir: test/stevedore_config_cyclic.yml
+
+images_tree:
+  cyclic1:
+    "prod":
+      children: 
+        cyclic2:
+        - prod
+  cyclic2:
+    "prod":
+      children: 
+        cyclic3:
+        - prod
+  cyclic3:
+    "prod":
+      children: 
+        cyclic1:
+        - prod

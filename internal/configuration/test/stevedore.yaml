@@ -1,0 +1,5 @@
+tree_path: stevedore.yaml
+builder_path: stevedore.yaml
+num_workers: 10
+build_skip_push_image: false
+build_on_cascade: true

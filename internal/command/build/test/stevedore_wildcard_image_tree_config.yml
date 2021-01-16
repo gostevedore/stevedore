@@ -1,0 +1,92 @@
+---
+
+tree_path: test/stevedore_wildcard_image_tree_config.yml
+builder_path: test/stevedore_wildcard_image_tree_config.yml
+log_path: /dev/null
+num_workers: 1
+push_images: false
+build_on_cascade: false
+docker_registry_credentials_dir: test/stevedore_wildcard_image_tree_config.yml
+
+builders:
+  infrastructure:
+    options:
+      inventory: inventory/all
+      playbook: site.yml
+    variables_mapping:
+      image_name_key: image
+  code:
+    driver: docker
+    options:
+      context:
+        path: .
+  dummy:
+
+images_tree:
+  # Ubuntu
+  ubuntu:
+    18.04:
+      builder: infrastructure
+      version: "{{ .Version }}"
+      registry: registryX
+      persistent_vars:
+        ubuntu_version: "{{ .Version }}"
+      children: 
+        php-fpm:
+          - "7.4"
+          - "*"
+        php-cli:
+          - "7.4"
+
+  # PHP
+  php-fpm:
+    7.4:
+      builder: infrastructure
+      version: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
+      persistent_vars:
+        pvar1: "pvar1"
+        php_version: "{{ .Version }}"
+      vars:
+        var1: "var1-php-fpm"
+      children: 
+        php-fpm-dev:
+          - "7.4"
+    "*":
+      builder: infrastructure
+      version: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
+      vars:
+        var1: "var1-php-fpm-wildcard"
+      persistent_vars:
+        pvar1: "pvar1-wildcard"
+        php_version: "{{ .Version }}"
+      children: 
+        php-fpm-dev:
+          - "*"
+
+  php-fpm-dev:
+    7.4:
+      builder: infrastructure
+      version: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
+      persistent_vars:
+        pvar1: "pvar1-overwrite-php-fpm-dev"
+      vars:
+        var1: "var1-php-fpm-dev"
+    "*":
+      builder: infrastructure
+      version: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
+      persistent_vars:
+        pvar1: "pvar1-overwrite-php-fpm-dev-wildcard"
+      vars:
+        var1: "var1-php-fpm-dev-wildcard"
+
+  php-cli:
+    7.4:
+      builder: infrastructure
+      version: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
+      persistent_vars:
+        php_version: "{{ .Version }}"
+
+  any-version-app:
+    "*":
+      builder: dummy
+      version: "{{ .Version }}"
