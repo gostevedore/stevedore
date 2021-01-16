@@ -81,7 +81,7 @@ tar xzfv stevedore_0.10.0_Linux-x86_64.tar.gz
 
 3. You can create a symlink to *stevedore*'s binary
 ```
-ln -sf ${PWD}/stevedore bin/stevedore
+ln -sf ${PWD}/stevedore /usr/local/bin/stevedore
 ```
 
 ### Install from source
