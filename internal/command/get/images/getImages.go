@@ -19,7 +19,7 @@ type getImagesCmdFlags struct {
 
 var getImagesCmdFlagsVar *getImagesCmdFlags
 
-//  NewCommand return an stevedore command object for get images
+// NewCommand return an stevedore command object for get images
 func NewCommand(ctx context.Context, config *configuration.Configuration) *command.StevedoreCommand {
 	getImagesCmdFlagsVar = &getImagesCmdFlags{}
 
