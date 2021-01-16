@@ -14,6 +14,14 @@
 - [Features](#features)
 - [Concepts](#concepts)
 - [Quick start](#quick-start)
+  - [Download and install stevedore](#download-and-install-stevedore)
+    - [Install from tarball](#install-from-tarball)
+    - [Install from source](#install-from-source)
+  - [Initialize the stevedore project](#initialize-the-stevedore-project)
+  - [Load credentials, in case you need](#load-credentials-in-case-you-need)
+  - [Define builders](#define-builders)
+  - [Define the image tree](#define-the-image-tree)
+  - [Start building](#start-building)
 
 <!-- /code_chunk_output -->
 
@@ -44,7 +52,7 @@ Supose that your Docker registry needs to be secured and should only be accessed
 Your production environment only accept to pull images from specific Docker registry, and that docker registry is only used by your production environment. Supose that you have built and pushed an image to your staging Docker registry and you have passed all your end to end test. Then, you can promote the image from your staging Docker registry to your production one.
 
 # Concepts
-
+> NOTE: Not documented yet
 - Driver
     - Dockerfile
     - Ansible
@@ -54,7 +62,43 @@ Your production environment only accept to pull images from specific Docker regi
 
 # Quick start
 
-1. Initialize the stevedore project
+## Download and install stevedore
+
+> NOTE: stevedore has been developed and tested on amd64 architecture and Linux os, for that reason the amd64-Linux tarball is available.
+In case you are running another arch or os, you could build it from source.
+
+### Install from tarball
+
+1. Achieve *stevedore*'s tarball
+```
+curl -sL https://github.com/gostevedore/stevedore/releases/download/v0.10.0/stevedore_0.10.0_Linux-x86_64.tar.gz > stevedore_0.10.0_Linux-x86_64.tar.gz
+```
+
+2. Untar the package
+```
+tar xzfv stevedore_0.10.0_Linux-x86_64.tar.gz
+```
+
+3. You can create a symlink to *stevedore*'s binary
+```
+ln -sf ${PWD}/stevedore bin/stevedore
+```
+
+### Install from source
+
+1. Clone *stevedore*'s repository
+```
+git clone https://github.com/gostevedore/stevedore.git
+```
+
+2. Build *stevedore*'s code
+```
+make build
+```
+You can also run `make tar` to generate a tarball ,under `dist`folder, containing the binary. 
+In case you want to use [goreleaser] to generate an snapshot you can run `make snapshot`.
+
+## Initialize the stevedore project
 ```
 stevedore init
 ```
@@ -88,7 +132,7 @@ Global Flags:
   -c, --config string   Configuration file location path
 ```
 
-2. Load credentials, in case you need
+## Load credentials, in case you need
 ```
 stevedore create credentials
 ```
@@ -113,9 +157,13 @@ Global Flags:
   -c, --config string   Configuration file location path
 ```
 
-3. Define builders
-4. Define the image tree
-5. Start building
+## Define builders
+> NOTE: Not documented yet
+
+## Define the image tree
+> NOTE: Not documented yet
+
+## Start building
 ```
 stevedore build
 ```
@@ -156,3 +204,5 @@ Global Flags:
   -c, --config string   Configuration file location path
 
 ```
+
+[goreleaser]: https://goreleaser.com/

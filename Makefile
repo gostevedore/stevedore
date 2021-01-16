@@ -7,7 +7,7 @@ BINARY=stevedore
 
 #
 # project name
-PROJECT=stevedore
+PROJECT=github.com/gostevedore/stevedore
 
 #
 # Values Version and Commit
@@ -36,7 +36,7 @@ CHECKSUM_EXT=md5
 # Setup the -ldflags option for go build here, interpolate the variable values
 #  -s: Omit the symbol table and debug information.
 #  -w: Omit the DWARF symbol table
-LDFLAGS=-ldflags "-s -w -X ${PROJECT}/internal/release.Version=${VERSION} -X ${PROJECT}/internal/release.Commit=${COMMIT} -X '${PROJECT}/internal/release.BuildDate=${BUILD_DATE}'"
+LDFLAGS=-ldflags "-s -w -X '${PROJECT}/internal/release.BuildDate=${BUILD_DATE}' -X ${PROJECT}/internal/release.Version=${VERSION} -X ${PROJECT}/internal/release.Commit=${COMMIT}"
 
 #
 # dafault target
@@ -72,6 +72,11 @@ build: clean
 
 checksum: build
 	${CHECKSUM} bin/${BINARY} > bin/${BINARY}.${CHECKSUM_EXT}
+
+#
+# goreleaser
+snapshot:
+	goreleaser --snapshot --skip-publish --rm-dist --release-notes RELEASE_NOTES.md
 
 #
 # install compiled dependencies in $GOPATH/pkg and put the binary in $GOPATH/bin
