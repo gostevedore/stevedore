@@ -2,7 +2,7 @@
 ![stevedore-logo](docs/logo/logo_4_stevedore.png "Stevedore logo")
 
 
-## ![Stevedore website](https://gostevedore.github.io/) ![Documentation](https://gostevedore.github.io/documentation/)
+## [Stevedore website](https://gostevedore.github.io/) - [Documentation](https://gostevedore.github.io/documentation/)
 
 ---
 
