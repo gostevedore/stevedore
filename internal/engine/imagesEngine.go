@@ -239,6 +239,11 @@ func (e *ImagesEngine) buildWorker(node *gdstree.Node, options *types.BuildOptio
 		}
 	}
 
+	// add tags defined on the image
+	for _, v := range image.Tags {
+		options.Tags = append(options.Tags, v)
+	}
+
 	// copy the original map to avoid overwrite the original values
 	imagePersistentVars := make(map[string]interface{})
 	for k, v := range originalOptions.PersistentVars {
