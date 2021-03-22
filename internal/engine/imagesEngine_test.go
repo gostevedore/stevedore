@@ -321,6 +321,9 @@ func TestEngineBuild(t *testing.T) {
 		Vars: map[string]interface{}{
 			"var1": "var1",
 		},
+		Tags: []string{
+			"bionic",
+		},
 	}
 	nodeUbuntu1604 := &gdstree.Node{
 		Name: "ubuntu:16.04",
