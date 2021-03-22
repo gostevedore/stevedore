@@ -15,18 +15,18 @@ const (
 
 // Image is the domain definition of a docker image
 type Image struct {
-	Name           string                 `yaml:"name"`
-	Registry       string                 `yaml:"registry"`
-	Type           string                 `yaml:"type"`
-	Namespace      string                 `yaml:"namespace"`
-	Version        string                 `yaml:"version"`
-	Tags           []string               `yaml:"tags"`
-	PersistentVars map[string]interface{} `yaml:"persistent_vars"`
-	Vars           map[string]interface{} `yaml:"vars"`
-	Childs         map[string][]string    `yaml:"childs"`
+	Builder        interface{}            `yaml:"builder"`
 	Children       map[string][]string    `yaml:"children"`
+	Childs         map[string][]string    `yaml:"childs"`
+	Name           string                 `yaml:"name"`
+	Namespace      string                 `yaml:"namespace"`
+	PersistentVars map[string]interface{} `yaml:"persistent_vars"`
+	Registry       string                 `yaml:"registry"`
+	Tags           []string               `yaml:"tags"`
+	Type           string                 `yaml:"type"`
+	Vars           map[string]interface{} `yaml:"vars"`
+	Version        string                 `yaml:"version"`
 	// Parents        map[string][]string    `yaml:"parents"`
-	Builder interface{} `yaml:"builder"`
 }
 
 // LoadImage
@@ -48,11 +48,8 @@ func (i *Image) Copy() (*Image, error) {
 	}
 
 	copiedImage := *i
+	copiedImage.Tags = append([]string{}, i.Tags...)
 
-	copiedImage.Tags = []string{}
-	for _, tag := range i.Tags {
-		copiedImage.Tags = append(copiedImage.Tags, tag)
-	}
 	copiedImage.PersistentVars = map[string]interface{}{}
 	for keyVar, keyValue := range i.PersistentVars {
 		copiedImage.PersistentVars[keyVar] = keyValue
@@ -69,10 +66,7 @@ func (i *Image) Copy() (*Image, error) {
 	if i.Children != nil {
 		copiedImage.Children = map[string][]string{}
 		for keyVar, keyValue := range i.Children {
-			keyValueCopy := []string{}
-			for _, value := range keyValue {
-				keyValueCopy = append(keyValueCopy, value)
-			}
+			keyValueCopy := append([]string{}, keyValue...)
 			copiedImage.Children[keyVar] = keyValueCopy
 		}
 	}
