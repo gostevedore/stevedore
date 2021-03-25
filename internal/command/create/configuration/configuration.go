@@ -141,7 +141,7 @@ func createConfigurationHandler(ctx context.Context, config *configuration.Confi
 			return errors.New("(command::createConfigurationHandler)", fmt.Sprintf("Configuration file '%s' already exist and will not be created", file))
 		}
 
-		configFile, err = os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+		configFile, err = os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			return errors.New("(command::createConfigurationHandler)", fmt.Sprintf("File '%s' could not be opened", file), err)
 		}
