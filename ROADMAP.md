@@ -1,9 +1,13 @@
 # ROADMAP
 
+## v0.11.0
+- [ ] refactor github.com/gostevedore/stevedore/internal/promote to support test
+- [ ] inject dockerfiles --> v0.11.0
+
 ## v0.10.1
-- [] stevedore init creates configuration file with execution permissions
-- [] promote does not uses -S flag to generate semantic version tags
-- [] tags defined on the image are ignored
+- [x] stevedore init creates configuration file with execution permissions
+- [x] promote does not uses -S flag to generate semantic version tags
+- [x] tags defined on the image are ignored
 
 ## v0.10.0
 - [x] create an init command
