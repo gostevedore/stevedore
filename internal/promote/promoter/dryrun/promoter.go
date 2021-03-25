@@ -9,6 +9,6 @@ import (
 )
 
 func Promote(ctx context.Context, options *types.PromoteOptions) error {
-	fmt.Fprintln(console.GetConsole(), fmt.Sprintf("%+v", *options))
+	fmt.Fprint(console.GetConsole(), options.String())
 	return nil
 }
