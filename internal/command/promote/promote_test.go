@@ -8,11 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gostevedore/stevedore/internal/configuration"
-
-	"github.com/gostevedore/stevedore/internal/ui/console"
-
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/configuration"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,6 +22,9 @@ func TestPromoteHandler(t *testing.T) {
 	var w bytes.Buffer
 	console.SetWriter(io.Writer(&w))
 	ctx := context.TODO()
+
+	defaultVerbose := false
+	defaultSkip := false
 
 	tests := []struct {
 		desc    string
@@ -37,8 +38,8 @@ func TestPromoteHandler(t *testing.T) {
 	}{
 		{
 			desc:    "Testing to promote a simple image",
-			verbose: false,
-			skip:    false,
+			verbose: defaultVerbose,
+			skip:    defaultSkip,
 			ctx:     ctx,
 			config: &configuration.Configuration{
 				TreePathFile:         filepath.Join(testBaseDir, "stevedore_config.yml"),
@@ -55,13 +56,22 @@ func TestPromoteHandler(t *testing.T) {
 				"myregistryhost.com/namespace/ubuntu:20.04",
 			},
 			res: map[string]int8{
-				"{DryRun:true EnableSemanticVersionTags:false ImagePromoteName: ImagePromoteRegistryNamespace: ImagePromoteRegistryHost: ImagePromoteTags:[] RemovePromotedTags:false ImageName:myregistryhost.com/namespace/ubuntu:20.04 OutputPrefix: SemanticVersionTagsTemplate:[]}": int8(0),
+				"dry_run: true":                                         int8(0),
+				"enable_semantic_version_tags: false":                   int8(0),
+				"image_promote_name: \"\"":                              int8(0),
+				"image_promote_registry_namespace: \"\"":                int8(0),
+				"image_promote_registry_host: \"\"":                     int8(0),
+				"image_promote_tags: []":                                int8(0),
+				"remove_promoted_tags: false":                           int8(0),
+				"image_name: myregistryhost.com/namespace/ubuntu:20.04": int8(0),
+				"output_prefix: \"\"":                                   int8(0),
+				"semantic_version_tags_templates: []":                   int8(0),
 			},
 		},
 		{
 			desc:    "Testing to promote an image to a new registry host, registry namespace, with new name and multiple tags",
-			verbose: false,
-			skip:    false,
+			verbose: defaultVerbose,
+			skip:    defaultSkip,
 			ctx:     ctx,
 			config: &configuration.Configuration{
 				TreePathFile:         filepath.Join(testBaseDir, "stevedore_config.yml"),
@@ -89,13 +99,66 @@ func TestPromoteHandler(t *testing.T) {
 				"--remove-promote-tags",
 			},
 			res: map[string]int8{
-				"{DryRun:true EnableSemanticVersionTags:false ImagePromoteName:myubuntu ImagePromoteRegistryNamespace:stable ImagePromoteRegistryHost:myprodregistryhost.com ImagePromoteTags:[tag1 tag2] RemovePromotedTags:true ImageName:myregistryhost.com/namespace/ubuntu:20.04 OutputPrefix: SemanticVersionTagsTemplate:[]}": int8(0),
+				"dry_run: true":                                         int8(0),
+				"enable_semantic_version_tags: false":                   int8(0),
+				"image_promote_name: myubuntu":                          int8(0),
+				"image_promote_registry_namespace: stable":              int8(0),
+				"image_promote_registry_host: myprodregistryhost.com":   int8(0),
+				"image_promote_tags:":                                   int8(0),
+				"- tag1":                                                int8(0),
+				"- tag2":                                                int8(0),
+				"remove_promoted_tags: true":                            int8(0),
+				"image_name: myregistryhost.com/namespace/ubuntu:20.04": int8(0),
+				"output_prefix: \"\"":                                   int8(0),
+				"semantic_version_tags_templates: []":                   int8(0),
+			},
+		},
+		{
+			desc:    "Testing to promote image and semver tags",
+			verbose: defaultVerbose,
+			skip:    defaultSkip,
+			ctx:     ctx,
+			config: &configuration.Configuration{
+				TreePathFile:         filepath.Join(testBaseDir, "stevedore_config.yml"),
+				BuilderPathFile:      filepath.Join(testBaseDir, "stevedore_config.yml"),
+				LogPathFile:          "/dev/null",
+				NumWorkers:           2,
+				PushImages:           false,
+				BuildOnCascade:       false,
+				DockerCredentialsDir: filepath.Join(testBaseDir, "stevedore_config.yml"),
+			},
+			err: errors.New("(command::promoteHandler)", "Is required an image name"),
+			args: []string{
+				"--dry-run",
+				"myregistryhost.com/namespace/ubuntu:1.2.3",
+				"--enable-semver-tags",
+				"--semver-tags-template",
+				"{{ .Major }}",
+				"--semver-tags-template",
+				"{{ .Major }}.{{ .Minor }}",
+			},
+			res: map[string]int8{
+				"dry_run: true":                          int8(0),
+				"enable_semantic_version_tags: true":     int8(0),
+				"image_promote_name: \"\"":               int8(0),
+				"image_promote_registry_namespace: \"\"": int8(0),
+				"image_promote_registry_host: \"\"":      int8(0),
+				"image_promote_tags:":                    int8(0),
+				"- 1.2.3":                                int8(0),
+				"- \"1\"":                                int8(0),
+				"- \"1.2\"":                              int8(0),
+				"remove_promoted_tags: false":            int8(0),
+				"image_name: myregistryhost.com/namespace/ubuntu:1.2.3": int8(0),
+				"output_prefix: \"\"":              int8(0),
+				"semantic_version_tags_templates:": int8(0),
+				"- '{{ .Major }}'":                 int8(0),
+				"- '{{ .Major }}.{{ .Minor }}'":    int8(0),
 			},
 		},
 		{
 			desc:    "Testing to promote without image name",
-			verbose: true,
-			skip:    false,
+			verbose: defaultVerbose,
+			skip:    defaultSkip,
 			ctx:     ctx,
 			config: &configuration.Configuration{
 				TreePathFile:         filepath.Join(testBaseDir, "stevedore_config.yml"),
@@ -118,6 +181,7 @@ func TestPromoteHandler(t *testing.T) {
 			if test.skip {
 				t.Skip(test.desc)
 			}
+			t.Log(test.desc)
 
 			w.Reset()
 

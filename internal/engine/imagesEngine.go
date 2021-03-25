@@ -530,6 +530,37 @@ func ListImageHeader() []string {
 // Promote an image
 func (e *ImagesEngine) Promote(options *types.PromoteOptions) error {
 
+	if options.EnableSemanticVersionTags {
+		promoteImageURL, err := image.Parse(options.ImageName)
+		if err != nil {
+			return errors.New("(ImagesEngine::Promote)", fmt.Sprintf("'%s' could not be parsed", options.ImageName), err)
+		}
+
+		options.ImagePromoteTags = append(options.ImagePromoteTags, promoteImageURL.Tag)
+
+		SVtags := make(map[string]struct{})
+		for _, tag := range options.ImagePromoteTags {
+
+			sv, err := semver.NewSemVer(tag)
+			if err != nil {
+				console.Warn(errors.New("(promote::Promote)", "Version does not match to a semver expression", err))
+			} else {
+				svtree, err := sv.VersionTree(options.SemanticVersionTagsTemplates)
+				if err != nil {
+					console.Warn(errors.New("(promote::Promote)", "Error generating version tree", err))
+				} else {
+					for _, v := range svtree {
+						SVtags[v] = struct{}{}
+					}
+				}
+			}
+		}
+
+		for tag := range SVtags {
+			options.ImagePromoteTags = append(options.ImagePromoteTags, tag)
+		}
+	}
+
 	err := promote.Promote(e.context, options)
 	if err != nil {
 		return errors.New("(ImagesEngine::Promote)", "Error promoting image", err)

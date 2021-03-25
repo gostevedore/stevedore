@@ -5,7 +5,7 @@ import (
 
 	defaultbuilder "github.com/gostevedore/stevedore/internal/driver/default"
 
-	common "github.com/apenella/go-common-utils/data"
+	data "github.com/apenella/go-common-utils/data"
 	errors "github.com/apenella/go-common-utils/error"
 )
 
@@ -18,7 +18,7 @@ type Builders struct {
 func LoadBuilders(file string) (*Builders, error) {
 
 	builders := &Builders{}
-	err := common.LoadYAMLFile(file, builders)
+	err := data.LoadYAMLFile(file, builders)
 	if err != nil {
 		return nil, errors.New("(builder::LoadBuilders)", "Could not be load configuration builders file", err)
 	}

@@ -5,7 +5,7 @@ import (
 
 	"github.com/gostevedore/stevedore/internal/ui/console"
 
-	common "github.com/apenella/go-common-utils/data"
+	data "github.com/apenella/go-common-utils/data"
 	errors "github.com/apenella/go-common-utils/error"
 )
 
@@ -32,7 +32,7 @@ type Image struct {
 // LoadImage
 func LoadImage(file string) (*Image, error) {
 	image := &Image{}
-	err := common.LoadYAMLFile(file, image)
+	err := data.LoadYAMLFile(file, image)
 	if err != nil {
 		return nil, errors.New("(images::LoadImage)", "Images file could not be load", err)
 	}

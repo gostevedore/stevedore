@@ -1,5 +1,10 @@
 # ROADMAP
 
+## v0.10.1
+- [] stevedore init creates configuration file with execution permissions
+- [] promote does not uses -S flag to generate semantic version tags
+- [] tags defined on the image are ignored
+
 ## v0.10.0
 - [x] create an init command
 - [x] automate semver tagging for images

@@ -7,11 +7,9 @@ import (
 	"io"
 	"testing"
 
-	"github.com/gostevedore/stevedore/internal/types"
-
-	"github.com/gostevedore/stevedore/internal/ui/console"
-
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/types"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -49,7 +47,17 @@ func TestPromote(t *testing.T) {
 				DryRun:    true,
 				ImageName: "unexisting",
 			},
-			res: "{DryRun:true EnableSemanticVersionTags:false ImagePromoteName: ImagePromoteRegistryNamespace: ImagePromoteRegistryHost: ImagePromoteTags:[] RemovePromotedTags:false ImageName:unexisting OutputPrefix: SemanticVersionTagsTemplate:[]}\n",
+			res: `dry_run: true
+enable_semantic_version_tags: false
+image_promote_name: ""
+image_promote_registry_namespace: ""
+image_promote_registry_host: ""
+image_promote_tags: []
+remove_promoted_tags: false
+image_name: unexisting
+output_prefix: ""
+semantic_version_tags_templates: []
+`,
 		},
 	}
 
