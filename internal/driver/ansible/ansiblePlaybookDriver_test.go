@@ -70,19 +70,6 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 			res:     nil,
 		},
 		{
-			desc: "Testing an image with undefined registry namespace",
-			options: &types.BuildOptions{
-				ImageName: "imageName",
-				BuilderOptions: map[string]interface{}{
-					"playbook":  "playbook",
-					"inventory": "inventory",
-				},
-			},
-			context: ctx,
-			err:     errors.New("(build::NewAnsiblePlaybookDriver)", "Registry namespace is not set"),
-			res:     nil,
-		},
-		{
 			desc: "Testing options without an inventory defined",
 			options: &types.BuildOptions{
 				ImageName:         "imageName",

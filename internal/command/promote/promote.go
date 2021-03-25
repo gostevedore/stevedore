@@ -21,7 +21,7 @@ type promoteCmdFlags struct {
 	ImagePromoteRegistryHost      string
 	ImagePromoteTags              []string
 	RemovePromoteTags             bool
-	SemanticVersionTagsTemplate   []string
+	SemanticVersionTagsTemplates  []string
 }
 
 var promoteCmdFlagsVar *promoteCmdFlags
@@ -41,7 +41,7 @@ func NewCommand(ctx context.Context, config *configuration.Configuration) *comma
 	}
 
 	promoteCmd.Flags().BoolVarP(&promoteCmdFlagsVar.EnableSemanticVersionTags, "enable-semver-tags", "S", false, "Generate extra tags based on semantic version tree when main version is semver 2.0.0 compliance")
-	promoteCmd.Flags().StringSliceVarP(&promoteCmdFlagsVar.SemanticVersionTagsTemplate, "semver-tags-template", "T", []string{}, "List templates to generate tags following semantic version expression")
+	promoteCmd.Flags().StringSliceVarP(&promoteCmdFlagsVar.SemanticVersionTagsTemplates, "semver-tags-template", "T", []string{}, "List templates to generate tags following semantic version expression")
 	promoteCmd.Flags().BoolVarP(&promoteCmdFlagsVar.DryRun, "dry-run", "D", false, "Dry run show the promote parameters")
 	promoteCmd.Flags().StringVarP(&promoteCmdFlagsVar.ImagePromoteName, "promote-image-name", "i", "", "Name for the image to be promoted")
 	promoteCmd.Flags().StringVarP(&promoteCmdFlagsVar.ImagePromoteRegistryNamespace, "promote-image-namespace", "n", "", "Registry's mamespace for the image to be promoted")
@@ -72,11 +72,11 @@ func promoteHandler(ctx context.Context, config *configuration.Configuration) co
 		}
 
 		options := &types.PromoteOptions{
-			DryRun:                      promoteCmdFlagsVar.DryRun,
-			EnableSemanticVersionTags:   promoteCmdFlagsVar.EnableSemanticVersionTags,
-			ImageName:                   promoteCmdFlagsVar.ImageName,
-			RemovePromotedTags:          promoteCmdFlagsVar.RemovePromoteTags,
-			SemanticVersionTagsTemplate: promoteCmdFlagsVar.SemanticVersionTagsTemplate,
+			DryRun:                       promoteCmdFlagsVar.DryRun,
+			EnableSemanticVersionTags:    promoteCmdFlagsVar.EnableSemanticVersionTags,
+			ImageName:                    promoteCmdFlagsVar.ImageName,
+			RemovePromotedTags:           promoteCmdFlagsVar.RemovePromoteTags,
+			SemanticVersionTagsTemplates: promoteCmdFlagsVar.SemanticVersionTagsTemplates,
 		}
 
 		if promoteCmdFlagsVar.ImagePromoteName != "" {

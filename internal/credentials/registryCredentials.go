@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	common "github.com/apenella/go-common-utils/data"
+	data "github.com/apenella/go-common-utils/data"
 	errors "github.com/apenella/go-common-utils/error"
 )
 
@@ -45,7 +45,7 @@ func LoadCredentials(dir string) error {
 			userpass := &RegistryUserPassAuth{}
 			if file.Mode().IsRegular() {
 				filename := file.Name()
-				err := common.LoadJSONFile(strings.Join([]string{dir, filename}, string(os.PathSeparator)), userpass)
+				err := data.LoadJSONFile(strings.Join([]string{dir, filename}, string(os.PathSeparator)), userpass)
 				if err == nil {
 					AddCredential(filename, userpass)
 				}
@@ -155,7 +155,7 @@ func CreateCredential(dir, username, password, registry string) error {
 		Password: password,
 	}
 
-	userPassJSON, err = common.ObjectToJSONStringPretty(userPass)
+	userPassJSON, err = data.ObjectToJSONStringPretty(userPass)
 	if err != nil {
 		return errors.New("(credentials::CreateCredential)", "Error converting user-pass auth to []byte. ", err)
 	}

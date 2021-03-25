@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	common "github.com/apenella/go-common-utils/data"
+	data "github.com/apenella/go-common-utils/data"
 	errors "github.com/apenella/go-common-utils/error"
 	gdsexttree "github.com/apenella/go-data-structures/extendedTree"
 	gdstree "github.com/apenella/go-data-structures/tree"
@@ -32,7 +32,7 @@ type ImagesTree struct {
 func LoadImagesTree(file string) (*ImagesTree, error) {
 
 	imagesTree := &ImagesTree{}
-	err := common.LoadYAMLFile(file, imagesTree)
+	err := data.LoadYAMLFile(file, imagesTree)
 	if err != nil {
 		return nil, errors.New("(tree::LoadImagesTree)", "Error loading images tree configuration", err)
 	}
