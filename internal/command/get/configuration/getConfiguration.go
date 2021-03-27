@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	columnSeparator = " | "
+	columnSeparator string = " | "
 )
 
 //  NewCommand return an stevedore command object for get builders

@@ -3,6 +3,7 @@ package promote
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"path/filepath"
 	"strings"
@@ -155,6 +156,50 @@ func TestPromoteHandler(t *testing.T) {
 				"- '{{ .Major }}.{{ .Minor }}'":    int8(0),
 			},
 		},
+
+		{
+			desc:    "Testing to promote image and semver tags getting config from file",
+			verbose: defaultVerbose,
+			skip:    defaultVerbose,
+			ctx:     ctx,
+			config: &configuration.Configuration{
+				TreePathFile:                 filepath.Join(testBaseDir, "stevedore_config.yml"),
+				BuilderPathFile:              filepath.Join(testBaseDir, "stevedore_config.yml"),
+				LogPathFile:                  "/dev/null",
+				NumWorkers:                   2,
+				PushImages:                   false,
+				BuildOnCascade:               false,
+				DockerCredentialsDir:         filepath.Join(testBaseDir, "stevedore_config.yml"),
+				EnableSemanticVersionTags:    false,
+				SemanticVersionTagsTemplates: []string{"{{.Major}}", "{{.Major}}.{{.Minor}}"},
+			},
+			err: errors.New("(command::promoteHandler)", "Is required an image name"),
+			args: []string{
+				"--dry-run",
+				"myregistryhost.com/namespace/ubuntu:1.2.3",
+				"--enable-semver-tags",
+				"--config",
+				"test/stevedore_config.yml",
+			},
+			res: map[string]int8{
+				"image_name: myregistryhost.com/namespace/ubuntu:1.2.3": int8(0),
+				"dry_run: true":                          int8(0),
+				"enable_semantic_version_tags: true":     int8(0),
+				"image_promote_name: \"\"":               int8(0),
+				"image_promote_registry_namespace: \"\"": int8(0),
+				"image_promote_registry_host: \"\"":      int8(0),
+				"image_promote_tags:":                    int8(0),
+				"- 1.2.3":                                int8(0),
+				"- \"1\"":                                int8(0),
+				"- \"1.2\"":                              int8(0),
+				"remove_promoted_tags: false":            int8(0),
+				"output_prefix: \"\"":                    int8(0),
+				"semantic_version_tags_templates:":       int8(0),
+				"- '{{.Major}}'":                         int8(0),
+				"- '{{.Major}}.{{.Minor}}'":              int8(0),
+			},
+		},
+
 		{
 			desc:    "Testing to promote without image name",
 			verbose: defaultVerbose,
@@ -189,6 +234,7 @@ func TestPromoteHandler(t *testing.T) {
 			cmd.Command.ParseFlags(test.args)
 			err := cmd.Command.RunE(cmd.Command, test.args)
 			if err != nil && assert.Error(t, err) {
+				fmt.Println(err.Error())
 				assert.Equal(t, test.err, err)
 			} else {
 				if test.verbose {

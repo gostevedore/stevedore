@@ -28,6 +28,12 @@ build_on_cascade: false
 # Directory to store docker registry credentials
 docker_registry_credentials_dir: test/stevedore_config.yml
 
+semantic_version_tags_enabled: false
+
+semantic_version_tags_templates:
+  - "{{ -Major }}"
+  - "{{ -Major }}.{{ .Minor }}"
+
 builders:
   infrastructure:
     options:

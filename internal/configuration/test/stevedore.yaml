@@ -1,5 +1,11 @@
-tree_path: stevedore.yaml
-builder_path: stevedore.yaml
+tree_path: mystevedore.yaml
+builder_path: mystevedore.yaml
+log_path: mystevedore.log
 num_workers: 10
-build_skip_push_image: false
+push_images: false
 build_on_cascade: true
+docker_registry_credentials_dir: mycredentials
+semantic_version_tags_enabled: true
+semantic_version_tags_templates:
+  - "{{ -Major }}"
+  - "{{ -Major }}.{{ .Minor }}"

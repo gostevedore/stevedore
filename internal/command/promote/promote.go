@@ -72,11 +72,9 @@ func promoteHandler(ctx context.Context, config *configuration.Configuration) co
 		}
 
 		options := &types.PromoteOptions{
-			DryRun:                       promoteCmdFlagsVar.DryRun,
-			EnableSemanticVersionTags:    promoteCmdFlagsVar.EnableSemanticVersionTags,
-			ImageName:                    promoteCmdFlagsVar.ImageName,
-			RemovePromotedTags:           promoteCmdFlagsVar.RemovePromoteTags,
-			SemanticVersionTagsTemplates: promoteCmdFlagsVar.SemanticVersionTagsTemplates,
+			DryRun:             promoteCmdFlagsVar.DryRun,
+			ImageName:          promoteCmdFlagsVar.ImageName,
+			RemovePromotedTags: promoteCmdFlagsVar.RemovePromoteTags,
 		}
 
 		if promoteCmdFlagsVar.ImagePromoteName != "" {
@@ -93,6 +91,18 @@ func promoteHandler(ctx context.Context, config *configuration.Configuration) co
 
 		if len(promoteCmdFlagsVar.ImagePromoteTags) > 0 {
 			options.ImagePromoteTags = promoteCmdFlagsVar.ImagePromoteTags
+		}
+
+		if len(promoteCmdFlagsVar.SemanticVersionTagsTemplates) > 0 {
+			options.SemanticVersionTagsTemplates = promoteCmdFlagsVar.SemanticVersionTagsTemplates
+		} else {
+			options.SemanticVersionTagsTemplates = config.SemanticVersionTagsTemplates
+		}
+
+		if promoteCmdFlagsVar.EnableSemanticVersionTags {
+			options.EnableSemanticVersionTags = promoteCmdFlagsVar.EnableSemanticVersionTags
+		} else {
+			options.EnableSemanticVersionTags = config.EnableSemanticVersionTags
 		}
 
 		imagesEngine, err = engine.NewImagesEngine(ctx, config.NumWorkers, config.TreePathFile, config.BuilderPathFile)
