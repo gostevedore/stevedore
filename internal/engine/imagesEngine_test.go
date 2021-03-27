@@ -1732,3 +1732,19 @@ func TestListImageHeader(t *testing.T) {
 
 	assert.Equal(t, expected, res)
 }
+
+func TestPromote(t *testing.T) {
+	tests := []struct {
+		desc    string
+		engine  *ImagesEngine
+		options *types.PromoteOptions
+		err     error
+	}{}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+		})
+	}
+
+}

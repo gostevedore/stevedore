@@ -175,11 +175,6 @@ func TestNew(t *testing.T) {
 
 func TestLoadFromFile(t *testing.T) {
 
-	user, err := user.Current()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-
 	tests := []struct {
 		desc string
 		file string
@@ -197,15 +192,18 @@ func TestLoadFromFile(t *testing.T) {
 			file: filepath.Join(testBaseDir, "stevedore.yaml"),
 			err:  nil,
 			res: &Configuration{
-				TreePathFile:                 filepath.Join(DefaultConfigFolder, DefaultTreePathFile),
-				BuilderPathFile:              filepath.Join(DefaultConfigFolder, DefaultBuilderPathFile),
-				LogPathFile:                  DefaultLogPathFile,
-				NumWorkers:                   10,
-				PushImages:                   DefaultPushImages,
-				BuildOnCascade:               true,
-				DockerCredentialsDir:         filepath.Join(user.HomeDir, ".config", "stevedore", DefaultDockerCredentialsDir),
-				EnableSemanticVersionTags:    DefaultEnableSemanticVersionTags,
-				SemanticVersionTagsTemplates: []string{DefaultSemanticVersionTagsTemplates},
+				TreePathFile:              "mystevedore.yaml",
+				BuilderPathFile:           "mystevedore.yaml",
+				LogPathFile:               "mystevedore.log",
+				NumWorkers:                10,
+				PushImages:                false,
+				BuildOnCascade:            true,
+				DockerCredentialsDir:      "mycredentials",
+				EnableSemanticVersionTags: true,
+				SemanticVersionTagsTemplates: []string{
+					"{{ -Major }}",
+					"{{ -Major }}.{{ .Minor }}",
+				},
 			},
 		},
 	}
@@ -227,11 +225,6 @@ func TestLoadFromFile(t *testing.T) {
 
 func TestReloadConfigurationFromFile(t *testing.T) {
 
-	user, err := user.Current()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-
 	tests := []struct {
 		desc string
 		file string
@@ -251,15 +244,18 @@ func TestReloadConfigurationFromFile(t *testing.T) {
 			file: filepath.Join(testBaseDir, "stevedore.yaml"),
 			err:  nil,
 			res: &Configuration{
-				TreePathFile:                 filepath.Join(DefaultConfigFolder, DefaultTreePathFile),
-				BuilderPathFile:              filepath.Join(DefaultConfigFolder, DefaultBuilderPathFile),
-				LogPathFile:                  DefaultLogPathFile,
-				NumWorkers:                   10,
-				PushImages:                   DefaultPushImages,
-				BuildOnCascade:               true,
-				DockerCredentialsDir:         filepath.Join(user.HomeDir, ".config", "stevedore", DefaultDockerCredentialsDir),
-				EnableSemanticVersionTags:    DefaultEnableSemanticVersionTags,
-				SemanticVersionTagsTemplates: []string{DefaultSemanticVersionTagsTemplates},
+				TreePathFile:              "mystevedore.yaml",
+				BuilderPathFile:           "mystevedore.yaml",
+				LogPathFile:               "mystevedore.log",
+				NumWorkers:                10,
+				PushImages:                false,
+				BuildOnCascade:            true,
+				DockerCredentialsDir:      "mycredentials",
+				EnableSemanticVersionTags: true,
+				SemanticVersionTagsTemplates: []string{
+					"{{ -Major }}",
+					"{{ -Major }}.{{ .Minor }}",
+				},
 			},
 		},
 	}
@@ -318,7 +314,7 @@ func TestToArray(t *testing.T) {
 				{BuildOnCascadeKey, fmt.Sprint(DefaultBuildOnCascade)},
 				{DockerCredentialsDirKey, filepath.Join("$HOME", ".config", "stevedore", DefaultDockerCredentialsDir)},
 				{EnableSemanticVersionTagsKey, fmt.Sprint(DefaultEnableSemanticVersionTags)},
-				{SemanticVersionTagsTemplatesKey, fmt.Sprint(fmt.Sprintf("[%s]", DefaultSemanticVersionTagsTemplates))},
+				{SemanticVersionTagsTemplatesKey, fmt.Sprintf("[%s]", DefaultSemanticVersionTagsTemplates)},
 			},
 			err: nil,
 		},
