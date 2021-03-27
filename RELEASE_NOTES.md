@@ -1,8 +1,6 @@
 # RELEASE NOTES
 
-## [0.10.1]
+## [0.10.2]
 
 ### Fixed
-- fix stevedore init creates configuration file with execution permissions
-- fix promote does not uses -S flag to generate semantic version tags
-- fix tags defined on the image are ignored
+- fix load semver templates from file on promote command

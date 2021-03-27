@@ -99,9 +99,9 @@ notes: ## generate release notes from commits since last tag
 snapshot: ## create a goreleaser snapshot
 	goreleaser --snapshot --skip-publish --rm-dist --release-notes RELEASE_NOTES.md
 
-tag: ## generate a tag on master branch based on the Version file content
-	git checkout master
-	git pull origin master
+tag: ## generate a tag on main branch based on the Version file content
+	git checkout main
+	git pull origin main
 	git tag -a v${VERSION} -m "Version v${VERSION}"
 	git push origin v${VERSION}
 
