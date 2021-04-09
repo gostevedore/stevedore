@@ -34,9 +34,13 @@ func NewCommand(ctx context.Context, config *configuration.Configuration) *comma
 			"auths",
 			"credential",
 		},
-		Short: "get credentials return all credentials defined",
-		Long:  "get credentials return all credentials defined",
-		RunE:  getCredentialssHandler(ctx, config),
+		Short: "Stevedore subcommand to get credentials information",
+		Long: `Stevedore subcommand to get credentials information
+
+  Example:
+    stevedore get credentials --wide
+`,
+		RunE: getCredentialssHandler(ctx, config),
 	}
 
 	command := &command.StevedoreCommand{

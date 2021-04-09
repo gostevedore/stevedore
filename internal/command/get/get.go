@@ -28,8 +28,8 @@ func NewCommand(ctx context.Context, config *configuration.Configuration) *comma
 	getCmd := &cobra.Command{
 		Use:     "get",
 		Aliases: []string{"list"},
-		Short:   "get could return serveral items",
-		Long:    "",
+		Short:   "Stevedore command to get items information",
+		Long:    "Stevedore command to get items information",
 		Run:     getHandler(ctx),
 	}
 

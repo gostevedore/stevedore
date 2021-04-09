@@ -24,9 +24,12 @@ func NewCommand(ctx context.Context, config *configuration.Configuration) *comma
 		Aliases: []string{
 			"builder",
 		},
-		Short: "get builders return all builders defined",
-		Long:  "get builders return all builders defined",
-		RunE:  getBuildersHandler(ctx, config),
+		Short: "Stevedore subcommand to get builders information",
+		Long: `Stevedore subcommand to get builders information
+  Example:
+    stevedore get builders
+`,
+		RunE: getBuildersHandler(ctx, config),
 	}
 
 	command := &command.StevedoreCommand{

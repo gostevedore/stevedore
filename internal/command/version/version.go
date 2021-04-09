@@ -15,8 +15,8 @@ import (
 func NewCommand(ctx context.Context, conf *configuration.Configuration) *command.StevedoreCommand {
 	versionCmd := &cobra.Command{
 		Use:   "version",
-		Short: "Print Stevedore version number",
-		Long:  `Stevedore version, the docker images orchestrator`,
+		Short: "Stevedore command to print the binary release version",
+		Long:  "Stevedore command to print the binary release version",
 		RunE:  versionHandler(ctx, conf),
 	}
 

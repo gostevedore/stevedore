@@ -28,10 +28,14 @@ func NewCommand(ctx context.Context, config *configuration.Configuration) *comma
 		Aliases: []string{
 			"images",
 		},
-		Short: "get images return all images defined",
-		Long:  "get images return all images defined",
-		Args:  cobra.MaximumNArgs(0),
-		RunE:  getImagesHandler(ctx, config),
+		Short: "Stevedore subcommand to get images information",
+		Long: `Stevedore subcommand to get images information
+
+  Example:
+    stevedore get images --tree
+`,
+		Args: cobra.MaximumNArgs(0),
+		RunE: getImagesHandler(ctx, config),
 	}
 
 	getImagesCmd.Flags().BoolVarP(&getImagesCmdFlagsVar.Tree, "tree", "t", false, "Return the output as a tree")

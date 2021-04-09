@@ -53,9 +53,14 @@ func NewCommand(ctx context.Context, config *configuration.Configuration) *comma
 
 	buildCmd := &cobra.Command{
 		Use:   "build <image>",
-		Short: "Build images",
-		Long:  "",
-		RunE:  buildHandler(ctx, config),
+		Short: "Stevedore command to build images",
+		Long: `Stevedore command to build images
+
+  Example: 
+  	Command to build the 'focal' version of an image named 'ubuntu-base':
+    stevedore build ubuntu-base --image-version focal
+		`,
+		RunE: buildHandler(ctx, config),
 	}
 
 	buildCmd.Flags().StringVarP(&buildCmdFlagsVar.BuildBuilderName, "builder-name", "b", "", "Intermediate builder's container name [only applies to ansible-playbook builders]")
