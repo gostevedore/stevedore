@@ -33,11 +33,14 @@ func NewCommand(ctx context.Context, config *configuration.Configuration) *comma
 
 	promoteCmd := &cobra.Command{
 		Use:     "promote",
-		Aliases: []string{"publish"},
-		Short:   "Promote images",
-		Long:    "",
-		Hidden:  true,
-		RunE:    promoteHandler(ctx, config),
+		Aliases: []string{"publish", "copy"},
+		Short:   "Stevedore command to promote, publish or copy images to a docker registry or namespace",
+		Long: `Stevedore command to promote, publish or copy images to a docker registry or namespace
+
+  Example:
+    stevedore promote ubuntu:focal --romote-image-registry myregistry.example.com --promote-image-namespace mynamespace
+`,
+		RunE: promoteHandler(ctx, config),
 	}
 
 	promoteCmd.Flags().BoolVarP(&promoteCmdFlagsVar.EnableSemanticVersionTags, "enable-semver-tags", "S", false, "Generate extra tags based on semantic version tree when main version is semver 2.0.0 compliance")

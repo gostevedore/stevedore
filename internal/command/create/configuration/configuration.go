@@ -44,8 +44,8 @@ func NewCommand(ctx context.Context, config *configuration.Configuration) *comma
 	createConfigurationCmd := &cobra.Command{
 		Use:     "configuration",
 		Aliases: []string{"config"},
-		Short:   "Create stevedore configuration file",
-		Long:    "",
+		Short:   "Stevedore subcommand to initialize a project with a configuration file and a credential file",
+		Long:    "Stevedore subcommand to initialize a project with a configuration file and a credential file",
 		RunE:    createConfigurationHandler(ctx, config),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			err = logger.Init(config.LogPathFile, logger.LogConsoleEncoderName)

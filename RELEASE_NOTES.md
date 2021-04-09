@@ -1,6 +1,9 @@
 # RELEASE NOTES
 
-## [0.10.2]
+## [PENDING TO BE RELEASED]
+
+### Changed
+- The command descriptions has been updated
 
 ### Fixed
-- fix load semver templates from file on promote command
+- fix promote command was hidden

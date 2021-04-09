@@ -25,9 +25,13 @@ func NewCommand(ctx context.Context, config *configuration.Configuration) *comma
 			"conf",
 			"cfg",
 		},
-		Short: "get configuration",
-		Long:  "get configuration",
-		RunE:  getConfigurationHandler(ctx, config),
+		Short: "Stevedore subcommand to get configuration information",
+		Long: `Stevedore subcommand to get configuration information
+  
+  Example:
+    stevedore get configuration
+`,
+		RunE: getConfigurationHandler(ctx, config),
 	}
 
 	command := &command.StevedoreCommand{

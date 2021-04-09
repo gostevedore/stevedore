@@ -18,8 +18,8 @@ func NewCommand(ctx context.Context, config *configuration.Configuration) *comma
 	createCmd := &cobra.Command{
 		Use:     "create",
 		Aliases: []string{"generate"},
-		Short:   "Create stevedore elements",
-		Long:    "",
+		Short:   "Stevedore command to create configuration files",
+		Long:    "Stevedore command to create configuration files",
 		RunE:    createHandler(ctx),
 	}
 

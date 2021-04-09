@@ -15,13 +15,11 @@ func NewCommand(ctx context.Context, config *configuration.Configuration, rootCm
 
 	completionCmd := &cobra.Command{
 		Use:   "completion",
-		Short: "Generates bash completion scripts",
-		Long: `To load completion run
-	
-	. <(stevedore completion)
+		Short: "Stevedore command to generate shell completions",
+		Long: `To load stevedore completion run
+	$ . <(stevedore completion)
 	
 	To configure your bash shell to load completions for each session add to your bashrc
-	
 	# ~/.bashrc or ~/.profile
 	. <(stevedore completion)
 	`,
