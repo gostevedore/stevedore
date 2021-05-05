@@ -66,8 +66,8 @@ func Promote(ctx context.Context, options *types.PromoteOptions) error {
 		tags = options.ImagePromoteTags
 	}
 
-	// pushSource controls when the source image is needed to push and forces to push it the last image
-	//	It also solve an issue when --promote-image-tag is the same as the source tag and --remove-promote-tags flag is true. That combination remove the source image and the upcomming image tag will fail because source image does not exist
+	// pushSource controls when the source image is going to be pushed to registry and forces it to be pushed such the last image
+	// It also solve an issue when is defined a --promote-image-tag with same value as the source tag and --remove-promote-tags flag is enabled. That flags combination removes the source image and the upcomming image tags won't be pushed because the source image was already removed
 	pushSource := false
 	for _, tag := range tags {
 		promoteImageURL.Tag = tag
