@@ -4,16 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gostevedore/stevedore/internal/credentials"
-	"github.com/gostevedore/stevedore/internal/image"
-	"github.com/gostevedore/stevedore/internal/types"
-	"github.com/gostevedore/stevedore/internal/ui/console"
-
 	errors "github.com/apenella/go-common-utils/error"
 	dockerpush "github.com/apenella/go-docker-builder/pkg/push"
 	"github.com/docker/distribution/reference"
 	dockertypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/gostevedore/stevedore/internal/credentials"
+	"github.com/gostevedore/stevedore/internal/image"
+	"github.com/gostevedore/stevedore/internal/types"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 )
 
 const (
@@ -34,6 +33,10 @@ func Promote(ctx context.Context, options *types.PromoteOptions) error {
 	}
 
 	promoteImageURL, err = image.Parse(options.ImageName)
+	if err != nil {
+		return errors.New("(promote::Promote)", fmt.Sprintf("Error when parsing '%s'", options.ImageName), err)
+	}
+
 	sourceImageName, err = promoteImageURL.URL()
 	if err != nil {
 		return errors.New("(promote::Promote)", "Error when achiving image URL", err)
@@ -63,6 +66,9 @@ func Promote(ctx context.Context, options *types.PromoteOptions) error {
 		tags = options.ImagePromoteTags
 	}
 
+	// pushSource controls when the source image is going to be pushed to registry and forces it to be pushed such the last image
+	// It also solve an issue when is defined a --promote-image-tag with same value as the source tag and --remove-promote-tags flag is enabled. That flags combination removes the source image and the upcomming image tags won't be pushed because the source image was already removed
+	pushSource := false
 	for _, tag := range tags {
 		promoteImageURL.Tag = tag
 		promoteImageName, err = promoteImageURL.URL()
@@ -70,7 +76,18 @@ func Promote(ctx context.Context, options *types.PromoteOptions) error {
 			return errors.New("(promote::Promote)", "Error when achiving image URL", err)
 		}
 
-		err = promoteWorker(ctx, options, sourceImageName, promoteImageName, auth)
+		if sourceImageName != promoteImageName {
+			err = promoteWorker(ctx, options, sourceImageName, promoteImageName, auth)
+			if err != nil {
+				return errors.New("(promote::Promote) ", fmt.Sprintf("Error promoting '%s' to '%s'", sourceImageName, promoteImageName), err)
+			}
+		} else {
+			pushSource = true
+		}
+	}
+
+	if pushSource {
+		err = promoteWorker(ctx, options, sourceImageName, sourceImageName, auth)
 		if err != nil {
 			return errors.New("(promote::Promote) ", fmt.Sprintf("Error promoting '%s' to '%s'", sourceImageName, promoteImageName), err)
 		}
@@ -87,7 +104,7 @@ func promoteWorker(ctx context.Context, options *types.PromoteOptions, src, dest
 
 	normalizedPromoteImageName, err = reference.ParseNormalizedNamed(dest)
 	if err != nil {
-		return errors.New("(promote::Promote)", "Error normalizing image name '"+dest+"'", err)
+		return errors.New("(promote::Promote)", fmt.Sprintf("Error normalizing image name '%s'", dest), err)
 	}
 
 	if options.OutputPrefix == "" {
@@ -99,6 +116,11 @@ func promoteWorker(ctx context.Context, options *types.PromoteOptions, src, dest
 		return errors.New("(promote::Promote)", "Error on docker client creation", err)
 	}
 	dockerCli.NegotiateAPIVersion(ctx)
+
+	err = dockerCli.ImageTag(ctx, src, normalizedPromoteImageName.String())
+	if err != nil {
+		return errors.New("(promote::Promote)", fmt.Sprintf("Error tagging '%s' to '%s'", src, normalizedPromoteImageName.String()), err)
+	}
 
 	dockerPushOptions := &dockerpush.DockerPushOptions{
 		ImageName: normalizedPromoteImageName.String(),
@@ -115,11 +137,6 @@ func promoteWorker(ctx context.Context, options *types.PromoteOptions, src, dest
 		}
 	}
 
-	err = dockerCli.ImageTag(ctx, src, normalizedPromoteImageName.String())
-	if err != nil {
-		return errors.New("(promote::Promote)", "Error tagging '"+src+"' to '"+normalizedPromoteImageName.String()+"'", err)
-	}
-
 	dockerPusher := &dockerpush.DockerPushCmd{
 		Writer:            console.GetConsole(),
 		Cli:               dockerCli,
@@ -130,7 +147,7 @@ func promoteWorker(ctx context.Context, options *types.PromoteOptions, src, dest
 
 	err = dockerPusher.Run()
 	if err != nil {
-		return errors.New("(promote::Promote)", "Error pushing '"+normalizedPromoteImageName.String()+"'", err)
+		return errors.New("(promote::Promote)", fmt.Sprintf("Error pushing '%s'", normalizedPromoteImageName.String()), err)
 	}
 
 	if options.RemovePromotedTags {

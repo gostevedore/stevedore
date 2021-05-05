@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [0.10.3]
+
+### Changed
+- The command descriptions has been updated
+
+### Fixed
+- fix promote image with multiple tags and remove promoted tags enable. The image is deleted after first push.
+- fix promote command was hidden
+
 ## [0.10.2]
 
 ### Fixed
