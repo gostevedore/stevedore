@@ -1,6 +1,8 @@
 package types
 
+import "context"
+
 // Driverer element
 type Driverer interface {
-	Run() error
+	Run(context.Context) error
 }
