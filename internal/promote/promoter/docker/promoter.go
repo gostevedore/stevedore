@@ -5,9 +5,10 @@ import (
 	"fmt"
 
 	errors "github.com/apenella/go-common-utils/error"
-	dockerpush "github.com/apenella/go-docker-builder/pkg/push"
+	transformer "github.com/apenella/go-common-utils/transformer/string"
+	dockercopy "github.com/apenella/go-docker-builder/pkg/copy"
+	"github.com/apenella/go-docker-builder/pkg/response"
 	"github.com/docker/distribution/reference"
-	dockertypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/image"
@@ -111,50 +112,38 @@ func promoteWorker(ctx context.Context, options *types.PromoteOptions, src, dest
 		options.OutputPrefix = normalizedPromoteImageName.String()
 	}
 
+	// create docker sdk client
 	dockerCli, err = client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return errors.New("(promote::Promote)", "Error on docker client creation", err)
 	}
 	dockerCli.NegotiateAPIVersion(ctx)
 
-	err = dockerCli.ImageTag(ctx, src, normalizedPromoteImageName.String())
-	if err != nil {
-		return errors.New("(promote::Promote)", fmt.Sprintf("Error tagging '%s' to '%s'", src, normalizedPromoteImageName.String()), err)
+	// create docker push instance
+	dockerCopier := &dockercopy.DockerImageCopyCmd{
+		Cli: dockerCli,
+		Response: response.NewDefaultResponse(
+			response.WithTransformers(
+				transformer.Prepend(options.OutputPrefix),
+			),
+			response.WithWriter(console.GetConsole()),
+		),
+		SourceImage:     src,
+		TargetImage:     normalizedPromoteImageName.String(),
+		RemoveAfterPush: options.RemovePromotedTags,
+		RemoteSource:    false,
 	}
 
-	dockerPushOptions := &dockerpush.DockerPushOptions{
-		ImageName: normalizedPromoteImageName.String(),
-	}
-
+	// it just work with local images when remote source is accepted credentials must be updated
 	if credentials != nil {
 		user := credentials.Username
 		pass := credentials.Password
-		dockerPushOptions.AddAuth(user, pass)
-
-		// add auth to build options when it not already set
-		if dockerPushOptions.RegistryAuth == nil {
-			dockerPushOptions.AddAuth(user, pass)
-		}
+		dockerCopier.AddAuth(user, pass)
 	}
 
-	dockerPusher := &dockerpush.DockerPushCmd{
-		Writer:            console.GetConsole(),
-		Cli:               dockerCli,
-		Context:           ctx,
-		DockerPushOptions: dockerPushOptions,
-		ExecPrefix:        options.OutputPrefix,
-	}
-
-	err = dockerPusher.Run()
+	err = dockerCopier.Run(ctx)
 	if err != nil {
 		return errors.New("(promote::Promote)", fmt.Sprintf("Error pushing '%s'", normalizedPromoteImageName.String()), err)
-	}
-
-	if options.RemovePromotedTags {
-		dockerCli.ImageRemove(ctx, normalizedPromoteImageName.String(), dockertypes.ImageRemoveOptions{
-			Force:         true,
-			PruneChildren: true,
-		})
 	}
 
 	return nil

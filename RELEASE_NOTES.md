@@ -1,10 +1,10 @@
 # RELEASE NOTES
 
-## [0.10.3]
+## [Undefined]
 
 ### Changed
-- The command descriptions has been updated
-
-### Fixed
-- fix promote command was hidden
-- fix promote image with multiple tags and remove promoted tags enable. The image is deleted after first push.
+- Use go-ansible master version
+- Use go-docker-builder v0.4.0 version
+- Update `Driverer` interface to `Run(context.Context) error`
+- Drivers has been adapted to use go-ansible and go-docker-builder version
+- Promote uses copy package for go-docker-builder
