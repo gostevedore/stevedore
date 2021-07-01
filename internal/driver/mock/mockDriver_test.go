@@ -1,6 +1,7 @@
 package mockdriver
 
 import (
+	"context"
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
@@ -47,7 +48,7 @@ func TestMockDriverRun(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			err := test.builder.Run()
+			err := test.builder.Run(context.TODO())
 			if err != nil && assert.Error(t, err) {
 				assert.Equal(t, test.err, err)
 			}
@@ -95,7 +96,7 @@ func TestMockDriverErrRun(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			err := test.builder.Run()
+			err := test.builder.Run(context.TODO())
 			if err != nil && assert.Error(t, err) {
 				assert.Equal(t, test.err, err)
 			}

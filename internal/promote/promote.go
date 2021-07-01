@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	errors "github.com/apenella/go-common-utils/error"
 	dockerpromoter "github.com/gostevedore/stevedore/internal/promote/promoter/docker"
 	dryrunpromoter "github.com/gostevedore/stevedore/internal/promote/promoter/dryrun"
 	"github.com/gostevedore/stevedore/internal/types"
-
-	errors "github.com/apenella/go-common-utils/error"
 )
 
 func Promote(ctx context.Context, options *types.PromoteOptions) error {

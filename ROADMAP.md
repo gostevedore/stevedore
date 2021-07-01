@@ -1,8 +1,12 @@
 # ROADMAP
 
 ## v0.11.0
-- [ ] refactor github.com/gostevedore/stevedore/internal/promote to support test
+- [ ] fix: promote images with subnamespaces fails example myregistry/mynamesapce/grafana/tempo:1.0.0
+- [ ] refactor github.com/gostevedore/stevedore/internal/promote
+      - to support test
+      - promote local and remote images
 - [ ] inject dockerfiles --> v0.11.0
+- [ ] git context should accept authentication
 
 ## v0.10.1
 - [x] stevedore init creates configuration file with execution permissions

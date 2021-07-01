@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/apenella/go-common-utils/data"
+	data "github.com/apenella/go-common-utils/data"
 )
 
 // promoteOptions

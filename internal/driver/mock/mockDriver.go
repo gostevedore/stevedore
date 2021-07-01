@@ -18,7 +18,7 @@ func NewMockDriver(ctx context.Context, o *types.BuildOptions) (types.Driverer, 
 	return &MockDriver{}, nil
 }
 
-func (b *MockDriver) Run() error {
+func (b *MockDriver) Run(ctx context.Context) error {
 	return nil
 }
 
@@ -29,7 +29,7 @@ func NewMockDriverErr(ctx context.Context, o *types.BuildOptions) (types.Drivere
 	return &MockDriverErr{}, nil
 }
 
-func (b *MockDriverErr) Run() error {
+func (b *MockDriverErr) Run(ctx context.Context) error {
 	return errors.New("(MockDriverRunErr)", "Error")
 }
 

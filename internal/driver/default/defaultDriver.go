@@ -20,7 +20,7 @@ type DefaultDriver struct {
 	options *types.BuildOptions
 }
 
-func (b *DefaultDriver) Run() error {
+func (b *DefaultDriver) Run(ctx context.Context) error {
 
 	if b.Writer == nil {
 		b.Writer = os.Stdout

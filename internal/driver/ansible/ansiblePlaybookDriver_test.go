@@ -6,13 +6,14 @@ import (
 	"io"
 	"testing"
 
-	"github.com/gostevedore/stevedore/internal/types"
-
-	"github.com/gostevedore/stevedore/internal/build/varsmap"
-	"github.com/gostevedore/stevedore/internal/ui/console"
-
-	ansibler "github.com/apenella/go-ansible"
+	"github.com/apenella/go-ansible/pkg/execute"
+	"github.com/apenella/go-ansible/pkg/options"
+	ansible "github.com/apenella/go-ansible/pkg/playbook"
+	"github.com/apenella/go-ansible/pkg/stdoutcallback/results"
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/build/varsmap"
+	"github.com/gostevedore/stevedore/internal/types"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,7 +31,7 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 		options *types.BuildOptions
 		context context.Context
 		err     error
-		res     *ansibler.AnsiblePlaybookCmd
+		res     *ansible.AnsiblePlaybookCmd
 	}{
 		{
 			desc:    "Testing new ansiblePlaybookBuilder with nil options",
@@ -112,11 +113,15 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 			},
 			context: ctx,
 			err:     nil,
-			res: &ansibler.AnsiblePlaybookCmd{
-				Playbook:   "playbook",
-				Writer:     cons,
-				ExecPrefix: "imageName",
-				Options: &ansibler.AnsiblePlaybookOptions{
+			res: &ansible.AnsiblePlaybookCmd{
+				Playbooks: []string{"playbook"},
+				Exec: execute.NewDefaultExecute(
+					execute.WithWrite(cons),
+					execute.WithTransformers(
+						results.Prepend("imageName"),
+					),
+				),
+				Options: &ansible.AnsiblePlaybookOptions{
 					Inventory: "inventory",
 					ExtraVars: map[string]interface{}{
 						"image_name":               "imageName",
@@ -125,7 +130,7 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 						"image_builder_label":      "builder_namespace_imageName",
 					},
 				},
-				ConnectionOptions: &ansibler.AnsiblePlaybookConnectionOptions{},
+				ConnectionOptions: &options.AnsibleConnectionOptions{},
 			},
 		},
 		{
@@ -158,11 +163,15 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 			},
 			context: ctx,
 			err:     nil,
-			res: &ansibler.AnsiblePlaybookCmd{
-				Playbook:   "playbook",
-				Writer:     cons,
-				ExecPrefix: "imageName:version",
-				Options: &ansibler.AnsiblePlaybookOptions{
+			res: &ansible.AnsiblePlaybookCmd{
+				Playbooks: []string{"playbook"},
+				Exec: execute.NewDefaultExecute(
+					execute.WithWrite(cons),
+					execute.WithTransformers(
+						results.Prepend("imageName"),
+					),
+				),
+				Options: &ansible.AnsiblePlaybookOptions{
 					Inventory: "inventory",
 					ExtraVars: map[string]interface{}{
 						"image_name":               "imageName",
@@ -171,7 +180,7 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 						"image_builder_label":      "builder_namespace_imageName_version",
 					},
 				},
-				ConnectionOptions: &ansibler.AnsiblePlaybookConnectionOptions{},
+				ConnectionOptions: &options.AnsibleConnectionOptions{},
 			},
 		},
 		{
@@ -207,11 +216,15 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 			},
 			context: ctx,
 			err:     nil,
-			res: &ansibler.AnsiblePlaybookCmd{
-				Playbook:   "playbook",
-				Writer:     cons,
-				ExecPrefix: "imageName",
-				Options: &ansibler.AnsiblePlaybookOptions{
+			res: &ansible.AnsiblePlaybookCmd{
+				Playbooks: []string{"playbook"},
+				Exec: execute.NewDefaultExecute(
+					execute.WithWrite(cons),
+					execute.WithTransformers(
+						results.Prepend("imageName"),
+					),
+				),
+				Options: &ansible.AnsiblePlaybookOptions{
 					Inventory: "inventory",
 					ExtraVars: map[string]interface{}{
 						"image_name":               "imageName",
@@ -221,7 +234,7 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 						"image_builder_label":      "builder_namespace_imageName",
 					},
 				},
-				ConnectionOptions: &ansibler.AnsiblePlaybookConnectionOptions{},
+				ConnectionOptions: &options.AnsibleConnectionOptions{},
 			},
 		},
 		{
@@ -261,11 +274,15 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 			},
 			context: ctx,
 			err:     nil,
-			res: &ansibler.AnsiblePlaybookCmd{
-				Playbook:   "playbook",
-				Writer:     cons,
-				ExecPrefix: "imageName",
-				Options: &ansibler.AnsiblePlaybookOptions{
+			res: &ansible.AnsiblePlaybookCmd{
+				Playbooks: []string{"playbook"},
+				Exec: execute.NewDefaultExecute(
+					execute.WithWrite(cons),
+					execute.WithTransformers(
+						results.Prepend("imageName"),
+					),
+				),
+				Options: &ansible.AnsiblePlaybookOptions{
 					Inventory: "inventory",
 					ExtraVars: map[string]interface{}{
 						"image_name":               "imageName",
@@ -277,7 +294,7 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 						"image_builder_label":      "builder_namespace_imageName",
 					},
 				},
-				ConnectionOptions: &ansibler.AnsiblePlaybookConnectionOptions{},
+				ConnectionOptions: &options.AnsibleConnectionOptions{},
 			},
 		},
 		{
@@ -315,11 +332,14 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 			},
 			context: ctx,
 			err:     nil,
-			res: &ansibler.AnsiblePlaybookCmd{
-				Playbook:   "playbook",
-				Writer:     cons,
-				ExecPrefix: "imageName",
-				Options: &ansibler.AnsiblePlaybookOptions{
+			res: &ansible.AnsiblePlaybookCmd{
+				Playbooks: []string{"playbook"},
+				Exec: execute.NewDefaultExecute(
+					execute.WithWrite(cons),
+					execute.WithTransformers(
+						results.Prepend("imageName"),
+					),
+				), Options: &ansible.AnsiblePlaybookOptions{
 					Inventory: "inventory",
 					ExtraVars: map[string]interface{}{
 						"image_name":               "imageName",
@@ -328,7 +348,7 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 						"image_builder_label":      "builder_namespace_imageName",
 					},
 				},
-				ConnectionOptions: &ansibler.AnsiblePlaybookConnectionOptions{},
+				ConnectionOptions: &options.AnsibleConnectionOptions{},
 			},
 		},
 		{
@@ -364,11 +384,15 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 			},
 			context: ctx,
 			err:     nil,
-			res: &ansibler.AnsiblePlaybookCmd{
-				Playbook:   "playbook",
-				Writer:     cons,
-				ExecPrefix: "imageName",
-				Options: &ansibler.AnsiblePlaybookOptions{
+			res: &ansible.AnsiblePlaybookCmd{
+				Playbooks: []string{"playbook"},
+				Exec: execute.NewDefaultExecute(
+					execute.WithWrite(cons),
+					execute.WithTransformers(
+						results.Prepend("imageName"),
+					),
+				),
+				Options: &ansible.AnsiblePlaybookOptions{
 					Inventory: "inventory",
 					ExtraVars: map[string]interface{}{
 						"image_name":               "imageName",
@@ -379,7 +403,7 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 						"image_builder_label":      "builder_namespace_imageName",
 					},
 				},
-				ConnectionOptions: &ansibler.AnsiblePlaybookConnectionOptions{},
+				ConnectionOptions: &options.AnsibleConnectionOptions{},
 			},
 		},
 		{
@@ -416,11 +440,15 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 			},
 			context: ctx,
 			err:     nil,
-			res: &ansibler.AnsiblePlaybookCmd{
-				Playbook:   "playbook",
-				Writer:     cons,
-				ExecPrefix: "imageName",
-				Options: &ansibler.AnsiblePlaybookOptions{
+			res: &ansible.AnsiblePlaybookCmd{
+				Playbooks: []string{"playbook"},
+				Exec: execute.NewDefaultExecute(
+					execute.WithWrite(cons),
+					execute.WithTransformers(
+						results.Prepend("imageName"),
+					),
+				),
+				Options: &ansible.AnsiblePlaybookOptions{
 					Inventory: "inventory",
 					ExtraVars: map[string]interface{}{
 						"image_name":               "imageName",
@@ -430,7 +458,7 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 						"image_builder_label":      "builder_namespace_imageName",
 					},
 				},
-				ConnectionOptions: &ansibler.AnsiblePlaybookConnectionOptions{
+				ConnectionOptions: &options.AnsibleConnectionOptions{
 					Connection: "local",
 				},
 			},
@@ -472,11 +500,15 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 			},
 			context: ctx,
 			err:     nil,
-			res: &ansibler.AnsiblePlaybookCmd{
-				Playbook:   "playbook",
-				Writer:     cons,
-				ExecPrefix: "imageName",
-				Options: &ansibler.AnsiblePlaybookOptions{
+			res: &ansible.AnsiblePlaybookCmd{
+				Playbooks: []string{"playbook"},
+				Exec: execute.NewDefaultExecute(
+					execute.WithWrite(cons),
+					execute.WithTransformers(
+						results.Prepend("imageName"),
+					),
+				),
+				Options: &ansible.AnsiblePlaybookOptions{
 					Inventory: "inventory",
 					ExtraVars: map[string]interface{}{
 						"image_name":                    "imageName",
@@ -490,7 +522,7 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 						"image_builder_label":           "builder_namespace_imageName",
 					},
 				},
-				ConnectionOptions: &ansibler.AnsiblePlaybookConnectionOptions{},
+				ConnectionOptions: &options.AnsibleConnectionOptions{},
 			},
 		},
 	}
@@ -503,12 +535,11 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 			if err != nil && assert.Error(t, err) {
 				assert.Equal(t, test.err, err)
 			} else {
-				assert.Equal(t, test.res.Playbook, builderer.(*ansibler.AnsiblePlaybookCmd).Playbook, "Unexpected Playbook")
-				assert.Equal(t, test.res.ExecPrefix, builderer.(*ansibler.AnsiblePlaybookCmd).ExecPrefix, "Unexpected ExecPrefix")
-				assert.Equal(t, test.res.Options, builderer.(*ansibler.AnsiblePlaybookCmd).Options, "Unexpected Options")
-				assert.Equal(t, test.res.ConnectionOptions, builderer.(*ansibler.AnsiblePlaybookCmd).ConnectionOptions, "Unexpected ConnectionOptions")
-				assert.Equal(t, test.res.PrivilegeEscalationOptions, builderer.(*ansibler.AnsiblePlaybookCmd).PrivilegeEscalationOptions, "Unexpected PrivilegeEscalationOptions")
-				assert.Equal(t, test.res.StdoutCallback, builderer.(*ansibler.AnsiblePlaybookCmd).StdoutCallback, "Unexpected StdoutCallback")
+				assert.Equal(t, test.res.Playbooks, builderer.(*ansible.AnsiblePlaybookCmd).Playbooks, "Unexpected Playbook")
+				assert.Equal(t, test.res.Options, builderer.(*ansible.AnsiblePlaybookCmd).Options, "Unexpected Options")
+				assert.Equal(t, test.res.ConnectionOptions, builderer.(*ansible.AnsiblePlaybookCmd).ConnectionOptions, "Unexpected ConnectionOptions")
+				assert.Equal(t, test.res.PrivilegeEscalationOptions, builderer.(*ansible.AnsiblePlaybookCmd).PrivilegeEscalationOptions, "Unexpected PrivilegeEscalationOptions")
+				assert.Equal(t, test.res.StdoutCallback, builderer.(*ansible.AnsiblePlaybookCmd).StdoutCallback, "Unexpected StdoutCallback")
 			}
 		})
 	}

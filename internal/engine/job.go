@@ -27,7 +27,7 @@ func (j *Job) Run(ctx context.Context) {
 	}
 
 	go func() {
-		err := j.Driver.Run()
+		err := j.Driver.Run(ctx)
 		if err != nil {
 			errChan <- err
 			return

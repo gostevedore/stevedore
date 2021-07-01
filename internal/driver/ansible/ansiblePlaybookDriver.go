@@ -4,14 +4,16 @@ import (
 	"context"
 	"strings"
 
+	"github.com/apenella/go-ansible/pkg/execute"
+	"github.com/apenella/go-ansible/pkg/options"
+	ansible "github.com/apenella/go-ansible/pkg/playbook"
+	"github.com/apenella/go-ansible/pkg/stdoutcallback/results"
+	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/build/varsmap"
 	"github.com/gostevedore/stevedore/internal/driver/common"
 	drivercommon "github.com/gostevedore/stevedore/internal/driver/common"
 	"github.com/gostevedore/stevedore/internal/types"
 	"github.com/gostevedore/stevedore/internal/ui/console"
-
-	ansibler "github.com/apenella/go-ansible"
-	errors "github.com/apenella/go-common-utils/error"
 )
 
 const (
@@ -42,11 +44,11 @@ func NewAnsiblePlaybookDriver(ctx context.Context, o *types.BuildOptions) (types
 		return nil, errors.New("(build::NewAnsiblePlaybookDriver)", "inventory has not been defined on build options")
 	}
 
-	ansiblePlaybookOptions := &ansibler.AnsiblePlaybookOptions{
+	ansiblePlaybookOptions := &ansible.AnsiblePlaybookOptions{
 		Inventory: inventory.(string),
 	}
 
-	ansiblePlaybookConnectionOptions := &ansibler.AnsiblePlaybookConnectionOptions{}
+	ansiblePlaybookConnectionOptions := &options.AnsibleConnectionOptions{}
 	if o.ConnectionLocal {
 		ansiblePlaybookConnectionOptions.Connection = "local"
 	}
@@ -128,13 +130,18 @@ func NewAnsiblePlaybookDriver(ctx context.Context, o *types.BuildOptions) (types
 		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingPushImagetKey], false)
 	}
 
-	ansibler.AnsibleForceColor()
-	ansiblePlaybook := &ansibler.AnsiblePlaybookCmd{
-		Writer:            console.GetConsole(),
-		Playbook:          playbook.(string),
-		ExecPrefix:        o.OutputPrefix,
+	options.AnsibleForceColor()
+
+	ansiblePlaybook := &ansible.AnsiblePlaybookCmd{
+		Playbooks:         []string{playbook.(string)},
 		Options:           ansiblePlaybookOptions,
 		ConnectionOptions: ansiblePlaybookConnectionOptions,
+		Exec: execute.NewDefaultExecute(
+			execute.WithWrite(console.GetConsole()),
+			execute.WithTransformers(
+				results.Prepend(o.OutputPrefix),
+			),
+		),
 	}
 
 	console.Blue(ansiblePlaybook.String())

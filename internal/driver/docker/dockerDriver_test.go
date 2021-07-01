@@ -5,14 +5,12 @@ import (
 	"io"
 	"testing"
 
-	"github.com/gostevedore/stevedore/internal/types"
-
-	"github.com/gostevedore/stevedore/internal/build/varsmap"
-	"github.com/gostevedore/stevedore/internal/ui/console"
-
 	errors "github.com/apenella/go-common-utils/error"
 	dockerbuild "github.com/apenella/go-docker-builder/pkg/build"
-	"github.com/apenella/go-docker-builder/pkg/build/context/path"
+	dockertypes "github.com/docker/docker/api/types"
+	"github.com/gostevedore/stevedore/internal/build/varsmap"
+	"github.com/gostevedore/stevedore/internal/types"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/thriftrw/ptr"
 	"go.uber.org/zap/buffer"
@@ -72,7 +70,7 @@ func TestNewDockerDriver(t *testing.T) {
 			options: &types.BuildOptions{
 				BuilderOptions: map[string]interface{}{
 					"context": map[string]string{
-						"path": "ubuntu",
+						"path": "test/ubuntu",
 					},
 				},
 				Dockerfile:        "Dockerfile.test",
@@ -94,8 +92,8 @@ func TestNewDockerDriver(t *testing.T) {
 			context: ctx,
 			err:     nil,
 			res: &dockerbuild.DockerBuildCmd{
-				DockerBuildOptions: &dockerbuild.DockerBuildOptions{
-					ImageName: "registry.host/library/ubuntu:16.04",
+				ImageName: "registry.host/library/ubuntu:16.04",
+				ImageBuildOptions: &dockertypes.ImageBuildOptions{
 					Tags: []string{
 						"registry.host/library/ubuntu:tag1",
 					},
@@ -103,12 +101,9 @@ func TestNewDockerDriver(t *testing.T) {
 						"pvar1": &optionPersistentVar,
 						"var1":  &optionVar,
 					},
-					Dockerfile:     "Dockerfile.test",
-					PushAfterBuild: true,
-					DockerBuildContext: &path.PathBuildContext{
-						Path: "ubuntu",
-					},
+					Dockerfile: "Dockerfile.test",
 				},
+				PushAfterBuild: true,
 			},
 		},
 		{
@@ -116,7 +111,7 @@ func TestNewDockerDriver(t *testing.T) {
 			options: &types.BuildOptions{
 				BuilderOptions: map[string]interface{}{
 					"context": map[string]string{
-						"path": "ubuntu",
+						"path": "test/ubuntu",
 					},
 					"dockerfile": "./ubuntu/Dockerfile",
 				},
@@ -138,8 +133,8 @@ func TestNewDockerDriver(t *testing.T) {
 			context: ctx,
 			err:     nil,
 			res: &dockerbuild.DockerBuildCmd{
-				DockerBuildOptions: &dockerbuild.DockerBuildOptions{
-					ImageName: "registry.host/library/ubuntu:16.04",
+				ImageName: "registry.host/library/ubuntu:16.04",
+				ImageBuildOptions: &dockertypes.ImageBuildOptions{
 					Tags: []string{
 						"registry.host/library/ubuntu:tag1",
 					},
@@ -147,12 +142,9 @@ func TestNewDockerDriver(t *testing.T) {
 						"pvar1": &optionPersistentVar,
 						"var1":  &optionVar,
 					},
-					Dockerfile:     "./ubuntu/Dockerfile",
-					PushAfterBuild: true,
-					DockerBuildContext: &path.PathBuildContext{
-						Path: "ubuntu",
-					},
+					Dockerfile: "./ubuntu/Dockerfile",
 				},
+				PushAfterBuild: true,
 			},
 		},
 		{
@@ -160,7 +152,7 @@ func TestNewDockerDriver(t *testing.T) {
 			options: &types.BuildOptions{
 				BuilderOptions: map[string]interface{}{
 					"context": map[string]string{
-						"path": "ubuntu",
+						"path": "test/ubuntu",
 					},
 					"dockerfile": "./ubuntu/Dockerfile",
 				},
@@ -183,8 +175,8 @@ func TestNewDockerDriver(t *testing.T) {
 			context: ctx,
 			err:     nil,
 			res: &dockerbuild.DockerBuildCmd{
-				DockerBuildOptions: &dockerbuild.DockerBuildOptions{
-					ImageName: "registry.host/library/ubuntu:16.04",
+				ImageName: "registry.host/library/ubuntu:16.04",
+				ImageBuildOptions: &dockertypes.ImageBuildOptions{
 					Tags: []string{
 						"registry.host/library/ubuntu:tag1",
 					},
@@ -192,12 +184,9 @@ func TestNewDockerDriver(t *testing.T) {
 						"pvar1": &optionPersistentVar,
 						"var1":  &optionVar,
 					},
-					Dockerfile:     "Dockerfile.test",
-					PushAfterBuild: true,
-					DockerBuildContext: &path.PathBuildContext{
-						Path: "ubuntu",
-					},
+					Dockerfile: "Dockerfile.test",
 				},
+				PushAfterBuild: true,
 			},
 		},
 
@@ -206,7 +195,7 @@ func TestNewDockerDriver(t *testing.T) {
 			options: &types.BuildOptions{
 				BuilderOptions: map[string]interface{}{
 					"context": map[string]string{
-						"path": "ubuntu",
+						"path": "test/ubuntu",
 					},
 					"dockerfile": "./ubuntu/Dockerfile",
 				},
@@ -249,8 +238,8 @@ func TestNewDockerDriver(t *testing.T) {
 			context: ctx,
 			err:     nil,
 			res: &dockerbuild.DockerBuildCmd{
-				DockerBuildOptions: &dockerbuild.DockerBuildOptions{
-					ImageName: "registry.host/library/ubuntu:16.04",
+				ImageName: "registry.host/library/ubuntu:16.04",
+				ImageBuildOptions: &dockertypes.ImageBuildOptions{
 					Tags: []string{
 						"registry.host/library/ubuntu:tag1",
 					},
@@ -262,12 +251,9 @@ func TestNewDockerDriver(t *testing.T) {
 						"pvar1":                         &optionPersistentVar,
 						"var1":                          &optionVar,
 					},
-					Dockerfile:     "Dockerfile.test",
-					PushAfterBuild: true,
-					DockerBuildContext: &path.PathBuildContext{
-						Path: "ubuntu",
-					},
+					Dockerfile: "Dockerfile.test",
 				},
+				PushAfterBuild: true,
 			},
 		},
 
@@ -276,7 +262,7 @@ func TestNewDockerDriver(t *testing.T) {
 			options: &types.BuildOptions{
 				BuilderOptions: map[string]interface{}{
 					"context": map[string]string{
-						"path": "ubuntu",
+						"path": "test/ubuntu",
 					},
 				},
 				Dockerfile:        "Dockerfile.test",
@@ -298,8 +284,8 @@ func TestNewDockerDriver(t *testing.T) {
 			context: ctx,
 			err:     nil,
 			res: &dockerbuild.DockerBuildCmd{
-				DockerBuildOptions: &dockerbuild.DockerBuildOptions{
-					ImageName: "registry.host/library/ubuntu:16.04",
+				ImageName: "registry.host/library/ubuntu:16.04",
+				ImageBuildOptions: &dockertypes.ImageBuildOptions{
 					Tags: []string{
 						"registry.host/library/ubuntu:tag1",
 					},
@@ -307,12 +293,9 @@ func TestNewDockerDriver(t *testing.T) {
 						"pvar1": &optionPersistentVar,
 						"var1":  &optionVar,
 					},
-					Dockerfile:     "Dockerfile.test",
-					PushAfterBuild: false,
-					DockerBuildContext: &path.PathBuildContext{
-						Path: "ubuntu",
-					},
+					Dockerfile: "Dockerfile.test",
 				},
+				PushAfterBuild: false,
 			},
 		},
 	}
@@ -324,10 +307,14 @@ func TestNewDockerDriver(t *testing.T) {
 			builderer, err := NewDockerDriver(test.context, test.options)
 
 			if err != nil && assert.Error(t, err) {
+				t.Log(err.Error())
 				assert.Equal(t, test.err, err)
 			} else {
 				dockerbuildercmd := builderer.(*dockerbuild.DockerBuildCmd)
-				assert.Equal(t, test.res.DockerBuildOptions, dockerbuildercmd.DockerBuildOptions, "Unexpected value")
+				assert.Equal(t, test.res.ImageName, dockerbuildercmd.ImageName, "Unexpected value")
+				assert.Equal(t, test.res.PushAfterBuild, dockerbuildercmd.PushAfterBuild, "Unexpected value")
+				assert.Equal(t, test.res.ImageBuildOptions.Tags, dockerbuildercmd.ImageBuildOptions.Tags, "Unexpected value")
+				assert.Equal(t, test.res.ImageBuildOptions.BuildArgs, dockerbuildercmd.ImageBuildOptions.BuildArgs, "Unexpected value")
 			}
 		})
 	}
@@ -350,7 +337,7 @@ func TestNewDockerDriver(t *testing.T) {
 // 		{
 // 			desc: "Testing extracting a docker builder context defined on a path",
 // 			context: map[string]string{
-// 				"path": "ubuntu",
+// 				"path": "test/ubuntu",
 // 			},
 // 			err: nil,
 // 			res: &dockercontextpath.PathBuildContext{
