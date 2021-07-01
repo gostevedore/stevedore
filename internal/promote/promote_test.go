@@ -36,8 +36,9 @@ func TestPromote(t *testing.T) {
 			},
 			err: errors.New("(promote::Promote)", "Error promoting 'unexisting' image",
 				errors.New("", "Error promoting 'unexisting' to 'unexisting'",
-					errors.New("", "Error tagging 'unexisting' to 'docker.io/library/unexisting'",
-						goerrors.New("Error response from daemon: No such image: unexisting:latest")))),
+					errors.New("", "Error pushing 'docker.io/library/unexisting'",
+						errors.New("", "Error tagging image 'unexisting' to 'docker.io/library/unexisting'",
+							goerrors.New("Error response from daemon: No such image: unexisting:latest"))))),
 		},
 		{
 			desc: "Testing a error promotion",

@@ -9,6 +9,7 @@ import (
 	dockercopy "github.com/apenella/go-docker-builder/pkg/copy"
 	"github.com/apenella/go-docker-builder/pkg/response"
 	"github.com/docker/distribution/reference"
+	dockertypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/image"
@@ -128,10 +129,11 @@ func promoteWorker(ctx context.Context, options *types.PromoteOptions, src, dest
 			),
 			response.WithWriter(console.GetConsole()),
 		),
-		SourceImage:     src,
-		TargetImage:     normalizedPromoteImageName.String(),
-		RemoveAfterPush: options.RemovePromotedTags,
-		RemoteSource:    false,
+		SourceImage:      src,
+		TargetImage:      normalizedPromoteImageName.String(),
+		RemoveAfterPush:  options.RemovePromotedTags,
+		RemoteSource:     false,
+		ImagePushOptions: &dockertypes.ImagePushOptions{},
 	}
 
 	// it just work with local images when remote source is accepted credentials must be updated
