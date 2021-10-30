@@ -35,11 +35,11 @@ func NewSemVer(version string) (*SemVer, error) {
 	sv.Patch = strconv.FormatInt(int64(v.Patch()), 10)
 
 	if len(v.Prerelease()) > 0 {
-		sv.PreRelease = fmt.Sprintf("%s", v.Prerelease())
+		sv.PreRelease = v.Prerelease()
 	}
 
 	if len(v.Metadata()) > 0 {
-		sv.Build = fmt.Sprintf("%s", v.Metadata())
+		sv.Build = v.Metadata()
 	}
 
 	return sv, nil
@@ -48,10 +48,7 @@ func NewSemVer(version string) (*SemVer, error) {
 // Validate
 func Validate(version string) bool {
 	_, err := semver.NewVersion(version)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 // VersionTree return semver versions from v and based on list templates. example: from 1.2.3 --> [1, 1.2, 1.2.3]. It returns an error when a template could not be parsed
