@@ -90,12 +90,12 @@ func TestNewSemVer(t *testing.T) {
 			err: errors.New("(semver::NewSemVer)", "Error creating new version '1.2-rc1+build+build'",
 				goerrors.New("Invalid Semantic Version")),
 		},
-		{
-			desc:     "Testing version invalid matching version [major.minor-prerelease+build+build]",
-			version:  "1.2-rc1.1",
-			expected: &SemVer{},
-			err:      &errors.Error{},
-		},
+		// {
+		// 	desc:     "Testing version invalid matching version [major.minor-prerelease+build+build]",
+		// 	version:  "1.2-rc1.1",
+		// 	expected: &SemVer{},
+		// 	err:      &errors.Error{},
+		// },
 	}
 
 	for _, test := range tests {
