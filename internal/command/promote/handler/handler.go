@@ -18,8 +18,6 @@ func NewHandler(p ServicePromoter) *Handler {
 }
 
 func (h *Handler) Handler(ctx context.Context, options *HandlerOptions) error {
-	//func (h *Handler) Handler(ctx context.Context, options *HandlerOptions) func(cmd *cobra.Command, args []string) error {
-	//	return func(cmd *cobra.Command, args []string) error {
 
 	errContext := "(promote::Handler)"
 

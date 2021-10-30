@@ -24,7 +24,5 @@ type PromoteFactorier interface {
 
 // Semverser
 type Semverser interface {
-	// GenerateSemvVer(version string) error
-	// GenerateVersionTree(tmpl []string) ([]string, error)
 	GenerateSemverList(version []string, tmpls []string) ([]string, error)
 }
