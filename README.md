@@ -6,7 +6,7 @@
 
 ---
 
-Stevedore, a way to manage and govern the Docker image's building process
+Stevedore, the docker images factory
 
 ## What is Stevedore?
 
