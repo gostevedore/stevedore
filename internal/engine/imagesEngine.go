@@ -13,7 +13,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/image"
 
 	//images "github.com/gostevedore/stevedore/internal/image"
-	"github.com/gostevedore/stevedore/internal/promote"
+
 	"github.com/gostevedore/stevedore/internal/schedule"
 	"github.com/gostevedore/stevedore/internal/semver"
 	"github.com/gostevedore/stevedore/internal/tree"
@@ -525,46 +525,4 @@ func ListImageHeader() []string {
 	}
 
 	return h
-}
-
-// Promote an image
-func (e *ImagesEngine) Promote(options *types.PromoteOptions) error {
-
-	if options.EnableSemanticVersionTags {
-		promoteImageURL, err := image.Parse(options.ImageName)
-		if err != nil {
-			return errors.New("(ImagesEngine::Promote)", fmt.Sprintf("'%s' could not be parsed", options.ImageName), err)
-		}
-
-		options.ImagePromoteTags = append(options.ImagePromoteTags, promoteImageURL.Tag)
-
-		SVtags := make(map[string]struct{})
-		for _, tag := range options.ImagePromoteTags {
-
-			sv, err := semver.NewSemVer(tag)
-			if err != nil {
-				console.Warn(errors.New("(promote::Promote)", "Version does not match to a semver expression", err))
-			} else {
-				svtree, err := sv.VersionTree(options.SemanticVersionTagsTemplates)
-				if err != nil {
-					console.Warn(errors.New("(promote::Promote)", "Error generating version tree", err))
-				} else {
-					for _, v := range svtree {
-						SVtags[v] = struct{}{}
-					}
-				}
-			}
-		}
-
-		for tag := range SVtags {
-			options.ImagePromoteTags = append(options.ImagePromoteTags, tag)
-		}
-	}
-
-	err := promote.Promote(e.context, options)
-	if err != nil {
-		return errors.New("(ImagesEngine::Promote)", "Error promoting image", err)
-	}
-
-	return nil
 }
