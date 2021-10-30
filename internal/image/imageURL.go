@@ -33,19 +33,25 @@ func Parse(imageName string) (*ImageURL, error) {
 	}
 
 	imageNameBlock2 := strings.Split(imageNameBlock1[0], urlSeparator)
-	if len(imageNameBlock2) > 3 {
-		return nil, errors.New("(ImageURL::Parse)", "Invalid image name")
-	}
+	// if len(imageNameBlock2) > 3 {
+	// 	return nil, errors.New("(ImageURL::Parse)", "Invalid image name")
+	// }
 
 	parsedImageName.Name = imageNameBlock2[len(imageNameBlock2)-1]
-	if len(imageNameBlock2) > 1 {
-		imageNameBlock2 = imageNameBlock2[:len(imageNameBlock2)-1]
-		parsedImageName.Namespace = imageNameBlock2[len(imageNameBlock2)-1]
-	}
 
+	// remove name from imageNameBlock2
 	if len(imageNameBlock2) > 1 {
 		imageNameBlock2 = imageNameBlock2[:len(imageNameBlock2)-1]
-		parsedImageName.Registry = imageNameBlock2[len(imageNameBlock2)-1]
+
+		// get registry host
+		if len(imageNameBlock2) > 1 {
+			parsedImageName.Registry = imageNameBlock2[0]
+			imageNameBlock2 = imageNameBlock2[1:]
+		}
+
+		// get image namespace
+		parsedImageName.Namespace = strings.Join(imageNameBlock2, urlSeparator)
+
 	}
 
 	return parsedImageName, nil

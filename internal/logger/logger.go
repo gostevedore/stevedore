@@ -2,6 +2,7 @@ package logger
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -16,6 +17,70 @@ const (
 )
 
 var sugarLogger *zap.SugaredLogger
+
+type Logger struct {
+	logger *zap.SugaredLogger
+}
+
+func NewLogger(w io.Writer, encoderType string) *Logger {
+
+	encoder := generateEncoderEncoder(encoderType)
+
+	core := zapcore.NewCore(
+		encoder,
+		zapcore.AddSync(w),
+		zapcore.DebugLevel)
+	logger := zap.New(core)
+
+	return &Logger{
+		logger: logger.Sugar(),
+	}
+}
+
+func generateEncoderEncoder(encoderType string) zapcore.Encoder {
+
+	encoderConfig := zap.NewProductionEncoderConfig()
+	encoderConfig.EncodeTime = customTimeEncoder
+	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+
+	switch encoderType {
+	case LogJSONEncoderName:
+		return zapcore.NewJSONEncoder(encoderConfig)
+	default:
+		return zapcore.NewConsoleEncoder(encoderConfig)
+	}
+
+}
+
+// Info
+func (l *Logger) Info(msg ...interface{}) {
+	l.logger.Info(msg)
+}
+
+// Warn
+func (l *Logger) Warn(msg ...interface{}) {
+	l.logger.Warn(msg)
+}
+
+// Error
+func (l *Logger) Error(msg ...interface{}) {
+	l.logger.Error(msg)
+}
+
+// Debug
+func (l *Logger) Debug(msg ...interface{}) {
+	l.logger.Debug(msg)
+}
+
+// Fatal
+func (l *Logger) Fatal(msg ...interface{}) {
+	l.logger.Fatal(msg)
+}
+
+// Panic
+func (l *Logger) Panic(msg ...interface{}) {
+	l.logger.Panic(msg)
+}
 
 //Init initializes suggarlogger
 func Init(logfile, encoderType string) error {

@@ -27,7 +27,7 @@ func TestNewSemVer(t *testing.T) {
 				PreRelease: "rc0",
 				Build:      "build123",
 			},
-			err: nil,
+			err: &errors.Error{},
 		},
 		{
 			desc:    "Testing version major.minor.patch-prerelease",
@@ -38,7 +38,7 @@ func TestNewSemVer(t *testing.T) {
 				Patch:      "3",
 				PreRelease: "rc0",
 			},
-			err: nil,
+			err: &errors.Error{},
 		},
 		{
 			desc:    "Testing version major.minor.patch+build",
@@ -49,7 +49,7 @@ func TestNewSemVer(t *testing.T) {
 				Patch: "3",
 				Build: "build123",
 			},
-			err: nil,
+			err: &errors.Error{},
 		},
 		{
 			desc:    "Testing version major.minor.patch",
@@ -59,7 +59,7 @@ func TestNewSemVer(t *testing.T) {
 				Minor: "2",
 				Patch: "3",
 			},
-			err: nil,
+			err: &errors.Error{},
 		},
 		{
 			desc:    "Testing version version major.minor",
@@ -69,7 +69,7 @@ func TestNewSemVer(t *testing.T) {
 				Minor: "2",
 				Patch: "0",
 			},
-			err: nil,
+			err: &errors.Error{},
 		},
 		{
 			desc:    "Testing version version major.minor-prerelease-hyphen",
@@ -90,6 +90,12 @@ func TestNewSemVer(t *testing.T) {
 			err: errors.New("(semver::NewSemVer)", "Error creating new version '1.2-rc1+build+build'",
 				goerrors.New("Invalid Semantic Version")),
 		},
+		// {
+		// 	desc:     "Testing version invalid matching version [major.minor-prerelease+build+build]",
+		// 	version:  "1.2-rc1.1",
+		// 	expected: &SemVer{},
+		// 	err:      &errors.Error{},
+		// },
 	}
 
 	for _, test := range tests {

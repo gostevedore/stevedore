@@ -138,7 +138,7 @@ func TestCopy(t *testing.T) {
 					"source_image_tag": "16.04",
 				},
 				Children: map[string][]string{
-					"php-fpm": []string{
+					"php-fpm": {
 						"7.1",
 						"7.3",
 					},
@@ -159,7 +159,7 @@ func TestCopy(t *testing.T) {
 					"source_image_tag": "16.04",
 				},
 				Children: map[string][]string{
-					"php-fpm": []string{
+					"php-fpm": {
 						"7.1",
 						"7.3",
 					},

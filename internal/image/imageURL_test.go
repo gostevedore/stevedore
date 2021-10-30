@@ -22,9 +22,13 @@ func TestParse(t *testing.T) {
 		},
 		{
 			desc: "Testing parse image URL error when multiple slashes",
-			name: "name/name/name/name",
+			name: "registry/namespace/subnamespace/image",
 			err:  errors.New("(ImageURL::Parse)", "Invalid image name"),
-			res:  nil,
+			res: &ImageURL{
+				Name:      "image",
+				Registry:  "registry",
+				Namespace: "namespace/subnamespace",
+			},
 		},
 		{
 			desc: "Testing parse image URL with name",

@@ -7,18 +7,16 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gostevedore/stevedore/internal/build"
-	"github.com/gostevedore/stevedore/internal/image"
-	"github.com/gostevedore/stevedore/internal/tree"
-	"github.com/gostevedore/stevedore/internal/types"
-
-	factory "github.com/gostevedore/stevedore/internal/driver"
-	mockdriver "github.com/gostevedore/stevedore/internal/driver/mock"
-	"github.com/gostevedore/stevedore/internal/schedule"
-	"github.com/gostevedore/stevedore/internal/ui/console"
-
 	errors "github.com/apenella/go-common-utils/error"
 	gdstree "github.com/apenella/go-data-structures/tree"
+	"github.com/gostevedore/stevedore/internal/build"
+	factory "github.com/gostevedore/stevedore/internal/driver"
+	mockdriver "github.com/gostevedore/stevedore/internal/driver/mock"
+	"github.com/gostevedore/stevedore/internal/image"
+	"github.com/gostevedore/stevedore/internal/schedule"
+	"github.com/gostevedore/stevedore/internal/tree"
+	"github.com/gostevedore/stevedore/internal/types"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -1731,20 +1729,4 @@ func TestListImageHeader(t *testing.T) {
 	res := ListImageHeader()
 
 	assert.Equal(t, expected, res)
-}
-
-func TestPromote(t *testing.T) {
-	tests := []struct {
-		desc    string
-		engine  *ImagesEngine
-		options *types.PromoteOptions
-		err     error
-	}{}
-
-	for _, test := range tests {
-		t.Run(test.desc, func(t *testing.T) {
-			t.Log(test.desc)
-		})
-	}
-
 }

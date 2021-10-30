@@ -3,10 +3,9 @@ package build
 import (
 	"fmt"
 
-	defaultbuilder "github.com/gostevedore/stevedore/internal/driver/default"
-
 	data "github.com/apenella/go-common-utils/data"
 	errors "github.com/apenella/go-common-utils/error"
+	defaultbuilder "github.com/gostevedore/stevedore/internal/driver/default"
 )
 
 // Builders serializes the builders defined on user configuration
