@@ -11,10 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const (
-	testBaseDir = "test"
-)
-
 func TestPromote(t *testing.T) {
 
 	tests := []struct {
