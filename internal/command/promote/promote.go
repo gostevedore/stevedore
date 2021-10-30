@@ -18,6 +18,7 @@ import (
 	repodockercopy "github.com/gostevedore/stevedore/internal/promote/docker/promoter"
 	repodryrun "github.com/gostevedore/stevedore/internal/promote/dryrun"
 	"github.com/gostevedore/stevedore/internal/semver"
+	"github.com/gostevedore/stevedore/internal/ui/console"
 	"github.com/spf13/cobra"
 )
 
@@ -39,16 +40,6 @@ func NewCommand(ctx context.Context, conf *configuration.Configuration) *command
 	`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			errContext := "(promote::PreRunE)"
-
-			// if cmd.Flags().NArg() == 0 {
-			// 	return errors.New(errContext, "Source images name must be provided")
-			// } else {
-			// 	handlerOptions.SourceImageName = cmd.Flags().Arg(0)
-			// 	if cmd.Flags().NArg() > 1 {
-			// 		args := cmd.Flags().Args()
-			// 		fmt.Println("Arguments to be ignored:", args[1:])
-			// 	}
-			// }
 
 			dockerClient, err := dockerclient.NewClientWithOpts(dockerclient.FromEnv)
 			if err != nil {
@@ -108,8 +99,17 @@ func NewCommand(ctx context.Context, conf *configuration.Configuration) *command
 	promoteCmd.Flags().StringVarP(&handlerOptions.TargetImageRegistryHost, "promote-image-registry", "r", "", "Target image registry host")
 	promoteCmd.Flags().StringSliceVarP(&handlerOptions.TargetImageTags, "promote-image-tag", "t", []string{}, "Target image tag")
 	promoteCmd.Flags().BoolVar(&handlerOptions.RemoveTargetImageTags, "remove-local-images-after-push", false, "Remove source image tags")
+
+	promoteCmd.Flags().BoolVar(&handlerOptions.DEPRECATED_RemoveTargetImageTags, "remove-promote-tags", false, "[DEPRECATED] use remove-local-images-after-push. Remove source image tags")
+
 	promoteCmd.Flags().BoolVarP(&handlerOptions.PromoteSourceImageTag, "promote-source-tags", "s", false, "Promote source image. It must be used when a promote image tag is defined and source image needs to be promoted")
 	promoteCmd.Flags().BoolVarP(&handlerOptions.RemoteSourceImage, "remote-source-image", "R", false, "Use as a source image an image stored on a Docker registry")
+
+	// Transitorial flags
+	if handlerOptions.DEPRECATED_RemoveTargetImageTags && !handlerOptions.RemoveTargetImageTags {
+		handlerOptions.RemoveTargetImageTags = handlerOptions.DEPRECATED_RemoveTargetImageTags
+		console.Warn("[DEPRECATED FLAG] use `remove-local-images-after-push` instead of `remove-promote-tags`")
+	}
 
 	command := &command.StevedoreCommand{
 		Command: promoteCmd,
