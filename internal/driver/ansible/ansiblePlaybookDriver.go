@@ -2,6 +2,8 @@ package ansibledriver
 
 import (
 	"context"
+	"io"
+	"os"
 	"strings"
 
 	"github.com/apenella/go-ansible/pkg/execute"
@@ -10,38 +12,66 @@ import (
 	"github.com/apenella/go-ansible/pkg/stdoutcallback/results"
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/build/varsmap"
-	"github.com/gostevedore/stevedore/internal/driver/common"
-	drivercommon "github.com/gostevedore/stevedore/internal/driver/common"
 	"github.com/gostevedore/stevedore/internal/types"
 	"github.com/gostevedore/stevedore/internal/ui/console"
 )
 
 const (
-	DriverName = "ansible-playbook"
+	DriverName                     = "ansible-playbook"
+	BuilderConfOptionsPlaybookKey  = "playbook"
+	BuilderConfOptionsInventoryKey = "inventory"
 )
 
-func NewAnsiblePlaybookDriver(ctx context.Context, o *types.BuildOptions) (types.Driverer, error) {
+type AnsiblePlaybookDriver struct {
+	driver Ansibler
+	writer io.Writer
+}
+
+func NewAnsiblePlaybookDriver(driver Ansibler, writer io.Writer) (*AnsiblePlaybookDriver, error) {
+
+	errContext := "(ansibledriver::NewAnsiblePlaybookDriver)"
+
+	if driver == nil {
+		return nil, errors.New(errContext, "To create an AnsiblePlaybookDriver is expected a driver")
+	}
+
+	if writer == nil {
+		writer = os.Stdout
+	}
+
+	return &AnsiblePlaybookDriver{
+		driver: driver,
+		writer: writer,
+	}, nil
+}
+
+func (d *AnsiblePlaybookDriver) Build(ctx context.Context, o *types.BuildOptions) error {
 
 	builderName := "builder"
+	errContext := "(ansibledriver::Build)"
+
+	if d.driver == nil {
+		return errors.New(errContext, "Build driver is missing")
+	}
 
 	if o == nil {
-		return nil, errors.New("(build::NewAnsiblePlaybookDriver)", "Build options are nil")
+		return errors.New(errContext, "Build options are nil")
 	}
 
 	if ctx == nil {
-		return nil, errors.New("(build::NewAnsiblePlaybookDriver)", "Context is nil")
+		return errors.New(errContext, "Context is nil")
 	}
 
 	builderConfOptions := o.BuilderOptions
 
-	playbook, ok := builderConfOptions["playbook"]
+	playbook, ok := builderConfOptions[BuilderConfOptionsPlaybookKey]
 	if !ok {
-		return nil, errors.New("(build::NewAnsiblePlaybookDriver)", "playbook has not been defined on build options")
+		return errors.New(errContext, "Playbook has not been defined on build options")
 	}
 
-	inventory, ok := builderConfOptions["inventory"]
+	inventory, ok := builderConfOptions[BuilderConfOptionsInventoryKey]
 	if !ok {
-		return nil, errors.New("(build::NewAnsiblePlaybookDriver)", "inventory has not been defined on build options")
+		return errors.New(errContext, "Inventory has not been defined on build options")
 	}
 
 	ansiblePlaybookOptions := &ansible.AnsiblePlaybookOptions{
@@ -54,7 +84,7 @@ func NewAnsiblePlaybookDriver(ctx context.Context, o *types.BuildOptions) (types
 	}
 
 	if o.ImageName == "" {
-		return nil, errors.New("(build::NewAnsiblePlaybookDriver)", "Image name is not set")
+		return errors.New(errContext, "Image name is not set")
 	}
 	ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageNameKey], o.ImageName)
 
@@ -66,7 +96,8 @@ func NewAnsiblePlaybookDriver(ctx context.Context, o *types.BuildOptions) (types
 	builderName = strings.Join([]string{builderName, o.ImageName}, "_")
 
 	if o.ImageVersion != "" {
-		o.ImageVersion = common.SanitizeTag(o.ImageVersion)
+		// Removed: stevedore does not sanitize image version
+		// o.ImageVersion = common.SanitizeTag(o.ImageVersion)
 		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageTagKey], o.ImageVersion)
 		builderName = strings.Join([]string{builderName, o.ImageVersion}, "_")
 	}
@@ -95,12 +126,13 @@ func NewAnsiblePlaybookDriver(ctx context.Context, o *types.BuildOptions) (types
 	}
 
 	if len(o.Tags) > 0 {
-		sanitizedTags := []string{}
-		for _, tag := range o.Tags {
-			tag = drivercommon.SanitizeTag(tag)
-			sanitizedTags = append(sanitizedTags, tag)
-		}
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], sanitizedTags)
+		// Removed: stevedore does not sanitize image version
+		// sanitizedTags := []string{}
+		// for _, tag := range o.Tags {
+		// 	tag = drivercommon.SanitizeTag(tag)
+		// 	sanitizedTags = append(sanitizedTags, tag)
+		// }
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], o.Tags)
 	}
 
 	if o.OutputPrefix == "" {
@@ -130,21 +162,34 @@ func NewAnsiblePlaybookDriver(ctx context.Context, o *types.BuildOptions) (types
 		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingPushImagetKey], false)
 	}
 
-	options.AnsibleForceColor()
-
-	ansiblePlaybook := &ansible.AnsiblePlaybookCmd{
-		Playbooks:         []string{playbook.(string)},
-		Options:           ansiblePlaybookOptions,
-		ConnectionOptions: ansiblePlaybookConnectionOptions,
-		Exec: execute.NewDefaultExecute(
-			execute.WithWrite(console.GetConsole()),
-			execute.WithTransformers(
-				results.Prepend(o.OutputPrefix),
-			),
+	executor := execute.NewDefaultExecute(
+		execute.WithWrite(console.GetConsole()),
+		execute.WithTransformers(
+			results.Prepend(o.OutputPrefix),
 		),
+	)
+
+	d.driver.WithPlaybook(playbook.(string))
+	d.driver.WithOptions(ansiblePlaybookOptions)
+	d.driver.WithConnectionOptions(ansiblePlaybookConnectionOptions)
+	d.driver.WithExecutor(executor)
+
+	// ansiblePlaybook := &ansible.AnsiblePlaybookCmd{
+	// 	Playbooks:         []string{playbook.(string)},
+	// 	Options:           ansiblePlaybookOptions,
+	// 	ConnectionOptions: ansiblePlaybookConnectionOptions,
+	// 	Exec: execute.NewDefaultExecute(
+	// 		execute.WithWrite(console.GetConsole()),
+	// 		execute.WithTransformers(
+	// 			results.Prepend(o.OutputPrefix),
+	// 		),
+	// 	),
+	// }
+
+	err := d.driver.Run(ctx)
+	if err != nil {
+		return errors.New(errContext, err.Error())
 	}
 
-	console.Blue(ansiblePlaybook.String())
-
-	return ansiblePlaybook, nil
+	return nil
 }
