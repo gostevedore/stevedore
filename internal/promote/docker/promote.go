@@ -26,12 +26,10 @@ func NewDockerPromote(cmd promote.DockerCopier, w io.Writer) *DockerPromete {
 		w = os.Stdout
 	}
 
-	p := &DockerPromete{
+	return &DockerPromete{
 		cmd:    cmd,
 		writer: w,
 	}
-
-	return p
 }
 
 func (p *DockerPromete) Promote(ctx context.Context, options *promote.PromoteOptions) error {

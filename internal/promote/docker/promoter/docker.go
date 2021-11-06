@@ -63,40 +63,20 @@ func (c *DockerCopy) WithUseNormalizedNamed() {
 
 // AddAuth
 func (c *DockerCopy) AddAuth(username string, password string) error {
-	err := c.cmd.AddAuth(username, password)
-	if err != nil {
-		return err
-	}
-
-	return err
+	return c.cmd.AddAuth(username, password)
 }
 
 // AddPullAuth
 func (c *DockerCopy) AddPullAuth(username string, password string) error {
-	err := c.cmd.AddPullAuth(username, password)
-	if err != nil {
-		return err
-	}
-
-	return err
+	return c.cmd.AddPullAuth(username, password)
 }
 
 // AddPushAuth
 func (c *DockerCopy) AddPushAuth(username string, password string) error {
-	err := c.cmd.AddPushAuth(username, password)
-	if err != nil {
-		return err
-	}
-
-	return err
+	return c.cmd.AddPushAuth(username, password)
 }
 
 // Run
 func (c *DockerCopy) Run(ctx context.Context) error {
-	err := c.cmd.Run(ctx)
-	if err != nil {
-		return err
-	}
-
-	return err
+	return c.cmd.Run(ctx)
 }
