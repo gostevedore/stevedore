@@ -2,8 +2,8 @@ package ansibledriver
 
 import (
 	"context"
+	"io"
 
-	"github.com/apenella/go-ansible/pkg/execute"
 	"github.com/apenella/go-ansible/pkg/options"
 	ansible "github.com/apenella/go-ansible/pkg/playbook"
 )
@@ -14,6 +14,6 @@ type Ansibler interface {
 	WithConnectionOptions(opts *options.AnsibleConnectionOptions)
 	WithPriviledgedEscalationOptions(opts *options.AnsiblePrivilegeEscalationOptions)
 	WithStdoutCallback(callback string)
-	WithExecutor(executor execute.Executor)
+	PrepareExecutor(writer io.Writer, prefix string)
 	Run(ctx context.Context) error
 }
