@@ -1,11 +1,13 @@
-package ansibler
+package goansible
 
 import (
 	"context"
+	"io"
 
 	"github.com/apenella/go-ansible/pkg/execute"
 	"github.com/apenella/go-ansible/pkg/options"
 	ansible "github.com/apenella/go-ansible/pkg/playbook"
+	"github.com/apenella/go-ansible/pkg/stdoutcallback/results"
 	"github.com/gostevedore/stevedore/internal/ui/console"
 )
 
@@ -41,6 +43,17 @@ func (d *GoAnsibleDriver) WithExecutor(executor execute.Executor) {
 
 func (d *GoAnsibleDriver) WithPriviledgedEscalationOptions(opts *options.AnsiblePrivilegeEscalationOptions) {
 	d.ansible.PrivilegeEscalationOptions = opts
+}
+
+func (d *GoAnsibleDriver) PrepareExecutor(writer io.Writer, prefix string) {
+	executor := execute.NewDefaultExecute(
+		execute.WithWrite(writer),
+		execute.WithTransformers(
+			results.Prepend(prefix),
+		),
+	)
+
+	d.ansible.Exec = executor
 }
 
 func (d *GoAnsibleDriver) Run(ctx context.Context) error {

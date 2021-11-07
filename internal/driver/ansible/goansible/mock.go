@@ -1,7 +1,8 @@
-package ansibler
+package goansible
 
 import (
 	"context"
+	"io"
 
 	"github.com/apenella/go-ansible/pkg/execute"
 	"github.com/apenella/go-ansible/pkg/options"
@@ -39,6 +40,10 @@ func (d *MockAnsibleDriver) WithStdoutCallback(callback string) {
 
 func (d *MockAnsibleDriver) WithExecutor(executor execute.Executor) {
 	d.Mock.Called(executor)
+}
+
+func (d *MockAnsibleDriver) PrepareExecutor(writer io.Writer, prefix string) {
+	d.Mock.Called(writer, prefix)
 }
 
 func (d *MockAnsibleDriver) Run(ctx context.Context) error {
