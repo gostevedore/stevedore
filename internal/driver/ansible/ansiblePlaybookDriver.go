@@ -6,14 +6,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/apenella/go-ansible/pkg/execute"
 	"github.com/apenella/go-ansible/pkg/options"
 	ansible "github.com/apenella/go-ansible/pkg/playbook"
-	"github.com/apenella/go-ansible/pkg/stdoutcallback/results"
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/build/varsmap"
 	"github.com/gostevedore/stevedore/internal/types"
-	"github.com/gostevedore/stevedore/internal/ui/console"
 )
 
 const (
@@ -84,8 +81,9 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, o *types.BuildOptions
 	}
 
 	if o.ImageName == "" {
-		return errors.New(errContext, "Image name is not set")
+		return errors.New(errContext, "Image has not been defined on build options")
 	}
+
 	ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageNameKey], o.ImageName)
 
 	if o.RegistryNamespace != "" {
@@ -162,17 +160,10 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, o *types.BuildOptions
 		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingPushImagetKey], false)
 	}
 
-	executor := execute.NewDefaultExecute(
-		execute.WithWrite(console.GetConsole()),
-		execute.WithTransformers(
-			results.Prepend(o.OutputPrefix),
-		),
-	)
-
 	d.driver.WithPlaybook(playbook.(string))
 	d.driver.WithOptions(ansiblePlaybookOptions)
 	d.driver.WithConnectionOptions(ansiblePlaybookConnectionOptions)
-	d.driver.WithExecutor(executor)
+	d.driver.PrepareExecutor(d.writer, o.OutputPrefix)
 
 	// ansiblePlaybook := &ansible.AnsiblePlaybookCmd{
 	// 	Playbooks:         []string{playbook.(string)},
