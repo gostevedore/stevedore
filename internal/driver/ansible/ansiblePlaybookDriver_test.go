@@ -288,449 +288,80 @@ func TestBuild(t *testing.T) {
 					driver.(*goansible.MockAnsibleDriver).AssertNumberOfCalls(t, "Run", 1)
 			},
 		},
+		{
+			desc: "Testing build an image with same variable defined either on persistent_vars and vars",
+			driver: &AnsiblePlaybookDriver{
+				driver: goansible.NewMockAnsibleDriver(),
+				writer: os.Stdout,
+			},
+			options: &types.BuildOptions{
+				BuilderOptions: map[string]interface{}{
+					"playbook":  "site.yml",
+					"inventory": "inventory.yml",
+				},
+				ImageName:         "image_name",
+				ImageVersion:      "version",
+				RegistryNamespace: "namespace",
+				RegistryHost:      "registry",
+				ConnectionLocal:   true,
+				PersistentVars: map[string]interface{}{
+					"var1": "persistent_value1",
+					"var2": "persistent_value2",
+				},
+				Vars: map[string]interface{}{
+					"var1": "value1",
+					"var2": "value2",
+				},
+				BuilderVarMappings: map[string]string{
+					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
+					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
+					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
+					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
+					varsmap.VarMappingImageBuilderLabelKey:             varsmap.VarMappingImageBuilderLabelDefaultValue,
+					varsmap.VarMappingImageFromNameKey:                 varsmap.VarMappingImageFromNameDefaultValue,
+					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
+					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
+					varsmap.VarMappingImageFromRegistryHostKey:         varsmap.VarMappingImageFromRegistryHostDefaultValue,
+					varsmap.VarMappingImageNameKey:                     varsmap.VarMappingImageNameDefaultValue,
+					varsmap.VarMappingImageTagKey:                      varsmap.VarMappingImageTagDefaultValue,
+					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
+					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
+					varsmap.VarMappingPushImagetKey:                    varsmap.VarMappingPushImagetDefaultValue,
+				},
+			},
+			prepareAssertFunc: func(driver Ansibler) {
 
-		// 		{
-		// 			desc: "Testing an image with a registry defined",
-		// 			options: &types.BuildOptions{
-		// 				ImageName:         "imageName",
-		// 				RegistryNamespace: "namespace",
-		// 				RegistryHost:      "registry",
-		// 				BuilderOptions: map[string]interface{}{
-		// 					"playbook":  "playbook",
-		// 					"inventory": "inventory",
-		// 				},
-		// 				BuilderVarMappings: map[string]string{
-		// 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
-		// 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
-		// 					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
-		// 					varsmap.VarMappingImageBuilderLabelKey:             varsmap.VarMappingImageBuilderLabelDefaultValue,
-		// 					varsmap.VarMappingImageFromNameKey:                 varsmap.VarMappingImageFromNameDefaultValue,
-		// 					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
-		// 					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingImageFromRegistryHostKey:         varsmap.VarMappingImageFromRegistryHostDefaultValue,
-		// 					varsmap.VarMappingImageNameKey:                     varsmap.VarMappingImageNameDefaultValue,
-		// 					varsmap.VarMappingImageTagKey:                      varsmap.VarMappingImageTagDefaultValue,
-		// 					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
-		// 					varsmap.VarMappingPushImagetKey:                    varsmap.VarMappingPushImagetDefaultValue,
-		// 				},
-		// 				PushImages: true,
-		// 			},
-		// 			context: ctx,
-		// 			err:     nil,
-		// 			res: &ansible.AnsiblePlaybookCmd{
-		// 				Playbooks: []string{"playbook"},
-		// 				Exec: execute.NewDefaultExecute(
-		// 					execute.WithWrite(cons),
-		// 					execute.WithTransformers(
-		// 						results.Prepend("imageName"),
-		// 					),
-		// 				),
-		// 				Options: &ansible.AnsiblePlaybookOptions{
-		// 					Inventory: "inventory",
-		// 					ExtraVars: map[string]interface{}{
-		// 						"image_name":               "imageName",
-		// 						"image_registry_namespace": "namespace",
-		// 						"image_registry_host":      "registry",
-		// 						"image_builder_label":      "builder_namespace_imageName",
-		// 					},
-		// 				},
-		// 				ConnectionOptions: &options.AnsibleConnectionOptions{},
-		// 			},
-		// 		},
-		// 		{
-		// 			desc: "Testing an image with a main version defined",
-		// 			options: &types.BuildOptions{
-		// 				ImageName:         "imageName",
-		// 				ImageVersion:      "version",
-		// 				RegistryNamespace: "namespace",
-		// 				BuilderOptions: map[string]interface{}{
-		// 					"playbook":  "playbook",
-		// 					"inventory": "inventory",
-		// 				},
-		// 				BuilderVarMappings: map[string]string{
-		// 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
-		// 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
-		// 					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
-		// 					varsmap.VarMappingImageBuilderLabelKey:             varsmap.VarMappingImageBuilderLabelDefaultValue,
-		// 					varsmap.VarMappingImageFromNameKey:                 varsmap.VarMappingImageFromNameDefaultValue,
-		// 					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
-		// 					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingImageFromRegistryHostKey:         varsmap.VarMappingImageFromRegistryHostDefaultValue,
-		// 					varsmap.VarMappingImageNameKey:                     varsmap.VarMappingImageNameDefaultValue,
-		// 					varsmap.VarMappingImageTagKey:                      varsmap.VarMappingImageTagDefaultValue,
-		// 					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
-		// 					varsmap.VarMappingPushImagetKey:                    varsmap.VarMappingPushImagetDefaultValue,
-		// 				},
-		// 				PushImages: true,
-		// 			},
-		// 			context: ctx,
-		// 			err:     nil,
-		// 			res: &ansible.AnsiblePlaybookCmd{
-		// 				Playbooks: []string{"playbook"},
-		// 				Exec: execute.NewDefaultExecute(
-		// 					execute.WithWrite(cons),
-		// 					execute.WithTransformers(
-		// 						results.Prepend("imageName"),
-		// 					),
-		// 				),
-		// 				Options: &ansible.AnsiblePlaybookOptions{
-		// 					Inventory: "inventory",
-		// 					ExtraVars: map[string]interface{}{
-		// 						"image_name":               "imageName",
-		// 						"image_registry_namespace": "namespace",
-		// 						"image_tag":                "version",
-		// 						"image_builder_label":      "builder_namespace_imageName_version",
-		// 					},
-		// 				},
-		// 				ConnectionOptions: &options.AnsibleConnectionOptions{},
-		// 			},
-		// 		},
-		// 		{
-		// 			desc: "Testing an image with a vars defined",
-		// 			options: &types.BuildOptions{
-		// 				ImageName:         "imageName",
-		// 				RegistryNamespace: "namespace",
-		// 				Vars: map[string]interface{}{
-		// 					"var1": "value1",
-		// 					"var2": "value2",
-		// 				},
-		// 				BuilderOptions: map[string]interface{}{
-		// 					"playbook":  "playbook",
-		// 					"inventory": "inventory",
-		// 				},
-		// 				BuilderVarMappings: map[string]string{
-		// 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
-		// 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
-		// 					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
-		// 					varsmap.VarMappingImageBuilderLabelKey:             varsmap.VarMappingImageBuilderLabelDefaultValue,
-		// 					varsmap.VarMappingImageFromNameKey:                 varsmap.VarMappingImageFromNameDefaultValue,
-		// 					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
-		// 					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingImageFromRegistryHostKey:         varsmap.VarMappingImageFromRegistryHostDefaultValue,
-		// 					varsmap.VarMappingImageNameKey:                     varsmap.VarMappingImageNameDefaultValue,
-		// 					varsmap.VarMappingImageTagKey:                      varsmap.VarMappingImageTagDefaultValue,
-		// 					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
-		// 					varsmap.VarMappingPushImagetKey:                    varsmap.VarMappingPushImagetDefaultValue,
-		// 				},
-		// 				PushImages: true,
-		// 			},
-		// 			context: ctx,
-		// 			err:     nil,
-		// 			res: &ansible.AnsiblePlaybookCmd{
-		// 				Playbooks: []string{"playbook"},
-		// 				Exec: execute.NewDefaultExecute(
-		// 					execute.WithWrite(cons),
-		// 					execute.WithTransformers(
-		// 						results.Prepend("imageName"),
-		// 					),
-		// 				),
-		// 				Options: &ansible.AnsiblePlaybookOptions{
-		// 					Inventory: "inventory",
-		// 					ExtraVars: map[string]interface{}{
-		// 						"image_name":               "imageName",
-		// 						"image_registry_namespace": "namespace",
-		// 						"var1":                     "value1",
-		// 						"var2":                     "value2",
-		// 						"image_builder_label":      "builder_namespace_imageName",
-		// 					},
-		// 				},
-		// 				ConnectionOptions: &options.AnsibleConnectionOptions{},
-		// 			},
-		// 		},
-		// 		{
-		// 			desc: "Testing an image with persistent vars defined",
-		// 			options: &types.BuildOptions{
-		// 				ImageName:         "imageName",
-		// 				RegistryNamespace: "namespace",
-		// 				PersistentVars: map[string]interface{}{
-		// 					"pvar1": "pvalue1",
-		// 					"pvar2": "pvalue2",
-		// 				},
-		// 				Vars: map[string]interface{}{
-		// 					"var1": "value1",
-		// 					"var2": "value2",
-		// 				},
-		// 				BuilderOptions: map[string]interface{}{
-		// 					"playbook":  "playbook",
-		// 					"inventory": "inventory",
-		// 				},
-		// 				BuilderVarMappings: map[string]string{
-		// 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
-		// 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
-		// 					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
-		// 					varsmap.VarMappingImageBuilderLabelKey:             varsmap.VarMappingImageBuilderLabelDefaultValue,
-		// 					varsmap.VarMappingImageFromNameKey:                 varsmap.VarMappingImageFromNameDefaultValue,
-		// 					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
-		// 					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingImageFromRegistryHostKey:         varsmap.VarMappingImageFromRegistryHostDefaultValue,
-		// 					varsmap.VarMappingImageNameKey:                     varsmap.VarMappingImageNameDefaultValue,
-		// 					varsmap.VarMappingImageTagKey:                      varsmap.VarMappingImageTagDefaultValue,
-		// 					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
-		// 					varsmap.VarMappingPushImagetKey:                    varsmap.VarMappingPushImagetDefaultValue,
-		// 				},
-		// 				PushImages: true,
-		// 			},
-		// 			context: ctx,
-		// 			err:     nil,
-		// 			res: &ansible.AnsiblePlaybookCmd{
-		// 				Playbooks: []string{"playbook"},
-		// 				Exec: execute.NewDefaultExecute(
-		// 					execute.WithWrite(cons),
-		// 					execute.WithTransformers(
-		// 						results.Prepend("imageName"),
-		// 					),
-		// 				),
-		// 				Options: &ansible.AnsiblePlaybookOptions{
-		// 					Inventory: "inventory",
-		// 					ExtraVars: map[string]interface{}{
-		// 						"image_name":               "imageName",
-		// 						"image_registry_namespace": "namespace",
-		// 						"pvar1":                    "pvalue1",
-		// 						"pvar2":                    "pvalue2",
-		// 						"var1":                     "value1",
-		// 						"var2":                     "value2",
-		// 						"image_builder_label":      "builder_namespace_imageName",
-		// 					},
-		// 				},
-		// 				ConnectionOptions: &options.AnsibleConnectionOptions{},
-		// 			},
-		// 		},
-		// 		{
-		// 			desc: "Testing an image with persistent vars defined avoiding an overwrite",
-		// 			options: &types.BuildOptions{
-		// 				ImageName:         "imageName",
-		// 				RegistryNamespace: "namespace",
-		// 				PersistentVars: map[string]interface{}{
-		// 					"pvar1": "pvalue1",
-		// 				},
-		// 				Vars: map[string]interface{}{
-		// 					"pvar1": "newvalue1",
-		// 				},
-		// 				BuilderOptions: map[string]interface{}{
-		// 					"playbook":  "playbook",
-		// 					"inventory": "inventory",
-		// 				},
-		// 				BuilderVarMappings: map[string]string{
-		// 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
-		// 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
-		// 					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
-		// 					varsmap.VarMappingImageBuilderLabelKey:             varsmap.VarMappingImageBuilderLabelDefaultValue,
-		// 					varsmap.VarMappingImageFromNameKey:                 varsmap.VarMappingImageFromNameDefaultValue,
-		// 					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
-		// 					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingImageFromRegistryHostKey:         varsmap.VarMappingImageFromRegistryHostDefaultValue,
-		// 					varsmap.VarMappingImageNameKey:                     varsmap.VarMappingImageNameDefaultValue,
-		// 					varsmap.VarMappingImageTagKey:                      varsmap.VarMappingImageTagDefaultValue,
-		// 					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
-		// 					varsmap.VarMappingPushImagetKey:                    varsmap.VarMappingPushImagetDefaultValue,
-		// 				},
-		// 				PushImages: true,
-		// 			},
-		// 			context: ctx,
-		// 			err:     nil,
-		// 			res: &ansible.AnsiblePlaybookCmd{
-		// 				Playbooks: []string{"playbook"},
-		// 				Exec: execute.NewDefaultExecute(
-		// 					execute.WithWrite(cons),
-		// 					execute.WithTransformers(
-		// 						results.Prepend("imageName"),
-		// 					),
-		// 				), Options: &ansible.AnsiblePlaybookOptions{
-		// 					Inventory: "inventory",
-		// 					ExtraVars: map[string]interface{}{
-		// 						"image_name":               "imageName",
-		// 						"image_registry_namespace": "namespace",
-		// 						"pvar1":                    "pvalue1",
-		// 						"image_builder_label":      "builder_namespace_imageName",
-		// 					},
-		// 				},
-		// 				ConnectionOptions: &options.AnsibleConnectionOptions{},
-		// 			},
-		// 		},
-		// 		{
-		// 			desc: "Testing a build skipping image push",
-		// 			options: &types.BuildOptions{
-		// 				ImageName:         "imageName",
-		// 				RegistryNamespace: "namespace",
-		// 				Vars: map[string]interface{}{
-		// 					"var1": "value1",
-		// 					"var2": "value2",
-		// 				},
-		// 				PushImages: false,
-		// 				BuilderOptions: map[string]interface{}{
-		// 					"playbook":  "playbook",
-		// 					"inventory": "inventory",
-		// 				},
-		// 				BuilderVarMappings: map[string]string{
-		// 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
-		// 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
-		// 					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
-		// 					varsmap.VarMappingImageBuilderLabelKey:             varsmap.VarMappingImageBuilderLabelDefaultValue,
-		// 					varsmap.VarMappingImageFromNameKey:                 varsmap.VarMappingImageFromNameDefaultValue,
-		// 					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
-		// 					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingImageFromRegistryHostKey:         varsmap.VarMappingImageFromRegistryHostDefaultValue,
-		// 					varsmap.VarMappingImageNameKey:                     varsmap.VarMappingImageNameDefaultValue,
-		// 					varsmap.VarMappingImageTagKey:                      varsmap.VarMappingImageTagDefaultValue,
-		// 					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
-		// 					varsmap.VarMappingPushImagetKey:                    varsmap.VarMappingPushImagetDefaultValue,
-		// 				},
-		// 			},
-		// 			context: ctx,
-		// 			err:     nil,
-		// 			res: &ansible.AnsiblePlaybookCmd{
-		// 				Playbooks: []string{"playbook"},
-		// 				Exec: execute.NewDefaultExecute(
-		// 					execute.WithWrite(cons),
-		// 					execute.WithTransformers(
-		// 						results.Prepend("imageName"),
-		// 					),
-		// 				),
-		// 				Options: &ansible.AnsiblePlaybookOptions{
-		// 					Inventory: "inventory",
-		// 					ExtraVars: map[string]interface{}{
-		// 						"image_name":               "imageName",
-		// 						"image_registry_namespace": "namespace",
-		// 						"var1":                     "value1",
-		// 						"var2":                     "value2",
-		// 						"push_image":               false,
-		// 						"image_builder_label":      "builder_namespace_imageName",
-		// 					},
-		// 				},
-		// 				ConnectionOptions: &options.AnsibleConnectionOptions{},
-		// 			},
-		// 		},
-		// 		{
-		// 			desc: "Testing a build with ansible local connection",
-		// 			options: &types.BuildOptions{
-		// 				ImageName:         "imageName",
-		// 				RegistryNamespace: "namespace",
-		// 				Vars: map[string]interface{}{
-		// 					"var1": "value1",
-		// 					"var2": "value2",
-		// 				},
-		// 				ConnectionLocal: true,
-		// 				BuilderOptions: map[string]interface{}{
-		// 					"playbook":  "playbook",
-		// 					"inventory": "inventory",
-		// 				},
-		// 				BuilderVarMappings: map[string]string{
-		// 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
-		// 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
-		// 					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
-		// 					varsmap.VarMappingImageBuilderLabelKey:             varsmap.VarMappingImageBuilderLabelDefaultValue,
-		// 					varsmap.VarMappingImageFromNameKey:                 varsmap.VarMappingImageFromNameDefaultValue,
-		// 					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
-		// 					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingImageFromRegistryHostKey:         varsmap.VarMappingImageFromRegistryHostDefaultValue,
-		// 					varsmap.VarMappingImageNameKey:                     varsmap.VarMappingImageNameDefaultValue,
-		// 					varsmap.VarMappingImageTagKey:                      varsmap.VarMappingImageTagDefaultValue,
-		// 					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
-		// 					varsmap.VarMappingPushImagetKey:                    varsmap.VarMappingPushImagetDefaultValue,
-		// 				},
-		// 				PushImages: true,
-		// 			},
-		// 			context: ctx,
-		// 			err:     nil,
-		// 			res: &ansible.AnsiblePlaybookCmd{
-		// 				Playbooks: []string{"playbook"},
-		// 				Exec: execute.NewDefaultExecute(
-		// 					execute.WithWrite(cons),
-		// 					execute.WithTransformers(
-		// 						results.Prepend("imageName"),
-		// 					),
-		// 				),
-		// 				Options: &ansible.AnsiblePlaybookOptions{
-		// 					Inventory: "inventory",
-		// 					ExtraVars: map[string]interface{}{
-		// 						"image_name":               "imageName",
-		// 						"image_registry_namespace": "namespace",
-		// 						"var1":                     "value1",
-		// 						"var2":                     "value2",
-		// 						"image_builder_label":      "builder_namespace_imageName",
-		// 					},
-		// 				},
-		// 				ConnectionOptions: &options.AnsibleConnectionOptions{
-		// 					Connection: "local",
-		// 				},
-		// 			},
-		// 		},
-		// 		{
-		// 			desc: "Testing a build image giving image from specs",
-		// 			options: &types.BuildOptions{
-		// 				ImageName:         "imageName",
-		// 				RegistryNamespace: "namespace",
-		// 				Vars: map[string]interface{}{
-		// 					"var1": "value1",
-		// 					"var2": "value2",
-		// 				},
-		// 				BuilderOptions: map[string]interface{}{
-		// 					"playbook":  "playbook",
-		// 					"inventory": "inventory",
-		// 				},
-		// 				BuilderVarMappings: map[string]string{
-		// 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
-		// 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
-		// 					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
-		// 					varsmap.VarMappingImageBuilderLabelKey:             varsmap.VarMappingImageBuilderLabelDefaultValue,
-		// 					varsmap.VarMappingImageFromNameKey:                 varsmap.VarMappingImageFromNameDefaultValue,
-		// 					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
-		// 					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingImageFromRegistryHostKey:         varsmap.VarMappingImageFromRegistryHostDefaultValue,
-		// 					varsmap.VarMappingImageNameKey:                     varsmap.VarMappingImageNameDefaultValue,
-		// 					varsmap.VarMappingImageTagKey:                      varsmap.VarMappingImageTagDefaultValue,
-		// 					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
-		// 					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
-		// 					varsmap.VarMappingPushImagetKey:                    varsmap.VarMappingPushImagetDefaultValue,
-		// 				},
-		// 				ImageFromName:              "parent",
-		// 				ImageFromRegistryNamespace: "parentNamespace",
-		// 				ImageFromRegistryHost:      "parentRegistry",
-		// 				ImageFromVersion:           "parentVersion",
-		// 				PushImages:                 true,
-		// 			},
-		// 			context: ctx,
-		// 			err:     nil,
-		// 			res: &ansible.AnsiblePlaybookCmd{
-		// 				Playbooks: []string{"playbook"},
-		// 				Exec: execute.NewDefaultExecute(
-		// 					execute.WithWrite(cons),
-		// 					execute.WithTransformers(
-		// 						results.Prepend("imageName"),
-		// 					),
-		// 				),
-		// 				Options: &ansible.AnsiblePlaybookOptions{
-		// 					Inventory: "inventory",
-		// 					ExtraVars: map[string]interface{}{
-		// 						"image_name":                    "imageName",
-		// 						"image_registry_namespace":      "namespace",
-		// 						"var1":                          "value1",
-		// 						"var2":                          "value2",
-		// 						"image_from_name":               "parent",
-		// 						"image_from_registry_namespace": "parentNamespace",
-		// 						"image_from_registry_host":      "parentRegistry",
-		// 						"image_from_tag":                "parentVersion",
-		// 						"image_builder_label":           "builder_namespace_imageName",
-		// 					},
-		// 				},
-		// 				ConnectionOptions: &options.AnsibleConnectionOptions{},
-		// 			},
-		// 		},
+				ansibleOptions := &ansible.AnsiblePlaybookOptions{
+					Inventory: "inventory.yml",
+					ExtraVars: map[string]interface{}{
+						"image_builder_label":      "builder_namespace_image_name_version",
+						"image_name":               "image_name",
+						"image_registry_host":      "registry",
+						"image_registry_namespace": "namespace",
+						"image_tag":                "version",
+						"var1":                     "persistent_value1",
+						"var2":                     "persistent_value2",
+						"push_image":               false,
+					},
+				}
+				ansibleConnectionOptions := &options.AnsibleConnectionOptions{
+					Connection: "local",
+				}
+
+				driver.(*goansible.MockAnsibleDriver).On("WithPlaybook", "site.yml")
+				driver.(*goansible.MockAnsibleDriver).On("WithOptions", ansibleOptions)
+				driver.(*goansible.MockAnsibleDriver).On("WithConnectionOptions", ansibleConnectionOptions)
+				driver.(*goansible.MockAnsibleDriver).On("PrepareExecutor", os.Stdout, "image_name:version")
+				driver.(*goansible.MockAnsibleDriver).On("Run", context.TODO()).Return(nil)
+			},
+			assertFunc: func(driver Ansibler) bool {
+				return driver.(*goansible.MockAnsibleDriver).AssertNumberOfCalls(t, "WithPlaybook", 1) &&
+					driver.(*goansible.MockAnsibleDriver).AssertNumberOfCalls(t, "WithOptions", 1) &&
+					driver.(*goansible.MockAnsibleDriver).AssertNumberOfCalls(t, "WithConnectionOptions", 1) &&
+					driver.(*goansible.MockAnsibleDriver).AssertNumberOfCalls(t, "PrepareExecutor", 1) &&
+					driver.(*goansible.MockAnsibleDriver).AssertNumberOfCalls(t, "Run", 1)
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -747,17 +378,6 @@ func TestBuild(t *testing.T) {
 			} else {
 				assert.True(t, test.assertFunc(test.driver.driver))
 			}
-
-			// 			builderer, err := NewAnsiblePlaybookDriver(test.context, test.options)
-			// 			if err != nil && assert.Error(t, err) {
-			// 				assert.Equal(t, test.err, err)
-			// 			} else {
-			// 				assert.Equal(t, test.res.Playbooks, builderer.(*ansible.AnsiblePlaybookCmd).Playbooks, "Unexpected Playbook")
-			// 				assert.Equal(t, test.res.Options, builderer.(*ansible.AnsiblePlaybookCmd).Options, "Unexpected Options")
-			// 				assert.Equal(t, test.res.ConnectionOptions, builderer.(*ansible.AnsiblePlaybookCmd).ConnectionOptions, "Unexpected ConnectionOptions")
-			// 				assert.Equal(t, test.res.PrivilegeEscalationOptions, builderer.(*ansible.AnsiblePlaybookCmd).PrivilegeEscalationOptions, "Unexpected PrivilegeEscalationOptions")
-			// 				assert.Equal(t, test.res.StdoutCallback, builderer.(*ansible.AnsiblePlaybookCmd).StdoutCallback, "Unexpected StdoutCallback")
-			// 			}
 		})
 	}
 

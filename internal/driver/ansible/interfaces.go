@@ -8,6 +8,7 @@ import (
 	ansible "github.com/apenella/go-ansible/pkg/playbook"
 )
 
+// Ansibler is an interface that describes the methods that must implement any objects for building images from ansible
 type Ansibler interface {
 	WithPlaybook(playbook string)
 	WithOptions(opts *ansible.AnsiblePlaybookOptions)

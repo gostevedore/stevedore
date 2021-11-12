@@ -14,16 +14,21 @@ import (
 )
 
 const (
-	DriverName                     = "ansible-playbook"
-	BuilderConfOptionsPlaybookKey  = "playbook"
+	// DriverName is the name for the driver
+	DriverName = "ansible-playbook"
+	// BuilderConfOptionsPlaybookKey string that defines the playbook on builder options defintions
+	BuilderConfOptionsPlaybookKey = "playbook"
+	// BuilderConfOptionsInventoryKey string that defines the invetory on builder options defintions
 	BuilderConfOptionsInventoryKey = "inventory"
 )
 
+// AnsiblePlaybookDriver drives the build through ansible
 type AnsiblePlaybookDriver struct {
 	driver Ansibler
 	writer io.Writer
 }
 
+// NewAnsiblePlaybookDriver returns an AnsiblePlaybookDriver. In case driver is null, it returns an error
 func NewAnsiblePlaybookDriver(driver Ansibler, writer io.Writer) (*AnsiblePlaybookDriver, error) {
 
 	errContext := "(ansibledriver::NewAnsiblePlaybookDriver)"
@@ -42,6 +47,7 @@ func NewAnsiblePlaybookDriver(driver Ansibler, writer io.Writer) (*AnsiblePlaybo
 	}, nil
 }
 
+// Build performs the build. In case the build could not performed it returns an error
 func (d *AnsiblePlaybookDriver) Build(ctx context.Context, o *types.BuildOptions) error {
 
 	builderName := "builder"
