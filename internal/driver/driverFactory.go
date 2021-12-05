@@ -35,7 +35,7 @@ func (f DriverFactory) Register(id string, driver Driverer) error {
 
 	_, exist := f[id]
 	if exist {
-		return errors.New(errContext, fmt.Sprintf("Factory '%s' already registered", id))
+		return errors.New(errContext, fmt.Sprintf("Driver '%s' already registered", id))
 	}
 
 	f[id] = driver

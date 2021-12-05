@@ -24,17 +24,17 @@ const (
 
 // AnsiblePlaybookDriver drives the build through ansible
 type AnsiblePlaybookDriver struct {
-	driver Ansibler
+	driver AnsibleDriverer
 	writer io.Writer
 }
 
 // NewAnsiblePlaybookDriver returns an AnsiblePlaybookDriver. In case driver is null, it returns an error
-func NewAnsiblePlaybookDriver(driver Ansibler, writer io.Writer) (*AnsiblePlaybookDriver, error) {
+func NewAnsiblePlaybookDriver(driver AnsibleDriverer, writer io.Writer) (*AnsiblePlaybookDriver, error) {
 
 	errContext := "(ansibledriver::NewAnsiblePlaybookDriver)"
 
 	if driver == nil {
-		return nil, errors.New(errContext, "To create an AnsiblePlaybookDriver is expected a driver")
+		return nil, errors.New(errContext, "To create an AnsiblePlaybookDriver is required a driver")
 	}
 
 	if writer == nil {
@@ -54,15 +54,15 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, o *types.BuildOptions
 	errContext := "(ansibledriver::Build)"
 
 	if d.driver == nil {
-		return errors.New(errContext, "Build driver is missing")
+		return errors.New(errContext, "To build an image is required a driver")
 	}
 
 	if o == nil {
-		return errors.New(errContext, "Build options are nil")
+		return errors.New(errContext, "To build an image is required a build options")
 	}
 
 	if ctx == nil {
-		return errors.New(errContext, "Context is nil")
+		return errors.New(errContext, "To build an image is required a golang context")
 	}
 
 	builderConfOptions := o.BuilderOptions
@@ -170,18 +170,6 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, o *types.BuildOptions
 	d.driver.WithOptions(ansiblePlaybookOptions)
 	d.driver.WithConnectionOptions(ansiblePlaybookConnectionOptions)
 	d.driver.PrepareExecutor(d.writer, o.OutputPrefix)
-
-	// ansiblePlaybook := &ansible.AnsiblePlaybookCmd{
-	// 	Playbooks:         []string{playbook.(string)},
-	// 	Options:           ansiblePlaybookOptions,
-	// 	ConnectionOptions: ansiblePlaybookConnectionOptions,
-	// 	Exec: execute.NewDefaultExecute(
-	// 		execute.WithWrite(console.GetConsole()),
-	// 		execute.WithTransformers(
-	// 			results.Prepend(o.OutputPrefix),
-	// 		),
-	// 	),
-	// }
 
 	err := d.driver.Run(ctx)
 	if err != nil {

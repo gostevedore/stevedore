@@ -15,13 +15,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTestNewAnsiblePlaybookDriver(t *testing.T) {
+func TestNewAnsiblePlaybookDriver(t *testing.T) {
 
 	errContext := "(ansibledriver::NewAnsiblePlaybookDriver)"
 
 	tests := []struct {
 		desc   string
-		driver Ansibler
+		driver AnsibleDriverer
 		writer io.Writer
 		res    *AnsiblePlaybookDriver
 		err    error
@@ -30,7 +30,7 @@ func TestTestNewAnsiblePlaybookDriver(t *testing.T) {
 			desc:   "Testing error creating an ansible-playbook driver with nil driver",
 			driver: nil,
 			writer: nil,
-			err:    errors.New(errContext, "To create an AnsiblePlaybookDriver is expected a driver"),
+			err:    errors.New(errContext, "To create an AnsiblePlaybookDriver is required a driver"),
 		},
 		{
 			desc:   "Testing create and ansible-playbook driver",
@@ -62,13 +62,6 @@ func TestTestNewAnsiblePlaybookDriver(t *testing.T) {
 
 func TestBuild(t *testing.T) {
 
-	// 	var w bytes.Buffer
-	// 	ctx := context.TODO()
-
-	// 	cons := &console.Console{
-	// 		Writer: io.Writer(&w),
-	// 	}
-
 	errContext := "(ansibledriver::Build)"
 
 	tests := []struct {
@@ -76,8 +69,8 @@ func TestBuild(t *testing.T) {
 		driver            *AnsiblePlaybookDriver
 		options           *types.BuildOptions
 		err               error
-		prepareAssertFunc func(driver Ansibler)
-		assertFunc        func(driver Ansibler) bool
+		prepareAssertFunc func(driver AnsibleDriverer)
+		assertFunc        func(driver AnsibleDriverer) bool
 	}{
 		{
 			desc: "Testing error building an image build with nil driver",
@@ -85,7 +78,7 @@ func TestBuild(t *testing.T) {
 				driver: nil,
 			},
 			options: nil,
-			err:     errors.New(errContext, "Build driver is missing"),
+			err:     errors.New(errContext, "To build an image is required a driver"),
 		},
 		{
 			desc: "Testing error building an image with nil options",
@@ -94,7 +87,7 @@ func TestBuild(t *testing.T) {
 				writer: nil,
 			},
 			options: nil,
-			err:     errors.New(errContext, "Build options are nil"),
+			err:     errors.New(errContext, "To build an image is required a build options"),
 		},
 		{
 			desc: "Testing error building without a playbook defined on builder options",
@@ -165,7 +158,7 @@ func TestBuild(t *testing.T) {
 					varsmap.VarMappingPushImagetKey:                    varsmap.VarMappingPushImagetDefaultValue,
 				},
 			},
-			prepareAssertFunc: func(driver Ansibler) {
+			prepareAssertFunc: func(driver AnsibleDriverer) {
 
 				ansibleOptions := &ansible.AnsiblePlaybookOptions{
 					Inventory: "inventory.yml",
@@ -188,7 +181,7 @@ func TestBuild(t *testing.T) {
 				driver.(*goansible.MockAnsibleDriver).On("PrepareExecutor", os.Stdout, "image_name:version")
 				driver.(*goansible.MockAnsibleDriver).On("Run", context.TODO()).Return(nil)
 			},
-			assertFunc: func(driver Ansibler) bool {
+			assertFunc: func(driver AnsibleDriverer) bool {
 				return driver.(*goansible.MockAnsibleDriver).AssertNumberOfCalls(t, "WithPlaybook", 1) &&
 					driver.(*goansible.MockAnsibleDriver).AssertNumberOfCalls(t, "WithOptions", 1) &&
 					driver.(*goansible.MockAnsibleDriver).AssertNumberOfCalls(t, "WithConnectionOptions", 1) &&
@@ -248,7 +241,7 @@ func TestBuild(t *testing.T) {
 					varsmap.VarMappingPushImagetKey:                    varsmap.VarMappingPushImagetDefaultValue,
 				},
 			},
-			prepareAssertFunc: func(driver Ansibler) {
+			prepareAssertFunc: func(driver AnsibleDriverer) {
 
 				ansibleOptions := &ansible.AnsiblePlaybookOptions{
 					Inventory: "inventory.yml",
@@ -280,7 +273,7 @@ func TestBuild(t *testing.T) {
 				driver.(*goansible.MockAnsibleDriver).On("PrepareExecutor", os.Stdout, "prefix")
 				driver.(*goansible.MockAnsibleDriver).On("Run", context.TODO()).Return(nil)
 			},
-			assertFunc: func(driver Ansibler) bool {
+			assertFunc: func(driver AnsibleDriverer) bool {
 				return driver.(*goansible.MockAnsibleDriver).AssertNumberOfCalls(t, "WithPlaybook", 1) &&
 					driver.(*goansible.MockAnsibleDriver).AssertNumberOfCalls(t, "WithOptions", 1) &&
 					driver.(*goansible.MockAnsibleDriver).AssertNumberOfCalls(t, "WithConnectionOptions", 1) &&
@@ -329,7 +322,7 @@ func TestBuild(t *testing.T) {
 					varsmap.VarMappingPushImagetKey:                    varsmap.VarMappingPushImagetDefaultValue,
 				},
 			},
-			prepareAssertFunc: func(driver Ansibler) {
+			prepareAssertFunc: func(driver AnsibleDriverer) {
 
 				ansibleOptions := &ansible.AnsiblePlaybookOptions{
 					Inventory: "inventory.yml",
@@ -354,7 +347,7 @@ func TestBuild(t *testing.T) {
 				driver.(*goansible.MockAnsibleDriver).On("PrepareExecutor", os.Stdout, "image_name:version")
 				driver.(*goansible.MockAnsibleDriver).On("Run", context.TODO()).Return(nil)
 			},
-			assertFunc: func(driver Ansibler) bool {
+			assertFunc: func(driver AnsibleDriverer) bool {
 				return driver.(*goansible.MockAnsibleDriver).AssertNumberOfCalls(t, "WithPlaybook", 1) &&
 					driver.(*goansible.MockAnsibleDriver).AssertNumberOfCalls(t, "WithOptions", 1) &&
 					driver.(*goansible.MockAnsibleDriver).AssertNumberOfCalls(t, "WithConnectionOptions", 1) &&

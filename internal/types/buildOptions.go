@@ -48,4 +48,15 @@ type BuildOptions struct {
 	Tags []string `yaml:"tags"`
 	// Vars is a variables list to be sent to driver
 	Vars map[string]interface{} `yaml:"variables"`
+
+	// Transitorial pending to move buildOptions to driver package
+
+	// PullAuthUsername
+	PullAuthUsername string
+	// PullAuthPassword
+	PullAuthPassword string
+	// PushAuthUsername
+	PushAuthUsername string
+	// PushAuthPassword
+	PushAuthPassword string
 }

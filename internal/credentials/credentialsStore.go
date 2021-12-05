@@ -11,13 +11,13 @@ import (
 )
 
 type CredentialsStore struct {
-	store map[string]*RegistryUserPassAuth
+	Store map[string]*RegistryUserPassAuth
 	//	backend afero.Fs
 }
 
 func NewCredentialsStore() *CredentialsStore {
 	return &CredentialsStore{
-		store: make(map[string]*RegistryUserPassAuth),
+		Store: make(map[string]*RegistryUserPassAuth),
 	}
 }
 
@@ -30,8 +30,8 @@ func (s *CredentialsStore) LoadCredentials(dir string) error {
 		return errors.New(errContext, "Unable to load credentials because store is not initialized")
 	}
 
-	if s.store == nil {
-		s.store = make(map[string]*RegistryUserPassAuth)
+	if s.Store == nil {
+		s.Store = make(map[string]*RegistryUserPassAuth)
 	}
 
 	_, err = os.Stat(dir)
@@ -66,16 +66,16 @@ func (s *CredentialsStore) AddCredentials(id string, auth *RegistryUserPassAuth)
 		return errors.New(errContext, "Unable to add new credential because store is not initialized")
 	}
 
-	if s.store == nil {
-		s.store = make(map[string]*RegistryUserPassAuth)
+	if s.Store == nil {
+		s.Store = make(map[string]*RegistryUserPassAuth)
 	}
 
-	_, exists := s.store[id]
+	_, exists := s.Store[id]
 	if exists {
 		return errors.New(errContext, fmt.Sprintf("Auth method with id '%s' already exist", id))
 	}
 
-	s.store[id] = auth
+	s.Store[id] = auth
 
 	return nil
 }
@@ -89,13 +89,13 @@ func (s *CredentialsStore) GetCredentials(registry string) (*RegistryUserPassAut
 		return nil, errors.New(errContext, "Unable to get credential because credentials store is not initialized")
 	}
 
-	if s.store == nil {
+	if s.Store == nil {
 		return nil, errors.New(errContext, "Unable to get credential because store is not initialized")
 	}
 
 	hashedRegisty := hashRegistryName(registry)
 
-	credential, exists := s.store[hashedRegisty]
+	credential, exists := s.Store[hashedRegisty]
 	if !exists {
 		return nil, errors.New(errContext, fmt.Sprintf("No credential found for '%s'", registry))
 	}
