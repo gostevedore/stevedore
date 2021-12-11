@@ -22,6 +22,7 @@ func TestNew(t *testing.T) {
 		VarMappingImageExtraTagsKey:                VarMappingImageExtraTagsDefaultValue,
 		VarMappingRegistryNamespaceKey:             VarMappingRegistryNamespaceDefaultValue,
 		VarMappingRegistryHostKey:                  VarMappingRegistryHostDefaultValue,
+		VarMappingPullParentImageKey:               VarMappingPullParentImageDefaultValue,
 		VarMappingPushImagetKey:                    VarMappingPushImagetDefaultValue,
 	}
 
@@ -46,6 +47,7 @@ func TestGetUnderlyingMap(t *testing.T) {
 		VarMappingImageExtraTagsKey:                VarMappingImageExtraTagsDefaultValue,
 		VarMappingRegistryNamespaceKey:             VarMappingRegistryNamespaceDefaultValue,
 		VarMappingRegistryHostKey:                  VarMappingRegistryHostDefaultValue,
+		VarMappingPullParentImageKey:               VarMappingPullParentImageDefaultValue,
 		VarMappingPushImagetKey:                    VarMappingPushImagetDefaultValue,
 	}
 
@@ -73,6 +75,7 @@ func TestSetUnderlyingMap(t *testing.T) {
 		VarMappingImageExtraTagsKey:                "expectedVarMappingImageExtraTagsDefaultValue",
 		VarMappingRegistryNamespaceKey:             "expectedVarMappingRegistryNamespaceDefaultValue",
 		VarMappingRegistryHostKey:                  "expectedVarMappingRegistryHostDefaultValue",
+		VarMappingPullParentImageKey:               "expectedVarMappingPullParentImageDefaultValue",
 		VarMappingPushImagetKey:                    "expectedVarMappingPushImagetDefaultValue",
 	}
 	expected := Varsmap{
@@ -90,6 +93,7 @@ func TestSetUnderlyingMap(t *testing.T) {
 		VarMappingImageExtraTagsKey:                "expectedVarMappingImageExtraTagsDefaultValue",
 		VarMappingRegistryNamespaceKey:             "expectedVarMappingRegistryNamespaceDefaultValue",
 		VarMappingRegistryHostKey:                  "expectedVarMappingRegistryHostDefaultValue",
+		VarMappingPullParentImageKey:               "expectedVarMappingPullParentImageDefaultValue",
 		VarMappingPushImagetKey:                    "expectedVarMappingPushImagetDefaultValue",
 	}
 
@@ -119,6 +123,7 @@ func TestCombine(t *testing.T) {
 		VarMappingImageExtraTagsKey:                VarMappingImageExtraTagsDefaultValue,
 		VarMappingRegistryNamespaceKey:             VarMappingRegistryNamespaceDefaultValue,
 		VarMappingRegistryHostKey:                  VarMappingRegistryHostDefaultValue,
+		VarMappingPullParentImageKey:               VarMappingPullParentImageDefaultValue,
 		VarMappingPushImagetKey:                    VarMappingPushImagetDefaultValue,
 	}
 

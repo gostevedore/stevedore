@@ -19,6 +19,7 @@ const (
 	VarMappingImageExtraTagsKey                = "image_extra_tags_key"
 	VarMappingRegistryNamespaceKey             = "image_registry_namespace_key"
 	VarMappingRegistryHostKey                  = "image_registry_host_key"
+	VarMappingPullParentImageKey               = "pull_parent_image_key"
 	VarMappingPushImagetKey                    = "push_image_key"
 
 	VarMappingImageBuilderNameDefaultValue              = "image_builder_name"               // Not comming from build's command flag
@@ -35,9 +36,11 @@ const (
 	VarMappingImageExtraTagsDefaultValue                = "image_extra_tags"
 	VarMappingRegistryNamespaceDefaultValue             = "image_registry_namespace"
 	VarMappingRegistryHostDefaultValue                  = "image_registry_host"
+	VarMappingPullParentImageDefaultValue               = "pull_parent_image"
 	VarMappingPushImagetDefaultValue                    = "push_image"
 )
 
+// Varsmap is a map[string]string that defines the variables names passed from builder to build drivers
 type Varsmap map[string]string
 
 // New return a Varsmap object
@@ -57,6 +60,7 @@ func New() Varsmap {
 		VarMappingImageExtraTagsKey:                VarMappingImageExtraTagsDefaultValue,
 		VarMappingRegistryNamespaceKey:             VarMappingRegistryNamespaceDefaultValue,
 		VarMappingRegistryHostKey:                  VarMappingRegistryHostDefaultValue,
+		VarMappingPullParentImageKey:               VarMappingPullParentImageDefaultValue,
 		VarMappingPushImagetKey:                    VarMappingPushImagetDefaultValue,
 	}
 }
@@ -187,6 +191,14 @@ func (v Varsmap) Combine(c Varsmap) error {
 		_, existsC = auxC[VarMappingRegistryHostKey]
 		if existsC {
 			auxV[VarMappingRegistryHostKey] = auxC[VarMappingRegistryHostKey]
+		}
+	}
+
+	_, existsV = auxV[VarMappingPullParentImageKey]
+	if !existsV {
+		_, existsC = auxC[VarMappingPullParentImageKey]
+		if existsC {
+			auxV[VarMappingPullParentImageKey] = auxC[VarMappingPullParentImageKey]
 		}
 	}
 
