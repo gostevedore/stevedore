@@ -2,9 +2,9 @@ package dockerdriver
 
 import (
 	"context"
+	"io"
 
 	"github.com/apenella/go-docker-builder/pkg/build/context/filesystem"
-	"github.com/apenella/go-docker-builder/pkg/types"
 	buildcontext "github.com/gostevedore/stevedore/internal/driver/docker/context"
 )
 
@@ -20,17 +20,18 @@ type DockerBuildContextFactorier interface {
 
 // DockerDriverer defines a docker driver
 type DockerDriverer interface {
-	WithDockerfile(dockerfile string)
-	WithImageName(image string)
+	WithDockerfile(string)
+	WithImageName(string)
+	WithPullParentImage()
 	WithPushAfterBuild()
-	WithResponse(response types.Responser)
+	WithResponse(io.Writer, string)
 	WithUseNormalizedNamed()
 	WithRemoveAfterPush()
-	AddAuth(username string, password string, registry string) error
-	AddPushAuth(username string, password string) error
-	AddBuildArgs(arg string, value string) error
-	AddBuildContext(context ...*buildcontext.DockerBuildContextOptions) error
-	AddLabel(label string, value string) error
-	AddTags(tags ...string) error
-	Run(ctx context.Context) error
+	AddAuth(string, string, string) error
+	AddPushAuth(string, string) error
+	AddBuildArgs(string, string) error
+	AddBuildContext(...*buildcontext.DockerBuildContextOptions) error
+	AddLabel(string, string) error
+	AddTags(...string) error
+	Run(context.Context) error
 }

@@ -2,76 +2,91 @@ package godockerbuilder
 
 import (
 	"context"
+	"io"
 
 	errors "github.com/apenella/go-common-utils/error"
+	transformer "github.com/apenella/go-common-utils/transformer/string"
 	"github.com/apenella/go-docker-builder/pkg/build"
 	godockerbuilderbuildcontext "github.com/apenella/go-docker-builder/pkg/build/context"
-	"github.com/apenella/go-docker-builder/pkg/types"
+	"github.com/apenella/go-docker-builder/pkg/response"
 	contextoptions "github.com/gostevedore/stevedore/internal/driver/docker/context"
 	buildcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context"
 )
 
-// GoDockerDriver is a driver for building docker images
-type GoDockerDriver struct {
+// GoDockerBuildDriver is a driver for building docker images
+type GoDockerBuildDriver struct {
 	docker         DockerBuilder
 	contextFactory *buildcontext.DockerBuildContextFactory
 }
 
-// NewGoDockerDriver creates a new GoDockerDriver
-func NewGoDockerDriver(contextFactory *buildcontext.DockerBuildContextFactory) *GoDockerDriver {
-	return &GoDockerDriver{
+// NewGoDockerBuildDriver creates a new GoDockerBuildDriver
+func NewGoDockerBuildDriver(contextFactory *buildcontext.DockerBuildContextFactory) *GoDockerBuildDriver {
+	return &GoDockerBuildDriver{
 		docker:         &build.DockerBuildCmd{},
 		contextFactory: contextFactory,
 	}
 }
 
 // WithDockerfile sets dockerfile to use
-func (d *GoDockerDriver) WithDockerfile(dockerfile string) {
+func (d *GoDockerBuildDriver) WithDockerfile(dockerfile string) {
 	d.docker = d.docker.WithDockerfile(dockerfile)
 }
 
 // WithImageName sets the image name
-func (d *GoDockerDriver) WithImageName(image string) {
+func (d *GoDockerBuildDriver) WithImageName(image string) {
 	d.docker = d.docker.WithImageName(image)
 }
 
-// WitPushAfterBuild sets if the image should be pushed after build
-func (d *GoDockerDriver) WithPushAfterBuild() {
+// WithPullParentImage sets if the image should be pushed after build
+func (d *GoDockerBuildDriver) WithPullParentImage() {
+	d.docker = d.docker.WithPullParentImage()
+}
+
+// WithPushAfterBuild sets if the image should be pushed after build
+func (d *GoDockerBuildDriver) WithPushAfterBuild() {
 	d.docker = d.docker.WithPushAfterBuild()
 }
 
-// WithResponse sets responser to manage the response
-func (d *GoDockerDriver) WithResponse(response types.Responser) {
-	d.docker = d.docker.WithResponse(response)
-}
-
 // WithUseNormalizedNamed sets if image name should be normalized
-func (d *GoDockerDriver) WithUseNormalizedNamed() {
+func (d *GoDockerBuildDriver) WithUseNormalizedNamed() {
 	d.docker = d.docker.WithUseNormalizedNamed()
 }
 
 // WithRemoveAfterPush sets if the image should be removed after push
-func (d *GoDockerDriver) WithRemoveAfterPush() {
+func (d *GoDockerBuildDriver) WithRemoveAfterPush() {
 	d.docker = d.docker.WithRemoveAfterPush()
 }
 
+// WithResponse sets the responser to use
+func (d *GoDockerBuildDriver) WithResponse(w io.Writer, prefix string) {
+
+	res := response.NewDefaultResponse(
+		response.WithTransformers(
+			transformer.Prepend(prefix),
+		),
+		response.WithWriter(w),
+	)
+
+	d.docker = d.docker.WithResponse(res)
+}
+
 // AddAuth defines the authentication to use for an specific registry
-func (d *GoDockerDriver) AddAuth(username string, password string, registry string) error {
+func (d *GoDockerBuildDriver) AddAuth(username string, password string, registry string) error {
 	return d.docker.AddAuth(username, password, registry)
 }
 
 // AddPushAuth defines the authentication to use for an specific registry
-func (d *GoDockerDriver) AddPushAuth(username string, password string) error {
+func (d *GoDockerBuildDriver) AddPushAuth(username string, password string) error {
 	return d.docker.AddPushAuth(username, password)
 }
 
 // AddBuildArgs append new build args
-func (d *GoDockerDriver) AddBuildArgs(arg string, value string) error {
+func (d *GoDockerBuildDriver) AddBuildArgs(arg string, value string) error {
 	return d.docker.AddBuildArgs(arg, value)
 }
 
 // AddBuildContext sets those docker build contexts required to build an image. It supports to use several context which are merged before to start the image build
-func (d *GoDockerDriver) AddBuildContext(options ...*contextoptions.DockerBuildContextOptions) error {
+func (d *GoDockerBuildDriver) AddBuildContext(options ...*contextoptions.DockerBuildContextOptions) error {
 
 	errContext := "(godockerbuilder::AddBuildContext)"
 
@@ -97,16 +112,16 @@ func (d *GoDockerDriver) AddBuildContext(options ...*contextoptions.DockerBuildC
 }
 
 // AddLabel adds a label to the image
-func (d *GoDockerDriver) AddLabel(label string, value string) error {
+func (d *GoDockerBuildDriver) AddLabel(label string, value string) error {
 	return d.docker.AddLabel(label, value)
 }
 
 // AddTags adds tags to the image
-func (d *GoDockerDriver) AddTags(tags ...string) error {
+func (d *GoDockerBuildDriver) AddTags(tags ...string) error {
 	return d.docker.AddTags(tags...)
 }
 
 // Run starts the build
-func (d *GoDockerDriver) Run(ctx context.Context) error {
+func (d *GoDockerBuildDriver) Run(ctx context.Context) error {
 	return d.docker.Run(ctx)
 }

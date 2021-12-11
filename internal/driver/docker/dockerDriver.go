@@ -8,9 +8,9 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/build/varsmap"
+	"github.com/gostevedore/stevedore/internal/driver"
 	buildcontext "github.com/gostevedore/stevedore/internal/driver/docker/context"
 	"github.com/gostevedore/stevedore/internal/image"
-	"github.com/gostevedore/stevedore/internal/types"
 	"gopkg.in/yaml.v2"
 )
 
@@ -51,7 +51,7 @@ func NewDockerDriver(driver DockerDriverer, writer io.Writer) (*DockerDriver, er
 }
 
 // Build performs the build. In case the build could not performed it returns an error
-func (d *DockerDriver) Build(ctx context.Context, options *types.BuildOptions) error {
+func (d *DockerDriver) Build(ctx context.Context, options *driver.BuildDriverOptions) error {
 
 	var err error
 	//var dockerBuildContext dockercontext.DockerBuildContexter
@@ -74,12 +74,6 @@ func (d *DockerDriver) Build(ctx context.Context, options *types.BuildOptions) e
 	if options.ImageName == "" {
 		return errors.New(errContext, "To build an image is required an image name")
 	}
-
-	// TBD:
-	// WithResponse
-	// WithUseNormalizedNamed
-	// WithRemoveAfterPush
-	// AddLabel
 
 	imageNameURL := &image.ImageURL{
 		Name: options.ImageName,
@@ -149,6 +143,12 @@ func (d *DockerDriver) Build(ctx context.Context, options *types.BuildOptions) e
 		}
 	}
 
+	if len(options.Labels) > 0 {
+		for label, value := range options.Labels {
+			d.driver.AddLabel(label, value)
+		}
+	}
+
 	// add docker build arguments
 	if options.ImageFromRegistryNamespace != "" {
 		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromRegistryNamespaceKey], options.ImageFromRegistryNamespace)
@@ -183,6 +183,10 @@ func (d *DockerDriver) Build(ctx context.Context, options *types.BuildOptions) e
 		}
 	}
 
+	if options.PullParentImage {
+		d.driver.WithPullParentImage()
+	}
+
 	builderConfOptionsRaw, exists := builderConfOptions[builderConfOptionsContextKey]
 
 	if !exists {
@@ -214,6 +218,14 @@ func (d *DockerDriver) Build(ctx context.Context, options *types.BuildOptions) e
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
+
+	responseOutputPrefix := options.OutputPrefix
+	if responseOutputPrefix == "" {
+		responseOutputPrefix = imageName
+	}
+
+	d.driver.WithResponse(d.writer, responseOutputPrefix)
+	d.driver.WithUseNormalizedNamed()
 
 	err = d.driver.Run(ctx)
 	if err != nil {

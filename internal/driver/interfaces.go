@@ -2,7 +2,8 @@ package driver
 
 import "context"
 
-// Driverer
-type Driverer interface {
-	Run(context.Context) error
+// BuildDriverer
+type BuildDriverer interface {
+	//Run(context.Context) error
+	Build(context.Context, BuildDriverOptions) error
 }

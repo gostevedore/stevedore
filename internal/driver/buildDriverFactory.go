@@ -6,20 +6,17 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 )
 
-// DriverFactory type define functions that provides a Driverer
-// type DriverFactory func(ctx context.Context, o *types.BuildOptions) (Driverer, error)
+// BuildDriverFactory type define a map of BuildDriverer
+type BuildDriverFactory map[string]BuildDriverer
 
-type DriverFactory map[string]Driverer
-
-// //  driverFactories maps each driver to its builder factory
-// var driverFactories map[string]DriverFactory
-
-func NewDriverFactory() DriverFactory {
-	return make(DriverFactory)
+// NewBuildDriverFactory returns a new BuildDriverFactory
+func NewBuildDriverFactory() BuildDriverFactory {
+	return make(BuildDriverFactory)
 }
 
-func (f DriverFactory) GetDriverer(id string) (Driverer, error) {
-	errContext := "(DriverFactory::GetDriver)"
+// Get returns a BuildDriverer
+func (f BuildDriverFactory) Get(id string) (BuildDriverer, error) {
+	errContext := "(BuildDriverFactory::Get)"
 
 	driver, exist := f[id]
 	if !exist {
@@ -29,9 +26,10 @@ func (f DriverFactory) GetDriverer(id string) (Driverer, error) {
 	return driver, nil
 }
 
-func (f DriverFactory) Register(id string, driver Driverer) error {
+// Register registers a BuildDriverer
+func (f BuildDriverFactory) Register(id string, driver BuildDriverer) error {
 
-	errContext := "(DriverFactory::Register)"
+	errContext := "(BuildDriverFactory::Register)"
 
 	_, exist := f[id]
 	if exist {
@@ -42,6 +40,12 @@ func (f DriverFactory) Register(id string, driver Driverer) error {
 
 	return nil
 }
+
+// DriverFactory type define functions that provides a Driverer
+// type DriverFactory func(ctx context.Context, o *types.BuildOptions) (Driverer, error)
+
+// //  driverFactories maps each driver to its builder factory
+// var driverFactories map[string]DriverFactory
 
 // InitFactories initizalize the driverFactories data structure mapping each driver to its builder factory
 // func InitFactories() error {

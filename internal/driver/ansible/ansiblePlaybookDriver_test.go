@@ -10,8 +10,8 @@ import (
 	ansible "github.com/apenella/go-ansible/pkg/playbook"
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/build/varsmap"
+	"github.com/gostevedore/stevedore/internal/driver"
 	"github.com/gostevedore/stevedore/internal/driver/ansible/goansible"
-	"github.com/gostevedore/stevedore/internal/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -67,7 +67,7 @@ func TestBuild(t *testing.T) {
 	tests := []struct {
 		desc              string
 		driver            *AnsiblePlaybookDriver
-		options           *types.BuildOptions
+		options           *driver.BuildDriverOptions
 		err               error
 		prepareAssertFunc func(driver AnsibleDriverer)
 		assertFunc        func(driver AnsibleDriverer) bool
@@ -95,7 +95,7 @@ func TestBuild(t *testing.T) {
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: nil,
 			},
-			options: &types.BuildOptions{},
+			options: &driver.BuildDriverOptions{},
 			err:     errors.New(errContext, "Playbook has not been defined on build options"),
 		},
 		{
@@ -104,7 +104,7 @@ func TestBuild(t *testing.T) {
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: nil,
 			},
-			options: &types.BuildOptions{
+			options: &driver.BuildDriverOptions{
 				BuilderOptions: map[string]interface{}{
 					"playbook": "site.yml",
 				},
@@ -117,7 +117,7 @@ func TestBuild(t *testing.T) {
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: nil,
 			},
-			options: &types.BuildOptions{
+			options: &driver.BuildDriverOptions{
 				BuilderOptions: map[string]interface{}{
 					"playbook":  "site.yml",
 					"inventory": "inventory.yml",
@@ -131,7 +131,7 @@ func TestBuild(t *testing.T) {
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: os.Stdout,
 			},
-			options: &types.BuildOptions{
+			options: &driver.BuildDriverOptions{
 				BuilderOptions: map[string]interface{}{
 					"playbook":  "site.yml",
 					"inventory": "inventory.yml",
@@ -195,7 +195,7 @@ func TestBuild(t *testing.T) {
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: os.Stdout,
 			},
-			options: &types.BuildOptions{
+			options: &driver.BuildDriverOptions{
 				BuilderOptions: map[string]interface{}{
 					"playbook":  "site.yml",
 					"inventory": "inventory.yml",
@@ -287,7 +287,7 @@ func TestBuild(t *testing.T) {
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: os.Stdout,
 			},
-			options: &types.BuildOptions{
+			options: &driver.BuildDriverOptions{
 				BuilderOptions: map[string]interface{}{
 					"playbook":  "site.yml",
 					"inventory": "inventory.yml",

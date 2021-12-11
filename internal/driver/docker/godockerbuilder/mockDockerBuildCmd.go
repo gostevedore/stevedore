@@ -26,6 +26,12 @@ func (d *MockDockerBuildCmd) WithImageName(image string) *build.DockerBuildCmd {
 	return &build.DockerBuildCmd{}
 }
 
+// WithPullParentImage is a mock for WithPullParentImage "github.com/apenella/go-docker-builder/pkg/build"
+func (d *MockDockerBuildCmd) WithPullParentImage() *build.DockerBuildCmd {
+	d.Called()
+	return &build.DockerBuildCmd{}
+}
+
 // WithPushAfterBuild is a mock for WithPushAfterBuild "github.com/apenella/go-docker-builder/pkg/build"
 func (d *MockDockerBuildCmd) WithPushAfterBuild() *build.DockerBuildCmd {
 	d.Called()

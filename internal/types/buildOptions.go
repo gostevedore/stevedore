@@ -59,4 +59,9 @@ type BuildOptions struct {
 	PushAuthUsername string
 	// PushAuthPassword
 	PushAuthPassword string
+
+	// RemoveAfterBuild flag indicate whether to remove the image after build
+	RemoveAfterBuild bool
+	// Lables is a list of labels to add to the image
+	Labels map[string]string
 }

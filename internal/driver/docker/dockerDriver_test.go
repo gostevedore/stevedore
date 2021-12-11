@@ -8,9 +8,9 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/build/varsmap"
+	"github.com/gostevedore/stevedore/internal/driver"
 	buildcontext "github.com/gostevedore/stevedore/internal/driver/docker/context"
 	"github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder"
-	"github.com/gostevedore/stevedore/internal/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,11 +32,11 @@ func TestNewDockerDriver(t *testing.T) {
 		},
 		{
 			desc:   "Testing create a docker driver",
-			driver: godockerbuilder.NewMockDockerDriver(),
+			driver: godockerbuilder.NewMockGoDockerBuildDriver(),
 			writer: nil,
 			err:    &errors.Error{},
 			res: &DockerDriver{
-				driver: godockerbuilder.NewMockDockerDriver(),
+				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
 				writer: os.Stdout,
 			},
 		},
@@ -66,7 +66,7 @@ func TestBuild(t *testing.T) {
 		desc              string
 		driver            *DockerDriver
 		ctx               context.Context
-		options           *types.BuildOptions
+		options           *driver.BuildDriverOptions
 		prepareAssertFunc func(DockerDriverer)
 		assertFunc        func(DockerDriverer) bool
 		err               error
@@ -81,34 +81,35 @@ func TestBuild(t *testing.T) {
 		{
 			desc: "Testing error building a docker image with nil options",
 			driver: &DockerDriver{
-				driver: godockerbuilder.NewMockDockerDriver(),
+				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
 			},
 			err: errors.New(errContext, "To build an image is required a build options"),
 		},
 		{
 			desc: "Testing error building a docker image with nil golang context",
 			driver: &DockerDriver{
-				driver: godockerbuilder.NewMockDockerDriver(),
+				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
 			},
-			options: &types.BuildOptions{},
+			options: &driver.BuildDriverOptions{},
 			err:     errors.New(errContext, "To build an image is required a golang context"),
 		},
 		{
 			desc: "Testing error building a docker image with not defined image name",
 			driver: &DockerDriver{
-				driver: godockerbuilder.NewMockDockerDriver(),
+				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
 			},
 			ctx:     context.TODO(),
-			options: &types.BuildOptions{},
+			options: &driver.BuildDriverOptions{},
 			err:     errors.New(errContext, "To build an image is required an image name"),
 		},
 		{
 			desc: "Testing building a docker image",
 			driver: &DockerDriver{
-				driver: godockerbuilder.NewMockDockerDriver(),
+				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
+				writer: os.Stdout,
 			},
 			ctx: context.TODO(),
-			options: &types.BuildOptions{
+			options: &driver.BuildDriverOptions{
 				ImageName:                  "image",
 				ImageVersion:               "version",
 				RegistryNamespace:          "namespace",
@@ -118,6 +119,8 @@ func TestBuild(t *testing.T) {
 				ImageFromRegistryNamespace: "image-from-registry-namespace",
 				ImageFromRegistryHost:      "image-from-registry-host.test",
 				PushImages:                 true,
+				PullParentImage:            true,
+				OutputPrefix:               "output-prefix",
 				BuilderVarMappings: map[string]string{
 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
@@ -140,6 +143,7 @@ func TestBuild(t *testing.T) {
 					"var1": "value1",
 				},
 				Tags:             []string{"tag1", "tag2"},
+				Labels:           map[string]string{"label1": "value1", "label2": "value2"},
 				PullAuthUsername: "pull-user",
 				PullAuthPassword: "pull-pass",
 				PushAuthUsername: "push-user",
@@ -160,25 +164,29 @@ func TestBuild(t *testing.T) {
 				},
 			},
 			prepareAssertFunc: func(driver DockerDriverer) {
-				driver.(*godockerbuilder.MockDockerDriver).On("WithImageName", "myregistry.test/namespace/image:version")
-				driver.(*godockerbuilder.MockDockerDriver).On("WithDockerfile", "Dockerfile.test")
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "pvar1", "pvalue1").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "pvar2", "pvalue2").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "var1", "value1").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddTags", []string{"myregistry.test/namespace/image:tag1"}).Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddTags", []string{"myregistry.test/namespace/image:tag2"}).Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithImageName", "myregistry.test/namespace/image:version")
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithDockerfile", "Dockerfile.test")
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "pvar1", "pvalue1").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "pvar2", "pvalue2").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "var1", "value1").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddTags", []string{"myregistry.test/namespace/image:tag1"}).Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddTags", []string{"myregistry.test/namespace/image:tag2"}).Return(nil)
 
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "image_from_registry_namespace", "image-from-registry-namespace").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "image_from_name", "image-from-name").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "image_from_tag", "image-from-version").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "image_from_registry_host", "image-from-registry-host.test").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddLabel", "label1", "value1").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddLabel", "label2", "value2").Return(nil)
 
-				driver.(*godockerbuilder.MockDockerDriver).On("AddAuth", "pull-user", "pull-pass", "image-from-registry-host.test").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddAuth", "push-user", "push-pass", "myregistry.test").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddPushAuth", "push-user", "push-pass").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("WithPushAfterBuild")
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_registry_namespace", "image-from-registry-namespace").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_name", "image-from-name").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_tag", "image-from-version").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_registry_host", "image-from-registry-host.test").Return(nil)
 
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildContext", []*buildcontext.DockerBuildContextOptions{
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddAuth", "pull-user", "pull-pass", "image-from-registry-host.test").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddAuth", "push-user", "push-pass", "myregistry.test").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddPushAuth", "push-user", "push-pass").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithPushAfterBuild")
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithPullParentImage")
+
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildContext", []*buildcontext.DockerBuildContextOptions{
 					{Path: "/path/to/file"},
 					{Path: "/path/to/file2"},
 					{
@@ -193,11 +201,14 @@ func TestBuild(t *testing.T) {
 						},
 					},
 				}).Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithResponse", os.Stdout, "output-prefix")
 
-				driver.(*godockerbuilder.MockDockerDriver).On("Run", context.TODO()).Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithUseNormalizedNamed")
+
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("Run", context.TODO()).Return(nil)
 			},
 			assertFunc: func(driver DockerDriverer) bool {
-				return driver.(*godockerbuilder.MockDockerDriver).AssertExpectations(t)
+				return driver.(*godockerbuilder.MockGoDockerBuildDriver).AssertExpectations(t)
 			},
 			err: &errors.Error{},
 		},
@@ -205,10 +216,10 @@ func TestBuild(t *testing.T) {
 		{
 			desc: "Testing error context not defined on build options",
 			driver: &DockerDriver{
-				driver: godockerbuilder.NewMockDockerDriver(),
+				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
 			},
 			ctx: context.TODO(),
-			options: &types.BuildOptions{
+			options: &driver.BuildDriverOptions{
 				ImageName:                  "image",
 				ImageVersion:               "version",
 				RegistryNamespace:          "namespace",
@@ -249,33 +260,33 @@ func TestBuild(t *testing.T) {
 				},
 			},
 			prepareAssertFunc: func(driver DockerDriverer) {
-				driver.(*godockerbuilder.MockDockerDriver).On("WithImageName", "myregistry.test/namespace/image:version")
-				driver.(*godockerbuilder.MockDockerDriver).On("WithDockerfile", "Dockerfile.test")
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "pvar1", "pvalue1").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "pvar2", "pvalue2").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "var1", "value1").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddTags", []string{"myregistry.test/namespace/image:tag1"}).Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddTags", []string{"myregistry.test/namespace/image:tag2"}).Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithImageName", "myregistry.test/namespace/image:version")
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithDockerfile", "Dockerfile.test")
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "pvar1", "pvalue1").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "pvar2", "pvalue2").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "var1", "value1").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddTags", []string{"myregistry.test/namespace/image:tag1"}).Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddTags", []string{"myregistry.test/namespace/image:tag2"}).Return(nil)
 
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "image_from_registry_namespace", "image-from-registry-namespace").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "image_from_name", "image-from-name").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "image_from_tag", "image-from-version").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "image_from_registry_host", "image-from-registry-host.test").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_registry_namespace", "image-from-registry-namespace").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_name", "image-from-name").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_tag", "image-from-version").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_registry_host", "image-from-registry-host.test").Return(nil)
 
-				driver.(*godockerbuilder.MockDockerDriver).On("AddAuth", "pull-user", "pull-pass", "image-from-registry-host.test").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddAuth", "push-user", "push-pass", "myregistry.test").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddPushAuth", "push-user", "push-pass").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("WithPushAfterBuild")
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddAuth", "pull-user", "pull-pass", "image-from-registry-host.test").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddAuth", "push-user", "push-pass", "myregistry.test").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddPushAuth", "push-user", "push-pass").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithPushAfterBuild")
 			},
 			err: errors.New(errContext, "Docker building context has not been defined on build options"),
 		},
 		{
 			desc: "Testing error when there is not found any docker build context definition",
 			driver: &DockerDriver{
-				driver: godockerbuilder.NewMockDockerDriver(),
+				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
 			},
 			ctx: context.TODO(),
-			options: &types.BuildOptions{
+			options: &driver.BuildDriverOptions{
 				ImageName:                  "image",
 				ImageVersion:               "version",
 				RegistryNamespace:          "namespace",
@@ -325,23 +336,23 @@ git:
 				},
 			},
 			prepareAssertFunc: func(driver DockerDriverer) {
-				driver.(*godockerbuilder.MockDockerDriver).On("WithImageName", "myregistry.test/namespace/image:version")
-				driver.(*godockerbuilder.MockDockerDriver).On("WithDockerfile", "Dockerfile.test")
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "pvar1", "pvalue1").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "pvar2", "pvalue2").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "var1", "value1").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddTags", []string{"myregistry.test/namespace/image:tag1"}).Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddTags", []string{"myregistry.test/namespace/image:tag2"}).Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithImageName", "myregistry.test/namespace/image:version")
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithDockerfile", "Dockerfile.test")
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "pvar1", "pvalue1").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "pvar2", "pvalue2").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "var1", "value1").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddTags", []string{"myregistry.test/namespace/image:tag1"}).Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddTags", []string{"myregistry.test/namespace/image:tag2"}).Return(nil)
 
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "image_from_registry_namespace", "image-from-registry-namespace").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "image_from_name", "image-from-name").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "image_from_tag", "image-from-version").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddBuildArgs", "image_from_registry_host", "image-from-registry-host.test").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_registry_namespace", "image-from-registry-namespace").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_name", "image-from-name").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_tag", "image-from-version").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_registry_host", "image-from-registry-host.test").Return(nil)
 
-				driver.(*godockerbuilder.MockDockerDriver).On("AddAuth", "pull-user", "pull-pass", "image-from-registry-host.test").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddAuth", "push-user", "push-pass", "myregistry.test").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("AddPushAuth", "push-user", "push-pass").Return(nil)
-				driver.(*godockerbuilder.MockDockerDriver).On("WithPushAfterBuild")
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddAuth", "pull-user", "pull-pass", "image-from-registry-host.test").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddAuth", "push-user", "push-pass", "myregistry.test").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddPushAuth", "push-user", "push-pass").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithPushAfterBuild")
 			},
 			err: errors.New(errContext, "There is no docker build context definition found on:\ncontext:\ngit:\n  repository: repo\n  reference: main\n  path: path\n  auth:\n    username: user\n    password: pass\n"),
 		},
@@ -381,7 +392,7 @@ git:
 
 // 	tests := []struct {
 // 		desc    string
-// 		options *types.BuildOptions
+// 		options *driver.BuildDriverOptions
 // 		context context.Context
 // 		err     error
 // 		res     *dockerbuild.DockerBuildCmd
@@ -395,7 +406,7 @@ git:
 // 		},
 // 		{
 // 			desc: "Testing new dockerBuilder with a nil context",
-// 			options: &types.BuildOptions{
+// 			options: &driver.BuildDriverOptions{
 // 				BuilderOptions: map[string]interface{}{},
 // 			},
 // 			context: nil,
@@ -404,14 +415,14 @@ git:
 // 		},
 // 		{
 // 			desc:    "Testing new dockerBuilder with a non image name provided",
-// 			options: &types.BuildOptions{},
+// 			options: &driver.BuildDriverOptions{},
 // 			context: ctx,
 // 			err:     errors.New("(build::NewDockerDriver)", "Image name is not set"),
 // 			res:     nil,
 // 		},
 // 		{
 // 			desc: "Testing options without a docker building context defined",
-// 			options: &types.BuildOptions{
+// 			options: &driver.BuildDriverOptions{
 // 				ImageName:      "ubuntu",
 // 				BuilderOptions: map[string]interface{}{},
 // 			},
@@ -421,7 +432,7 @@ git:
 // 		},
 // 		{
 // 			desc: "Testing run docker builder",
-// 			options: &types.BuildOptions{
+// 			options: &driver.BuildDriverOptions{
 // 				BuilderOptions: map[string]interface{}{
 // 					"context": map[string]string{
 // 						"path": "test/ubuntu",
@@ -462,7 +473,7 @@ git:
 // 		},
 // 		{
 // 			desc: "Testing run docker builder with dockerfile defined in builder options",
-// 			options: &types.BuildOptions{
+// 			options: &driver.BuildDriverOptions{
 // 				BuilderOptions: map[string]interface{}{
 // 					"context": map[string]string{
 // 						"path": "test/ubuntu",
@@ -503,7 +514,7 @@ git:
 // 		},
 // 		{
 // 			desc: "Testing run docker builder with dockerfile defined in builder options and build options",
-// 			options: &types.BuildOptions{
+// 			options: &driver.BuildDriverOptions{
 // 				BuilderOptions: map[string]interface{}{
 // 					"context": map[string]string{
 // 						"path": "test/ubuntu",
@@ -546,7 +557,7 @@ git:
 
 // 		{
 // 			desc: "Testing run docker builder with dockerfile defined in builder options and build options with image from details",
-// 			options: &types.BuildOptions{
+// 			options: &driver.BuildDriverOptions{
 // 				BuilderOptions: map[string]interface{}{
 // 					"context": map[string]string{
 // 						"path": "test/ubuntu",
@@ -613,7 +624,7 @@ git:
 
 // 		{
 // 			desc: "Testing run docker builder with push images as false",
-// 			options: &types.BuildOptions{
+// 			options: &driver.BuildDriverOptions{
 // 				BuilderOptions: map[string]interface{}{
 // 					"context": map[string]string{
 // 						"path": "test/ubuntu",

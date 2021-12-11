@@ -16,7 +16,7 @@ func TestAddBuildContext(t *testing.T) {
 	errContext := "(godockerbuilder::AddBuildContext)"
 	tests := []struct {
 		desc              string
-		driver            *GoDockerDriver
+		driver            *GoDockerBuildDriver
 		options           []*contextoptions.DockerBuildContextOptions
 		prepareAssertFunc func(DockerBuilder)
 		assertFunc        func(DockerBuilder) bool
@@ -24,7 +24,7 @@ func TestAddBuildContext(t *testing.T) {
 	}{
 		{
 			desc: "Testing error when no options are passed to the method",
-			driver: &GoDockerDriver{
+			driver: &GoDockerBuildDriver{
 				docker:         &MockDockerBuildCmd{},
 				contextFactory: nil,
 			},
@@ -35,7 +35,7 @@ func TestAddBuildContext(t *testing.T) {
 		},
 		{
 			desc: "Testing error when options are nil",
-			driver: &GoDockerDriver{
+			driver: &GoDockerBuildDriver{
 				docker:         &MockDockerBuildCmd{},
 				contextFactory: nil,
 			},
@@ -46,7 +46,7 @@ func TestAddBuildContext(t *testing.T) {
 		},
 		{
 			desc: "Testing add Docker build context",
-			driver: &GoDockerDriver{
+			driver: &GoDockerBuildDriver{
 				docker:         &MockDockerBuildCmd{},
 				contextFactory: &dockerbuildcontext.DockerBuildContextFactory{},
 			},
