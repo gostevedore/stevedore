@@ -16,10 +16,6 @@ import (
 const (
 	// DriverName is the name for the driver
 	DriverName = "ansible-playbook"
-	// BuilderConfOptionsPlaybookKey string that defines the playbook on builder options defintions
-	BuilderConfOptionsPlaybookKey = "playbook"
-	// BuilderConfOptionsInventoryKey string that defines the invetory on builder options defintions
-	BuilderConfOptionsInventoryKey = "inventory"
 )
 
 // AnsiblePlaybookDriver drives the build through ansible
@@ -102,8 +98,6 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, o *driver.BuildDriver
 	builderName = strings.Join([]string{builderName, o.ImageName}, "_")
 
 	if o.ImageVersion != "" {
-		// Removed: stevedore does not sanitize image version
-		// o.ImageVersion = common.SanitizeTag(o.ImageVersion)
 		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageTagKey], o.ImageVersion)
 		builderName = strings.Join([]string{builderName, o.ImageVersion}, "_")
 	}
@@ -132,12 +126,6 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, o *driver.BuildDriver
 	}
 
 	if len(o.Tags) > 0 {
-		// Removed: stevedore does not sanitize image version
-		// sanitizedTags := []string{}
-		// for _, tag := range o.Tags {
-		// 	tag = drivercommon.SanitizeTag(tag)
-		// 	sanitizedTags = append(sanitizedTags, tag)
-		// }
 		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], o.Tags)
 	}
 
