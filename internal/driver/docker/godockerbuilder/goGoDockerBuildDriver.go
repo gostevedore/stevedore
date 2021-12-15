@@ -9,7 +9,7 @@ import (
 	"github.com/apenella/go-docker-builder/pkg/build"
 	godockerbuilderbuildcontext "github.com/apenella/go-docker-builder/pkg/build/context"
 	"github.com/apenella/go-docker-builder/pkg/response"
-	contextoptions "github.com/gostevedore/stevedore/internal/driver/docker/context"
+	"github.com/gostevedore/stevedore/internal/builders/builder"
 	buildcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context"
 )
 
@@ -86,7 +86,7 @@ func (d *GoDockerBuildDriver) AddBuildArgs(arg string, value string) error {
 }
 
 // AddBuildContext sets those docker build contexts required to build an image. It supports to use several context which are merged before to start the image build
-func (d *GoDockerBuildDriver) AddBuildContext(options ...*contextoptions.DockerBuildContextOptions) error {
+func (d *GoDockerBuildDriver) AddBuildContext(options ...*builder.DockerDriverContextOptions) error {
 
 	errContext := "(godockerbuilder::AddBuildContext)"
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	buildcontext "github.com/gostevedore/stevedore/internal/driver/docker/context"
+	"github.com/gostevedore/stevedore/internal/builders/builder"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -72,7 +72,7 @@ func (d *MockGoDockerBuildDriver) AddBuildArgs(arg string, value string) error {
 }
 
 // AddBuildContext is a mocked method
-func (d *MockGoDockerBuildDriver) AddBuildContext(context ...*buildcontext.DockerBuildContextOptions) error {
+func (d *MockGoDockerBuildDriver) AddBuildContext(context ...*builder.DockerDriverContextOptions) error {
 	args := d.Mock.Called(context)
 	return args.Error(0)
 }

@@ -5,7 +5,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	gitcontextbasicauth "github.com/apenella/go-docker-builder/pkg/auth/git/basic"
-	buildcontext "github.com/gostevedore/stevedore/internal/driver/docker/context"
+	"github.com/gostevedore/stevedore/internal/builders/builder"
 	gitcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/git"
 	gitauth "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/git/auth"
 	pathcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/path"
@@ -29,7 +29,7 @@ func TestGenerateDockerBuildContext(t *testing.T) {
 
 	tests := []struct {
 		desc    string
-		options *buildcontext.DockerBuildContextOptions
+		options *builder.DockerDriverContextOptions
 		factory *DockerBuildContextFactory
 		context DockerBuildContexter
 		err     error
@@ -43,7 +43,7 @@ func TestGenerateDockerBuildContext(t *testing.T) {
 		},
 		{
 			desc: "Testing to generate a docker build context from path",
-			options: &buildcontext.DockerBuildContextOptions{
+			options: &builder.DockerDriverContextOptions{
 				Path: "context_path",
 			},
 			factory: &DockerBuildContextFactory{},
@@ -52,12 +52,12 @@ func TestGenerateDockerBuildContext(t *testing.T) {
 		},
 		{
 			desc: "Testing error when git auth generator is not defined",
-			options: &buildcontext.DockerBuildContextOptions{
-				Git: &buildcontext.GitContextOptions{
+			options: &builder.DockerDriverContextOptions{
+				Git: &builder.DockerDriverGitContextOptions{
 					Repository: "repository",
 					Reference:  "main",
 					Path:       "docker-context",
-					Auth: &buildcontext.GitContextAuthOptions{
+					Auth: &builder.DockerDriverGitContextAuthOptions{
 						Username: "user",
 						Password: "password",
 					},
@@ -69,12 +69,12 @@ func TestGenerateDockerBuildContext(t *testing.T) {
 		},
 		{
 			desc: "Testing to generate a docker build context from git repository",
-			options: &buildcontext.DockerBuildContextOptions{
-				Git: &buildcontext.GitContextOptions{
+			options: &builder.DockerDriverContextOptions{
+				Git: &builder.DockerDriverGitContextOptions{
 					Repository: "repository",
 					Reference:  "main",
 					Path:       "docker-context",
-					Auth: &buildcontext.GitContextAuthOptions{
+					Auth: &builder.DockerDriverGitContextAuthOptions{
 						Username: "user",
 						Password: "password",
 					},
@@ -88,8 +88,8 @@ func TestGenerateDockerBuildContext(t *testing.T) {
 		},
 		{
 			desc: "Testing error generating docker build context from git repository without specifing a repository",
-			options: &buildcontext.DockerBuildContextOptions{
-				Git: &buildcontext.GitContextOptions{
+			options: &builder.DockerDriverContextOptions{
+				Git: &builder.DockerDriverGitContextOptions{
 					Repository: "",
 				},
 			},
@@ -101,13 +101,13 @@ func TestGenerateDockerBuildContext(t *testing.T) {
 		},
 		{
 			desc: "Testing error creating docker build context git auth method",
-			options: &buildcontext.DockerBuildContextOptions{
-				Git: &buildcontext.GitContextOptions{
+			options: &builder.DockerDriverContextOptions{
+				Git: &builder.DockerDriverGitContextOptions{
 					Repository: "my-test-repository",
 					Reference:  "main",
 					Path:       "docker-context",
-					Auth: &buildcontext.GitContextAuthOptions{
-						CredentialsId: "id",
+					Auth: &builder.DockerDriverGitContextAuthOptions{
+						CredentialsID: "id",
 					},
 				},
 			},

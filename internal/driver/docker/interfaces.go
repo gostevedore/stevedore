@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"github.com/apenella/go-docker-builder/pkg/build/context/filesystem"
-	buildcontext "github.com/gostevedore/stevedore/internal/driver/docker/context"
+	"github.com/gostevedore/stevedore/internal/builders/builder"
 )
 
 // DockerBuildContexter defines a docker build context
@@ -30,7 +30,7 @@ type DockerDriverer interface {
 	AddAuth(string, string, string) error
 	AddPushAuth(string, string) error
 	AddBuildArgs(string, string) error
-	AddBuildContext(...*buildcontext.DockerBuildContextOptions) error
+	AddBuildContext(...*builder.DockerDriverContextOptions) error
 	AddLabel(string, string) error
 	AddTags(...string) error
 	Run(context.Context) error

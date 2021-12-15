@@ -7,8 +7,8 @@ import (
 	gitcontextbasicauth "github.com/apenella/go-docker-builder/pkg/auth/git/basic"
 	gitcontextkeyauth "github.com/apenella/go-docker-builder/pkg/auth/git/key"
 	gitcontextsshagentauth "github.com/apenella/go-docker-builder/pkg/auth/git/sshagent"
+	"github.com/gostevedore/stevedore/internal/builders/builder"
 	credentialsstore "github.com/gostevedore/stevedore/internal/credentials"
-	buildcontext "github.com/gostevedore/stevedore/internal/driver/docker/context"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,7 +16,7 @@ func TestGenerateAuthMethod(t *testing.T) {
 	errContext := "(GitAuthFactory::GenerateAuthMethod)"
 	tests := []struct {
 		desc    string
-		options *buildcontext.GitContextAuthOptions
+		options *builder.DockerDriverGitContextAuthOptions
 		factory *GitAuthFactory
 		res     GitAuther
 		err     error
@@ -30,7 +30,7 @@ func TestGenerateAuthMethod(t *testing.T) {
 		},
 		{
 			desc: "Testing generate basic auth authorization method",
-			options: &buildcontext.GitContextAuthOptions{
+			options: &builder.DockerDriverGitContextAuthOptions{
 				Username: "user",
 				Password: "pass",
 			},
@@ -43,7 +43,7 @@ func TestGenerateAuthMethod(t *testing.T) {
 		},
 		{
 			desc: "Testing generate private key auth authorization method",
-			options: &buildcontext.GitContextAuthOptions{
+			options: &builder.DockerDriverGitContextAuthOptions{
 				PrivateKeyFile:     "keyfile",
 				PrivateKeyPassword: "keypass",
 				GitSSHUser:         "user",
@@ -58,7 +58,7 @@ func TestGenerateAuthMethod(t *testing.T) {
 		},
 		{
 			desc: "Testing generate ssh-agent auth authorization method",
-			options: &buildcontext.GitContextAuthOptions{
+			options: &builder.DockerDriverGitContextAuthOptions{
 				GitSSHUser: "user",
 			},
 			factory: &GitAuthFactory{},
@@ -69,8 +69,8 @@ func TestGenerateAuthMethod(t *testing.T) {
 		},
 		{
 			desc: "Testing generate authorization method from credentials id",
-			options: &buildcontext.GitContextAuthOptions{
-				CredentialsId: "test-credentials",
+			options: &builder.DockerDriverGitContextAuthOptions{
+				CredentialsID: "test-credentials",
 			},
 			factory: &GitAuthFactory{
 				Credentials: &credentialsstore.CredentialsStore{
@@ -90,8 +90,8 @@ func TestGenerateAuthMethod(t *testing.T) {
 		},
 		{
 			desc: "Testing error when credentials store is nil and is passed a credentials id",
-			options: &buildcontext.GitContextAuthOptions{
-				CredentialsId: "test-credentials",
+			options: &builder.DockerDriverGitContextAuthOptions{
+				CredentialsID: "test-credentials",
 			},
 			factory: &GitAuthFactory{
 				Credentials: nil,

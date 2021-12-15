@@ -5,7 +5,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	godockerbuilderbuildcontext "github.com/apenella/go-docker-builder/pkg/build/context"
-	contextoptions "github.com/gostevedore/stevedore/internal/driver/docker/context"
+	"github.com/gostevedore/stevedore/internal/builders/builder"
 	dockerbuildcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context"
 	gitcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/git"
 	pathcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/path"
@@ -17,7 +17,7 @@ func TestAddBuildContext(t *testing.T) {
 	tests := []struct {
 		desc              string
 		driver            *GoDockerBuildDriver
-		options           []*contextoptions.DockerBuildContextOptions
+		options           []*builder.DockerDriverContextOptions
 		prepareAssertFunc func(DockerBuilder)
 		assertFunc        func(DockerBuilder) bool
 		err               error
@@ -39,7 +39,7 @@ func TestAddBuildContext(t *testing.T) {
 				docker:         &MockDockerBuildCmd{},
 				contextFactory: nil,
 			},
-			options:           []*contextoptions.DockerBuildContextOptions{},
+			options:           []*builder.DockerDriverContextOptions{},
 			prepareAssertFunc: nil,
 			assertFunc:        nil,
 			err:               errors.New(errContext, "No Docker build context is defined"),
@@ -50,12 +50,12 @@ func TestAddBuildContext(t *testing.T) {
 				docker:         &MockDockerBuildCmd{},
 				contextFactory: &dockerbuildcontext.DockerBuildContextFactory{},
 			},
-			options: []*contextoptions.DockerBuildContextOptions{
+			options: []*builder.DockerDriverContextOptions{
 				{
 					Path: "my-path",
 				},
 				{
-					Git: &contextoptions.GitContextOptions{
+					Git: &builder.DockerDriverGitContextOptions{
 						Repository: "my-repository",
 						Reference:  "main",
 					},

@@ -9,7 +9,7 @@ import (
 	"github.com/apenella/go-ansible/pkg/options"
 	ansible "github.com/apenella/go-ansible/pkg/playbook"
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/build/varsmap"
+	"github.com/gostevedore/stevedore/internal/builders/varsmap"
 	"github.com/gostevedore/stevedore/internal/driver"
 )
 
@@ -65,20 +65,22 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, o *driver.BuildDriver
 		return errors.New(errContext, "To build an image is required a golang context")
 	}
 
-	builderConfOptions := o.BuilderOptions
+	if o.BuilderOptions == nil {
+		return errors.New(errContext, "To build an image are required the options from the builder")
+	}
 
-	playbook, ok := builderConfOptions[BuilderConfOptionsPlaybookKey]
-	if !ok {
+	playbook := o.BuilderOptions.Playbook
+	if playbook == "" {
 		return errors.New(errContext, "Playbook has not been defined on build options")
 	}
 
-	inventory, ok := builderConfOptions[BuilderConfOptionsInventoryKey]
-	if !ok {
+	inventory := o.BuilderOptions.Inventory
+	if inventory == "" {
 		return errors.New(errContext, "Inventory has not been defined on build options")
 	}
 
 	ansiblePlaybookOptions := &ansible.AnsiblePlaybookOptions{
-		Inventory: inventory.(string),
+		Inventory: inventory,
 	}
 
 	ansiblePlaybookConnectionOptions := &options.AnsibleConnectionOptions{}
@@ -166,7 +168,7 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, o *driver.BuildDriver
 		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingPushImagetKey], false)
 	}
 
-	d.driver.WithPlaybook(playbook.(string))
+	d.driver.WithPlaybook(playbook)
 	d.driver.WithOptions(ansiblePlaybookOptions)
 	d.driver.WithConnectionOptions(ansiblePlaybookConnectionOptions)
 	d.driver.PrepareExecutor(d.writer, o.OutputPrefix)

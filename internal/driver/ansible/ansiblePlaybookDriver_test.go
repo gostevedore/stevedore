@@ -9,7 +9,8 @@ import (
 	"github.com/apenella/go-ansible/pkg/options"
 	ansible "github.com/apenella/go-ansible/pkg/playbook"
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/build/varsmap"
+	"github.com/gostevedore/stevedore/internal/builders/builder"
+	"github.com/gostevedore/stevedore/internal/builders/varsmap"
 	"github.com/gostevedore/stevedore/internal/driver"
 	"github.com/gostevedore/stevedore/internal/driver/ansible/goansible"
 	"github.com/stretchr/testify/assert"
@@ -90,13 +91,24 @@ func TestBuild(t *testing.T) {
 			err:     errors.New(errContext, "To build an image is required a build options"),
 		},
 		{
-			desc: "Testing error building without a playbook defined on builder options",
+			desc: "Testing error building without options from the builder",
 			driver: &AnsiblePlaybookDriver{
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: nil,
 			},
 			options: &driver.BuildDriverOptions{},
-			err:     errors.New(errContext, "Playbook has not been defined on build options"),
+			err:     errors.New(errContext, "To build an image are required the options from the builder"),
+		},
+		{
+			desc: "Testing error building without a playbook defined on builder options",
+			driver: &AnsiblePlaybookDriver{
+				driver: goansible.NewMockAnsibleDriver(),
+				writer: nil,
+			},
+			options: &driver.BuildDriverOptions{
+				BuilderOptions: &builder.BuilderOptions{},
+			},
+			err: errors.New(errContext, "Playbook has not been defined on build options"),
 		},
 		{
 			desc: "Testing error building an image with undefined image name",
@@ -105,8 +117,8 @@ func TestBuild(t *testing.T) {
 				writer: nil,
 			},
 			options: &driver.BuildDriverOptions{
-				BuilderOptions: map[string]interface{}{
-					"playbook": "site.yml",
+				BuilderOptions: &builder.BuilderOptions{
+					Playbook: "site.yml",
 				},
 			},
 			err: errors.New(errContext, "Inventory has not been defined on build options"),
@@ -118,9 +130,9 @@ func TestBuild(t *testing.T) {
 				writer: nil,
 			},
 			options: &driver.BuildDriverOptions{
-				BuilderOptions: map[string]interface{}{
-					"playbook":  "site.yml",
-					"inventory": "inventory.yml",
+				BuilderOptions: &builder.BuilderOptions{
+					Playbook:  "site.yml",
+					Inventory: "inventory.yml",
 				},
 			},
 			err: errors.New(errContext, "Image has not been defined on build options"),
@@ -132,9 +144,9 @@ func TestBuild(t *testing.T) {
 				writer: os.Stdout,
 			},
 			options: &driver.BuildDriverOptions{
-				BuilderOptions: map[string]interface{}{
-					"playbook":  "site.yml",
-					"inventory": "inventory.yml",
+				BuilderOptions: &builder.BuilderOptions{
+					Playbook:  "site.yml",
+					Inventory: "inventory.yml",
 				},
 				ImageName:         "image_name",
 				ImageVersion:      "version",
@@ -196,9 +208,9 @@ func TestBuild(t *testing.T) {
 				writer: os.Stdout,
 			},
 			options: &driver.BuildDriverOptions{
-				BuilderOptions: map[string]interface{}{
-					"playbook":  "site.yml",
-					"inventory": "inventory.yml",
+				BuilderOptions: &builder.BuilderOptions{
+					Playbook:  "site.yml",
+					Inventory: "inventory.yml",
 				},
 				BuilderName:                "builder",
 				ImageName:                  "image_name",
@@ -288,9 +300,9 @@ func TestBuild(t *testing.T) {
 				writer: os.Stdout,
 			},
 			options: &driver.BuildDriverOptions{
-				BuilderOptions: map[string]interface{}{
-					"playbook":  "site.yml",
-					"inventory": "inventory.yml",
+				BuilderOptions: &builder.BuilderOptions{
+					Playbook:  "site.yml",
+					Inventory: "inventory.yml",
 				},
 				ImageName:         "image_name",
 				ImageVersion:      "version",

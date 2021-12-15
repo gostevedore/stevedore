@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/build/varsmap"
+	"github.com/gostevedore/stevedore/internal/builders/builder"
+	"github.com/gostevedore/stevedore/internal/builders/varsmap"
 	"github.com/gostevedore/stevedore/internal/driver"
-	buildcontext "github.com/gostevedore/stevedore/internal/driver/docker/context"
 	"github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder"
 	"github.com/stretchr/testify/assert"
 )
@@ -148,19 +148,21 @@ func TestBuild(t *testing.T) {
 				PullAuthPassword: "pull-pass",
 				PushAuthUsername: "push-user",
 				PushAuthPassword: "push-pass",
-				BuilderOptions: map[string]interface{}{
-					builderConfOptionsDockerfileKey: "Dockerfile.test",
-					builderConfOptionsContextKey: `
-- path: "/path/to/file"
-- path: "/path/to/file2"
-- git:
-    repository: repo
-    reference: main
-    path: path
-    auth:
-      username: user
-      password: pass
-`,
+				BuilderOptions: &builder.BuilderOptions{
+					Dockerfile: "Dockerfile.test",
+					Context: []*builder.DockerDriverContextOptions{
+						{Path: "/path/to/file"},
+						{Path: "/path/to/file2"},
+						{Git: &builder.DockerDriverGitContextOptions{
+							Repository: "repo",
+							Reference:  "main",
+							Path:       "path",
+							Auth: &builder.DockerDriverGitContextAuthOptions{
+								Username: "user",
+								Password: "pass",
+							},
+						}},
+					},
 				},
 			},
 			prepareAssertFunc: func(driver DockerDriverer) {
@@ -186,15 +188,15 @@ func TestBuild(t *testing.T) {
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithPushAfterBuild")
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithPullParentImage")
 
-				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildContext", []*buildcontext.DockerBuildContextOptions{
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildContext", []*builder.DockerDriverContextOptions{
 					{Path: "/path/to/file"},
 					{Path: "/path/to/file2"},
 					{
-						Git: &buildcontext.GitContextOptions{
+						Git: &builder.DockerDriverGitContextOptions{
 							Repository: "repo",
 							Reference:  "main",
 							Path:       "path",
-							Auth: &buildcontext.GitContextAuthOptions{
+							Auth: &builder.DockerDriverGitContextAuthOptions{
 								Username: "user",
 								Password: "pass",
 							},
@@ -255,8 +257,8 @@ func TestBuild(t *testing.T) {
 				PullAuthPassword: "pull-pass",
 				PushAuthUsername: "push-user",
 				PushAuthPassword: "push-pass",
-				BuilderOptions: map[string]interface{}{
-					builderConfOptionsDockerfileKey: "Dockerfile.test",
+				BuilderOptions: &builder.BuilderOptions{
+					Dockerfile: "Dockerfile.test",
 				},
 			},
 			prepareAssertFunc: func(driver DockerDriverer) {
@@ -322,17 +324,9 @@ func TestBuild(t *testing.T) {
 				PullAuthPassword: "pull-pass",
 				PushAuthUsername: "push-user",
 				PushAuthPassword: "push-pass",
-				BuilderOptions: map[string]interface{}{
-					builderConfOptionsDockerfileKey: "Dockerfile.test",
-					builderConfOptionsContextKey: `
-git:
-  repository: repo
-  reference: main
-  path: path
-  auth:
-    username: user
-    password: pass
-`,
+				BuilderOptions: &builder.BuilderOptions{
+					Dockerfile: "Dockerfile.test",
+					Context:    []*builder.DockerDriverContextOptions{},
 				},
 			},
 			prepareAssertFunc: func(driver DockerDriverer) {
@@ -354,7 +348,7 @@ git:
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddPushAuth", "push-user", "push-pass").Return(nil)
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithPushAfterBuild")
 			},
-			err: errors.New(errContext, "There is no docker build context definition found on:\ncontext:\ngit:\n  repository: repo\n  reference: main\n  path: path\n  auth:\n    username: user\n    password: pass\n"),
+			err: errors.New(errContext, "Docker building context has not been defined on build options"),
 		},
 	}
 

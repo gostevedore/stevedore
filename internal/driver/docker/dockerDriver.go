@@ -2,16 +2,13 @@ package dockerdriver
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/build/varsmap"
+	"github.com/gostevedore/stevedore/internal/builders/varsmap"
 	"github.com/gostevedore/stevedore/internal/driver"
-	buildcontext "github.com/gostevedore/stevedore/internal/driver/docker/context"
 	"github.com/gostevedore/stevedore/internal/image"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -97,12 +94,12 @@ func (d *DockerDriver) Build(ctx context.Context, options *driver.BuildDriverOpt
 	}
 	d.driver.WithImageName(imageName)
 
+	// TO REMOVE
 	// add docker build context to cmd instance
-	builderConfOptions := options.BuilderOptions
+	// builderConfOptions := options.BuilderOptions
 
-	dockerfile, exists := builderConfOptions[builderConfOptionsDockerfileKey]
-	if exists {
-		d.driver.WithDockerfile(dockerfile.(string))
+	if options.BuilderOptions.Dockerfile != "" {
+		d.driver.WithDockerfile(options.BuilderOptions.Dockerfile)
 	}
 
 	// add docker build arguments: Persistent vars contains the variables defined by the user on execution time and has precedences over vars and the persistent vars defined on the image
@@ -187,34 +184,11 @@ func (d *DockerDriver) Build(ctx context.Context, options *driver.BuildDriverOpt
 		d.driver.WithPullParentImage()
 	}
 
-	builderConfOptionsRaw, exists := builderConfOptions[builderConfOptionsContextKey]
-
-	if !exists {
+	if options.BuilderOptions.Context == nil || len(options.BuilderOptions.Context) == 0 {
 		return errors.New(errContext, "Docker building context has not been defined on build options")
 	}
 
-	dockerBuildContextOptionsList := []*buildcontext.DockerBuildContextOptions{}
-
-	DockerBuildContextOptionsRawList := struct {
-		Context []*buildcontext.DockerBuildContextOptions
-	}{}
-
-	builderConfOptionsRaw = fmt.Sprintf("%s:%s", builderConfOptionsContextKey, builderConfOptionsRaw.(string))
-
-	err = yaml.Unmarshal([]byte(builderConfOptionsRaw.(string)), &DockerBuildContextOptionsRawList)
-	if err != nil {
-		return errors.New(errContext, fmt.Sprintf("Docker build context options are not properly configured\n found:\n%s\n", builderConfOptionsRaw.(string)), err)
-	}
-
-	if len(DockerBuildContextOptionsRawList.Context) == 0 {
-		return errors.New(errContext, fmt.Sprintf("There is no docker build context definition found on:\n%s", builderConfOptionsRaw.(string)))
-	}
-
-	for _, dockerBuildContextOptions := range DockerBuildContextOptionsRawList.Context {
-		dockerBuildContextOptionsList = append(dockerBuildContextOptionsList, dockerBuildContextOptions)
-	}
-
-	err = d.driver.AddBuildContext(dockerBuildContextOptionsList...)
+	err = d.driver.AddBuildContext(options.BuilderOptions.Context...)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}

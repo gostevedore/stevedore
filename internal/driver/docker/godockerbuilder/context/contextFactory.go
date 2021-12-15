@@ -2,7 +2,7 @@ package context
 
 import (
 	errors "github.com/apenella/go-common-utils/error"
-	buildcontext "github.com/gostevedore/stevedore/internal/driver/docker/context"
+	"github.com/gostevedore/stevedore/internal/builders/builder"
 	gitcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/git"
 	pathcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/path"
 )
@@ -20,7 +20,7 @@ func NewDockerBuildContextFactory(gitAuth GitAuthFactorier) *DockerBuildContextF
 }
 
 // GenerateDockerBuildContext returns the docker build context
-func (f *DockerBuildContextFactory) GenerateDockerBuildContext(options *buildcontext.DockerBuildContextOptions) (DockerBuildContexter, error) {
+func (f *DockerBuildContextFactory) GenerateDockerBuildContext(options *builder.DockerDriverContextOptions) (DockerBuildContexter, error) {
 
 	errContext := "(DockerBuildContextFactory::GenerateDockerBuildContext)"
 

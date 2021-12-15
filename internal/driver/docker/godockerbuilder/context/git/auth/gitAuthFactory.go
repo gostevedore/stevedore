@@ -5,7 +5,7 @@ import (
 	gitcontextbasicauth "github.com/apenella/go-docker-builder/pkg/auth/git/basic"
 	gitcontextkeyauth "github.com/apenella/go-docker-builder/pkg/auth/git/key"
 	gitcontextsshagentauth "github.com/apenella/go-docker-builder/pkg/auth/git/sshagent"
-	buildcontext "github.com/gostevedore/stevedore/internal/driver/docker/context"
+	"github.com/gostevedore/stevedore/internal/builders/builder"
 )
 
 // GitAuthFactory is a factory for creating GitAuther
@@ -21,7 +21,7 @@ func NewGitAuthFactory(credentials CredentialsStorer) *GitAuthFactory {
 }
 
 // GenerateAuthMethod returns a new auth method based on the given context
-func (f *GitAuthFactory) GenerateAuthMethod(options *buildcontext.GitContextAuthOptions) (GitAuther, error) {
+func (f *GitAuthFactory) GenerateAuthMethod(options *builder.DockerDriverGitContextAuthOptions) (GitAuther, error) {
 
 	errContext := "(GitAuthFactory::GenerateAuthMethod)"
 
@@ -29,12 +29,12 @@ func (f *GitAuthFactory) GenerateAuthMethod(options *buildcontext.GitContextAuth
 		return nil, errors.New(errContext, "Git context auth options is required to generate an an auth method")
 	}
 
-	if options.CredentialsId != "" {
+	if options.CredentialsID != "" {
 		if f.Credentials == nil {
 			return nil, errors.New(errContext, "Credentials store is expected when a credentials id is configured")
 		}
 
-		cred, err := f.Credentials.GetCredentials(options.CredentialsId)
+		cred, err := f.Credentials.GetCredentials(options.CredentialsID)
 		if err != nil {
 			return nil, errors.New(errContext, err.Error())
 		}
