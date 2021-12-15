@@ -190,30 +190,3 @@ func (b *Builders) LoadBuildersFromDir(path string) error {
 
 	return nil
 }
-
-// // ListBuilders
-// func (c *Builders) ListBuilders() ([][]string, error) {
-// 	builders := [][]string{}
-
-// 	for _, builder := range c.Builders {
-
-// 		b, err := builder.ToArray()
-// 		if err != nil {
-// 			return nil, errors.New("(images::ListBuilders)", "Builders could not be listed", err)
-// 		}
-// 		builders = append(builders, b)
-// 	}
-
-// 	return builders, nil
-// }
-
-// // ListBuildersHeader
-// func ListBuildersHeader() []string {
-// 	h := []string{
-// 		"BUILDER",
-// 		"DRIVER",
-// 		"OPTIONS",
-// 	}
-
-// 	return h
-// }
