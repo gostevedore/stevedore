@@ -10,7 +10,7 @@
 - Create a handler for promote cli subcommand
 - Create a logger object
 - `BuildDriverer` interface accepts `Build(context.Context,BuildDriverOptions) error`
-- On docker build driver, are accepted user/password and private key as auth method for git docker build context.
+- On docker build driver, are accepted user/password and private key as auth method for git docker build context
 
 ### Changed
 - Use go-ansible master version
@@ -20,5 +20,9 @@
 - Promote Cobra subcommand initializes all required repositories, services and handlers on its prerun function
 - [DEPRECATED] On promote subcommand, use `remove-local-images-after-push` instead of `remove-promote-tags`
 - Rename `Driverer` interface to `BuildDriverer`
-- refactor ansible-playbook build driver to allow testing
-- refactor docker build driver to allow testing
+- Refactor ansible-playbook build driver to allow testing
+- Refactor docker build driver to allow testing
+- **BREAKING-CHANGES** package `"github.com/gostevedore/stevedore/internal/build"` has been replaced by `"github.com/gostevedore/stevedore/internal/builders"`.
+- **BREAKING-CHANGES** package `"github.com/gostevedore/stevedore/internal/builders/builder"` has an strict definition of builder options
+- `BuilderOptions` accepts multiple context that are unified before perform an image build
+- Drivers receives `BuildDriverOptions` instead of `BuildOptions`
