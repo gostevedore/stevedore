@@ -15,7 +15,7 @@ func TestWrite(t *testing.T) {
 	expected := `I'm a test`
 	data := []byte(expected)
 	c := &Console{
-		Writer: io.Writer(&w),
+		write: io.Writer(&w),
 	}
 	c.Write(data)
 

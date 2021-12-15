@@ -27,19 +27,54 @@ var ui *Console
 
 // Console
 type Console struct {
-	Writer io.Writer
+	write io.Writer
+}
+
+// NewConsole creates a new console
+func NewConsole(w io.Writer) *Console {
+	return &Console{
+		write: w,
+	}
 }
 
 // Write
 func (c *Console) Write(data []byte) (int, error) {
 
+	if c.write == nil {
+		c.write = os.Stdout
+	}
+
 	size := len(data)
 	// if size > 0 && data[size-1] == '\n' {
 	// data = data[:size-1]
 	// }
-	fmt.Fprint(c.Writer, string(data))
+	fmt.Fprint(c.write, string(data))
 
 	return size, nil
+}
+
+// PrintTable prints a table
+func (c *Console) PrintTable(content [][]string) error {
+
+	if c.write == nil {
+		c.write = os.Stdout
+	}
+
+	table := []string{}
+	config := columnize.DefaultConfig()
+	config.Delim = columnSeparator
+	config.Glue = columnGlue
+	config.Prefix = columnPrefix
+
+	//	table = append(table, columnizeLine(header))
+
+	for _, row := range content {
+		table = append(table, columnizeLine(row))
+	}
+
+	fmt.Fprintf(c.write, "%s\n", columnize.Format(table, config))
+
+	return nil
 }
 
 // Init initialzes the ui console
@@ -53,7 +88,7 @@ func Init(w io.Writer) {
 func GetConsole() io.Writer {
 	if ui == nil {
 		ui = &Console{
-			Writer: os.Stdout,
+			write: os.Stdout,
 		}
 	}
 
@@ -71,7 +106,7 @@ func Print(msg ...interface{}) {
 		Init(os.Stdout)
 	}
 
-	fmt.Fprintln(ui.Writer, msg...)
+	fmt.Fprintln(ui.write, msg...)
 }
 
 // Blue prints a message in blue color
@@ -138,7 +173,7 @@ func PrintTable(content [][]string) error {
 		table = append(table, columnizeLine(row))
 	}
 
-	fmt.Fprintf(ui.Writer, "%s\n", columnize.Format(table, config))
+	fmt.Fprintf(ui.write, "%s\n", columnize.Format(table, config))
 
 	return nil
 }
