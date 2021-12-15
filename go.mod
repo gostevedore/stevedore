@@ -14,9 +14,11 @@ require (
 	github.com/docker/docker v20.10.10+incompatible
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/ryanuber/columnize v0.0.0-20160712163229-9b3edd62028f
+	github.com/spf13/afero v1.6.0
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.7.0
 	go.uber.org/zap v1.16.0
+	golang.org/x/text v0.3.4
 	gopkg.in/yaml.v2 v2.4.0
 )
