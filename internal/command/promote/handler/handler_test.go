@@ -26,7 +26,7 @@ func TestHandler(t *testing.T) {
 		{
 			desc: "Testing promote handler error when no source image is provided",
 			handler: &Handler{
-				service: promote.NewServiceMock(),
+				service: promote.NewMockService(),
 			},
 			cmd:     &cobra.Command{},
 			cmdArgs: []string{},
@@ -42,7 +42,7 @@ func TestHandler(t *testing.T) {
 		{
 			desc: "Testing promote handler passing all options",
 			handler: &Handler{
-				service: promote.NewServiceMock(),
+				service: promote.NewMockService(),
 			},
 			cmd: &cobra.Command{},
 			cmdArgs: []string{
@@ -77,7 +77,7 @@ func TestHandler(t *testing.T) {
 					SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
 				}
 
-				h.service.(*promote.ServiceMock).On("Promote", context.TODO(), options, "dry-run").Return(nil)
+				h.service.(*promote.MockService).On("Promote", context.TODO(), options, "dry-run").Return(nil)
 			},
 		},
 	}
@@ -93,7 +93,7 @@ func TestHandler(t *testing.T) {
 			if err != nil && assert.Error(t, err) {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				test.handler.service.(*promote.ServiceMock).AssertExpectations(t)
+				test.handler.service.(*promote.MockService).AssertExpectations(t)
 			}
 
 		})
