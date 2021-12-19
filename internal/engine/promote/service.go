@@ -51,6 +51,10 @@ func (e *Service) Promote(ctx context.Context, options *ServiceOptions, promoteT
 		return errors.New(errContext, "Credentials has not been initialized")
 	}
 
+	if options == nil {
+		return errors.New(errContext, "Options are required on promote service")
+	}
+
 	if options.SourceImageName == "" {
 		return errors.New(errContext, "Promote options requires an image source name defined")
 	}
