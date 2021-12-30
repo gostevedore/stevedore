@@ -8,12 +8,12 @@ import (
 
 // BuildCommand contains details to build a docker image
 type BuildCommand struct {
-	driver  BuildDriverer
+	driver  driver.BuildDriverer
 	options *driver.BuildDriverOptions
 }
 
 // NewBuildCommand creates a command to build docker images
-func NewBuildCommand(driver BuildDriverer, options *driver.BuildDriverOptions) *BuildCommand {
+func NewBuildCommand(driver driver.BuildDriverer, options *driver.BuildDriverOptions) *BuildCommand {
 	return &BuildCommand{
 		driver:  driver,
 		options: options,

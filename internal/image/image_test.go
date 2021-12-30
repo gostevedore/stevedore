@@ -35,9 +35,9 @@ func TestLoadImage(t *testing.T) {
 			file: filepath.Join(testBaseDir, "image.yml"),
 			err:  &errors.Error{},
 			image: &Image{
-				Name:     "ubuntu",
-				Registry: "registry",
-				Builder:  "infrastructure",
+				Name:         "ubuntu",
+				RegistryHost: "registry",
+				Builder:      "infrastructure",
 				Tags: []string{
 					"16.04",
 					"xenial",
@@ -90,9 +90,9 @@ func TestCopy(t *testing.T) {
 		{
 			desc: "Testing an image copy",
 			image: &Image{
-				Name:     "ubuntu",
-				Registry: "registry",
-				Builder:  "infrastructure",
+				Name:         "ubuntu",
+				RegistryHost: "registry",
+				Builder:      "infrastructure",
 				Tags: []string{
 					"16.04",
 				},
@@ -105,9 +105,9 @@ func TestCopy(t *testing.T) {
 				},
 			},
 			res: &Image{
-				Name:     "ubuntu",
-				Registry: "registry",
-				Builder:  "infrastructure",
+				Name:         "ubuntu",
+				RegistryHost: "registry",
+				Builder:      "infrastructure",
 				Tags: []string{
 					"16.04",
 				},
@@ -124,9 +124,9 @@ func TestCopy(t *testing.T) {
 		{
 			desc: "Testing an image copy with childs",
 			image: &Image{
-				Name:     "ubuntu",
-				Registry: "registry",
-				Builder:  "infrastructure",
+				Name:         "ubuntu",
+				RegistryHost: "registry",
+				Builder:      "infrastructure",
 				Tags: []string{
 					"16.04",
 				},
@@ -145,9 +145,9 @@ func TestCopy(t *testing.T) {
 				},
 			},
 			res: &Image{
-				Name:     "ubuntu",
-				Registry: "registry",
-				Builder:  "infrastructure",
+				Name:         "ubuntu",
+				RegistryHost: "registry",
+				Builder:      "infrastructure",
 				Tags: []string{
 					"16.04",
 				},
@@ -203,11 +203,11 @@ func TestImageToArray(t *testing.T) {
 		{
 			desc: "Testing array generation from an image",
 			image: &Image{
-				Name:      "name",
-				Version:   "version",
-				Builder:   "type",
-				Namespace: "namespace",
-				Registry:  "registry",
+				Name:              "name",
+				Version:           "version",
+				Builder:           "type",
+				RegistryNamespace: "namespace",
+				RegistryHost:      "registry",
 			},
 			res: []string{"name", "version", "type", "namespace", "registry"},
 			err: nil,
@@ -238,11 +238,11 @@ func TestGetBuilderType(t *testing.T) {
 		{
 			desc: "Testing get builder type when builder is an string",
 			image: &Image{
-				Name:      "name",
-				Version:   "version",
-				Builder:   "builder",
-				Namespace: "namespace",
-				Registry:  "registry",
+				Name:              "name",
+				Version:           "version",
+				Builder:           "builder",
+				RegistryNamespace: "namespace",
+				RegistryHost:      "registry",
 			},
 			res: "builder",
 		},
@@ -258,8 +258,8 @@ func TestGetBuilderType(t *testing.T) {
 						"option1": "option1",
 					},
 				},
-				Namespace: "namespace",
-				Registry:  "registry",
+				RegistryNamespace: "namespace",
+				RegistryHost:      "registry",
 			},
 			res: InlineBuilder,
 		},

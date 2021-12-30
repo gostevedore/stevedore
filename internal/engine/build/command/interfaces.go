@@ -1,12 +1,13 @@
 package command
 
-import (
-	"context"
+import "context"
 
-	"github.com/gostevedore/stevedore/internal/driver"
-)
+// // BuildDriverer interface defines which methods are used to build a docker image
+// type BuildDriverer interface {
+// 	Build(context.Context, *driver.BuildDriverOptions) error
+// }
 
-// BuildDriverer interface defines which methods are used to build a docker image
-type BuildDriverer interface {
-	Build(context.Context, *driver.BuildDriverOptions) error
+// BuildCommander interface defines the command to build a docker image
+type BuildCommander interface {
+	Execute(context.Context) error
 }

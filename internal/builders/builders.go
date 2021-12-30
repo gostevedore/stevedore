@@ -70,8 +70,8 @@ func (b *Builders) AddBuilder(builder *builder.Builder) error {
 	return nil
 }
 
-// GetBuilder returns the builder registered with input name
-func (b *Builders) GetBuilder(name string) (*builder.Builder, error) {
+// Find returns the builder registered with input name
+func (b *Builders) Find(name string) (*builder.Builder, error) {
 
 	errContext := "(builders::GetBuilder)"
 

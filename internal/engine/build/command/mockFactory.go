@@ -11,6 +11,6 @@ func NewMockBuildCommandFactory() *MockBuildCommandFactory {
 }
 
 // New returns a new build command constructor
-func (f *MockBuildCommandFactory) New(driver BuildDriverer, options *driver.BuildDriverOptions) *MockBuildCommand {
+func (f *MockBuildCommandFactory) New(driver driver.BuildDriverer, options *driver.BuildDriverOptions) BuildCommander {
 	return NewMockBuildCommand()
 }

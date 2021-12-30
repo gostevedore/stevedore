@@ -4,14 +4,16 @@ import (
 	"context"
 
 	"github.com/gostevedore/stevedore/internal/builders/builder"
+	"github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/driver"
+	"github.com/gostevedore/stevedore/internal/engine/build/command"
 	"github.com/gostevedore/stevedore/internal/image"
 )
 
 // BuildDriverer interface defines which methods are used to build a docker image
-type BuildDriverer interface {
-	Build(context.Context, *driver.BuildDriverOptions) error
-}
+// type BuildDriverer interface {
+// 	Build(context.Context, *driver.BuildDriverOptions) error
+// }
 
 // type Imager interface {
 // 	GetItem() (*image.Image, error)
@@ -31,7 +33,7 @@ type BuildersStorer interface {
 }
 
 type BuildCommandFactorier interface {
-	New(BuildDriverer, *driver.BuildDriverOptions) BuildCommander
+	New(driver.BuildDriverer, *driver.BuildDriverOptions) command.BuildCommander
 }
 
 // BuildCommander interface defines the command to build a docker image
@@ -54,4 +56,19 @@ type Jobber interface {
 // Dispatcher is a dispatcher to build docker images
 type Dispatcher interface {
 	Enqueue(Jobber)
+}
+
+// DriverFactorier interface defines the factory to create a build driver
+type DriverFactorier interface {
+	Get(id string) (driver.BuildDriverer, error)
+}
+
+// Semverser
+type Semverser interface {
+	GenerateSemverList(version []string, tmpls []string) ([]string, error)
+}
+
+// CredentialsStorer
+type CredentialsStorer interface {
+	GetCredentials(registy string) (*credentials.RegistryUserPassAuth, error)
 }

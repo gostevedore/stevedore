@@ -14,8 +14,8 @@ type BuildDriverOptions struct {
 	BuilderVarMappings map[string]string `yaml:"builder_variables_mapping"`
 	// ConnectionLocal indicates whether to use a local connection during the build when ansible-playbook driver is used
 	ConnectionLocal bool `yaml:"connection_local"`
-	// Dockerfile is the path to Dockerfile when docker driver is used
-	Dockerfile string `yaml:"dockerfile"`
+	// // Dockerfile is the path to Dockerfile when docker driver is used
+	// Dockerfile string `yaml:"dockerfile"`
 	// ImageFromName is the parent's image name
 	ImageFromName string `yaml:"image_from_name"`
 	// ImageFromRegistryNamespace is the parent's image namespace

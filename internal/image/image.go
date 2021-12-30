@@ -15,18 +15,21 @@ const (
 
 // Image is the domain definition of a docker image
 type Image struct {
-	Builder        interface{}            `yaml:"builder"`
-	Children       map[string][]string    `yaml:"children"`
-	Childs         map[string][]string    `yaml:"childs"`
-	Name           string                 `yaml:"name"`
-	Namespace      string                 `yaml:"namespace"`
-	PersistentVars map[string]interface{} `yaml:"persistent_vars"`
-	Registry       string                 `yaml:"registry"`
-	Tags           []string               `yaml:"tags"`
-	Type           string                 `yaml:"type"`
-	Vars           map[string]interface{} `yaml:"vars"`
-	Version        string                 `yaml:"version"`
-	// Parents        map[string][]string    `yaml:"parents"`
+	Builder           interface{}            `yaml:"builder"`
+	Children          map[string][]string    `yaml:"children"`
+	Childs            map[string][]string    `yaml:"childs"`
+	Labels            map[string]string      `yaml:"labels"`
+	Name              string                 `yaml:"name"`
+	PersistentVars    map[string]interface{} `yaml:"persistent_vars"`
+	RegistryHost      string                 `yaml:"registry"`
+	RegistryNamespace string                 `yaml:"namespace"`
+	Tags              []string               `yaml:"tags"`
+	Type              string                 `yaml:"type"`
+	Vars              map[string]interface{} `yaml:"vars"`
+	Version           string                 `yaml:"version"`
+	Parents           map[string][]string    `yaml:"parents"`
+	ParentName        string                 `yaml:"-"`
+	ParentVersion     string                 `yaml:"-"`
 }
 
 // LoadImage
@@ -84,8 +87,8 @@ func (i *Image) ToArray() ([]string, error) {
 	arrayImage = append(arrayImage, i.Name)
 	arrayImage = append(arrayImage, i.Version)
 	arrayImage = append(arrayImage, i.getBuilderType())
-	arrayImage = append(arrayImage, i.Namespace)
-	arrayImage = append(arrayImage, i.Registry)
+	arrayImage = append(arrayImage, i.RegistryNamespace)
+	arrayImage = append(arrayImage, i.RegistryHost)
 
 	return arrayImage, nil
 }

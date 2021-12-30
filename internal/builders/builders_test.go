@@ -105,7 +105,7 @@ func TestGetBuilder(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			res, err := test.builders.GetBuilder(test.builder)
+			res, err := test.builders.Find(test.builder)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {

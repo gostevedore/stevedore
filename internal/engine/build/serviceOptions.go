@@ -33,7 +33,7 @@ type ServiceOptions struct {
 	PushImages bool `yaml:"push_images"`
 
 	// SemanticVersionTagsTemplate are the semantic version tags templates to generate automatically
-	SemanticVersionTagsTemplate []string `yaml:"semantic_version_tags_template"`
+	SemanticVersionTagsTemplates []string `yaml:"semantic_version_tags_template"`
 	// Tags is a list of tags to generate
 	Tags []string `yaml:"tags"`
 	// Vars is a variables list to be sent to driver
@@ -75,9 +75,9 @@ func (o *ServiceOptions) Copy() *ServiceOptions {
 		copy.PersistentVars[name] = value
 	}
 
-	copy.SemanticVersionTagsTemplate = []string{}
-	for _, semanticVersionTagTemplate := range o.SemanticVersionTagsTemplate {
-		copy.SemanticVersionTagsTemplate = append(copy.SemanticVersionTagsTemplate, semanticVersionTagTemplate)
+	copy.SemanticVersionTagsTemplates = []string{}
+	for _, semanticVersionTagTemplate := range o.SemanticVersionTagsTemplates {
+		copy.SemanticVersionTagsTemplates = append(copy.SemanticVersionTagsTemplates, semanticVersionTagTemplate)
 	}
 
 	copy.Tags = []string{}
