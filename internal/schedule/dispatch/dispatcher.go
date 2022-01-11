@@ -2,20 +2,25 @@ package dispatch
 
 import (
 	"context"
+	"sync"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/schedule"
 )
 
+// DefaultNumWorkers is the default number of workers
 const DefaultNumWorkers = 1
 
+// Dispatch is a dispatcher that executes jobs
 type Dispatch struct {
 	WorkerPool    chan chan schedule.Jobber
 	inputJobQueue chan schedule.Jobber
 	NumWorkers    int
 	workerFactory WorkerFactorier
+	once          sync.Once
 }
 
+// New creates a new dispatcher
 func NewDispatch(numWorkers int, workerFactory WorkerFactorier) *Dispatch {
 
 	if numWorkers < 1 {
@@ -49,18 +54,22 @@ func (d *Dispatch) Start(ctx context.Context) error {
 		return errors.New(errContext, "Dispatch requires a worker pool")
 	}
 
-	for i := 0; i < d.NumWorkers; i++ {
-		worker := d.workerFactory.New(d.WorkerPool)
+	d.once.Do(func() {
+		for i := 0; i < d.NumWorkers; i++ {
+			worker := d.workerFactory.New(d.WorkerPool)
 
-		go worker.Start(ctx)
-	}
+			go worker.Start(ctx)
+		}
 
-	go d.dispatch()
+		go d.dispatch()
+	})
 
 	return nil
 }
 
+// dispatch is the main loop of the dispatcher
 func (d *Dispatch) dispatch() {
+
 	for {
 		j := <-d.inputJobQueue
 		go func(j schedule.Jobber) {
@@ -70,7 +79,7 @@ func (d *Dispatch) dispatch() {
 	}
 }
 
-// Queue
+// Enqueue enqueues a job to be executed by a worker
 func (d *Dispatch) Enqueue(job schedule.Jobber) {
 	d.inputJobQueue <- job
 }

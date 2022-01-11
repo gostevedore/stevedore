@@ -11,6 +11,7 @@ type Workerer interface {
 // Jobber interface defines a job element
 type Jobber interface {
 	Run(context.Context)
+	Wait() error
 	Done() <-chan struct{}
 	Err() <-chan error
 	Close()

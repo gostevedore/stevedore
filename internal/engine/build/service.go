@@ -13,12 +13,12 @@ import (
 	"github.com/gostevedore/stevedore/internal/driver"
 	"github.com/gostevedore/stevedore/internal/image"
 	"github.com/gostevedore/stevedore/internal/schedule"
+	"github.com/gostevedore/stevedore/internal/schedule/job"
 )
 
 // Service is an application service to build docker images
 type Service struct {
-	plan Planner
-	// images         ImagesStorer
+	plan           Planner
 	builders       BuildersStorer
 	commandFactory BuildCommandFactorier
 	driverFactory  DriverFactorier
@@ -29,12 +29,13 @@ type Service struct {
 }
 
 // NewService creates a Service to build docker images
-func NewService(plans Planner, images ImagesStorer, builders BuildersStorer, commandFactory BuildCommandFactorier, jobFactory JobFactorier, dispatch Dispatcher, semver Semverser, credentials CredentialsStorer) *Service {
+func NewService(plans Planner, builders BuildersStorer, commandFactory BuildCommandFactorier, driverFactory DriverFactorier, jobFactory JobFactorier, dispatch Dispatcher, semver Semverser, credentials CredentialsStorer) *Service {
+
 	return &Service{
-		plan: plans,
-		// images:         images,
+		plan:           plans,
 		builders:       builders,
 		commandFactory: commandFactory,
+		driverFactory:  driverFactory,
 		jobFactory:     jobFactory,
 		dispatch:       dispatch,
 		semver:         semver,
@@ -60,16 +61,16 @@ func (s *Service) Build(ctx context.Context, options *ServiceOptions) error {
 		return errors.New(errContext, "Plan storer is required on build service")
 	}
 
-	// buildImageList, err = s.generateImagesList(options.ImageName, options.ImageVersions)
-	// if err != nil {
-	// 	return errors.New(errContext, err.Error())
-	// }
+	if s.dispatch == nil {
+		return errors.New(errContext, "Build worker requires a dispatcher")
+	}
 
 	steps, err = s.plan.Plan(options.ImageName, options.ImageVersions)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
 
+	// future promise which triggers the image build
 	buildWorkerFunc := func(ctx context.Context, step Steper, options *ServiceOptions) func() error {
 		var err error
 
@@ -96,13 +97,14 @@ func (s *Service) Build(ctx context.Context, options *ServiceOptions) error {
 	for _, step := range steps {
 		wg.Add(1)
 		buildWorkerErrs = append(buildWorkerErrs, buildWorkerFunc(ctx, step, options))
-
 	}
 
 	wg.Wait()
 
+	// Wait for all workers to finish
 	errMsg := ""
 	for _, buildWorkerErr := range buildWorkerErrs {
+		// it is blocking
 		err = buildWorkerErr()
 		if err != nil {
 			errMsg = fmt.Sprintf("%s%s\n", errMsg, err.Error())
@@ -115,38 +117,7 @@ func (s *Service) Build(ctx context.Context, options *ServiceOptions) error {
 	return nil
 }
 
-// func (s *Service) generateImagesList(name string, versions []string) ([]*image.Image, error) {
-// 	errContext := "(build::generateImagesList)"
-// 	var list []*image.Image
-// 	var imageAux *image.Image
-// 	var err error
-
-// 	if name == "" {
-// 		return nil, errors.New(errContext, "Image name is required to build an image")
-// 	}
-
-// 	if versions == nil || len(versions) < 1 {
-// 		list, err = s.images.All(name)
-// 		if err != nil {
-// 			return nil, errors.New(errContext, err.Error())
-// 		}
-// 	} else {
-// 		for _, version := range versions {
-// 			imageAux, err = s.images.Find(name, version)
-// 			if err != nil {
-// 				return nil, errors.New(errContext, err.Error())
-// 			}
-// 			list = append(list, imageAux)
-// 		}
-// 	}
-
-// 	return list, nil
-// }
-
 func (s *Service) worker(ctx context.Context, image *image.Image, options *ServiceOptions) error {
-	// var wg sync.WaitGroup
-	// childBuildErrs := []func() error{}
-
 	errContext := "(build::worker)"
 
 	if options == nil {
@@ -155,10 +126,6 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 
 	if image == nil {
 		return errors.New(errContext, "Build worker requires an image specification")
-	}
-
-	if s.dispatch == nil {
-		return errors.New(errContext, "Build worker requires a dispatcher")
 	}
 
 	if s.driverFactory == nil {
@@ -172,6 +139,7 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 	if s.credentials == nil {
 		return errors.New(errContext, "Build worker requires a credentials store")
 	}
+
 	// Enrich options with image information
 
 	// An originalOptions' copy is kept because it will be passed to children build on cascade mode.
@@ -206,7 +174,8 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 		}
 	}
 
-	buildOptions.Tags = append(options.Tags, image.Tags...)
+	buildOptions.Tags = append(buildOptions.Tags, options.Tags...)
+	buildOptions.Tags = append(buildOptions.Tags, image.Tags...)
 
 	// add persistent vars defined service options
 	// options definition has precedence over the image one
@@ -258,25 +227,6 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 		}
 	}
 
-	// if image.ParentName != "" {
-	// 	parent, err := s.images.Find(image.ParentName, image.ParentVersion)
-	// 	if err != nil {
-	// 		return errors.New(errContext, err.Error())
-	// 	}
-
-	// 	buildOptions.ImageFromName = parent.Name
-	// 	buildOptions.ImageFromVersion = parent.Version
-	// 	buildOptions.ImageFromRegistryHost = parent.RegistryHost
-	// 	buildOptions.ImageFromRegistryNamespace = parent.RegistryNamespace
-
-	// 	pullAuth := s.getCredentials(parent.RegistryHost)
-	// 	if pullAuth != nil {
-	// 		// TODO allow other auth methods than user-pass
-	// 		buildOptions.PullAuthUsername = pullAuth.Username
-	// 		buildOptions.PullAuthPassword = pullAuth.Password
-	// 	}
-	// }
-
 	pushAuth := s.getCredentials(buildOptions.RegistryHost)
 	if pushAuth != nil {
 		buildOptions.PushAuthUsername = pushAuth.Username
@@ -306,6 +256,8 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 
 	buildOptions.PushImageAfterBuild = options.PushImageAfterBuild
 
+	buildOptions.RemoveImageAfterBuild = options.RemoveAfterBuild
+
 	cmd, err := s.command(driver, buildOptions)
 	if err != nil {
 		return errors.New(errContext, err.Error())
@@ -319,63 +271,10 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 
 	s.dispatch.Enqueue(job)
 
-	select {
-	case <-job.Done():
-	case jobErr := <-job.Err():
-		return errors.New(errContext, jobErr.Error())
+	err = job.Wait()
+	if err != nil {
+		return errors.New(errContext, err.Error())
 	}
-
-	// if options.Cascade && options.CascadeDepth != 0 {
-
-	// 	childBuildFunc := func(ctx context.Context, options *ServiceOptions) func() error {
-	// 		var err error
-
-	// 		c := make(chan struct{}, 1)
-	// 		go func() {
-	// 			defer close(c)
-	// 			err = s.Build(ctx, options)
-	// 			wg.Done()
-	// 		}()
-
-	// 		return func() error {
-	// 			<-c
-	// 			return err
-	// 		}
-	// 	}
-
-	// 	for childName, childVersions := range image.Children {
-
-	// 		childServiceOptions := options.Copy()
-	// 		childServiceOptions.ImageName = childName
-	// 		childServiceOptions.ImageVersions = childVersions
-	// 		childServiceOptions.Tags = []string{}
-
-	// 		childServiceOptions.PersistentVars = make(map[string]interface{})
-	// 		// Copy the parent persistent vars
-	// 		for k, v := range buildOptions.PersistentVars {
-	// 			childServiceOptions.PersistentVars[k] = v
-	// 		}
-	// 		childServiceOptions.Vars = map[string]interface{}{}
-	// 		childServiceOptions.Labels = map[string]string{}
-	// 		childServiceOptions.CascadeDepth--
-
-	// 		wg.Add(1)
-	// 		childBuildErrs = append(childBuildErrs, childBuildFunc(ctx, childServiceOptions))
-	// 	}
-
-	// 	wg.Wait()
-
-	// 	errMsg := ""
-	// 	for _, childBuildErr := range childBuildErrs {
-	// 		err = childBuildErr()
-	// 		if err != nil {
-	// 			errMsg = fmt.Sprintf("%s%s\n", errMsg, err.Error())
-	// 		}
-	// 	}
-	// 	if errMsg != "" {
-	// 		return errors.New(errContext, errMsg)
-	// 	}
-	// }
 
 	return nil
 }
@@ -386,11 +285,17 @@ func (s *Service) getCredentials(registry string) *credentials.RegistryUserPassA
 	return auth
 }
 
-func (s *Service) job(ctx context.Context, cmd BuildCommander) (schedule.Jobber, error) {
+func (s *Service) job(ctx context.Context, cmd job.Commander) (schedule.Jobber, error) {
+	errContext := "(build::job)"
+
+	if s.jobFactory == nil {
+		return nil, errors.New(errContext, "To create a build job, is required a job factory")
+	}
+
 	return s.jobFactory.New(cmd), nil
 }
 
-func (s *Service) command(driver driver.BuildDriverer, options *driver.BuildDriverOptions) (BuildCommander, error) {
+func (s *Service) command(driver driver.BuildDriverer, options *driver.BuildDriverOptions) (job.Commander, error) {
 	errContext := "(build::command)"
 
 	if s.commandFactory == nil {
@@ -429,5 +334,4 @@ func (s *Service) builder(builderDefinition interface{}) (*builder.Builder, erro
 		// In-line builder definition
 		return builder.NewBuilderFromIOReader(bytes.NewBuffer([]byte(builderDefinition.(string))))
 	}
-
 }

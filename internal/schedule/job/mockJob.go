@@ -21,6 +21,12 @@ func (j *MockJob) Run(ctx context.Context) {
 	j.Called(ctx)
 }
 
+// Wait waits for the job to finish
+func (j *MockJob) Wait() error {
+	args := j.Mock.Called()
+	return args.Error(0)
+}
+
 // Close closes the job channels
 func (j *MockJob) Close() {
 	j.Called()
@@ -28,12 +34,12 @@ func (j *MockJob) Close() {
 
 // Done returns a channel that is closed when the job is done
 func (j *MockJob) Done() <-chan struct{} {
-	j.Mock.Called()
-	return make(<-chan struct{})
+	args := j.Mock.Called()
+	return args.Get(0).(<-chan struct{})
 }
 
 // Err returns a channel that is closed when the job has an error
 func (j *MockJob) Err() <-chan error {
-	j.Mock.Called()
-	return make(<-chan error)
+	args := j.Mock.Called()
+	return args.Get(0).(<-chan error)
 }

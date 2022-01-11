@@ -1,14 +1,13 @@
 package build
 
 import (
-	"context"
-
 	"github.com/gostevedore/stevedore/internal/builders/builder"
 	"github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/driver"
 	"github.com/gostevedore/stevedore/internal/engine/build/command"
 	"github.com/gostevedore/stevedore/internal/image"
 	"github.com/gostevedore/stevedore/internal/schedule"
+	"github.com/gostevedore/stevedore/internal/schedule/job"
 )
 
 // BuildDriverer interface defines which methods are used to build a docker image
@@ -22,10 +21,10 @@ import (
 // 	Children() []Imager
 // }
 
-// ImagesStorer interfaces defines the storage of images
-type ImagesStorer interface {
-	Find(string, string) (*image.Image, error)
-}
+// // ImagesStorer interfaces defines the storage of images
+// type ImagesStorer interface {
+// 	Find(string, string) (*image.Image, error)
+// }
 
 // Steper interface defines the step plan
 type Steper interface {
@@ -50,13 +49,13 @@ type BuildCommandFactorier interface {
 }
 
 // BuildCommander interface defines the command to build a docker image
-type BuildCommander interface {
-	Execute(context.Context) error
-}
+// type BuildCommander interface {
+// 	Execute(context.Context) error
+// }
 
 // JobFactorier interface defines the factory of build jobs
 type JobFactorier interface {
-	New(BuildCommander) schedule.Jobber
+	New(job.Commander) schedule.Jobber
 }
 
 // Dispatcher is a dispatcher to build docker images

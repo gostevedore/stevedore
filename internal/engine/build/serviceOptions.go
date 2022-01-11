@@ -5,8 +5,9 @@ type ServiceOptions struct {
 	ImageName     string
 	ImageVersions []string
 
-	Cascade      bool
-	CascadeDepth int
+	// TODO move to handler
+	// Cascade      bool
+	// CascadeDepth int
 
 	ConnectionLocal bool
 
@@ -69,8 +70,8 @@ func (o *ServiceOptions) Copy() *ServiceOptions {
 
 	copy.PushImageAfterBuild = o.PushImageAfterBuild
 	copy.RemoveAfterBuild = o.RemoveAfterBuild
-	copy.Cascade = o.Cascade
-	copy.CascadeDepth = o.CascadeDepth
+	// copy.Cascade = o.Cascade
+	// copy.CascadeDepth = o.CascadeDepth
 	copy.ConnectionLocal = o.ConnectionLocal
 
 	copy.PersistentVars = map[string]interface{}{}

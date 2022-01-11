@@ -13,6 +13,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/engine/build/command"
 	"github.com/gostevedore/stevedore/internal/image"
 	"github.com/gostevedore/stevedore/internal/schedule/dispatch"
+	"github.com/gostevedore/stevedore/internal/schedule/job"
 	"github.com/gostevedore/stevedore/internal/schedule/worker"
 	"github.com/gostevedore/stevedore/internal/semver"
 	"github.com/stretchr/testify/assert"
@@ -47,15 +48,15 @@ func TestWorker(t *testing.T) {
 			options: &ServiceOptions{},
 			err:     errors.New(errContext, "Build worker requires an image specification"),
 		},
-		{
-			desc: "Testing error when no dispatcher is given to worker",
-			service: &Service{
-				dispatch: nil,
-			},
-			options: &ServiceOptions{},
-			image:   &image.Image{},
-			err:     errors.New(errContext, "Build worker requires a dispatcher"),
-		},
+		// {
+		// 	desc: "Testing error when no dispatcher is given to worker",
+		// 	service: &Service{
+		// 		dispatch: nil,
+		// 	},
+		// 	options: &ServiceOptions{},
+		// 	image:   &image.Image{},
+		// 	err:     errors.New(errContext, "Build worker requires a dispatcher"),
+		// },
 		{
 			desc: "Testing error when no driver factory is given to worker",
 			service: &Service{
@@ -89,16 +90,95 @@ func TestWorker(t *testing.T) {
 
 		{
 			desc: "Testing build an image",
-			service: &Service{
-				dispatch:      dispatch.NewDispatch(1, worker.NewMockWorkerFactory()),
-				driverFactory: driver.NewBuildDriverFactory(),
-				semver:        semver.NewSemVerGenerator(),
-				credentials:   credentials.NewCredentialsStoreMock(),
+			service: NewService(
+				nil,
+				builders.NewMockBuilders(),
+				command.NewMockBuildCommandFactory(),
+				&driver.BuildDriverFactory{
+					"mock": mockdriver.NewMockDriver(),
+				},
+				job.NewMockJobFactory(),
+				dispatch.NewMockDispatch(),
+				semver.NewSemVerGenerator(),
+				credentials.NewCredentialsStoreMock(),
+			),
+			// service: &Service{
+			// 	builders:       builders.NewMockBuilders(),
+			// 	commandFactory: command.NewMockBuildCommandFactory(),
+			// 	dispatch:       dispatch.NewDispatch(1, worker.NewMockWorkerFactory()),
+			// 	driverFactory: driver.BuildDriverFactory{
+			// 		"mock": mockdriver.NewMockDriver(),
+			// 	},
+			// 	jobFactory:  job.NewMockJobFactory(),
+			// 	semver:      semver.NewSemVerGenerator(),
+			// 	credentials: credentials.NewCredentialsStoreMock(),
+			// },
+			options: &ServiceOptions{
+				EnableSemanticVersionTags:    true,
+				PushImageAfterBuild:          true,
+				PullParentImage:              true,
+				SemanticVersionTagsTemplates: []string{"{{.Major}}", "{{.Major}}.{{.Minor}}"},
+				RemoveAfterBuild:             true,
 			},
-			options:           &ServiceOptions{},
-			image:             &image.Image{},
-			err:               &errors.Error{},
-			prepareAssertFunc: func(service *Service) {},
+			image: &image.Image{
+				Name:              "image",
+				Version:           "0.0.0",
+				RegistryHost:      "registry",
+				RegistryNamespace: "namespace",
+				Builder:           "builder",
+			},
+			err: &errors.Error{},
+			assertFunc: func(service *Service) bool {
+				return service.credentials.(*credentials.CredentialsStoreMock).AssertExpectations(t) &&
+					service.builders.(*builders.MockBuilders).AssertExpectations(t) &&
+					service.commandFactory.(*command.MockBuildCommandFactory).AssertExpectations(t) &&
+					service.dispatch.(*dispatch.MockDispatch).AssertExpectations(t) &&
+					service.jobFactory.(*job.MockJobFactory).AssertExpectations(t)
+			},
+			prepareAssertFunc: func(service *Service) {
+
+				mockJob := job.NewMockJob()
+				mockJob.On("Wait").Return(nil)
+
+				service.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry").Return(&credentials.RegistryUserPassAuth{
+					Username: "user",
+					Password: "pass",
+				}, nil)
+
+				service.builders.(*builders.MockBuilders).On("Find", "builder").Return(&builder.Builder{
+					Driver: "mock",
+				}, nil)
+				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
+					mockdriver.NewMockDriver(),
+					&driver.BuildDriverOptions{
+						BuilderName:                "builder_mock_namespace_image_0.0.0",
+						BuilderOptions:             nil,
+						BuilderVarMappings:         nil,
+						ConnectionLocal:            false,
+						ImageFromName:              "",
+						ImageFromRegistryNamespace: "",
+						ImageFromRegistryHost:      "",
+						ImageFromVersion:           "",
+						ImageName:                  "image",
+						ImageVersion:               "0.0.0",
+						Labels:                     nil,
+						OutputPrefix:               "",
+						PersistentVars:             nil,
+						RegistryNamespace:          "namespace",
+						RegistryHost:               "registry",
+						PullAuthUsername:           "",
+						PullAuthPassword:           "",
+						PullParentImage:            true,
+						PushAuthUsername:           "user",
+						PushAuthPassword:           "pass",
+						PushImageAfterBuild:        true,
+						RemoveImageAfterBuild:      true,
+						Tags:                       []string{"0", "0.0"},
+						Vars:                       nil,
+					}).Return(command.NewMockBuildCommand(), nil)
+				service.jobFactory.(*job.MockJobFactory).On("New", command.NewMockBuildCommand()).Return(mockJob, nil)
+				service.dispatch.(*dispatch.MockDispatch).On("Enqueue", mockJob)
+			},
 		},
 	}
 
@@ -117,118 +197,59 @@ func TestWorker(t *testing.T) {
 			} else {
 				assert.True(t, test.assertFunc(test.service))
 			}
+
+			//time.Sleep(time.Millisecond * 100)
 		})
 	}
 
 }
 
-// func TestGenerateImagesList(t *testing.T) {
-// 	errContext := "(build::generateImagesList)"
+func TestJob(t *testing.T) {
+	errContext := "(build::command)"
 
-// 	tests := []struct {
-// 		desc              string
-// 		service           *Service
-// 		name              string
-// 		versions          []string
-// 		res               []*image.Image
-// 		prepareAssertFunc func(*Service)
-// 		assertFunc        func(*Service) bool
-// 		err               error
-// 	}{
-// 		{
-// 			desc: "Testing error when no image name is provided",
-// 			name: "",
-// 			err:  errors.New(errContext, "Image name is required to build an image"),
-// 		},
-// 		{
-// 			desc: "Testing generate images list",
-// 			service: &Service{
-// 				images: imagestore.NewMockImageStore(),
-// 			},
-// 			name:     "image",
-// 			versions: []string{"version1", "version2"},
-// 			res: []*image.Image{
-// 				{
-// 					Name:    "image",
-// 					Version: "version1",
-// 				},
-// 				{
-// 					Name:    "image",
-// 					Version: "version2",
-// 				},
-// 			},
-// 			err: &errors.Error{},
-// 			prepareAssertFunc: func(s *Service) {
-// 				s.images.(*imagestore.MockImageStore).On("Find", "image", "version1").Return(&image.Image{
-// 					Name:    "image",
-// 					Version: "version1",
-// 				}, nil)
-// 				s.images.(*imagestore.MockImageStore).On("Find", "image", "version2").Return(&image.Image{
-// 					Name:    "image",
-// 					Version: "version2",
-// 				}, nil)
-// 			},
-// 			assertFunc: func(s *Service) bool {
-// 				return s.images.(*imagestore.MockImageStore).AssertExpectations(t)
-// 			},
-// 		},
+	tests := []struct {
+		desc              string
+		service           *Service
+		cmd               job.Commander
+		prepareAssertFunc func(*Service, job.Commander)
+		err               error
+	}{
+		{
+			desc:    "Testing error when no job factory is defined on service",
+			service: &Service{},
+			err:     errors.New(errContext, "To create a build job, is required a job factory"),
+		},
+		{
+			desc: "Testing job creation",
+			service: &Service{
+				jobFactory: job.NewMockJobFactory(),
+			},
+			cmd: command.NewMockBuildCommand(),
+			prepareAssertFunc: func(service *Service, cmd job.Commander) {
+				service.jobFactory.(*job.MockJobFactory).On("New", cmd).Return(job.NewMockJob(), nil)
+			},
+			err: &errors.Error{},
+		},
+	}
 
-// 		{
-// 			desc: "Testing generate images list when no version is provided",
-// 			service: &Service{
-// 				images: imagestore.NewMockImageStore(),
-// 			},
-// 			name:     "image",
-// 			versions: []string{},
-// 			res: []*image.Image{
-// 				{
-// 					Name:    "image",
-// 					Version: "version1",
-// 				},
-// 				{
-// 					Name:    "image",
-// 					Version: "version2",
-// 				},
-// 			},
-// 			err: &errors.Error{},
-// 			prepareAssertFunc: func(s *Service) {
-// 				s.images.(*imagestore.MockImageStore).On("All", "image").Return([]*image.Image{
-// 					{
-// 						Name:    "image",
-// 						Version: "version1",
-// 					},
-// 					{
-// 						Name:    "image",
-// 						Version: "version2",
-// 					},
-// 				}, nil)
-// 			},
-// 			assertFunc: func(s *Service) bool {
-// 				return s.images.(*imagestore.MockImageStore).AssertExpectations(t)
-// 			},
-// 		},
-// 	}
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
 
-// 	for _, test := range tests {
-// 		t.Run(test.desc, func(t *testing.T) {
-// 			t.Log(test.desc)
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.service, test.cmd)
+			}
 
-// 			if test.prepareAssertFunc != nil {
-// 				test.prepareAssertFunc(test.service)
-// 			}
+			_, err := test.service.job(context.TODO(), test.cmd)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				test.service.jobFactory.(*job.MockJobFactory).AssertExpectations(t)
+			}
 
-// 			res, err := test.service.generateImagesList(test.name, test.versions)
-
-// 			if err != nil {
-// 				assert.Equal(t, test.err.Error(), err.Error())
-// 			} else {
-// 				assert.True(t, test.assertFunc(test.service))
-// 				assert.Equal(t, test.res, res)
-// 			}
-// 		})
-// 	}
-
-// }
+		})
+	}
+}
 
 func TestCommand(t *testing.T) {
 	errContext := "(build::command)"
@@ -241,7 +262,7 @@ func TestCommand(t *testing.T) {
 		service           *Service
 		driver            driver.BuildDriverer
 		options           *driver.BuildDriverOptions
-		res               BuildCommander
+		res               job.Commander
 		prepareAssertFunc func(*Service)
 		err               error
 	}{
@@ -268,18 +289,20 @@ func TestCommand(t *testing.T) {
 
 		{
 			desc: "Testing create build command",
-			service: &Service{
-				commandFactory: command.NewMockBuildCommandFactory(),
-				driverFactory:  driverFactory,
-				builders:       builders.NewMockBuilders(),
-			},
+			service: NewService(
+				nil,
+				nil,
+				command.NewMockBuildCommandFactory(),
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+			),
 			options: &driver.BuildDriverOptions{},
 			driver:  mockdriver.NewMockDriver(),
 			prepareAssertFunc: func(s *Service) {
-				s.builders.(*builders.MockBuilders).On("Find", "test").Return(&builder.Builder{
-					Name:   "test",
-					Driver: "mock", // during test, we use the mock driver
-				}, nil)
+				s.commandFactory.(*command.MockBuildCommandFactory).On("New", mockdriver.NewMockDriver(), &driver.BuildDriverOptions{}).Return(command.NewMockBuildCommand(), nil)
 			},
 			res: &command.MockBuildCommand{},
 			err: &errors.Error{},
@@ -304,7 +327,6 @@ func TestCommand(t *testing.T) {
 
 		})
 	}
-
 }
 
 func TestBuilder(t *testing.T) {

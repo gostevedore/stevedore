@@ -1,6 +1,10 @@
 package job
 
-import "context"
+import (
+	"context"
+
+	errors "github.com/apenella/go-common-utils/error"
+)
 
 // Job is a job that can be run
 type Job struct {
@@ -27,6 +31,20 @@ func (j *Job) Run(ctx context.Context) {
 	}
 
 	j.done <- struct{}{}
+}
+
+// Wait waits for the job to finish
+func (j *Job) Wait() error {
+	errContext := "(job::Wait)"
+	defer j.Close()
+
+	select {
+	case <-j.Done():
+	case jobErr := <-j.Err():
+		return errors.New(errContext, jobErr.Error())
+	}
+
+	return nil
 }
 
 // Close closes the job channels
