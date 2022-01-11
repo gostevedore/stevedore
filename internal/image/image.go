@@ -1,130 +1,103 @@
 package image
 
-import (
-	"fmt"
-
-	"github.com/gostevedore/stevedore/internal/ui/console"
-
-	data "github.com/apenella/go-common-utils/data"
-	errors "github.com/apenella/go-common-utils/error"
-)
-
-const (
-	InlineBuilder = "<in-line>"
-)
-
-// Image is the domain definition of a docker image
+// Image defines the image on the system
 type Image struct {
-	Builder           interface{}            `yaml:"builder"`
-	Children          map[string][]string    `yaml:"children"`
-	Childs            map[string][]string    `yaml:"childs"`
-	Labels            map[string]string      `yaml:"labels"`
-	Name              string                 `yaml:"name"`
-	PersistentVars    map[string]interface{} `yaml:"persistent_vars"`
-	RegistryHost      string                 `yaml:"registry"`
-	RegistryNamespace string                 `yaml:"namespace"`
-	Tags              []string               `yaml:"tags"`
-	Type              string                 `yaml:"type"`
-	Vars              map[string]interface{} `yaml:"vars"`
-	Version           string                 `yaml:"version"`
-	Parents           map[string][]string    `yaml:"parents"`
-	ParentName        string                 `yaml:"-"`
-	ParentVersion     string                 `yaml:"-"`
+	// Builder is the builder to use to build the image
+	Builder interface{} `yaml:"builder"`
+	// Children list of children images
+	Children []*Image `yaml:"-"`
+	// Labels is a map of image labels
+	Labels map[string]string `yaml:"labels"`
+	// Name is the name of the image
+	Name string `yaml:"name"`
+	// PresistentVars is a map of persistent variables
+	PersistentVars map[string]interface{} `yaml:"persistent_vars"`
+	// RegistryHost is the host of the registry
+	RegistryHost string `yaml:"registry"`
+	// RegistryNamespace is the namespace of the registry
+	RegistryNamespace string `yaml:"namespace"`
+	// Tags is a list of extra tags
+	Tags []string `yaml:"tags"`
+	// Vars is a map of variables
+	Vars map[string]interface{} `yaml:"vars"`
+	// Version is the version of the image
+	Version string `yaml:"version"`
+	// Parent is the parent image
+	Parent *Image `yaml:"-"`
 }
 
-// LoadImage
-func LoadImage(file string) (*Image, error) {
-	image := &Image{}
-	err := data.LoadYAMLFile(file, image)
-	if err != nil {
-		return nil, errors.New("(images::LoadImage)", "Images file could not be load", err)
-	}
+// OptionFunc is an option to pass to NewImage
+type OptionFunc func(*Image)
 
-	return image, nil
+// NewImage creates a new image
+func NewImage(name, version string, opt ...OptionFunc) *Image {
+	image := &Image{
+		Name:    name,
+		Version: version,
+	}
+	for _, o := range opt {
+		o(image)
+	}
+	return image
 }
 
-// Copy method return a copy of the instanced Image
-func (i *Image) Copy() (*Image, error) {
-
-	if i == nil {
-		return nil, errors.New("(image::Image::Copy)", "Image is nil")
+// WithBuilder sets the builder
+func WithBuilder(builder interface{}) OptionFunc {
+	return func(i *Image) {
+		i.Builder = builder
 	}
-
-	copiedImage := *i
-	copiedImage.Tags = append([]string{}, i.Tags...)
-
-	copiedImage.PersistentVars = map[string]interface{}{}
-	for keyVar, keyValue := range i.PersistentVars {
-		copiedImage.PersistentVars[keyVar] = keyValue
-	}
-	copiedImage.Vars = map[string]interface{}{}
-	for keyVar, keyValue := range i.Vars {
-		copiedImage.Vars[keyVar] = keyValue
-	}
-	copiedImage.Vars = map[string]interface{}{}
-	for keyVar, keyValue := range i.Vars {
-		copiedImage.Vars[keyVar] = keyValue
-	}
-
-	if i.Children != nil {
-		copiedImage.Children = map[string][]string{}
-		for keyVar, keyValue := range i.Children {
-			keyValueCopy := append([]string{}, keyValue...)
-			copiedImage.Children[keyVar] = keyValueCopy
-		}
-	}
-
-	return &copiedImage, nil
 }
 
-func (i *Image) ToArray() ([]string, error) {
-
-	if i == nil {
-		return nil, errors.New("(image::Image::ToArray)", "Image is nil")
+// WithChildren sets the children
+func WithChildren(children ...*Image) OptionFunc {
+	return func(i *Image) {
+		i.Children = children
 	}
-
-	arrayImage := []string{}
-	arrayImage = append(arrayImage, i.Name)
-	arrayImage = append(arrayImage, i.Version)
-	arrayImage = append(arrayImage, i.getBuilderType())
-	arrayImage = append(arrayImage, i.RegistryNamespace)
-	arrayImage = append(arrayImage, i.RegistryHost)
-
-	return arrayImage, nil
 }
 
-// getBuilderType return the name of the builder or <in-line> when the builder is defined on the image
-func (i *Image) getBuilderType() string {
-	switch i.Builder.(type) {
-	case string:
-		return i.Builder.(string)
-	default:
-		return InlineBuilder
+// WithLabels sets the labels
+func WithLabels(labels map[string]string) OptionFunc {
+	return func(i *Image) {
+		i.Labels = labels
 	}
-
 }
 
-// CheckCompatibility checks that image compatibility
-func (i *Image) CheckCompatibility() {
-
-	if i.Type != "" {
-		console.Warn(fmt.Sprintf("DEPRECATION: On '%s', 'type' attribute must be replaced by 'builder' before 0.11.0", i.Name))
-
-		if i.Builder == "" {
-			i.Builder = i.Type
-		} else {
-			console.Warn(fmt.Sprintf(" On '%s', 'builder' value will be used instead of 'type'", i.Name))
-		}
-
+// WithPersistentVars sets the persistent variables
+func WithPersistentVars(persistentVars map[string]interface{}) OptionFunc {
+	return func(i *Image) {
+		i.PersistentVars = persistentVars
 	}
+}
 
-	if i.Childs != nil && len(i.Childs) > 0 {
-		console.Warn(fmt.Sprintf("DEPRECATION: On '%s', 'childs' attribute must be replaced by 'children' before 0.11.0", i.Name))
-
-		if i.Children != nil && len(i.Children) > 0 {
-			console.Warn(fmt.Sprintf(" On '%s', 'children' value will be used instead of 'childs'", i.Name))
-		} else {
-			i.Children = i.Childs
-		}
+// WithRegistryHost sets the registry host
+func WithRegistryHost(registryHost string) OptionFunc {
+	return func(i *Image) {
+		i.RegistryHost = registryHost
 	}
+}
+
+// WithRegistryNamespace sets the registry namespace
+func WithRegistryNamespace(registryNamespace string) OptionFunc {
+	return func(i *Image) {
+		i.RegistryNamespace = registryNamespace
+	}
+}
+
+// WithTags sets the tags
+func WithTags(tags ...string) OptionFunc {
+	return func(i *Image) {
+		i.Tags = tags
+	}
+}
+
+// WithVars sets the variables
+func WithVars(vars map[string]interface{}) OptionFunc {
+	return func(i *Image) {
+		i.Vars = vars
+	}
+}
+
+// AddChild adds a child image
+func (i *Image) AddChild(child *Image) {
+	i.Children = append(i.Children, child)
 }

@@ -14,12 +14,10 @@ type BuildDriverOptions struct {
 	BuilderVarMappings map[string]string `yaml:"builder_variables_mapping"`
 	// ConnectionLocal indicates whether to use a local connection during the build when ansible-playbook driver is used
 	ConnectionLocal bool `yaml:"connection_local"`
-	// // Dockerfile is the path to Dockerfile when docker driver is used
-	// Dockerfile string `yaml:"dockerfile"`
 	// ImageFromName is the parent's image name
 	ImageFromName string `yaml:"image_from_name"`
 	// ImageFromRegistryNamespace is the parent's image namespace
-	ImageFromRegistryNamespace string `yaml:"image_from_namespace"`
+	ImageFromRegistryNamespace string `yaml:"image_from_registry_namespace"`
 	// ImageFromRegistryHost is the parent's image registry host
 	ImageFromRegistryHost string `yaml:"image_from_registry_host"`
 	// ImageFromVersion is the paren't image version
@@ -35,7 +33,7 @@ type BuildDriverOptions struct {
 	// PersistentVars is a persistent variables list to be sent to driver
 	PersistentVars map[string]interface{} `yaml:"persistent_variables"`
 	// RegistryNamespace is the namespace of the image to be built
-	RegistryNamespace string `yaml:"image_namespace"`
+	RegistryNamespace string `yaml:"image_registry_namespace"`
 	// RegistryHost is the registry's host of the image to be built
 	RegistryHost string `yaml:"image_registry_host"`
 	// PullAuthUsername is the username to use for pulling the image
@@ -48,24 +46,12 @@ type BuildDriverOptions struct {
 	PushAuthUsername string `yaml:"push_auth_username"`
 	// PushAuthPassword is the password to use for pushing the image
 	PushAuthPassword string `yaml:"push_auth_password"`
-	// PushImages flag indicate whether to push the image to the registry once it has been built
-	PushImages bool `yaml:"push_images"`
-	// RemoveAfterBuild flag indicate whether to remove the image after build
-	RemoveAfterBuild bool `yaml:"remove_after_build"`
+	// PushImageAfterBuild flag indicate whether to push the image to the registry once it has been built
+	PushImageAfterBuild bool `yaml:"push_image_after_build"`
+	// RemoveImageAfterBuild flag indicate whether to remove the image after build
+	RemoveImageAfterBuild bool `yaml:"remove_image_after_build"`
 	// Tags is a list of tags to generate
 	Tags []string `yaml:"tags"`
 	// Vars is a variables list to be sent to driver
 	Vars map[string]interface{} `yaml:"variables"`
-
-	// //************************************
-	// // DryRun flag indicate whether to simulate the image built
-	// DryRun bool `yaml:"dry_run"`
-	// // EnableSemanticVersionTags flag indicate whether to generate tags based on sematic version automatically
-	// EnableSemanticVersionTags bool `yaml:"enable_semantic_version_tags"`
-	// // NumWorkers set the number of workers to start. It is the number of concurrent images to be.
-	// NumWorkers int `yaml:"num_workers"`
-	// // SemanticVersionTagsTemplate are the semantic version tags templates to generate automatically
-	// SemanticVersionTagsTemplate []string `yaml:"semantic_version_tags_template"`
-	// // Cascade flag determines whether to start children build once the image built is finished
-	// Cascade bool `yaml:"cascade"`
 }

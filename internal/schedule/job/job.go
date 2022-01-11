@@ -2,16 +2,16 @@ package job
 
 import "context"
 
-// BuildJob is a job that can be run
-type BuildJob struct {
-	command BuildCommander
+// Job is a job that can be run
+type Job struct {
+	command Commander
 	done    chan struct{}
 	err     chan error
 }
 
-// NewBuildJob creates a new job
-func NewBuildJob(command BuildCommander) *BuildJob {
-	return &BuildJob{
+// NewJob creates a new job
+func NewJob(command Commander) *Job {
+	return &Job{
 		command: command,
 		done:    make(chan struct{}),
 		err:     make(chan error),
@@ -19,7 +19,7 @@ func NewBuildJob(command BuildCommander) *BuildJob {
 }
 
 // Run runs the job
-func (j *BuildJob) Run(ctx context.Context) {
+func (j *Job) Run(ctx context.Context) {
 
 	err := j.command.Execute(ctx)
 	if err != nil {
@@ -30,17 +30,17 @@ func (j *BuildJob) Run(ctx context.Context) {
 }
 
 // Close closes the job channels
-func (j *BuildJob) Close() {
+func (j *Job) Close() {
 	close(j.done)
 	close(j.err)
 }
 
 // Done returns a channel that is closed when the job is done
-func (j *BuildJob) Done() <-chan struct{} {
+func (j *Job) Done() <-chan struct{} {
 	return j.done
 }
 
 // Err returns a channel that is closed when the job has an error
-func (j *BuildJob) Err() <-chan error {
+func (j *Job) Err() <-chan error {
 	return j.err
 }

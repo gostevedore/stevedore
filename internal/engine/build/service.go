@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	errors "github.com/apenella/go-common-utils/error"
@@ -11,11 +12,13 @@ import (
 	"github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/driver"
 	"github.com/gostevedore/stevedore/internal/image"
+	"github.com/gostevedore/stevedore/internal/schedule"
 )
 
 // Service is an application service to build docker images
 type Service struct {
-	images         ImagesStorer
+	plan Planner
+	// images         ImagesStorer
 	builders       BuildersStorer
 	commandFactory BuildCommandFactorier
 	driverFactory  DriverFactorier
@@ -26,9 +29,10 @@ type Service struct {
 }
 
 // NewService creates a Service to build docker images
-func NewService(images ImagesStorer, builders BuildersStorer, commandFactory BuildCommandFactorier, jobFactory JobFactorier, dispatch Dispatcher, semver Semverser, credentials CredentialsStorer) *Service {
+func NewService(plans Planner, images ImagesStorer, builders BuildersStorer, commandFactory BuildCommandFactorier, jobFactory JobFactorier, dispatch Dispatcher, semver Semverser, credentials CredentialsStorer) *Service {
 	return &Service{
-		images:         images,
+		plan: plans,
+		// images:         images,
 		builders:       builders,
 		commandFactory: commandFactory,
 		jobFactory:     jobFactory,
@@ -42,7 +46,7 @@ func NewService(images ImagesStorer, builders BuildersStorer, commandFactory Bui
 func (s *Service) Build(ctx context.Context, options *ServiceOptions) error {
 
 	var err error
-	var buildImageList []*image.Image
+	var steps []Steper
 	var wg sync.WaitGroup
 	buildWorkerErrs := []func() error{}
 
@@ -52,21 +56,32 @@ func (s *Service) Build(ctx context.Context, options *ServiceOptions) error {
 		return errors.New(errContext, "Options are required on build service")
 	}
 
-	if s.dispatch == nil {
-		return errors.New(errContext, "Build worker requires a dispatcher")
+	if s.plan == nil {
+		return errors.New(errContext, "Plan storer is required on build service")
 	}
 
-	buildImageList, err = s.generateImagesList(options.ImageName, options.ImageVersions)
+	// buildImageList, err = s.generateImagesList(options.ImageName, options.ImageVersions)
+	// if err != nil {
+	// 	return errors.New(errContext, err.Error())
+	// }
+
+	steps, err = s.plan.Plan(options.ImageName, options.ImageVersions)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
 
-	buildWorkerFunc := func(ctx context.Context, image *image.Image, options *ServiceOptions) func() error {
+	buildWorkerFunc := func(ctx context.Context, step Steper, options *ServiceOptions) func() error {
 		var err error
 
 		c := make(chan struct{}, 1)
 		go func() {
 			defer close(c)
+			// defer notify to plans subscribed to this plan
+			defer step.Notify()
+			image := step.Image()
+			// wait to be notified before start building
+			step.Wait()
+
 			err = s.worker(ctx, image, options)
 			wg.Done()
 		}()
@@ -77,9 +92,10 @@ func (s *Service) Build(ctx context.Context, options *ServiceOptions) error {
 		}
 	}
 
-	for _, image := range buildImageList {
+	// execute build workers as future promises
+	for _, step := range steps {
 		wg.Add(1)
-		buildWorkerErrs = append(buildWorkerErrs, buildWorkerFunc(ctx, image, options))
+		buildWorkerErrs = append(buildWorkerErrs, buildWorkerFunc(ctx, step, options))
 
 	}
 
@@ -99,37 +115,37 @@ func (s *Service) Build(ctx context.Context, options *ServiceOptions) error {
 	return nil
 }
 
-func (s *Service) generateImagesList(name string, versions []string) ([]*image.Image, error) {
-	errContext := "(build::generateImagesList)"
-	var list []*image.Image
-	var imageAux *image.Image
-	var err error
+// func (s *Service) generateImagesList(name string, versions []string) ([]*image.Image, error) {
+// 	errContext := "(build::generateImagesList)"
+// 	var list []*image.Image
+// 	var imageAux *image.Image
+// 	var err error
 
-	if name == "" {
-		return nil, errors.New(errContext, "Image name is required to build an image")
-	}
+// 	if name == "" {
+// 		return nil, errors.New(errContext, "Image name is required to build an image")
+// 	}
 
-	if versions == nil || len(versions) < 1 {
-		list, err = s.images.All(name)
-		if err != nil {
-			return nil, errors.New(errContext, err.Error())
-		}
-	} else {
-		for _, version := range versions {
-			imageAux, err = s.images.Find(name, version)
-			if err != nil {
-				return nil, errors.New(errContext, err.Error())
-			}
-			list = append(list, imageAux)
-		}
-	}
+// 	if versions == nil || len(versions) < 1 {
+// 		list, err = s.images.All(name)
+// 		if err != nil {
+// 			return nil, errors.New(errContext, err.Error())
+// 		}
+// 	} else {
+// 		for _, version := range versions {
+// 			imageAux, err = s.images.Find(name, version)
+// 			if err != nil {
+// 				return nil, errors.New(errContext, err.Error())
+// 			}
+// 			list = append(list, imageAux)
+// 		}
+// 	}
 
-	return list, nil
-}
+// 	return list, nil
+// }
 
 func (s *Service) worker(ctx context.Context, image *image.Image, options *ServiceOptions) error {
-	var wg sync.WaitGroup
-	childBuildErrs := []func() error{}
+	// var wg sync.WaitGroup
+	// childBuildErrs := []func() error{}
 
 	errContext := "(build::worker)"
 
@@ -169,6 +185,19 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 	}
 	buildOptions.ImageVersion = image.Version
 
+	if options.ImageRegistryHost != "" {
+		buildOptions.RegistryHost = options.ImageRegistryHost
+	} else {
+		// TODO image domain need to ensure that image registry host is set
+		buildOptions.RegistryHost = image.RegistryHost
+	}
+
+	if options.ImageRegistryNamespace != "" {
+		buildOptions.RegistryNamespace = options.ImageRegistryNamespace
+	} else {
+		buildOptions.RegistryNamespace = image.RegistryNamespace
+	}
+
 	if options.EnableSemanticVersionTags {
 		// semantically versions are generated by all tags and the image version
 		semVerTags, _ := s.semver.GenerateSemverList(append(options.Tags, buildOptions.ImageVersion), options.SemanticVersionTagsTemplates)
@@ -177,10 +206,7 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 		}
 	}
 
-	// add tags defined on the image
-	for _, v := range image.Tags {
-		buildOptions.Tags = append(options.Tags, v)
-	}
+	buildOptions.Tags = append(options.Tags, image.Tags...)
 
 	// add persistent vars defined service options
 	// options definition has precedence over the image one
@@ -218,35 +244,38 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 		buildOptions.Labels[k] = v
 	}
 
-	if options.ImageRegistryHost != "" {
-		buildOptions.RegistryHost = options.ImageRegistryHost
-	} else {
-		buildOptions.RegistryHost = image.RegistryHost
-	}
+	if image.Parent != nil {
+		buildOptions.ImageFromName = image.Parent.Name
+		buildOptions.ImageFromVersion = image.Parent.Version
+		buildOptions.ImageFromRegistryHost = image.Parent.RegistryHost
+		buildOptions.ImageFromRegistryNamespace = image.Parent.RegistryNamespace
 
-	if options.ImageRegistryNamespace != "" {
-		buildOptions.RegistryNamespace = options.ImageRegistryNamespace
-	} else {
-		buildOptions.RegistryNamespace = image.RegistryNamespace
-	}
-
-	if image.ParentName != "" {
-		parent, err := s.images.Find(image.ParentName, image.ParentVersion)
-		if err != nil {
-			return errors.New(errContext, err.Error())
-		}
-
-		buildOptions.ImageFromName = parent.Name
-		buildOptions.ImageFromVersion = parent.Version
-		buildOptions.ImageFromRegistryHost = parent.RegistryHost
-		buildOptions.ImageFromRegistryNamespace = parent.RegistryNamespace
-
-		pullAuth := s.getCredentials(parent.RegistryHost)
+		pullAuth := s.getCredentials(image.Parent.RegistryHost)
 		if pullAuth != nil {
+			// TODO allow other auth methods than user-pass
 			buildOptions.PullAuthUsername = pullAuth.Username
 			buildOptions.PullAuthPassword = pullAuth.Password
 		}
 	}
+
+	// if image.ParentName != "" {
+	// 	parent, err := s.images.Find(image.ParentName, image.ParentVersion)
+	// 	if err != nil {
+	// 		return errors.New(errContext, err.Error())
+	// 	}
+
+	// 	buildOptions.ImageFromName = parent.Name
+	// 	buildOptions.ImageFromVersion = parent.Version
+	// 	buildOptions.ImageFromRegistryHost = parent.RegistryHost
+	// 	buildOptions.ImageFromRegistryNamespace = parent.RegistryNamespace
+
+	// 	pullAuth := s.getCredentials(parent.RegistryHost)
+	// 	if pullAuth != nil {
+	// 		// TODO allow other auth methods than user-pass
+	// 		buildOptions.PullAuthUsername = pullAuth.Username
+	// 		buildOptions.PullAuthPassword = pullAuth.Password
+	// 	}
+	// }
 
 	pushAuth := s.getCredentials(buildOptions.RegistryHost)
 	if pushAuth != nil {
@@ -254,17 +283,28 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 		buildOptions.PushAuthPassword = pushAuth.Password
 	}
 
-	b, err := s.builder(image.Builder)
+	imageBuilder, err := s.builder(image.Builder)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
 
-	buildOptions.BuilderOptions = b.Options
+	buildOptions.BuilderOptions = imageBuilder.Options
+	// TODO is it populated by default?
+	buildOptions.BuilderVarMappings = imageBuilder.VarMapping
 
-	driver, err := s.driverFactory.Get(b.Driver)
+	driver, err := s.driverFactory.Get(imageBuilder.Driver)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
+
+	buildOptions.BuilderName = strings.Join([]string{"builder", imageBuilder.Driver, buildOptions.RegistryNamespace, buildOptions.ImageName, buildOptions.ImageVersion}, "_")
+
+	// used by ansible driver
+	buildOptions.ConnectionLocal = options.ConnectionLocal
+
+	buildOptions.PullParentImage = options.PullParentImage
+
+	buildOptions.PushImageAfterBuild = options.PushImageAfterBuild
 
 	cmd, err := s.command(driver, buildOptions)
 	if err != nil {
@@ -285,57 +325,57 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 		return errors.New(errContext, jobErr.Error())
 	}
 
-	if options.Cascade && options.CascadeDepth != 0 {
+	// if options.Cascade && options.CascadeDepth != 0 {
 
-		childBuildFunc := func(ctx context.Context, options *ServiceOptions) func() error {
-			var err error
+	// 	childBuildFunc := func(ctx context.Context, options *ServiceOptions) func() error {
+	// 		var err error
 
-			c := make(chan struct{}, 1)
-			go func() {
-				defer close(c)
-				err = s.Build(ctx, options)
-				wg.Done()
-			}()
+	// 		c := make(chan struct{}, 1)
+	// 		go func() {
+	// 			defer close(c)
+	// 			err = s.Build(ctx, options)
+	// 			wg.Done()
+	// 		}()
 
-			return func() error {
-				<-c
-				return err
-			}
-		}
+	// 		return func() error {
+	// 			<-c
+	// 			return err
+	// 		}
+	// 	}
 
-		for childName, childVersions := range image.Children {
+	// 	for childName, childVersions := range image.Children {
 
-			childServiceOptions := options.Copy()
-			childServiceOptions.ImageName = childName
-			childServiceOptions.ImageVersions = childVersions
-			childServiceOptions.Tags = []string{}
+	// 		childServiceOptions := options.Copy()
+	// 		childServiceOptions.ImageName = childName
+	// 		childServiceOptions.ImageVersions = childVersions
+	// 		childServiceOptions.Tags = []string{}
 
-			childServiceOptions.PersistentVars = make(map[string]interface{})
-			// Copy the parent persistent vars
-			for k, v := range buildOptions.PersistentVars {
-				childServiceOptions.PersistentVars[k] = v
-			}
-			childServiceOptions.Vars = map[string]interface{}{}
-			childServiceOptions.Labels = map[string]string{}
-			childServiceOptions.CascadeDepth--
+	// 		childServiceOptions.PersistentVars = make(map[string]interface{})
+	// 		// Copy the parent persistent vars
+	// 		for k, v := range buildOptions.PersistentVars {
+	// 			childServiceOptions.PersistentVars[k] = v
+	// 		}
+	// 		childServiceOptions.Vars = map[string]interface{}{}
+	// 		childServiceOptions.Labels = map[string]string{}
+	// 		childServiceOptions.CascadeDepth--
 
-			wg.Add(1)
-			childBuildErrs = append(childBuildErrs, childBuildFunc(ctx, childServiceOptions))
-		}
+	// 		wg.Add(1)
+	// 		childBuildErrs = append(childBuildErrs, childBuildFunc(ctx, childServiceOptions))
+	// 	}
 
-		wg.Wait()
+	// 	wg.Wait()
 
-		errMsg := ""
-		for _, childBuildErr := range childBuildErrs {
-			err = childBuildErr()
-			if err != nil {
-				errMsg = fmt.Sprintf("%s%s\n", errMsg, err.Error())
-			}
-		}
-		if errMsg != "" {
-			return errors.New(errContext, errMsg)
-		}
-	}
+	// 	errMsg := ""
+	// 	for _, childBuildErr := range childBuildErrs {
+	// 		err = childBuildErr()
+	// 		if err != nil {
+	// 			errMsg = fmt.Sprintf("%s%s\n", errMsg, err.Error())
+	// 		}
+	// 	}
+	// 	if errMsg != "" {
+	// 		return errors.New(errContext, errMsg)
+	// 	}
+	// }
 
 	return nil
 }
@@ -346,7 +386,7 @@ func (s *Service) getCredentials(registry string) *credentials.RegistryUserPassA
 	return auth
 }
 
-func (s *Service) job(ctx context.Context, cmd BuildCommander) (Jobber, error) {
+func (s *Service) job(ctx context.Context, cmd BuildCommander) (schedule.Jobber, error) {
 	return s.jobFactory.New(cmd), nil
 }
 
@@ -355,6 +395,10 @@ func (s *Service) command(driver driver.BuildDriverer, options *driver.BuildDriv
 
 	if s.commandFactory == nil {
 		return nil, errors.New(errContext, "To create a build command, is required a command factory")
+	}
+
+	if driver == nil {
+		return nil, errors.New(errContext, "To create a build command, is required a driver")
 	}
 
 	if options == nil {

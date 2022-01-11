@@ -20,6 +20,7 @@ func TestNew(t *testing.T) {
 		VarMappingImageNameKey:                     VarMappingImageNameDefaultValue,
 		VarMappingImageTagKey:                      VarMappingImageTagDefaultValue,
 		VarMappingImageExtraTagsKey:                VarMappingImageExtraTagsDefaultValue,
+		VarMappingImageLabelsKey:                   VarMappingImageLabelsDefaultValue,
 		VarMappingRegistryNamespaceKey:             VarMappingRegistryNamespaceDefaultValue,
 		VarMappingRegistryHostKey:                  VarMappingRegistryHostDefaultValue,
 		VarMappingPullParentImageKey:               VarMappingPullParentImageDefaultValue,
@@ -45,6 +46,7 @@ func TestGetUnderlyingMap(t *testing.T) {
 		VarMappingImageNameKey:                     VarMappingImageNameDefaultValue,
 		VarMappingImageTagKey:                      VarMappingImageTagDefaultValue,
 		VarMappingImageExtraTagsKey:                VarMappingImageExtraTagsDefaultValue,
+		VarMappingImageLabelsKey:                   VarMappingImageLabelsDefaultValue,
 		VarMappingRegistryNamespaceKey:             VarMappingRegistryNamespaceDefaultValue,
 		VarMappingRegistryHostKey:                  VarMappingRegistryHostDefaultValue,
 		VarMappingPullParentImageKey:               VarMappingPullParentImageDefaultValue,
@@ -77,6 +79,7 @@ func TestSetUnderlyingMap(t *testing.T) {
 		VarMappingRegistryHostKey:                  "expectedVarMappingRegistryHostDefaultValue",
 		VarMappingPullParentImageKey:               "expectedVarMappingPullParentImageDefaultValue",
 		VarMappingPushImagetKey:                    "expectedVarMappingPushImagetDefaultValue",
+		VarMappingImageLabelsKey:                   "expectedVarMappingImageLabelsDefaultValue",
 	}
 	expected := Varsmap{
 		VarMappingImageBuilderNameKey:              "expectedVarMappingImageBuilderNameDefaultValue",
@@ -95,6 +98,7 @@ func TestSetUnderlyingMap(t *testing.T) {
 		VarMappingRegistryHostKey:                  "expectedVarMappingRegistryHostDefaultValue",
 		VarMappingPullParentImageKey:               "expectedVarMappingPullParentImageDefaultValue",
 		VarMappingPushImagetKey:                    "expectedVarMappingPushImagetDefaultValue",
+		VarMappingImageLabelsKey:                   "expectedVarMappingImageLabelsDefaultValue",
 	}
 
 	t.Log("Testing set underlying map")
@@ -125,6 +129,7 @@ func TestCombine(t *testing.T) {
 		VarMappingRegistryHostKey:                  VarMappingRegistryHostDefaultValue,
 		VarMappingPullParentImageKey:               VarMappingPullParentImageDefaultValue,
 		VarMappingPushImagetKey:                    VarMappingPushImagetDefaultValue,
+		VarMappingImageLabelsKey:                   VarMappingImageLabelsDefaultValue,
 	}
 
 	t.Log("Testing combine maps")

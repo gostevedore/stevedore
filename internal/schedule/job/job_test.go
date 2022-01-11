@@ -15,7 +15,7 @@ func TestRunDone(t *testing.T) {
 	build := command.NewMockBuildCommand()
 	build.Mock.On("Execute", context.TODO()).Return(nil)
 
-	job := NewBuildJob(build)
+	job := NewJob(build)
 
 	go job.Run(context.TODO())
 
@@ -34,7 +34,7 @@ func TestRunErro(t *testing.T) {
 	build := command.NewMockBuildCommand()
 	build.Mock.On("Execute", context.TODO()).Return(errors.New("Test error"))
 
-	job := NewBuildJob(build)
+	job := NewJob(build)
 
 	go job.Run(context.TODO())
 

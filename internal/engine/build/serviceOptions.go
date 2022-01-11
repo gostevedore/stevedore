@@ -29,8 +29,11 @@ type ServiceOptions struct {
 	// ImageRegistryHost is the registry's host of the image to be built
 	ImageRegistryHost string `yaml:"image_registry_host"`
 
-	// PushImages flag indicate whether to push the image to the registry once it has been built
-	PushImages bool `yaml:"push_images"`
+	// PushImageAfterBuild flag indicate whether to push the image to the registry once it has been built
+	PushImageAfterBuild bool `yaml:"push_image_after_build"`
+
+	// PullParentImage flag indicate whether to pull the parent image before building
+	PullParentImage bool `yaml:"pull_parent_image"`
 
 	// SemanticVersionTagsTemplate are the semantic version tags templates to generate automatically
 	SemanticVersionTagsTemplates []string `yaml:"semantic_version_tags_template"`
@@ -64,7 +67,7 @@ func (o *ServiceOptions) Copy() *ServiceOptions {
 	copy.ImageFromRegistryHost = o.ImageFromRegistryHost
 	copy.ImageFromVersion = o.ImageFromVersion
 
-	copy.PushImages = o.PushImages
+	copy.PushImageAfterBuild = o.PushImageAfterBuild
 	copy.RemoveAfterBuild = o.RemoveAfterBuild
 	copy.Cascade = o.Cascade
 	copy.CascadeDepth = o.CascadeDepth

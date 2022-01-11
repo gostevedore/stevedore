@@ -129,6 +129,10 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, o *driver.BuildDriver
 		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], o.Tags)
 	}
 
+	if len(o.Labels) > 0 {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], o.Labels)
+	}
+
 	if o.OutputPrefix == "" {
 		o.OutputPrefix = o.ImageName
 		if o.ImageVersion != "" {
@@ -152,9 +156,12 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, o *driver.BuildDriver
 		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromTagKey], o.ImageFromVersion)
 	}
 
-	if !o.PushImages {
+	if !o.PushImageAfterBuild {
 		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingPushImagetKey], false)
 	}
+
+	// TODO:
+	// go-ansible library is not able to pass secrets, auth values won't be passed to ansible playbook till this is allowed
 
 	d.driver.WithPlaybook(playbook)
 	d.driver.WithOptions(ansiblePlaybookOptions)

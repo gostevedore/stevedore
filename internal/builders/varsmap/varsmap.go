@@ -17,6 +17,7 @@ const (
 	VarMappingImageNameKey                     = "image_name_key"
 	VarMappingImageTagKey                      = "image_tag_key"
 	VarMappingImageExtraTagsKey                = "image_extra_tags_key"
+	VarMappingImageLabelsKey                   = "image_lables_key"
 	VarMappingRegistryNamespaceKey             = "image_registry_namespace_key"
 	VarMappingRegistryHostKey                  = "image_registry_host_key"
 	VarMappingPullParentImageKey               = "pull_parent_image_key"
@@ -34,6 +35,7 @@ const (
 	VarMappingImageNameDefaultValue                     = "image_name"
 	VarMappingImageTagDefaultValue                      = "image_tag"
 	VarMappingImageExtraTagsDefaultValue                = "image_extra_tags"
+	VarMappingImageLabelsDefaultValue                   = "image_labels"
 	VarMappingRegistryNamespaceDefaultValue             = "image_registry_namespace"
 	VarMappingRegistryHostDefaultValue                  = "image_registry_host"
 	VarMappingPullParentImageDefaultValue               = "pull_parent_image"
@@ -58,6 +60,7 @@ func New() Varsmap {
 		VarMappingImageNameKey:                     VarMappingImageNameDefaultValue,
 		VarMappingImageTagKey:                      VarMappingImageTagDefaultValue,
 		VarMappingImageExtraTagsKey:                VarMappingImageExtraTagsDefaultValue,
+		VarMappingImageLabelsKey:                   VarMappingImageLabelsDefaultValue,
 		VarMappingRegistryNamespaceKey:             VarMappingRegistryNamespaceDefaultValue,
 		VarMappingRegistryHostKey:                  VarMappingRegistryHostDefaultValue,
 		VarMappingPullParentImageKey:               VarMappingPullParentImageDefaultValue,
@@ -215,6 +218,14 @@ func (v Varsmap) Combine(c Varsmap) error {
 		_, existsC = auxC[VarMappingImageExtraTagsKey]
 		if existsC {
 			auxV[VarMappingImageExtraTagsKey] = auxC[VarMappingImageExtraTagsKey]
+		}
+	}
+
+	_, existsV = auxV[VarMappingImageLabelsKey]
+	if !existsV {
+		_, existsC = auxC[VarMappingImageLabelsKey]
+		if existsC {
+			auxV[VarMappingImageLabelsKey] = auxC[VarMappingImageLabelsKey]
 		}
 	}
 

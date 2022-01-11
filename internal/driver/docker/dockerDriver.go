@@ -169,7 +169,7 @@ func (d *DockerDriver) Build(ctx context.Context, options *driver.BuildDriverOpt
 		d.driver.AddAuth(options.PushAuthUsername, options.PushAuthPassword, options.RegistryHost)
 	}
 
-	if options.PushImages {
+	if options.PushImageAfterBuild {
 		d.driver.WithPushAfterBuild()
 
 		if options.PushAuthUsername != "" && options.PushAuthPassword != "" {
@@ -179,6 +179,10 @@ func (d *DockerDriver) Build(ctx context.Context, options *driver.BuildDriverOpt
 
 	if options.PullParentImage {
 		d.driver.WithPullParentImage()
+	}
+
+	if options.RemoveImageAfterBuild {
+		d.driver.WithRemoveAfterPush()
 	}
 
 	if options.BuilderOptions.Context == nil || len(options.BuilderOptions.Context) == 0 {

@@ -118,8 +118,9 @@ func TestBuild(t *testing.T) {
 				ImageFromVersion:           "image-from-version",
 				ImageFromRegistryNamespace: "image-from-registry-namespace",
 				ImageFromRegistryHost:      "image-from-registry-host.test",
-				PushImages:                 true,
+				PushImageAfterBuild:        true,
 				PullParentImage:            true,
+				RemoveImageAfterBuild:      true,
 				OutputPrefix:               "output-prefix",
 				BuilderVarMappings: map[string]string{
 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
@@ -187,6 +188,7 @@ func TestBuild(t *testing.T) {
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddPushAuth", "push-user", "push-pass").Return(nil)
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithPushAfterBuild")
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithPullParentImage")
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithRemoveAfterPush")
 
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildContext", []*builder.DockerDriverContextOptions{
 					{Path: "/path/to/file"},
@@ -230,7 +232,7 @@ func TestBuild(t *testing.T) {
 				ImageFromVersion:           "image-from-version",
 				ImageFromRegistryNamespace: "image-from-registry-namespace",
 				ImageFromRegistryHost:      "image-from-registry-host.test",
-				PushImages:                 true,
+				PushImageAfterBuild:        true,
 				BuilderVarMappings: map[string]string{
 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
@@ -297,7 +299,7 @@ func TestBuild(t *testing.T) {
 				ImageFromVersion:           "image-from-version",
 				ImageFromRegistryNamespace: "image-from-registry-namespace",
 				ImageFromRegistryHost:      "image-from-registry-host.test",
-				PushImages:                 true,
+				PushImageAfterBuild:        true,
 				BuilderVarMappings: map[string]string{
 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
