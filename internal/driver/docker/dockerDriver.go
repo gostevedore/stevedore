@@ -14,9 +14,6 @@ import (
 const (
 	// DriverName is the name for the driver
 	DriverName = "docker"
-	// ImageTagVersionSeparator        = ":"
-	// ImageTagNamespaceSeparator      = "/"
-	// ImageTagRegistrySeparator       = "/"
 )
 
 // DockerDriver is a driver for Docker
@@ -69,26 +66,15 @@ func (d *DockerDriver) Build(ctx context.Context, options *driver.BuildDriverOpt
 		return errors.New(errContext, "To build an image is required an image name")
 	}
 
-	imageNameURL := &image.ImageURL{
-		Name: options.ImageName,
-	}
-
-	if options.ImageVersion != "" {
-		imageNameURL.Tag = options.ImageVersion
-	}
-
-	if options.RegistryNamespace != "" {
-		imageNameURL.Namespace = options.RegistryNamespace
-	}
-
-	if options.RegistryHost != "" {
-		imageNameURL.Registry = options.RegistryHost
-	}
-
-	imageName, err = imageNameURL.URL()
+	imageAux, err := image.NewImage(options.ImageName, options.ImageVersion, options.RegistryHost, options.RegistryNamespace)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
+	imageName, err = imageAux.DockerNormalizedNamed()
+	if err != nil {
+		return errors.New(errContext, err.Error())
+	}
+
 	d.driver.WithImageName(imageName)
 
 	// TO REMOVE
@@ -117,23 +103,16 @@ func (d *DockerDriver) Build(ctx context.Context, options *driver.BuildDriverOpt
 	if len(options.Tags) > 0 {
 		for _, tag := range options.Tags {
 
-			imageURL := &image.ImageURL{
-				Name: options.ImageName,
-				Tag:  tag,
-			}
-
-			if options.RegistryNamespace != "" {
-				imageURL.Namespace = options.RegistryNamespace
-			}
-			if options.RegistryHost != "" {
-				imageURL.Registry = options.RegistryHost
-			}
-
-			url, err := imageURL.URL()
+			imageTaggedAux, err := image.NewImage(options.ImageName, tag, options.RegistryHost, options.RegistryNamespace)
 			if err != nil {
 				return errors.New(errContext, err.Error())
 			}
-			d.driver.AddTags(url)
+			imageTaggedName, err := imageTaggedAux.DockerNormalizedNamed()
+			if err != nil {
+				return errors.New(errContext, err.Error())
+			}
+
+			d.driver.AddTags(imageTaggedName)
 		}
 	}
 

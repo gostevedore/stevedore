@@ -34,7 +34,7 @@ func TestPromote(t *testing.T) {
 			},
 			context: context.TODO(),
 			options: &ServiceOptions{
-				SourceImageName:              "registry/namespace/image:tag",
+				SourceImageName:              "registry.test/namespace/image:tag",
 				EnableSemanticVersionTags:    false,
 				TargetImageName:              "",
 				TargetImageRegistryNamespace: "",
@@ -48,18 +48,18 @@ func TestPromote(t *testing.T) {
 			prepareMockFunc: func(p *Service) {
 
 				options := &promoterepository.PromoteOptions{
-					TargetImageName:       "registry/namespace/image:tag",
+					TargetImageName:       "registry.test/namespace/image:tag",
 					TargetImageTags:       nil,
 					RemoveTargetImageTags: false,
 					RemoteSourceImage:     false,
-					SourceImageName:       "registry/namespace/image:tag",
+					SourceImageName:       "registry.test/namespace/image:tag",
 					PullAuthUsername:      "name",
 					PullAuthPassword:      "pass",
 					PushAuthUsername:      "name",
 					PushAuthPassword:      "pass",
 				}
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry.test").Return(&credentials.RegistryUserPassAuth{
 					Username: "name",
 					Password: "pass",
 				}, nil)
@@ -82,7 +82,7 @@ func TestPromote(t *testing.T) {
 			},
 			context: context.TODO(),
 			options: &ServiceOptions{
-				SourceImageName:              "registry/namespace/image:tag",
+				SourceImageName:              "registry.test/namespace/image:tag",
 				EnableSemanticVersionTags:    false,
 				TargetImageName:              "",
 				TargetImageRegistryNamespace: "",
@@ -95,11 +95,11 @@ func TestPromote(t *testing.T) {
 			},
 			prepareMockFunc: func(p *Service) {
 				options := &promoterepository.PromoteOptions{
-					TargetImageName:       "registry/namespace/image:tag",
+					TargetImageName:       "registry.test/namespace/image:tag",
 					TargetImageTags:       nil,
 					RemoveTargetImageTags: false,
 					RemoteSourceImage:     true,
-					SourceImageName:       "registry/namespace/image:tag",
+					SourceImageName:       "registry.test/namespace/image:tag",
 					PullAuthUsername:      "name",
 					PullAuthPassword:      "pass",
 					PushAuthUsername:      "name",
@@ -113,7 +113,7 @@ func TestPromote(t *testing.T) {
 				factory.Register(promoteMockID, mock)
 				p.factory = factory
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry.test").Return(&credentials.RegistryUserPassAuth{
 					Username: "name",
 					Password: "pass",
 				}, nil)
@@ -129,11 +129,11 @@ func TestPromote(t *testing.T) {
 			},
 			context: context.TODO(),
 			options: &ServiceOptions{
-				SourceImageName:              "registry/namespace/image:tag",
+				SourceImageName:              "registry.test/namespace/image:tag",
 				EnableSemanticVersionTags:    true,
 				TargetImageName:              "targetimage",
 				TargetImageRegistryNamespace: "targetnamespace",
-				TargetImageRegistryHost:      "targetregistry",
+				TargetImageRegistryHost:      "targetregistry.test",
 				TargetImageTags:              []string{"1.2.3", "tag1", "tag2"},
 				PromoteSourceImageTag:        true,
 				RemoveTargetImageTags:        true,
@@ -142,23 +142,23 @@ func TestPromote(t *testing.T) {
 			},
 			prepareMockFunc: func(p *Service) {
 				options := &promoterepository.PromoteOptions{
-					TargetImageName:       "targetregistry/targetnamespace/targetimage:1.2.3",
+					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
 					TargetImageTags:       []string{"tag", "tag1", "tag2", "1", "1.2"},
 					RemoveTargetImageTags: true,
 					RemoteSourceImage:     true,
-					SourceImageName:       "registry/namespace/image:tag",
+					SourceImageName:       "registry.test/namespace/image:tag",
 					PullAuthUsername:      "pullname",
 					PullAuthPassword:      "pullpass",
 					PushAuthUsername:      "pushname",
 					PushAuthPassword:      "pushpass",
 				}
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry.test").Return(&credentials.RegistryUserPassAuth{
 					Username: "pullname",
 					Password: "pullpass",
 				}, nil)
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "targetregistry").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "targetregistry.test").Return(&credentials.RegistryUserPassAuth{
 					Username: "pushname",
 					Password: "pushpass",
 				}, nil)
@@ -181,11 +181,11 @@ func TestPromote(t *testing.T) {
 			},
 			context: context.TODO(),
 			options: &ServiceOptions{
-				SourceImageName:              "registry/namespace/image:tag",
+				SourceImageName:              "registry.test/namespace/image:tag",
 				EnableSemanticVersionTags:    true,
 				TargetImageName:              "targetimage",
 				TargetImageRegistryNamespace: "targetnamespace",
-				TargetImageRegistryHost:      "targetregistry",
+				TargetImageRegistryHost:      "targetregistry.test",
 				TargetImageTags:              []string{"1.2.3", "tag1", "tag2"},
 				PromoteSourceImageTag:        true,
 				RemoveTargetImageTags:        true,
@@ -194,19 +194,19 @@ func TestPromote(t *testing.T) {
 			},
 			prepareMockFunc: func(p *Service) {
 				options := &promoterepository.PromoteOptions{
-					TargetImageName:       "targetregistry/targetnamespace/targetimage:1.2.3",
+					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
 					TargetImageTags:       []string{"tag", "tag1", "tag2", "1", "1.2"},
 					RemoveTargetImageTags: true,
 					RemoteSourceImage:     true,
-					SourceImageName:       "registry/namespace/image:tag",
+					SourceImageName:       "registry.test/namespace/image:tag",
 					PullAuthUsername:      "",
 					PullAuthPassword:      "",
 					PushAuthUsername:      "",
 					PushAuthPassword:      "",
 				}
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry").Return(nil, nil)
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "targetregistry").Return(nil, nil)
+				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry.test").Return(nil, nil)
+				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "targetregistry.test").Return(nil, nil)
 
 				mock := mockpromote.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
@@ -229,11 +229,11 @@ func TestPromote(t *testing.T) {
 			},
 			context: context.TODO(),
 			options: &ServiceOptions{
-				SourceImageName:              "registry/namespace/image:tag",
+				SourceImageName:              "registry.test/namespace/image:tag",
 				EnableSemanticVersionTags:    false,
 				TargetImageName:              "targetimage",
 				TargetImageRegistryNamespace: "targetnamespace",
-				TargetImageRegistryHost:      "targetregistry",
+				TargetImageRegistryHost:      "targetregistry.test",
 				TargetImageTags:              []string{"1.2.3", "tag1", "tag2"},
 				PromoteSourceImageTag:        true,
 				RemoveTargetImageTags:        true,
@@ -242,23 +242,23 @@ func TestPromote(t *testing.T) {
 			},
 			prepareMockFunc: func(p *Service) {
 				options := &promoterepository.PromoteOptions{
-					TargetImageName:       "targetregistry/targetnamespace/targetimage:1.2.3",
+					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
 					TargetImageTags:       []string{"tag", "tag1", "tag2", "1", "1.2"},
 					RemoveTargetImageTags: true,
 					RemoteSourceImage:     true,
-					SourceImageName:       "registry/namespace/image:tag",
+					SourceImageName:       "registry.test/namespace/image:tag",
 					PullAuthUsername:      "pullname",
 					PullAuthPassword:      "pullpass",
 					PushAuthUsername:      "pushname",
 					PushAuthPassword:      "pushpass",
 				}
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry.test").Return(&credentials.RegistryUserPassAuth{
 					Username: "pullname",
 					Password: "pullpass",
 				}, nil)
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "targetregistry").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "targetregistry.test").Return(&credentials.RegistryUserPassAuth{
 					Username: "pushname",
 					Password: "pushpass",
 				}, nil)
@@ -285,11 +285,11 @@ func TestPromote(t *testing.T) {
 			},
 			context: context.TODO(),
 			options: &ServiceOptions{
-				SourceImageName:              "registry/namespace/image:tag",
+				SourceImageName:              "registry.test/namespace/image:tag",
 				EnableSemanticVersionTags:    true,
 				TargetImageName:              "targetimage",
 				TargetImageRegistryNamespace: "targetnamespace",
-				TargetImageRegistryHost:      "targetregistry",
+				TargetImageRegistryHost:      "targetregistry.test",
 				TargetImageTags:              []string{"1.2.3", "tag1", "tag2"},
 				PromoteSourceImageTag:        true,
 				RemoveTargetImageTags:        true,
@@ -298,23 +298,23 @@ func TestPromote(t *testing.T) {
 			},
 			prepareMockFunc: func(p *Service) {
 				options := &promoterepository.PromoteOptions{
-					TargetImageName:       "targetregistry/targetnamespace/targetimage:1.2.3",
+					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
 					TargetImageTags:       []string{"tag", "tag1", "tag2", "1"},
 					RemoveTargetImageTags: true,
 					RemoteSourceImage:     true,
-					SourceImageName:       "registry/namespace/image:tag",
+					SourceImageName:       "registry.test/namespace/image:tag",
 					PullAuthUsername:      "pullname",
 					PullAuthPassword:      "pullpass",
 					PushAuthUsername:      "pushname",
 					PushAuthPassword:      "pushpass",
 				}
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry.test").Return(&credentials.RegistryUserPassAuth{
 					Username: "pullname",
 					Password: "pullpass",
 				}, nil)
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "targetregistry").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "targetregistry.test").Return(&credentials.RegistryUserPassAuth{
 					Username: "pushname",
 					Password: "pushpass",
 				}, nil)

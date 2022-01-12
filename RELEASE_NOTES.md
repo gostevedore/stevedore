@@ -26,6 +26,9 @@
 - **BREAKING-CHANGES** package `"github.com/gostevedore/stevedore/internal/builders/builder"` has an strict definition of builder options
 - `BuilderOptions` accepts multiple context that are unified before perform an image build
 - Drivers receives `BuildDriverOptions` instead of `BuildOptions`
+- Image uses docekr reference normalized names
+- Images has been splitted to image configration and image as dto
+- build engine has been replaced by application service build
 
 ### Removed
 - Image tags are not sanetized any more

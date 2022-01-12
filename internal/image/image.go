@@ -61,25 +61,12 @@ func NewImage(name, version, registryHost, registryNamesapace string, opt ...Opt
 		imageName = fmt.Sprintf("%s/%s", registryHost, imageName)
 	}
 
-	referenceName, err := reference.ParseNormalizedNamed(imageName)
+	image, err := Parse(imageName)
 	if err != nil {
-		return nil, errors.New(errContext, "Image could not be created", err)
+		return nil, errors.New(errContext, err.Error())
 	}
-	// in case that no version is specified, it will be the tag it as 'latest'
-	referenceName = reference.TagNameOnly(referenceName)
 
-	fmt.Println(">>>>", referenceName.String())
-
-	// Image
-	image := &Image{
-		Name:              reference.Path(referenceName)[strings.LastIndex(reference.Path(referenceName), "/")+1:],
-		Version:           referenceName.String()[strings.IndexRune(referenceName.String(), ':')+1:],
-		RegistryHost:      reference.Domain(referenceName),
-		RegistryNamespace: reference.Path(referenceName)[:strings.LastIndex(reference.Path(referenceName), "/")],
-	}
-	for _, o := range opt {
-		o(image)
-	}
+	image.Options(opt...)
 	return image, nil
 }
 
@@ -139,7 +126,55 @@ func WithVars(vars map[string]interface{}) OptionFunc {
 	}
 }
 
+func Parse(name string) (*Image, error) {
+	errContext := "(image::Parse)"
+
+	referenceName, err := reference.ParseNormalizedNamed(name)
+	if err != nil {
+		return nil, errors.New(errContext, "Image could not be parsed", err)
+	}
+	// in case that no version is specified, it will be the tag it as 'latest'
+	referenceName = reference.TagNameOnly(referenceName)
+
+	return &Image{
+		Name:              reference.Path(referenceName)[strings.LastIndex(reference.Path(referenceName), "/")+1:],
+		Version:           referenceName.String()[strings.IndexRune(referenceName.String(), ':')+1:],
+		RegistryHost:      reference.Domain(referenceName),
+		RegistryNamespace: reference.Path(referenceName)[:strings.LastIndex(reference.Path(referenceName), "/")],
+	}, nil
+}
+
+// Options returns the options of the image
+func (i *Image) Options(o ...OptionFunc) {
+	for _, opt := range o {
+		opt(i)
+	}
+}
+
 // AddChild adds a child image
 func (i *Image) AddChild(child *Image) {
 	i.Children = append(i.Children, child)
+}
+
+// NormalizedNamed normalizes the image name
+func (i *Image) DockerNormalizedNamed() (string, error) {
+	errContext := "(image::DockerNormalizedNamed)"
+
+	if i.Name == "" {
+		return "", errors.New(errContext, "Image name is empty")
+	}
+
+	if i.Version == "" {
+		return "", errors.New(errContext, "Image version is empty")
+	}
+
+	if i.RegistryHost == "" {
+		return "", errors.New(errContext, "Registry host is empty")
+	}
+
+	if i.RegistryNamespace == "" {
+		return "", errors.New(errContext, "Registry namespace is empty")
+	}
+
+	return fmt.Sprintf("%s/%s/%s:%s", i.RegistryHost, i.RegistryNamespace, i.Name, i.Version), nil
 }

@@ -30,7 +30,7 @@ func NewService(f PromoteFactorier, conf *configuration.Configuration, c Credent
 func (e *Service) Promote(ctx context.Context, options *ServiceOptions, promoteType string) error {
 
 	var err error
-	var sourceImageURL, targetImageURL *image.ImageURL
+	var sourceImage, targetImage *image.Image
 
 	promoteOptions := &promote.PromoteOptions{}
 	errContext := "(Service::Promote)"
@@ -60,36 +60,36 @@ func (e *Service) Promote(ctx context.Context, options *ServiceOptions, promoteT
 	}
 
 	promoteOptions.SourceImageName = options.SourceImageName
-	sourceImageURL, err = image.Parse(options.SourceImageName)
+	sourceImage, err = image.Parse(options.SourceImageName)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
-	targetImageURL = sourceImageURL
+	targetImage = sourceImage
 
-	pullAuth := e.getCredentials(sourceImageURL.Registry)
+	pullAuth := e.getCredentials(sourceImage.RegistryHost)
 	if pullAuth != nil {
 		promoteOptions.PullAuthUsername = pullAuth.Username
 		promoteOptions.PullAuthPassword = pullAuth.Password
 	}
 
 	if options.PromoteSourceImageTag {
-		promoteOptions.TargetImageTags = append(promoteOptions.TargetImageTags, sourceImageURL.Tag)
+		promoteOptions.TargetImageTags = append(promoteOptions.TargetImageTags, sourceImage.Version)
 	}
 
 	if options.TargetImageRegistryHost != "" {
-		targetImageURL.Registry = options.TargetImageRegistryHost
+		targetImage.RegistryHost = options.TargetImageRegistryHost
 	}
 
 	if options.TargetImageRegistryNamespace != "" {
-		targetImageURL.Namespace = options.TargetImageRegistryNamespace
+		targetImage.RegistryNamespace = options.TargetImageRegistryNamespace
 	}
 
 	if options.TargetImageName != "" {
-		targetImageURL.Name = options.TargetImageName
+		targetImage.Name = options.TargetImageName
 	}
 
 	if len(options.TargetImageTags) > 0 {
-		targetImageURL.Tag = options.TargetImageTags[0]
+		targetImage.Version = options.TargetImageTags[0]
 		promoteOptions.TargetImageTags = append(promoteOptions.TargetImageTags, options.TargetImageTags[1:]...)
 	}
 
@@ -108,12 +108,12 @@ func (e *Service) Promote(ctx context.Context, options *ServiceOptions, promoteT
 		}
 	}
 
-	promoteOptions.TargetImageName, err = targetImageURL.URL()
+	promoteOptions.TargetImageName, err = targetImage.DockerNormalizedNamed()
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
 
-	pushAuth := e.getCredentials(targetImageURL.Registry)
+	pushAuth := e.getCredentials(targetImage.RegistryHost)
 	if pushAuth != nil {
 		promoteOptions.PushAuthUsername = pushAuth.Username
 		promoteOptions.PushAuthPassword = pushAuth.Password
