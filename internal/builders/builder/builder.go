@@ -67,10 +67,21 @@ type DockerDriverGitContextAuthOptions struct {
 }
 
 // NewBuilder creates a new builder
-func NewBuilder() *Builder {
+func NewBuilder(name, driver string, options *BuilderOptions, varmap varsmap.Varsmap) *Builder {
+
+	if options == nil {
+		options = &BuilderOptions{}
+	}
+
+	if varmap == nil {
+		varmap = varsmap.New()
+	}
+
 	return &Builder{
-		Options:    &BuilderOptions{},
-		VarMapping: varsmap.New(),
+		Name:       name,
+		Driver:     driver,
+		Options:    options,
+		VarMapping: varmap,
 	}
 }
 
@@ -83,6 +94,10 @@ func NewBuilderFromByteArray(data []byte) (*Builder, error) {
 	err := yaml.Unmarshal(data, &builder)
 	if err != nil {
 		return nil, errors.New(errContext, fmt.Sprintf("Builder could not be created.\nfound:\n'%s'\n", string(data)), err)
+	}
+
+	if builder.VarMapping == nil {
+		builder.VarMapping = varsmap.New()
 	}
 
 	return builder, nil
@@ -104,6 +119,10 @@ func NewBuilderFromIOReader(reader io.Reader) (*Builder, error) {
 	err = yaml.Unmarshal(buff.Bytes(), &builder)
 	if err != nil {
 		return nil, errors.New(errContext, fmt.Sprintf("Builder could not be created.\nfound:\n'%s'\n", buff.String()), err)
+	}
+
+	if builder.VarMapping == nil {
+		builder.VarMapping = varsmap.New()
 	}
 
 	return builder, nil

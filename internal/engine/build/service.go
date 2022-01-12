@@ -344,7 +344,9 @@ func (s *Service) builder(builderDefinition interface{}) (*builder.Builder, erro
 	case string:
 		return s.builders.Find(builderDefinition.(string))
 	case *builder.Builder:
-		return builderDefinition.(*builder.Builder), nil
+		builderAux := builderDefinition.(*builder.Builder)
+
+		return builder.NewBuilder(builderAux.Name, builderAux.Driver, builderAux.Options, builderAux.VarMapping), nil
 	default:
 		// In-line builder definition
 		return builder.NewBuilderFromIOReader(bytes.NewBuffer([]byte(builderDefinition.(string))))

@@ -11,22 +11,6 @@ import (
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 )
 
-// BuildDriverer interface defines which methods are used to build a docker image
-// type BuildDriverer interface {
-// 	Build(context.Context, *driver.BuildDriverOptions) error
-// }
-
-// // Imager interface defines the image
-// type Imager interface {
-// 	Parent() Imager
-// 	Children() []Imager
-// }
-
-// // ImagesStorer interfaces defines the storage of images
-// type ImagesStorer interface {
-// 	Find(string, string) (*image.Image, error)
-// }
-
 // Steper interface defines the step plan
 type Steper interface {
 	Image() *image.Image
@@ -48,11 +32,6 @@ type BuildersStorer interface {
 type BuildCommandFactorier interface {
 	New(driver.BuildDriverer, *driver.BuildDriverOptions) command.BuildCommander
 }
-
-// BuildCommander interface defines the command to build a docker image
-// type BuildCommander interface {
-// 	Execute(context.Context) error
-// }
 
 // JobFactorier interface defines the factory of build jobs
 type JobFactorier interface {

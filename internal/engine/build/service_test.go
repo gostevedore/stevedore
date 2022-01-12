@@ -7,6 +7,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/builders"
 	"github.com/gostevedore/stevedore/internal/builders/builder"
+	"github.com/gostevedore/stevedore/internal/builders/varsmap"
 	"github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/driver"
 	mockdriver "github.com/gostevedore/stevedore/internal/driver/mock"
@@ -102,8 +103,6 @@ func TestBuild(t *testing.T) {
 					}, "parent_image", nil)
 				stepParent.Subscribe(childSyncChan)
 
-				_ = stepChild
-
 				service.plan.(*plan.MockPlan).On("Plan", "parent", []string{"0.0.0"}).Return([]*plan.Step{
 					stepParent,
 					stepChild,
@@ -130,6 +129,8 @@ func TestBuild(t *testing.T) {
 						PersistentVars:        map[string]interface{}{},
 						Vars:                  map[string]interface{}{},
 						Tags:                  []string{"0"},
+						BuilderVarMappings:    varsmap.New(),
+						BuilderOptions:        &builder.BuilderOptions{},
 					}).Return(command.NewMockBuildCommand(), nil)
 				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
 					mockdriver.NewMockDriver(),
@@ -148,6 +149,8 @@ func TestBuild(t *testing.T) {
 						PersistentVars:        map[string]interface{}{},
 						Vars:                  map[string]interface{}{},
 						Tags:                  []string{"0"},
+						BuilderVarMappings:    varsmap.New(),
+						BuilderOptions:        &builder.BuilderOptions{},
 					}).Return(command.NewMockBuildCommand(), nil)
 				service.jobFactory.(*job.MockJobFactory).On("New", command.NewMockBuildCommand()).Return(mockJob, nil)
 				service.dispatch.(*dispatch.MockDispatch).On("Enqueue", mockJob)
@@ -309,8 +312,6 @@ func TestWorker(t *testing.T) {
 					mockdriver.NewMockDriver(),
 					&driver.BuildDriverOptions{
 						BuilderName:                "builder_mock_namespace_image_0.0.0",
-						BuilderOptions:             nil,
-						BuilderVarMappings:         nil,
 						ConnectionLocal:            false,
 						ImageFromName:              "parent",
 						ImageFromRegistryNamespace: "parent_namespace",
@@ -342,6 +343,8 @@ func TestWorker(t *testing.T) {
 							"optvar":   "value",
 							"imagevar": "value",
 						},
+						BuilderVarMappings: varsmap.New(),
+						BuilderOptions:     &builder.BuilderOptions{},
 					}).Return(command.NewMockBuildCommand(), nil)
 				service.jobFactory.(*job.MockJobFactory).On("New", command.NewMockBuildCommand()).Return(mockJob, nil)
 				service.dispatch.(*dispatch.MockDispatch).On("Enqueue", mockJob)

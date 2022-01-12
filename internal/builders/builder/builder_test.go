@@ -11,12 +11,18 @@ import (
 
 func TestNewBuilder(t *testing.T) {
 	tests := []struct {
-		desc string
-		res  *Builder
+		desc   string
+		name   string
+		driver string
+		res    *Builder
 	}{
 		{
-			desc: "Testing create a new builder",
+			desc:   "Testing create a new builder",
+			name:   "builder",
+			driver: "ansible-playbook",
 			res: &Builder{
+				Name:       "builder",
+				Driver:     "ansible-playbook",
 				Options:    &BuilderOptions{},
 				VarMapping: varsmap.New(),
 			},
@@ -27,7 +33,7 @@ func TestNewBuilder(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			builder := NewBuilder()
+			builder := NewBuilder(test.name, test.driver, nil, nil)
 			assert.Equal(t, test.res, builder)
 		})
 	}
@@ -56,7 +62,7 @@ options:
 					Playbook:  "playbook",
 					Inventory: "inventory",
 				},
-				VarMapping: nil,
+				VarMapping: varsmap.New(),
 			},
 			err: &errors.Error{},
 		},
@@ -94,7 +100,7 @@ options:
 					},
 					Dockerfile: "Dockerfile.test",
 				},
-				VarMapping: nil,
+				VarMapping: varsmap.New(),
 			},
 			err: &errors.Error{},
 		},
@@ -142,7 +148,7 @@ options:
 					Playbook:  "playbook",
 					Inventory: "inventory",
 				},
-				VarMapping: nil,
+				VarMapping: varsmap.New(),
 			},
 			err: &errors.Error{},
 		},
@@ -180,7 +186,7 @@ options:
 					},
 					Dockerfile: "Dockerfile.test",
 				},
-				VarMapping: nil,
+				VarMapping: varsmap.New(),
 			},
 			err: &errors.Error{},
 		},
