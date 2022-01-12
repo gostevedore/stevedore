@@ -11,6 +11,7 @@ require (
 	github.com/apenella/go-data-structures/extendedTree v0.0.0-20210105152744-e87edca182ed
 	github.com/apenella/go-data-structures/tree v0.0.0-20210105152744-e87edca182ed
 	github.com/apenella/go-docker-builder v0.6.1-0.20211211151612-6c83c74727af
+	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v20.10.10+incompatible
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/ryanuber/columnize v0.0.0-20160712163229-9b3edd62028f
