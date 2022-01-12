@@ -11,6 +11,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/driver"
 	mockdriver "github.com/gostevedore/stevedore/internal/driver/mock"
 	"github.com/gostevedore/stevedore/internal/engine/build/command"
+	"github.com/gostevedore/stevedore/internal/engine/build/plan"
 	"github.com/gostevedore/stevedore/internal/image"
 	"github.com/gostevedore/stevedore/internal/schedule/dispatch"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
@@ -20,7 +21,156 @@ import (
 )
 
 func TestBuild(t *testing.T) {
+	errContext := "(build::Build)"
+	_ = errContext
+	tests := []struct {
+		desc              string
+		service           *Service
+		name              string
+		versions          []string
+		options           *ServiceOptions
+		prepareAssertFunc func(*Service)
+		assertFunc        func(*Service) bool
+		err               error
+	}{
+		{
+			desc:    "Testing error building an image with no options",
+			service: &Service{},
+			options: nil,
+			err:     errors.New(errContext, "To build an image, service options are required"),
+		},
+		{
+			desc:    "Testing error building an image with no execution plan",
+			service: &Service{},
+			options: &ServiceOptions{},
+			err:     errors.New(errContext, "To build an image, execution plan is required"),
+		},
+		{
+			desc: "Testing build an image",
+			service: NewService(
+				plan.NewMockPlan(),
+				builders.NewMockBuilders(),
+				command.NewMockBuildCommandFactory(),
+				&driver.BuildDriverFactory{
+					"mock": mockdriver.NewMockDriver(),
+				},
+				job.NewMockJobFactory(),
+				dispatch.NewMockDispatch(),
+				semver.NewSemVerGenerator(),
+				credentials.NewCredentialsStoreMock(),
+			),
+			name:     "parent",
+			versions: []string{"0.0.0"},
+			options: &ServiceOptions{
+				EnableSemanticVersionTags:    true,
+				PushImageAfterBuild:          true,
+				PullParentImage:              true,
+				SemanticVersionTagsTemplates: []string{"{{.Major}}"},
+				RemoveAfterBuild:             true,
+			},
+			err: &errors.Error{},
+			assertFunc: func(service *Service) bool {
+				return service.credentials.(*credentials.CredentialsStoreMock).AssertExpectations(t) &&
+					service.commandFactory.(*command.MockBuildCommandFactory).AssertExpectations(t) &&
+					service.dispatch.(*dispatch.MockDispatch).AssertExpectations(t) &&
+					service.jobFactory.(*job.MockJobFactory).AssertExpectations(t)
+			},
+			prepareAssertFunc: func(service *Service) {
 
+				mockJob := job.NewMockJob()
+				mockJob.On("Wait").Return(nil)
+
+				childSyncChan := make(chan struct{})
+				stepChild := plan.NewStep(&image.Image{
+					Name:         "child",
+					Version:      "0.0.0",
+					RegistryHost: "registry",
+					Builder: &builder.Builder{
+						Name:   "builder",
+						Driver: "mock",
+					},
+				}, "child_image", childSyncChan)
+				stepParent := plan.NewStep(
+					&image.Image{
+						Name:         "parent",
+						Version:      "0.0.0",
+						RegistryHost: "registry",
+						Builder: &builder.Builder{
+							Name:   "builder",
+							Driver: "mock",
+						},
+					}, "parent_image", nil)
+				stepParent.Subscribe(childSyncChan)
+
+				_ = stepChild
+
+				service.plan.(*plan.MockPlan).On("Plan", "parent", []string{"0.0.0"}).Return([]*plan.Step{
+					stepParent,
+					stepChild,
+				}, nil)
+
+				service.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry").Return(&credentials.RegistryUserPassAuth{
+					Username: "user",
+					Password: "pass",
+				}, nil)
+				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
+					mockdriver.NewMockDriver(),
+					&driver.BuildDriverOptions{
+						BuilderName:           "builder_mock__parent_0.0.0",
+						ConnectionLocal:       false,
+						ImageName:             "parent",
+						ImageVersion:          "0.0.0",
+						RegistryHost:          "registry",
+						PullParentImage:       true,
+						PushAuthUsername:      "user",
+						PushAuthPassword:      "pass",
+						PushImageAfterBuild:   true,
+						RemoveImageAfterBuild: true,
+						Labels:                map[string]string{},
+						PersistentVars:        map[string]interface{}{},
+						Vars:                  map[string]interface{}{},
+						Tags:                  []string{"0"},
+					}).Return(command.NewMockBuildCommand(), nil)
+				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
+					mockdriver.NewMockDriver(),
+					&driver.BuildDriverOptions{
+						BuilderName:           "builder_mock__child_0.0.0",
+						ConnectionLocal:       false,
+						ImageName:             "child",
+						ImageVersion:          "0.0.0",
+						RegistryHost:          "registry",
+						PullParentImage:       true,
+						PushAuthUsername:      "user",
+						PushAuthPassword:      "pass",
+						PushImageAfterBuild:   true,
+						RemoveImageAfterBuild: true,
+						Labels:                map[string]string{},
+						PersistentVars:        map[string]interface{}{},
+						Vars:                  map[string]interface{}{},
+						Tags:                  []string{"0"},
+					}).Return(command.NewMockBuildCommand(), nil)
+				service.jobFactory.(*job.MockJobFactory).On("New", command.NewMockBuildCommand()).Return(mockJob, nil)
+				service.dispatch.(*dispatch.MockDispatch).On("Enqueue", mockJob)
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.service)
+			}
+
+			err := test.service.Build(context.TODO(), test.name, test.versions, test.options)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				test.assertFunc(test.service)
+			}
+		})
+	}
 }
 
 func TestWorker(t *testing.T) {
@@ -48,15 +198,13 @@ func TestWorker(t *testing.T) {
 			options: &ServiceOptions{},
 			err:     errors.New(errContext, "Build worker requires an image specification"),
 		},
-		// {
-		// 	desc: "Testing error when no dispatcher is given to worker",
-		// 	service: &Service{
-		// 		dispatch: nil,
-		// 	},
-		// 	options: &ServiceOptions{},
-		// 	image:   &image.Image{},
-		// 	err:     errors.New(errContext, "Build worker requires a dispatcher"),
-		// },
+		{
+			desc:    "Testing error when no image specification is given to worker",
+			service: &Service{},
+			options: &ServiceOptions{},
+			image:   &image.Image{},
+			err:     errors.New(errContext, "Build worker requires a dispatcher"),
+		},
 		{
 			desc: "Testing error when no driver factory is given to worker",
 			service: &Service{
@@ -87,9 +235,8 @@ func TestWorker(t *testing.T) {
 			image:   &image.Image{},
 			err:     errors.New(errContext, "Build worker requires a credentials store"),
 		},
-
 		{
-			desc: "Testing build an image",
+			desc: "Testing worker to build an image",
 			service: NewService(
 				nil,
 				builders.NewMockBuilders(),
@@ -102,35 +249,44 @@ func TestWorker(t *testing.T) {
 				semver.NewSemVerGenerator(),
 				credentials.NewCredentialsStoreMock(),
 			),
-			// service: &Service{
-			// 	builders:       builders.NewMockBuilders(),
-			// 	commandFactory: command.NewMockBuildCommandFactory(),
-			// 	dispatch:       dispatch.NewDispatch(1, worker.NewMockWorkerFactory()),
-			// 	driverFactory: driver.BuildDriverFactory{
-			// 		"mock": mockdriver.NewMockDriver(),
-			// 	},
-			// 	jobFactory:  job.NewMockJobFactory(),
-			// 	semver:      semver.NewSemVerGenerator(),
-			// 	credentials: credentials.NewCredentialsStoreMock(),
-			// },
 			options: &ServiceOptions{
 				EnableSemanticVersionTags:    true,
 				PushImageAfterBuild:          true,
 				PullParentImage:              true,
-				SemanticVersionTagsTemplates: []string{"{{.Major}}", "{{.Major}}.{{.Minor}}"},
+				SemanticVersionTagsTemplates: []string{"{{.Major}}"},
 				RemoveAfterBuild:             true,
+				PersistentVars:               map[string]interface{}{"optpvar": "value"},
+				Vars:                         map[string]interface{}{"optvar": "value"},
+				Labels:                       map[string]string{"optlabel": "value"},
+				Tags:                         []string{"opttag"},
 			},
 			image: &image.Image{
 				Name:              "image",
 				Version:           "0.0.0",
 				RegistryHost:      "registry",
 				RegistryNamespace: "namespace",
-				Builder:           "builder",
+				Builder: &builder.Builder{
+					Name:   "builder",
+					Driver: "mock",
+				},
+				PersistentVars: map[string]interface{}{"imagepvar": "value"},
+				Vars:           map[string]interface{}{"imagevar": "value"},
+				Labels:         map[string]string{"imagelabel": "value"},
+				Tags:           []string{"imagetag"},
+				Parent: &image.Image{
+					Name:              "parent",
+					Version:           "parent_version",
+					RegistryHost:      "parent_registry",
+					RegistryNamespace: "parent_namespace",
+					Builder:           "builder",
+					PersistentVars:    map[string]interface{}{"parentpvar": "value"},
+					Vars:              map[string]interface{}{"parentvar": "value"},
+					Labels:            map[string]string{"parentlabel": "value"},
+				},
 			},
 			err: &errors.Error{},
 			assertFunc: func(service *Service) bool {
 				return service.credentials.(*credentials.CredentialsStoreMock).AssertExpectations(t) &&
-					service.builders.(*builders.MockBuilders).AssertExpectations(t) &&
 					service.commandFactory.(*command.MockBuildCommandFactory).AssertExpectations(t) &&
 					service.dispatch.(*dispatch.MockDispatch).AssertExpectations(t) &&
 					service.jobFactory.(*job.MockJobFactory).AssertExpectations(t)
@@ -145,8 +301,9 @@ func TestWorker(t *testing.T) {
 					Password: "pass",
 				}, nil)
 
-				service.builders.(*builders.MockBuilders).On("Find", "builder").Return(&builder.Builder{
-					Driver: "mock",
+				service.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "parent_registry").Return(&credentials.RegistryUserPassAuth{
+					Username: "parent_user",
+					Password: "parent_pass",
 				}, nil)
 				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
 					mockdriver.NewMockDriver(),
@@ -155,26 +312,36 @@ func TestWorker(t *testing.T) {
 						BuilderOptions:             nil,
 						BuilderVarMappings:         nil,
 						ConnectionLocal:            false,
-						ImageFromName:              "",
-						ImageFromRegistryNamespace: "",
-						ImageFromRegistryHost:      "",
-						ImageFromVersion:           "",
+						ImageFromName:              "parent",
+						ImageFromRegistryNamespace: "parent_namespace",
+						ImageFromRegistryHost:      "parent_registry",
+						ImageFromVersion:           "parent_version",
 						ImageName:                  "image",
 						ImageVersion:               "0.0.0",
-						Labels:                     nil,
-						OutputPrefix:               "",
-						PersistentVars:             nil,
-						RegistryNamespace:          "namespace",
-						RegistryHost:               "registry",
-						PullAuthUsername:           "",
-						PullAuthPassword:           "",
-						PullParentImage:            true,
-						PushAuthUsername:           "user",
-						PushAuthPassword:           "pass",
-						PushImageAfterBuild:        true,
-						RemoveImageAfterBuild:      true,
-						Tags:                       []string{"0", "0.0"},
-						Vars:                       nil,
+						Labels: map[string]string{
+							"optlabel":   "value",
+							"imagelabel": "value",
+						},
+						OutputPrefix: "",
+						PersistentVars: map[string]interface{}{
+							"optpvar":    "value",
+							"imagepvar":  "value",
+							"parentpvar": "value",
+						},
+						RegistryNamespace:     "namespace",
+						RegistryHost:          "registry",
+						PullAuthUsername:      "parent_user",
+						PullAuthPassword:      "parent_pass",
+						PullParentImage:       true,
+						PushAuthUsername:      "user",
+						PushAuthPassword:      "pass",
+						PushImageAfterBuild:   true,
+						RemoveImageAfterBuild: true,
+						Tags:                  []string{"0", "opttag", "imagetag"},
+						Vars: map[string]interface{}{
+							"optvar":   "value",
+							"imagevar": "value",
+						},
 					}).Return(command.NewMockBuildCommand(), nil)
 				service.jobFactory.(*job.MockJobFactory).On("New", command.NewMockBuildCommand()).Return(mockJob, nil)
 				service.dispatch.(*dispatch.MockDispatch).On("Enqueue", mockJob)
@@ -197,11 +364,8 @@ func TestWorker(t *testing.T) {
 			} else {
 				assert.True(t, test.assertFunc(test.service))
 			}
-
-			//time.Sleep(time.Millisecond * 100)
 		})
 	}
-
 }
 
 func TestJob(t *testing.T) {

@@ -5,6 +5,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/driver"
 	"github.com/gostevedore/stevedore/internal/engine/build/command"
+	"github.com/gostevedore/stevedore/internal/engine/build/plan"
 	"github.com/gostevedore/stevedore/internal/image"
 	"github.com/gostevedore/stevedore/internal/schedule"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
@@ -35,7 +36,7 @@ type Steper interface {
 
 // Planner interface defines the execution plan
 type Planner interface {
-	Plan(string, []string) ([]Steper, error)
+	Plan(string, []string) ([]*plan.Step, error)
 }
 
 // BuildersStorer interface defines the storage of builders

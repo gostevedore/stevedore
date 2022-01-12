@@ -11,6 +11,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/builders/builder"
 	"github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/driver"
+	"github.com/gostevedore/stevedore/internal/engine/build/plan"
 	"github.com/gostevedore/stevedore/internal/image"
 	"github.com/gostevedore/stevedore/internal/schedule"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
@@ -44,28 +45,24 @@ func NewService(plans Planner, builders BuildersStorer, commandFactory BuildComm
 }
 
 // Build starts the building process
-func (s *Service) Build(ctx context.Context, options *ServiceOptions) error {
+func (s *Service) Build(ctx context.Context, name string, version []string, options *ServiceOptions) error {
 
 	var err error
-	var steps []Steper
+	var steps []*plan.Step
 	var wg sync.WaitGroup
 	buildWorkerErrs := []func() error{}
 
 	errContext := "(build::Build)"
 
 	if options == nil {
-		return errors.New(errContext, "Options are required on build service")
+		return errors.New(errContext, "To build an image, service options are required")
 	}
 
 	if s.plan == nil {
-		return errors.New(errContext, "Plan storer is required on build service")
+		return errors.New(errContext, "To build an image, execution plan is required")
 	}
 
-	if s.dispatch == nil {
-		return errors.New(errContext, "Build worker requires a dispatcher")
-	}
-
-	steps, err = s.plan.Plan(options.ImageName, options.ImageVersions)
+	steps, err = s.plan.Plan(name, version)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
@@ -80,6 +77,7 @@ func (s *Service) Build(ctx context.Context, options *ServiceOptions) error {
 			// defer notify to plans subscribed to this plan
 			defer step.Notify()
 			image := step.Image()
+
 			// wait to be notified before start building
 			step.Wait()
 
@@ -126,6 +124,10 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 
 	if image == nil {
 		return errors.New(errContext, "Build worker requires an image specification")
+	}
+
+	if s.dispatch == nil {
+		return errors.New(errContext, "Build worker requires a dispatcher")
 	}
 
 	if s.driverFactory == nil {
@@ -177,11 +179,22 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 	buildOptions.Tags = append(buildOptions.Tags, options.Tags...)
 	buildOptions.Tags = append(buildOptions.Tags, image.Tags...)
 
+	buildOptions.PersistentVars = map[string]interface{}{}
 	// add persistent vars defined service options
-	// options definition has precedence over the image one
+	// options definition has precedence over parent and image ones
 	for k, v := range options.PersistentVars {
 		buildOptions.PersistentVars[k] = v
 	}
+
+	if image.Parent != nil {
+		for k, v := range image.Parent.PersistentVars {
+			_, exist := buildOptions.PersistentVars[k]
+			if !exist {
+				buildOptions.PersistentVars[k] = v
+			}
+		}
+	}
+
 	// add persistent vars defined on the image
 	for varKey, varValue := range image.PersistentVars {
 		_, exist := buildOptions.PersistentVars[varKey]
@@ -190,6 +203,7 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 		}
 	}
 
+	buildOptions.Vars = map[string]interface{}{}
 	// add vars defined on service options
 	// options defintion has precedence over the image one
 	for k, v := range options.Vars {
@@ -203,6 +217,7 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 		}
 	}
 
+	buildOptions.Labels = map[string]string{}
 	// add lables defined on service options
 	// options defintion has precedence over the image one
 	for k, v := range options.Labels {
@@ -328,8 +343,8 @@ func (s *Service) builder(builderDefinition interface{}) (*builder.Builder, erro
 	switch builderDefinition.(type) {
 	case string:
 		return s.builders.Find(builderDefinition.(string))
-	// case *builder.Builder:
-	// 	return builderDefinition.(*builder.Builder), nil
+	case *builder.Builder:
+		return builderDefinition.(*builder.Builder), nil
 	default:
 		// In-line builder definition
 		return builder.NewBuilderFromIOReader(bytes.NewBuffer([]byte(builderDefinition.(string))))
