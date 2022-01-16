@@ -23,6 +23,8 @@ type Configuration struct {
 	DockerCredentialsDir         string
 	EnableSemanticVersionTags    bool
 	SemanticVersionTagsTemplates []string
+
+	compatibility Compatibilitier
 }
 
 const (

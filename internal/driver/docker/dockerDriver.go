@@ -8,7 +8,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/builders/varsmap"
 	"github.com/gostevedore/stevedore/internal/driver"
-	"github.com/gostevedore/stevedore/internal/image"
+	"github.com/gostevedore/stevedore/internal/images/image"
 )
 
 const (

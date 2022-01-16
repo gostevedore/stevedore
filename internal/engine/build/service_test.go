@@ -13,7 +13,7 @@ import (
 	mockdriver "github.com/gostevedore/stevedore/internal/driver/mock"
 	"github.com/gostevedore/stevedore/internal/engine/build/command"
 	"github.com/gostevedore/stevedore/internal/engine/build/plan"
-	"github.com/gostevedore/stevedore/internal/image"
+	"github.com/gostevedore/stevedore/internal/images/image"
 	"github.com/gostevedore/stevedore/internal/schedule/dispatch"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 	"github.com/gostevedore/stevedore/internal/schedule/worker"
@@ -50,7 +50,7 @@ func TestBuild(t *testing.T) {
 			desc: "Testing build an image",
 			service: NewService(
 				plan.NewMockPlan(),
-				builders.NewMockBuilders(),
+				builders.NewMockBuildersStore(),
 				command.NewMockBuildCommandFactory(),
 				&driver.BuildDriverFactory{
 					"mock": mockdriver.NewMockDriver(),
@@ -242,7 +242,7 @@ func TestWorker(t *testing.T) {
 			desc: "Testing worker to build an image",
 			service: NewService(
 				nil,
-				builders.NewMockBuilders(),
+				builders.NewMockBuildersStore(),
 				command.NewMockBuildCommandFactory(),
 				&driver.BuildDriverFactory{
 					"mock": mockdriver.NewMockDriver(),
@@ -522,10 +522,10 @@ func TestBuilder(t *testing.T) {
 		},
 		{
 			desc:              "Testing return a builder defined by an string",
-			service:           &Service{builders: builders.NewMockBuilders()},
+			service:           &Service{builders: builders.NewMockBuildersStore()},
 			builderDefinition: "test",
 			prepareAssertFunc: func(s *Service) {
-				s.builders.(*builders.MockBuilders).On("Find", "test").Return(&builder.Builder{
+				s.builders.(*builders.MockBuildersStore).On("Find", "test").Return(&builder.Builder{
 					Name: "test",
 				}, nil)
 			},

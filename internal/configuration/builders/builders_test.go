@@ -4,116 +4,11 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/builders"
 	"github.com/gostevedore/stevedore/internal/builders/builder"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestAddBuilder(t *testing.T) {
-	errContext := "(builders::AddBuilder)"
-
-	tests := []struct {
-		desc     string
-		err      error
-		builders *Builders
-		builder  *builder.Builder
-		res      map[string]*builder.Builder
-	}{
-		{
-			desc:     "Testing add a builder",
-			builders: NewBuilders(afero.NewMemMapFs()),
-			err:      &errors.Error{},
-			builder: &builder.Builder{
-				Name: "first",
-			},
-			res: map[string]*builder.Builder{
-				"first": {Name: "first"},
-			},
-		},
-
-		{
-			desc: "Testing error adding already existing builder",
-			builders: &Builders{
-				fs: afero.NewMemMapFs(),
-				Builders: map[string]*builder.Builder{
-					"first": {Name: "first"},
-				},
-			},
-			err: errors.New(errContext, "Builder 'first' already exist"),
-			builder: &builder.Builder{
-				Name: "first",
-			},
-			res: map[string]*builder.Builder{
-				"first": {Name: "first"},
-			},
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.desc, func(t *testing.T) {
-			t.Log(test.desc)
-
-			err := test.builders.AddBuilder(test.builder)
-			if err != nil {
-				assert.Equal(t, test.err.Error(), err.Error())
-			} else {
-				assert.Equal(t, test.res, test.builders.Builders)
-			}
-		})
-	}
-}
-
-func TestGetBuilder(t *testing.T) {
-	errContext := "(builders::GetBuilder)"
-
-	tests := []struct {
-		desc     string
-		err      error
-		builders *Builders
-		builder  string
-		res      *builder.Builder
-	}{
-		{
-			desc: "Testing get a builder",
-			builders: &Builders{
-				fs: afero.NewMemMapFs(),
-				Builders: map[string]*builder.Builder{
-					"first": {Name: "first"},
-				},
-			},
-			err:     &errors.Error{},
-			builder: "first",
-			res: &builder.Builder{
-				Name: "first",
-			},
-		},
-
-		{
-			desc: "Testing error getting an unexisting",
-			builders: &Builders{
-				fs:       afero.NewMemMapFs(),
-				Builders: map[string]*builder.Builder{},
-			},
-			err:     errors.New(errContext, "Builder 'first' does not exists"),
-			builder: "first",
-
-			res: nil,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.desc, func(t *testing.T) {
-			t.Log(test.desc)
-
-			res, err := test.builders.Find(test.builder)
-			if err != nil {
-				assert.Equal(t, test.err.Error(), err.Error())
-			} else {
-				assert.Equal(t, test.res, res)
-			}
-		})
-	}
-}
 
 func TestLoadBuildersFromFile(t *testing.T) {
 	var err error
@@ -156,41 +51,44 @@ builders:
 	}
 
 	tests := []struct {
-		desc     string
-		path     string
-		builders *Builders
-		res      map[string]*builder.Builder
-		err      error
+		desc              string
+		path              string
+		builders          *Builders
+		prepareAssertFunc func(*Builders)
+		err               error
 	}{
 		{
 			desc:     "Testing loading builders from file",
 			path:     "/builders/file1.yml",
 			err:      &errors.Error{},
-			builders: NewBuilders(testFs),
-			res: map[string]*builder.Builder{
-				"first": {
-					Name:   "first",
-					Driver: "docker",
-					Options: &builder.BuilderOptions{
-						Dockerfile: "Dockerfile.test",
-						Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
+			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
+			prepareAssertFunc: func(b *Builders) {
+				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+					&builder.Builder{
+						Name:   "first",
+						Driver: "docker",
+						Options: &builder.BuilderOptions{
+							Dockerfile: "Dockerfile.test",
+							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
+						},
 					},
-				},
-				"second": {
-					Name:   "second",
-					Driver: "docker",
-					Options: &builder.BuilderOptions{
-						Dockerfile: "Dockerfile.test",
-						Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
+				).Return(nil)
+				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+					&builder.Builder{
+						Name:   "second",
+						Driver: "docker",
+						Options: &builder.BuilderOptions{
+							Dockerfile: "Dockerfile.test",
+							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
+						},
 					},
-				},
+				).Return(nil)
 			},
 		},
 		{
 			desc:     "Testing error loading builders from file",
 			path:     "/builders/tab_error_file.yml",
-			builders: NewBuilders(testFs),
-			res:      nil,
+			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
 			err:      errors.New(errContext, "Error loading builders from file '/builders/tab_error_file.yml'\nfound:\n\nbuilders:\n  first:\n    driver: docker\n    options:\n\t  dockerfile: Dockerfile.test\n      context:\n      path: /path/to/context\n\n\tyaml: line 6: found character that cannot start any token"),
 		},
 	}
@@ -199,11 +97,15 @@ builders:
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.builders)
+			}
+
 			err := test.builders.LoadBuildersFromFile(test.path)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				assert.Equal(t, test.res, test.builders.Builders)
+				test.builders.store.(*builders.MockBuildersStore).AssertExpectations(t)
 			}
 		})
 	}
@@ -278,50 +180,55 @@ builders:
 	}
 
 	tests := []struct {
-		desc     string
-		path     string
-		builders *Builders
-		res      map[string]*builder.Builder
-		err      error
+		desc              string
+		path              string
+		builders          *Builders
+		prepareAssertFunc func(*Builders)
+		err               error
 	}{
 		{
 			desc:     "Testing loading builders from directory",
 			path:     "/builders",
 			err:      &errors.Error{},
-			builders: NewBuilders(testFs),
-			res: map[string]*builder.Builder{
-				"first": {
-					Name:   "first",
-					Driver: "docker",
-					Options: &builder.BuilderOptions{
-						Dockerfile: "Dockerfile.test",
-						Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
+			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
+			prepareAssertFunc: func(b *Builders) {
+				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+					&builder.Builder{
+						Name:   "first",
+						Driver: "docker",
+						Options: &builder.BuilderOptions{
+							Dockerfile: "Dockerfile.test",
+							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
+						},
 					},
-				},
-				"second": {
-					Name:   "second",
-					Driver: "docker",
-					Options: &builder.BuilderOptions{
-						Dockerfile: "Dockerfile.test",
-						Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
+				).Return(nil)
+				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+					&builder.Builder{
+						Name:   "second",
+						Driver: "docker",
+						Options: &builder.BuilderOptions{
+							Dockerfile: "Dockerfile.test",
+							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
+						},
 					},
-				},
-				"third": {
-					Name:   "third",
-					Driver: "docker",
-					Options: &builder.BuilderOptions{
-						Dockerfile: "Dockerfile.test",
-						Context:    []*builder.DockerDriverContextOptions{{Path: "/even/another/path/to/context"}},
+				).Return(nil)
+				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+					&builder.Builder{
+						Name:   "third",
+						Driver: "docker",
+						Options: &builder.BuilderOptions{
+							Dockerfile: "Dockerfile.test",
+							Context:    []*builder.DockerDriverContextOptions{{Path: "/even/another/path/to/context"}},
+						},
 					},
-				},
+				).Return(nil)
 			},
 		},
 		{
 			desc:     "Testing error loading builders from directory",
 			path:     "/builders_error",
 			err:      errors.New(errContext, "Error loading builders from file '/builders_error/file1.yml'\nfound:\n\nbuilders:\n  third:\n    driver: docker\n    options:\n\t  dockerfile: Dockerfile.test\n      context:\n        - path: /even/another/path/to/context\n\n\tyaml: line 6: found character that cannot start any token\nError loading builders from file '/builders_error/file2.yml'\nfound:\n\nbuilders:\n  fourth:\n    driver: docker\n    options:\n\t  dockerfile: Dockerfile.test\n      context:\n        - path: /even/another/path/to/context\n\n\tyaml: line 6: found character that cannot start any token\n"),
-			builders: NewBuilders(testFs),
-			res:      nil,
+			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
 		},
 	}
 
@@ -329,11 +236,15 @@ builders:
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.builders)
+			}
+
 			err := test.builders.LoadBuildersFromDir(test.path)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				assert.Equal(t, test.res, test.builders.Builders)
+				test.builders.store.(*builders.MockBuildersStore).AssertExpectations(t)
 			}
 		})
 	}
@@ -391,65 +302,75 @@ builders:
 	}
 
 	tests := []struct {
-		desc     string
-		path     string
-		builders *Builders
-		res      map[string]*builder.Builder
-		err      error
+		desc              string
+		path              string
+		builders          *Builders
+		prepareAssertFunc func(*Builders)
+		err               error
 	}{
 		{
 			desc:     "Testing loading builders from file",
 			path:     "/builders/file1.yml",
-			builders: NewBuilders(testFs),
-			res: map[string]*builder.Builder{
-				"first": {
-					Name:   "first",
-					Driver: "docker",
-					Options: &builder.BuilderOptions{
-						Dockerfile: "Dockerfile.test",
-						Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
+			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
+			prepareAssertFunc: func(b *Builders) {
+				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+					&builder.Builder{
+						Name:   "first",
+						Driver: "docker",
+						Options: &builder.BuilderOptions{
+							Dockerfile: "Dockerfile.test",
+							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
+						},
 					},
-				},
-				"second": {
-					Name:   "second",
-					Driver: "docker",
-					Options: &builder.BuilderOptions{
-						Dockerfile: "Dockerfile.test",
-						Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
+				).Return(nil)
+				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+					&builder.Builder{
+						Name:   "second",
+						Driver: "docker",
+						Options: &builder.BuilderOptions{
+							Dockerfile: "Dockerfile.test",
+							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
+						},
 					},
-				},
+				).Return(nil)
 			},
 			err: &errors.Error{},
 		},
 		{
 			desc:     "Testing loading builders from directory",
 			path:     "/builders",
-			builders: NewBuilders(testFs),
-			res: map[string]*builder.Builder{
-				"first": {
-					Name:   "first",
-					Driver: "docker",
-					Options: &builder.BuilderOptions{
-						Dockerfile: "Dockerfile.test",
-						Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
+			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
+			prepareAssertFunc: func(b *Builders) {
+				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+					&builder.Builder{
+						Name:   "first",
+						Driver: "docker",
+						Options: &builder.BuilderOptions{
+							Dockerfile: "Dockerfile.test",
+							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
+						},
 					},
-				},
-				"second": {
-					Name:   "second",
-					Driver: "docker",
-					Options: &builder.BuilderOptions{
-						Dockerfile: "Dockerfile.test",
-						Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
+				).Return(nil)
+				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+					&builder.Builder{
+						Name:   "second",
+						Driver: "docker",
+						Options: &builder.BuilderOptions{
+							Dockerfile: "Dockerfile.test",
+							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
+						},
 					},
-				},
-				"third": {
-					Name:   "third",
-					Driver: "docker",
-					Options: &builder.BuilderOptions{
-						Dockerfile: "Dockerfile.test",
-						Context:    []*builder.DockerDriverContextOptions{{Path: "/even/another/path/to/context"}},
+				).Return(nil)
+				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+					&builder.Builder{
+						Name:   "third",
+						Driver: "docker",
+						Options: &builder.BuilderOptions{
+							Dockerfile: "Dockerfile.test",
+							Context:    []*builder.DockerDriverContextOptions{{Path: "/even/another/path/to/context"}},
+						},
 					},
-				},
+				).Return(nil)
 			},
 			err: &errors.Error{},
 		},
@@ -457,8 +378,7 @@ builders:
 		{
 			desc:     "Testing error loading builders from unexisting directory",
 			path:     "/builders_unexisting",
-			builders: NewBuilders(testFs),
-			res:      nil,
+			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
 			err:      errors.New(errContext, "open /builders_unexisting: file does not exist"),
 		},
 	}
@@ -467,11 +387,15 @@ builders:
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.builders)
+			}
+
 			err := test.builders.LoadBuilders(test.path)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				assert.Equal(t, test.res, test.builders.Builders)
+				test.builders.store.(*builders.MockBuildersStore).AssertExpectations(t)
 			}
 		})
 	}

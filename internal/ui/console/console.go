@@ -110,22 +110,22 @@ func Print(msg ...interface{}) {
 }
 
 // Blue prints a message in blue color
-func Blue(msg interface{}) {
+func Blue(msg ...interface{}) {
 	Print(blue, msg, resetColor)
 }
 
 // Green prints a message in green color
-func Green(msg interface{}) {
+func Green(msg ...interface{}) {
 	Print(green, msg, resetColor)
 }
 
 // Purple prints a message in purple color
-func Purple(msg interface{}) {
+func Purple(msg ...interface{}) {
 	Print(purple, msg, resetColor)
 }
 
 // Red prints a message in red color
-func Red(msg interface{}) {
+func Red(msg ...interface{}) {
 	Print(red, msg, resetColor)
 }
 
@@ -135,23 +135,23 @@ func ColorPrint(color string, msg interface{}) {
 }
 
 // Info
-func Info(msg interface{}) {
-	Print(msg)
+func Info(msg ...interface{}) {
+	Print(msg...)
 }
 
 // Warn
-func Warn(msg interface{}) {
-	Purple(msg)
+func Warn(msg ...interface{}) {
+	Purple(msg...)
 }
 
 // Error
-func Error(msg interface{}) {
-	Red(msg)
+func Error(msg ...interface{}) {
+	Red(msg...)
 }
 
 // Debug
-func Debug(msg interface{}) {
-	Blue(msg)
+func Debug(msg ...interface{}) {
+	Blue(msg...)
 }
 
 // PrintTable

@@ -3,6 +3,7 @@ package image
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/docker/distribution/reference"
@@ -11,27 +12,29 @@ import (
 // Image defines the image on the system
 type Image struct {
 	// Builder is the builder to use to build the image
-	Builder interface{} `yaml:"builder"`
+	Builder interface{}
 	// Children list of children images
-	Children []*Image `yaml:"-"`
+	Children []*Image
 	// Labels is a map of image labels
-	Labels map[string]string `yaml:"labels"`
+	Labels map[string]string
 	// Name is the name of the image
-	Name string `yaml:"name"`
+	Name string
 	// PresistentVars is a map of persistent variables
-	PersistentVars map[string]interface{} `yaml:"persistent_vars"`
+	PersistentVars map[string]interface{}
 	// RegistryHost is the host of the registry
-	RegistryHost string `yaml:"registry"`
+	RegistryHost string
 	// RegistryNamespace is the namespace of the registry
-	RegistryNamespace string `yaml:"namespace"`
+	RegistryNamespace string
 	// Tags is a list of extra tags
-	Tags []string `yaml:"tags"`
+	Tags []string
 	// Vars is a map of variables
-	Vars map[string]interface{} `yaml:"vars"`
+	Vars map[string]interface{}
 	// Version is the version of the image
-	Version string `yaml:"version"`
+	Version string
 	// Parent is the parent image
-	Parent *Image `yaml:"-"`
+	Parent *Image
+
+	addChildMutex sync.RWMutex
 }
 
 // OptionFunc is an option to pass to NewImage
@@ -153,6 +156,9 @@ func (i *Image) Options(o ...OptionFunc) {
 
 // AddChild adds a child image
 func (i *Image) AddChild(child *Image) {
+	i.addChildMutex.Lock()
+	defer i.addChildMutex.Unlock()
+
 	i.Children = append(i.Children, child)
 }
 
@@ -177,4 +183,37 @@ func (i *Image) DockerNormalizedNamed() (string, error) {
 	}
 
 	return fmt.Sprintf("%s/%s/%s:%s", i.RegistryHost, i.RegistryNamespace, i.Name, i.Version), nil
+}
+
+// Copy method return a copy of the instanced Image
+func (i *Image) Copy() (*Image, error) {
+
+	errContext := "(image::Copy)"
+
+	copiedImage, err := NewImage(i.Name, i.Version, i.RegistryHost, i.RegistryNamespace)
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+	copiedImage.Tags = append([]string{}, i.Tags...)
+
+	copiedImage.PersistentVars = map[string]interface{}{}
+	for keyVar, keyValue := range i.PersistentVars {
+		copiedImage.PersistentVars[keyVar] = keyValue
+	}
+	copiedImage.Vars = map[string]interface{}{}
+	for keyVar, keyValue := range i.Vars {
+		copiedImage.Vars[keyVar] = keyValue
+	}
+	copiedImage.Labels = map[string]string{}
+	for keyVar, keyValue := range i.Labels {
+		copiedImage.Labels[keyVar] = keyValue
+	}
+
+	if i.Children != nil {
+		for _, child := range i.Children {
+			copiedImage.Children = append(copiedImage.Children, child)
+		}
+	}
+
+	return copiedImage, nil
 }

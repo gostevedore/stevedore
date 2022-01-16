@@ -2,7 +2,7 @@ package plan
 
 import (
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/image"
+	"github.com/gostevedore/stevedore/internal/images/image"
 )
 
 // BasePlan is the base plan which all plans should extend

@@ -6,7 +6,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/configuration"
 	"github.com/gostevedore/stevedore/internal/credentials"
-	"github.com/gostevedore/stevedore/internal/image"
+	"github.com/gostevedore/stevedore/internal/images/image"
 	"github.com/gostevedore/stevedore/internal/promote"
 )
 
@@ -64,7 +64,10 @@ func (e *Service) Promote(ctx context.Context, options *ServiceOptions, promoteT
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
-	targetImage = sourceImage
+	targetImage, err = sourceImage.Copy()
+	if err != nil {
+		return errors.New(errContext, err.Error())
+	}
 
 	pullAuth := e.getCredentials(sourceImage.RegistryHost)
 	if pullAuth != nil {

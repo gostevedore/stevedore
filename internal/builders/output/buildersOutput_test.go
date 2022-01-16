@@ -11,7 +11,7 @@ import (
 )
 
 func TestPrintAll(t *testing.T) {
-	builders := filter.NewBuildersFilter(&builders.Builders{
+	builders := filter.NewBuildersFilter(&builders.BuildersStore{
 		Builders: map[string]*builder.Builder{
 			"builder1": {
 				Name:   "builder1",

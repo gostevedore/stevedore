@@ -2,7 +2,6 @@ package builders
 
 import (
 	"fmt"
-	"os"
 	"sync"
 
 	errors "github.com/apenella/go-common-utils/error"
@@ -16,14 +15,15 @@ type Builders struct {
 	fs       afero.Fs
 	mutex    sync.RWMutex
 	wg       sync.WaitGroup
+	store    BuildersStorer
 	Builders map[string]*builder.Builder `yaml:"builders"`
 }
 
 // NewBuilders creates a new builders configuration
-func NewBuilders(fs afero.Fs) *Builders {
+func NewBuilders(fs afero.Fs, store BuildersStorer) *Builders {
 	return &Builders{
-		fs: fs,
-
+		fs:       fs,
+		store:    store,
 		Builders: make(map[string]*builder.Builder),
 	}
 }
@@ -48,46 +48,46 @@ func (b *Builders) LoadBuilders(path string) error {
 
 }
 
-// AddBuilder include a new builder to builders
-func (b *Builders) AddBuilder(builder *builder.Builder) error {
+// // AddBuilder include a new builder to builders
+// func (b *Builders) AddBuilder(builder *builder.Builder) error {
 
-	errContext := "(builders::AddBuilder)"
+// 	errContext := "(builders::AddBuilder)"
 
-	if b == nil {
-		return errors.New(errContext, "Builders is nil")
-	}
+// 	if b == nil {
+// 		return errors.New(errContext, "Builders is nil")
+// 	}
 
-	b.mutex.Lock()
-	_, exist := b.Builders[builder.Name]
-	if exist {
-		b.mutex.Unlock()
-		return errors.New(errContext, fmt.Sprintf("Builder '%s' already exist", builder.Name))
-	}
+// 	b.mutex.Lock()
+// 	defer b.mutex.Unlock()
 
-	b.Builders[builder.Name] = builder
-	b.mutex.Unlock()
+// 	_, exist := b.Builders[builder.Name]
+// 	if exist {
+// 		return errors.New(errContext, fmt.Sprintf("Builder '%s' already exist", builder.Name))
+// 	}
 
-	return nil
-}
+// 	b.Builders[builder.Name] = builder
 
-// Find returns the builder registered with input name
-func (b *Builders) Find(name string) (*builder.Builder, error) {
+// 	return nil
+// }
 
-	errContext := "(builders::GetBuilder)"
+// // Find returns the builder registered with input name
+// func (b *Builders) Find(name string) (*builder.Builder, error) {
 
-	if b == nil {
-		return nil, errors.New(errContext, "Builders is nil")
-	}
+// 	errContext := "(builders::GetBuilder)"
 
-	b.mutex.RLock()
-	builder, exists := b.Builders[name]
-	if !exists {
-		return nil, errors.New(errContext, fmt.Sprintf("Builder '%s' does not exists", name))
-	}
-	b.mutex.RUnlock()
+// 	if b == nil {
+// 		return nil, errors.New(errContext, "Builders is nil")
+// 	}
 
-	return builder, nil
-}
+// 	b.mutex.RLock()
+// 	builder, exists := b.Builders[name]
+// 	if !exists {
+// 		return nil, errors.New(errContext, fmt.Sprintf("Builder '%s' does not exists", name))
+// 	}
+// 	b.mutex.RUnlock()
+
+// 	return builder, nil
+// }
 
 // LoadBuildersFromFile loads builders from file
 func (b *Builders) LoadBuildersFromFile(path string) error {
@@ -95,13 +95,13 @@ func (b *Builders) LoadBuildersFromFile(path string) error {
 	var err error
 	var fileData []byte
 
-	errContext := "(builders::loadBuilderFile)"
+	errContext := "(builders::LoadBuildersFromFile)"
 
 	if b == nil {
 		return errors.New(errContext, "Builders is nil")
 	}
 
-	buildersAux := NewBuilders(b.fs)
+	buildersAux := NewBuilders(b.fs, b.store)
 
 	fileData, err = afero.ReadFile(b.fs, path)
 	if err != nil {
@@ -118,7 +118,7 @@ func (b *Builders) LoadBuildersFromFile(path string) error {
 			builder.Name = name
 		}
 
-		err = b.AddBuilder(builder)
+		err = b.store.AddBuilder(builder)
 		if err != nil {
 			return errors.New(errContext, fmt.Sprintf("Error loading builders from file '%s'", path), err)
 		}
@@ -128,7 +128,7 @@ func (b *Builders) LoadBuildersFromFile(path string) error {
 }
 
 // LoadBuildersFromDir loads builders from all files on directory
-func (b *Builders) LoadBuildersFromDir(path string) error {
+func (b *Builders) LoadBuildersFromDir(dir string) error {
 	var err error
 	errFuncs := []func() error{}
 	errContext := "(builders::loadBuildersFromDir)"
@@ -136,6 +136,17 @@ func (b *Builders) LoadBuildersFromDir(path string) error {
 	if b == nil {
 		return errors.New(errContext, "Builders is nil")
 	}
+
+	yamlFiles, err := afero.Glob(b.fs, dir+"/*.yaml")
+	if err != nil {
+		return errors.New(errContext, err.Error())
+	}
+
+	ymlFiles, err := afero.Glob(b.fs, dir+"/*.yml")
+	if err != nil {
+		return errors.New(errContext, err.Error())
+	}
+	files := append(yamlFiles, ymlFiles...)
 
 	loadBuildersFromFile := func(path string) func() error {
 		var err error
@@ -153,27 +164,10 @@ func (b *Builders) LoadBuildersFromDir(path string) error {
 		}
 	}
 
-	err = afero.Walk(b.fs, path, func(path string, info os.FileInfo, err error) error {
-		var isDir bool
-
-		isDir, err = afero.IsDir(b.fs, path)
-		if err != nil {
-			return errors.New(errContext, err.Error())
-		}
-
-		if isDir {
-			return nil
-		}
-
+	for _, file := range files {
 		b.wg.Add(1)
-		f := loadBuildersFromFile(path)
+		f := loadBuildersFromFile(file)
 		errFuncs = append(errFuncs, f)
-
-		return nil
-	})
-
-	if err != nil {
-		return errors.New(errContext, err.Error())
 	}
 	b.wg.Wait()
 

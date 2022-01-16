@@ -138,12 +138,12 @@ func TestPromote(t *testing.T) {
 				PromoteSourceImageTag:        true,
 				RemoveTargetImageTags:        true,
 				RemoteSourceImage:            true,
-				SemanticVersionTagsTemplates: []string{"{{ .Major }}", "{{ .Major }}.{{ .Minor }}"},
+				SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
 			},
 			prepareMockFunc: func(p *Service) {
 				options := &promoterepository.PromoteOptions{
 					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
-					TargetImageTags:       []string{"tag", "tag1", "tag2", "1", "1.2"},
+					TargetImageTags:       []string{"tag", "tag1", "tag2", "1"},
 					RemoveTargetImageTags: true,
 					RemoteSourceImage:     true,
 					SourceImageName:       "registry.test/namespace/image:tag",
@@ -190,12 +190,12 @@ func TestPromote(t *testing.T) {
 				PromoteSourceImageTag:        true,
 				RemoveTargetImageTags:        true,
 				RemoteSourceImage:            true,
-				SemanticVersionTagsTemplates: []string{"{{ .Major }}", "{{ .Major }}.{{ .Minor }}"},
+				SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
 			},
 			prepareMockFunc: func(p *Service) {
 				options := &promoterepository.PromoteOptions{
 					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
-					TargetImageTags:       []string{"tag", "tag1", "tag2", "1", "1.2"},
+					TargetImageTags:       []string{"tag", "tag1", "tag2", "1"},
 					RemoveTargetImageTags: true,
 					RemoteSourceImage:     true,
 					SourceImageName:       "registry.test/namespace/image:tag",
@@ -224,7 +224,7 @@ func TestPromote(t *testing.T) {
 				semver:      semver.NewSemVerGenerator(),
 				configuration: &configuration.Configuration{
 					EnableSemanticVersionTags:    true,
-					SemanticVersionTagsTemplates: []string{"{{ .Major }}", "{{ .Major }}.{{ .Minor }}"},
+					SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
 				},
 			},
 			context: context.TODO(),
@@ -243,7 +243,7 @@ func TestPromote(t *testing.T) {
 			prepareMockFunc: func(p *Service) {
 				options := &promoterepository.PromoteOptions{
 					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
-					TargetImageTags:       []string{"tag", "tag1", "tag2", "1", "1.2"},
+					TargetImageTags:       []string{"tag", "tag1", "tag2", "1"},
 					RemoveTargetImageTags: true,
 					RemoteSourceImage:     true,
 					SourceImageName:       "registry.test/namespace/image:tag",
@@ -280,7 +280,7 @@ func TestPromote(t *testing.T) {
 				semver:      semver.NewSemVerGenerator(),
 				configuration: &configuration.Configuration{
 					EnableSemanticVersionTags:    true,
-					SemanticVersionTagsTemplates: []string{"{{ .Major }}", "{{ .Major }}.{{ .Minor }}"},
+					SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
 				},
 			},
 			context: context.TODO(),
