@@ -38,3 +38,8 @@ func (m *GraphTemplate) Exists(name string) bool {
 	node, _ := m.Graph.GetNode(name)
 	return node != nil
 }
+
+// HasCycles checks if the graph template has cycles
+func (m *GraphTemplate) HasCycles() bool {
+	return m.Graph.HasCycles()
+}
