@@ -70,6 +70,7 @@ func TestAddImage(t *testing.T) {
 				node := g.graphFactory.NewGraphTemplateNode(generateNodeName("image_name", "image_version"))
 				node.AddItem(i)
 				g.graph.(*graph.MockGraphTemplate).On("AddNode", node).Return(nil)
+				g.graph.(*graph.MockGraphTemplate).On("HasCycles").Return(false)
 
 				// parents
 				g.graph.(*graph.MockGraphTemplate).On("GetNode", generateNodeName("parent_name", "parent_version")).Return(nil)
@@ -132,6 +133,7 @@ func TestAddImage(t *testing.T) {
 				node := g.graphFactory.NewGraphTemplateNode(generateNodeName("image_name", "image_version"))
 				node.AddItem(i)
 				g.graph.(*graph.MockGraphTemplate).On("AddNode", node).Return(nil)
+				g.graph.(*graph.MockGraphTemplate).On("HasCycles").Return(false)
 
 				// parents
 				parent := g.graphFactory.NewGraphTemplateNode(generateNodeName("parent_name", "parent_version"))
@@ -182,9 +184,8 @@ func TestAddImage(t *testing.T) {
 			},
 			err: &errors.Error{},
 		},
-
 		{
-			desc:    "Testing add an existing image",
+			desc:    "Testing error when adding an existing image",
 			name:    "image_name",
 			version: "image_version",
 			image: &image.Image{
@@ -196,6 +197,27 @@ func TestAddImage(t *testing.T) {
 				g.graph.(*graph.MockGraphTemplate).On("Exists", "image_name:image_version").Return(true)
 			},
 			err: errors.New("", "Image 'image_name:image_version' already added to images graph template"),
+		},
+		{
+			desc:    "Testing error adding node that creates a cycles",
+			name:    "image_name",
+			version: "image_version",
+			image: &image.Image{
+				Name:    "image_name",
+				Version: "image_version",
+			},
+			graph: NewImagesGraphTemplate(*graph.NewGraphTemplateFactory(true)),
+			prepareAssertFunc: func(g *ImagesGraphTemplate, i *image.Image) {
+				// node
+				g.graph.(*graph.MockGraphTemplate).On("Exists", "image_name:image_version").Return(false, nil)
+				g.graph.(*graph.MockGraphTemplate).On("GetNode", generateNodeName("image_name", "image_version")).Return(nil)
+				node := g.graphFactory.NewGraphTemplateNode(generateNodeName("image_name", "image_version"))
+				node.AddItem(i)
+				g.graph.(*graph.MockGraphTemplate).On("AddNode", node).Return(nil)
+				g.graph.(*graph.MockGraphTemplate).On("HasCycles").Return(true)
+
+			},
+			err: errors.New("", "Detected a cycle in the graph template after adding node 'image_name:image_version'"),
 		},
 	}
 

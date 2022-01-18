@@ -22,6 +22,7 @@ type GraphTemplater interface {
 	AddNode(GraphTemplateNoder) error
 	AddRelationship(GraphTemplateNoder, GraphTemplateNoder) error
 	Exists(string) bool
+	HasCycles() bool
 }
 
 // // Grapher is a graph template for images

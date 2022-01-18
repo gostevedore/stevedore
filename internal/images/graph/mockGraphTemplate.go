@@ -43,3 +43,9 @@ func (m *MockGraphTemplate) Exists(name string) bool {
 
 	return args.Bool(0)
 }
+
+// HasCycles checks if the graph template has cycles
+func (m *MockGraphTemplate) HasCycles() bool {
+	args := m.Called()
+	return args.Bool(0)
+}

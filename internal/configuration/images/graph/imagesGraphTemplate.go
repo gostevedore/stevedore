@@ -84,6 +84,10 @@ func (m *ImagesGraphTemplate) AddImage(name, version string, image *image.Image)
 			if err != nil {
 				return errors.New(errContext, err.Error())
 			}
+
+			if m.graph.HasCycles() {
+				return errors.New(errContext, fmt.Sprintf("Detected a cycle in the graph template after adding node '%s'", generateNodeName(name, version)))
+			}
 		}
 	}
 
@@ -111,6 +115,16 @@ func (m *ImagesGraphTemplate) AddImage(name, version string, image *image.Image)
 		}
 	}
 
+	return nil
+}
+
+// Validate validates the graph template
+func (m *ImagesGraphTemplate) Validate() error {
+	errContext := "(graph::Validate)"
+
+	if m.graph.HasCycles() {
+		return errors.New(errContext, "Graph template has cycles")
+	}
 	return nil
 }
 

@@ -10,6 +10,7 @@ type Grapher interface {
 	AddNode(graph.GraphTemplateNoder) error
 	AddRelationship(graph.GraphTemplateNoder, graph.GraphTemplateNoder) error
 	Exists(string) bool
+	HasCycles() bool
 }
 
 // GraphNoder is a node for the graph template

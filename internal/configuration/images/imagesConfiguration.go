@@ -50,19 +50,8 @@ func NewImagesConfiguration(fs afero.Fs, graph ImagesGraphTemplatesStorer, compa
 // CheckCompatibility method ensures that ImagesConfiguration is compatible with current version
 func (t *ImagesConfiguration) CheckCompatibility() error {
 
-	errContext := "(tree::CheckCompatibility)"
-
 	if t.DEPRECATED_ImagesTree != nil && len(t.DEPRECATED_ImagesTree) > 0 {
 		t.compatibility.AddDeprecated("'images_tree' is deprecated and will be removed on v0.12.0, please use 'images' instead")
-
-		for name, images := range t.DEPRECATED_ImagesTree {
-			for version, image := range images {
-				err := t.AddImage(name, version, image)
-				if err != nil {
-					return errors.New(errContext, err.Error())
-				}
-			}
-		}
 	}
 
 	return nil
@@ -181,39 +170,49 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 		}
 	}
 
+	// TO BE REMOVE on v0.12: is kept just for compatibility concerns
+	for name, images := range imageTreeAux.DEPRECATED_ImagesTree {
+		for version, image := range images {
+			err := t.graph.AddImage(name, version, image)
+			if err != nil {
+				return errors.New(errContext, err.Error())
+			}
+		}
+	}
+
 	return nil
 }
 
 // AddImage method add an image to the tree
-func (t *ImagesConfiguration) AddImage(name, version string, i *image.Image) error {
+// func (t *ImagesConfiguration) AddImage(name, version string, i *image.Image) error {
 
-	errContext := "(tree::AddImage)"
+// 	errContext := "(tree::AddImage)"
 
-	if i == nil {
-		return errors.New(errContext, "Image to add is null")
-	}
+// 	if i == nil {
+// 		return errors.New(errContext, "Image to add is null")
+// 	}
 
-	if t.Images == nil {
-		t.Images = make(map[string]map[string]*image.Image)
-	}
+// 	if t.Images == nil {
+// 		t.Images = make(map[string]map[string]*image.Image)
+// 	}
 
-	t.mutex.Lock()
-	defer t.mutex.Unlock()
+// 	t.mutex.Lock()
+// 	defer t.mutex.Unlock()
 
-	_, exist := t.Images[name]
-	if !exist {
-		t.Images[name] = make(map[string]*image.Image)
-	}
+// 	_, exist := t.Images[name]
+// 	if !exist {
+// 		t.Images[name] = make(map[string]*image.Image)
+// 	}
 
-	_, exist = t.Images[name][version]
-	if exist {
-		return errors.New(errContext, fmt.Sprintf("Image '%s:%s' already defined on image tree", name, version))
-	}
+// 	_, exist = t.Images[name][version]
+// 	if exist {
+// 		return errors.New(errContext, fmt.Sprintf("Image '%s:%s' already defined on image tree", name, version))
+// 	}
 
-	t.Images[name][version] = i
+// 	t.Images[name][version] = i
 
-	return nil
-}
+// 	return nil
+// }
 
 // // GenerateGraph method returns a graph having the images and its relationships and a index the improve its searches
 // func (t *ImagesConfiguration) GenerateGraph() (*gdstree.Graph, *ImageIndex, error) {
