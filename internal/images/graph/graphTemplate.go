@@ -43,3 +43,26 @@ func (m *GraphTemplate) Exists(name string) bool {
 func (m *GraphTemplate) HasCycles() bool {
 	return m.Graph.HasCycles()
 }
+
+// Iterate return a channel that iterates over the graph template
+func (m *GraphTemplate) Iterate() <-chan GraphTemplateNoder {
+	var it = make(chan GraphTemplateNoder)
+
+	go func() {
+		for _, rootNode := range m.Root {
+			iterateOverNode(&GraphTemplateNode{rootNode}, it)
+		}
+		close(it)
+	}()
+
+	return it
+}
+
+// iterateOverNode iterates over a root node
+func iterateOverNode(node GraphTemplateNoder, it chan GraphTemplateNoder) {
+
+	it <- node
+	for _, child := range node.Children() {
+		iterateOverNode(child, it)
+	}
+}

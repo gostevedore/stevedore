@@ -2,6 +2,7 @@ package graph
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 
 	errors "github.com/apenella/go-common-utils/error"
@@ -34,12 +35,29 @@ func generateNodeName(name, version string) string {
 	return fmt.Sprintf("%s:%s", name, version)
 }
 
+func ParseNodeName(node GraphNoder) (string, string, error) {
+
+	errContext := "(graph::ParseNodeName)"
+
+	name := node.Name()
+	if name == "" {
+		return "", "", errors.New(errContext, "Node name is undefined")
+	}
+
+	idx := strings.IndexRune(name, ':')
+	if idx == -1 {
+		return "", "", errors.New(errContext, fmt.Sprintf("Node name '%s' is not valid", name))
+	}
+
+	return name[:idx], name[idx+1:], nil
+}
+
 // AddImage is a mock implementation of the AddImage method
 func (m *ImagesGraphTemplate) AddImage(name, version string, image *image.Image) error {
 
 	var err error
 	var node GraphNoder
-	var pendingNodeExists bool
+	var isPendingNode bool
 
 	errContext := "(graph::AddImage)"
 
@@ -66,29 +84,24 @@ func (m *ImagesGraphTemplate) AddImage(name, version string, image *image.Image)
 		return errors.New(errContext, fmt.Sprintf("Image '%s:%s' already added to images graph template", name, version))
 	}
 
-	node, pendingNodeExists = m.pendingNodes[name][version]
-	_ = node
-
-	if pendingNodeExists {
+	node, isPendingNode = m.pendingNodes[name][version]
+	if !isPendingNode {
+		node = m.graphFactory.NewGraphTemplateNode(generateNodeName(name, version))
+	} else {
 		delete(m.pendingNodes[name], version)
 		if len(m.pendingNodes[name]) <= 0 {
 			delete(m.pendingNodes, name)
 		}
-	} else {
-		node = m.graph.GetNode(generateNodeName(name, version))
-		if node == nil {
-			node = m.graphFactory.NewGraphTemplateNode(generateNodeName(name, version))
-			node.AddItem(image)
+	}
+	node.AddItem(image)
 
-			err = m.graph.AddNode(node)
-			if err != nil {
-				return errors.New(errContext, err.Error())
-			}
+	err = m.graph.AddNode(node)
+	if err != nil {
+		return errors.New(errContext, err.Error())
+	}
 
-			if m.graph.HasCycles() {
-				return errors.New(errContext, fmt.Sprintf("Detected a cycle in the graph template after adding node '%s'", generateNodeName(name, version)))
-			}
-		}
+	if m.graph.HasCycles() {
+		return errors.New(errContext, fmt.Sprintf("Detected a cycle in the graph template after adding node '%s'", generateNodeName(name, version)))
 	}
 
 	if len(image.Parents) > 0 {
@@ -157,4 +170,18 @@ func (m *ImagesGraphTemplate) addNodeToPendingNodes(name, version string, node G
 	}
 
 	m.pendingNodes[name][version] = node
+}
+
+// Iterate iterates over the graph template
+func (m *ImagesGraphTemplate) Iterate() <-chan GraphNoder {
+	it := make(chan GraphNoder)
+
+	go func() {
+		for node := range m.graph.Iterate() {
+			it <- node
+		}
+		close(it)
+	}()
+
+	return it
 }

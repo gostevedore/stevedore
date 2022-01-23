@@ -278,19 +278,19 @@ func TestImageCheckCompatibility(t *testing.T) {
 		compatibility     Compatibilitier
 		prepareAssertFunc func(Compatibilitier)
 	}{
-		{
-			desc:          "Testing childs compatibility",
-			compatibility: compatibility.NewMockCompatibility(),
-			image: &Image{
-				Name: "image",
-				Childs: map[string][]string{
-					"child": {"v1", "v2"},
-				},
-			},
-			prepareAssertFunc: func(c Compatibilitier) {
-				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"On 'image', 'childs' attribute must be replaced by 'children' before 0.11.0"}).Return(nil)
-			},
-		},
+		// {
+		// 	desc:          "Testing childs compatibility",
+		// 	compatibility: compatibility.NewMockCompatibility(),
+		// 	image: &Image{
+		// 		Name: "image",
+		// 		Childs: map[string][]string{
+		// 			"child": {"v1", "v2"},
+		// 		},
+		// 	},
+		// 	prepareAssertFunc: func(c Compatibilitier) {
+		// 		c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"On 'image', 'childs' attribute must be replaced by 'children' before 0.11.0"}).Return(nil)
+		// 	},
+		// },
 	}
 
 	//console.Init(ioutil.Discard)

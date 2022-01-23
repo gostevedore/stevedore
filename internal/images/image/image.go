@@ -7,32 +7,33 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/docker/distribution/reference"
+	"gopkg.in/yaml.v2"
 )
 
 // Image defines the image on the system
 type Image struct {
 	// Builder is the builder to use to build the image
-	Builder interface{}
+	Builder interface{} `yaml:"builder"`
 	// Children list of children images
-	Children []*Image
+	Children []*Image `yaml:"-"`
 	// Labels is a map of image labels
-	Labels map[string]string
+	Labels map[string]string `yaml:"labels"`
 	// Name is the name of the image
-	Name string
+	Name string `yaml:"name"`
 	// PresistentVars is a map of persistent variables
-	PersistentVars map[string]interface{}
+	PersistentVars map[string]interface{} `yaml:"persistent_vars"`
 	// RegistryHost is the host of the registry
-	RegistryHost string
+	RegistryHost string `yaml:"registry_host"`
 	// RegistryNamespace is the namespace of the registry
-	RegistryNamespace string
+	RegistryNamespace string `yaml:"registry_namespace"`
 	// Tags is a list of extra tags
-	Tags []string
+	Tags []string `yaml:"tags"`
 	// Vars is a map of variables
-	Vars map[string]interface{}
+	Vars map[string]interface{} `yaml:"vars"`
 	// Version is the version of the image
-	Version string
+	Version string `yaml:"version"`
 	// Parent is the parent image
-	Parent *Image
+	Parent *Image `yaml:"-"`
 
 	addChildMutex sync.RWMutex
 }
@@ -216,4 +217,28 @@ func (i *Image) Copy() (*Image, error) {
 	}
 
 	return copiedImage, nil
+}
+
+// YAMLMarshal marshals the image to YAML
+func (i *Image) YAMLMarshal() ([]byte, error) {
+	errContext := "(image::YAMLMarshal)"
+
+	marshaled, err := yaml.Marshal(i)
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+
+	return marshaled, nil
+}
+
+// YAMLUnmarshal unmarshals the image from a YAML string
+func (i *Image) YAMLUnmarshal(in []byte) error {
+	errContext := "(image::YAMLUnmarshal)"
+
+	err := yaml.Unmarshal(in, i)
+	if err != nil {
+		return errors.New(errContext, err.Error())
+	}
+
+	return nil
 }

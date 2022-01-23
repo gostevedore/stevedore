@@ -45,7 +45,7 @@ func TestAddImage(t *testing.T) {
 			err:     errors.New(errContext, "To add and image, image must be provided"),
 		},
 		{
-			desc:    "Testing add an image with parents and children neither added to graph nor pending",
+			desc:    "Testing add an image with parents and children that does not exists on graph nor pending nodes",
 			name:    "image_name",
 			version: "image_version",
 			image: &image.Image{
@@ -66,7 +66,6 @@ func TestAddImage(t *testing.T) {
 			prepareAssertFunc: func(g *ImagesGraphTemplate, i *image.Image) {
 				// node
 				g.graph.(*graph.MockGraphTemplate).On("Exists", "image_name:image_version").Return(false, nil)
-				g.graph.(*graph.MockGraphTemplate).On("GetNode", generateNodeName("image_name", "image_version")).Return(nil)
 				node := g.graphFactory.NewGraphTemplateNode(generateNodeName("image_name", "image_version"))
 				node.AddItem(i)
 				g.graph.(*graph.MockGraphTemplate).On("AddNode", node).Return(nil)
@@ -129,7 +128,6 @@ func TestAddImage(t *testing.T) {
 
 				// node
 				g.graph.(*graph.MockGraphTemplate).On("Exists", "image_name:image_version").Return(false, nil)
-				g.graph.(*graph.MockGraphTemplate).On("GetNode", generateNodeName("image_name", "image_version")).Return(nil)
 				node := g.graphFactory.NewGraphTemplateNode(generateNodeName("image_name", "image_version"))
 				node.AddItem(i)
 				g.graph.(*graph.MockGraphTemplate).On("AddNode", node).Return(nil)
@@ -167,11 +165,11 @@ func TestAddImage(t *testing.T) {
 			prepareAssertFunc: func(g *ImagesGraphTemplate, i *image.Image) {
 
 				node := g.graphFactory.NewGraphTemplateNode(generateNodeName("image_name", "image_version"))
-				g.addNodeToPendingNodes("image_name", "image_version", node)
+				node.AddItem(i)
 
-				// node
 				g.graph.(*graph.MockGraphTemplate).On("Exists", "image_name:image_version").Return(false, nil)
-
+				g.graph.(*graph.MockGraphTemplate).On("AddNode", node).Return(nil)
+				g.graph.(*graph.MockGraphTemplate).On("HasCycles").Return(false)
 			},
 			assertFunc: func(t *testing.T, g *ImagesGraphTemplate, i *image.Image) {
 				g.graph.(*graph.MockGraphTemplate).AssertExpectations(t)
@@ -242,4 +240,88 @@ func TestAddImage(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestIterate(t *testing.T) {
+	t.Log("Testing Iterate")
+
+	i01 := &image.Image{}
+	i011 := &image.Image{}
+	i0111 := &image.Image{}
+	i0112 := &image.Image{}
+	i012 := &image.Image{}
+	i02 := &image.Image{}
+	i021 := &image.Image{}
+	i0211 := &image.Image{}
+	i0212 := &image.Image{}
+	i022 := &image.Image{}
+
+	graph := NewImagesGraphTemplate(*graph.NewGraphTemplateFactory(false))
+	graph.AddImage("i01", "1.0.0", i01)
+	graph.AddImage("i011", "1.0.1", i011)
+	graph.AddImage("i0111", "1.0.11", i0111)
+	graph.AddImage("i0112", "1.0.12", i0112)
+	graph.AddImage("i012", "1.0.2", i012)
+	graph.AddImage("i02", "2.0.0", i02)
+	graph.AddImage("i021", "2.0.1", i021)
+	graph.AddImage("i0211", "2.0.11", i0211)
+	graph.AddImage("i0212", "2.0.12", i0212)
+	graph.AddImage("i022", "2.0.2", i022)
+
+	numNodes := 0
+	for range graph.Iterate() {
+		numNodes++
+	}
+
+	assert.Equal(t, numNodes, 10)
+}
+
+func TestParseNodeName(t *testing.T) {
+
+	f := graph.NewGraphTemplateFactory(false)
+
+	tests := []struct {
+		desc    string
+		node    GraphNoder
+		name    string
+		version string
+		err     error
+	}{
+		{
+			desc:    "Testing parsing node name",
+			node:    f.NewGraphTemplateNode("image_name:image_version"),
+			name:    "image_name",
+			version: "image_version",
+			err:     &errors.Error{},
+		},
+		{
+			desc:    "Testing parsing node name with invalid node",
+			node:    f.NewGraphTemplateNode("image_name"),
+			name:    "",
+			version: "",
+			err:     errors.New("", "Node name 'image_name' is not valid"),
+		},
+		{
+			desc:    "Testing parsing node with undefined name",
+			node:    f.NewGraphTemplateNode(""),
+			name:    "",
+			version: "",
+			err:     errors.New("", "Node name is undefined"),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			name, version, err := ParseNodeName(test.node)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				assert.Equal(t, test.name, name)
+				assert.Equal(t, test.version, version)
+			}
+		})
+	}
+
 }

@@ -11,6 +11,7 @@ type Grapher interface {
 	AddRelationship(graph.GraphTemplateNoder, graph.GraphTemplateNoder) error
 	Exists(string) bool
 	HasCycles() bool
+	Iterate() <-chan graph.GraphTemplateNoder
 }
 
 // GraphNoder is a node for the graph template
@@ -18,4 +19,8 @@ type GraphNoder interface {
 	AddChild(graph.GraphTemplateNoder) error
 	AddParent(graph.GraphTemplateNoder) error
 	AddItem(interface{})
+	Name() string
+	Item() interface{}
+	Children() []graph.GraphTemplateNoder
+	Parents() []graph.GraphTemplateNoder
 }

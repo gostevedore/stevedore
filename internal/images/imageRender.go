@@ -31,7 +31,7 @@ func RenderizeImage(r *ImageRender) error {
 	if err != nil {
 		return errors.New("(tree::RenderizeImage)", fmt.Sprintf("Error parsing template to renderize '%s'", r.Name), err)
 	}
-
+	//-------
 	err = tmpl.Execute(&renderBuffer, r)
 	if err != nil {
 		return errors.New("(tree::RenderizeImage)", fmt.Sprintf("Error renderizing image '%s'", r.Name), err)

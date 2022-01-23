@@ -1,9 +1,8 @@
 package image
 
 import (
-	"fmt"
-
 	errors "github.com/apenella/go-common-utils/error"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -12,19 +11,19 @@ const (
 
 // Image is the domain definition of a docker image
 type Image struct {
-	Builder           interface{}            `yaml:"builder"`
-	Children          map[string][]string    `yaml:"children"`
-	Childs            map[string][]string    `yaml:"childs"`
+	Builder  interface{}         `yaml:"builder"`
+	Children map[string][]string `yaml:"children"`
+	//	Childs            map[string][]string    `yaml:"childs"`
 	Labels            map[string]string      `yaml:"labels"`
 	Name              string                 `yaml:"name"`
 	PersistentVars    map[string]interface{} `yaml:"persistent_vars"`
 	RegistryHost      string                 `yaml:"registry"`
 	RegistryNamespace string                 `yaml:"namespace"`
 	Tags              []string               `yaml:"tags"`
-	Type              string                 `yaml:"type"`
-	Vars              map[string]interface{} `yaml:"vars"`
-	Version           string                 `yaml:"version"`
-	Parents           map[string][]string    `yaml:"parents"`
+	//	Type              string                 `yaml:"type"`
+	Vars    map[string]interface{} `yaml:"vars"`
+	Version string                 `yaml:"version"`
+	Parents map[string][]string    `yaml:"parents"`
 }
 
 // LoadImage
@@ -109,23 +108,47 @@ func (i *Image) Copy() (*Image, error) {
 // CheckCompatibility checks that image compatibility
 func (i *Image) CheckCompatibility(compabilitiy Compatibilitier) {
 
-	if i.Type != "" {
-		compabilitiy.AddDeprecated(fmt.Sprintf("On '%s', 'type' attribute must be replaced by 'builder' before 0.11.0", i.Name))
+	// if i.Type != "" {
+	// 	compabilitiy.AddDeprecated(fmt.Sprintf("On '%s', 'type' attribute must be replaced by 'builder' before 0.11.0", i.Name))
 
-		if i.Builder == "" {
-			i.Builder = i.Type
-		} else {
-			compabilitiy.AddDeprecated(fmt.Sprintf("On '%s', 'builder' value will be used instead of 'type'", i.Name))
-		}
+	// 	if i.Builder == "" {
+	// 		i.Builder = i.Type
+	// 	} else {
+	// 		compabilitiy.AddDeprecated(fmt.Sprintf("On '%s', 'builder' value will be used instead of 'type'", i.Name))
+	// 	}
+	// }
+
+	// if i.Childs != nil && len(i.Childs) > 0 {
+	// 	compabilitiy.AddDeprecated(fmt.Sprintf("On '%s', 'childs' attribute must be replaced by 'children' before 0.11.0", i.Name))
+
+	// 	if i.Children != nil && len(i.Children) > 0 {
+	// 		compabilitiy.AddDeprecated(fmt.Sprintf("On '%s', 'children' value will be used instead of 'childs'", i.Name))
+	// 	} else {
+	// 		i.Children = i.Childs
+	// 	}
+	// }
+}
+
+// YAMLMarshal marshals the image to YAML
+func (i *Image) YAMLMarshal() ([]byte, error) {
+	errContext := "(image::YAMLMarshal)"
+
+	marshaled, err := yaml.Marshal(i)
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
 	}
 
-	if i.Childs != nil && len(i.Childs) > 0 {
-		compabilitiy.AddDeprecated(fmt.Sprintf("On '%s', 'childs' attribute must be replaced by 'children' before 0.11.0", i.Name))
+	return marshaled, nil
+}
 
-		if i.Children != nil && len(i.Children) > 0 {
-			compabilitiy.AddDeprecated(fmt.Sprintf("On '%s', 'children' value will be used instead of 'childs'", i.Name))
-		} else {
-			i.Children = i.Childs
-		}
+// YAMLUnmarshal unmarshals the image from a YAML string
+func (i *Image) YAMLUnmarshal(in []byte) error {
+	errContext := "(image::YAMLUnmarshal)"
+
+	err := yaml.Unmarshal(in, i)
+	if err != nil {
+		return errors.New(errContext, err.Error())
 	}
+
+	return nil
 }

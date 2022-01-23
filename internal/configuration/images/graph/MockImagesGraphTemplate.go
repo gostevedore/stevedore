@@ -19,3 +19,12 @@ func (m *MockImagesGraphTemplate) AddImage(name, version string, image *image.Im
 	args := m.Called(name, version, image)
 	return args.Error(0)
 }
+
+// Iterate is a mock implementation of the Iterate method
+func (m *MockImagesGraphTemplate) Iterate() <-chan GraphNoder {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil
+	}
+	return args.Get(0).(<-chan GraphNoder)
+}

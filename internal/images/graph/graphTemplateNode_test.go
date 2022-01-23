@@ -26,7 +26,7 @@ func TestAddChild(t *testing.T) {
 	child := NewGraphTemplateNode("child")
 
 	parent.AddChild(child)
-	assert.Equal(t, 1, len(parent.Children))
+	assert.Equal(t, 1, len(parent.Children()))
 }
 
 func TestAddParent(t *testing.T) {
@@ -36,7 +36,7 @@ func TestAddParent(t *testing.T) {
 	child := NewGraphTemplateNode("child")
 
 	child.AddParent(parent)
-	assert.Equal(t, 1, len(child.Parents))
+	assert.Equal(t, 1, len(child.Parents()))
 }
 
 func TestAddItem(t *testing.T) {
@@ -44,6 +44,6 @@ func TestAddItem(t *testing.T) {
 
 	node := NewGraphTemplateNode("node")
 	node.AddItem("item")
-	assert.Equal(t, "item", node.Item)
+	assert.Equal(t, "item", node.Item())
 
 }

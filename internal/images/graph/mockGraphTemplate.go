@@ -50,3 +50,14 @@ func (m *MockGraphTemplate) HasCycles() bool {
 
 	return args.Bool(0)
 }
+
+// Iterate return a channel that iterates over the graph template
+func (m *MockGraphTemplate) Iterate() <-chan GraphTemplateNoder {
+	args := m.Called()
+
+	if args.Get(0) == nil {
+		return nil
+	}
+
+	return args.Get(0).(<-chan GraphTemplateNoder)
+}

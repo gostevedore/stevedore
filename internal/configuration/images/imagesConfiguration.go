@@ -2,9 +2,11 @@ package images
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/configuration/images/graph"
 	"github.com/gostevedore/stevedore/internal/configuration/images/image"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
@@ -57,13 +59,50 @@ func (t *ImagesConfiguration) CheckCompatibility() error {
 	return nil
 }
 
+// LoadImages
+func (t *ImagesConfiguration) LoadImagesToStore(path string, store ImagesStorer) error {
+
+	var err error
+	errContext := "(images::LoadImagesToStore)"
+
+	err = t.LoadImagesConfiguration(path)
+	if err != nil {
+		return errors.New(errContext, err.Error())
+	}
+
+	for node := range t.graph.Iterate() {
+		name, version, err := graph.ParseNodeName(node)
+		if err != nil {
+			return errors.New(errContext, err.Error())
+		}
+		_ = name
+		_ = version
+
+		image := node.Item().(*image.Image)
+		_ = image
+		// render de la image
+		/*
+			- get parent domain image
+			- prepare render object with parent domain image, image name, image version and config image
+			- render config image,
+			- generate domain image from config image
+			- add domain image as child of parent domain image
+			- add domain image to store
+			- initiate render of child config images
+		*/
+
+	}
+
+	return nil
+}
+
 // LoadImagesConfiguration method generate and return an ImagesConfiguration struct from a file
 func (t *ImagesConfiguration) LoadImagesConfiguration(path string) error {
 
 	var err error
 	var isDir bool
 
-	errContext := "(tree::LoadImagesConfiguration)"
+	errContext := "(images::LoadImagesConfiguration)"
 
 	isDir, err = afero.IsDir(t.fs, path)
 	if err != nil {
@@ -81,7 +120,7 @@ func (t *ImagesConfiguration) LoadImagesConfiguration(path string) error {
 func (t *ImagesConfiguration) LoadImagesConfigurationFromDir(dir string) error {
 	var err error
 	errFuncs := []func() error{}
-	errContext := "(tree::LoadImagesConfigurationFromDir)"
+	errContext := "(images::LoadImagesConfigurationFromDir)"
 
 	yamlFiles, err := afero.Glob(t.fs, dir+"/*.yaml")
 	if err != nil {
@@ -138,7 +177,7 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 	var err error
 	var fileData []byte
 
-	errContext := "(tree::LoadImagesConfigurationFromFile)"
+	errContext := "(images::LoadImagesConfigurationFromFile)"
 
 	if t == nil {
 		return errors.New(errContext, "Builders is nil")
@@ -161,7 +200,15 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 	}
 
 	for name, images := range imageTreeAux.Images {
+		if !isAValidName(name) {
+			return errors.New(errContext, fmt.Sprintf("Found an invalid image name '%s' defined in file '%s'", name, path))
+		}
+
 		for version, image := range images {
+			if !isAValidVersion(version) {
+				return errors.New(errContext, fmt.Sprintf("Found an invalid image version '%s' defined in file '%s'", version, path))
+			}
+
 			err = t.graph.AddImage(name, version, image)
 			// err = t.AddImage(name, version, image)
 			if err != nil {
@@ -172,7 +219,15 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 
 	// TO BE REMOVE on v0.12: is kept just for compatibility concerns
 	for name, images := range imageTreeAux.DEPRECATED_ImagesTree {
+		if !isAValidName(name) {
+			return errors.New(errContext, fmt.Sprintf("Found an invalid image name '%s' defined in file '%s'", name, path))
+		}
+
 		for version, image := range images {
+			if !isAValidVersion(version) {
+				return errors.New(errContext, fmt.Sprintf("Found an invalid image version '%s' defined in file '%s'", version, path))
+			}
+
 			err := t.graph.AddImage(name, version, image)
 			if err != nil {
 				return errors.New(errContext, err.Error())
@@ -183,10 +238,26 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 	return nil
 }
 
+// isValidName method checks if a string is a valid image name
+func isAValidName(name string) bool {
+	if strings.IndexRune(name, ':') != -1 {
+		return false
+	}
+	return true
+}
+
+// isValidVersion method checks if a string is a valid image version
+func isAValidVersion(name string) bool {
+	if strings.IndexRune(name, ':') != -1 {
+		return false
+	}
+	return true
+}
+
 // AddImage method add an image to the tree
 // func (t *ImagesConfiguration) AddImage(name, version string, i *image.Image) error {
 
-// 	errContext := "(tree::AddImage)"
+// 	errContext := "(images::AddImage)"
 
 // 	if i == nil {
 // 		return errors.New(errContext, "Image to add is null")
@@ -224,14 +295,14 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 // 			// root nodes has no parent then its argument is nil
 // 			err := t.generateTemplateGraph(imageName, imageVersion, imageDef, imagesTemplateGraph, nil)
 // 			if err != nil {
-// 				return nil, nil, errors.New("(tree::GenerateGraph)", "Error generating images graph", err)
+// 				return nil, nil, errors.New("(images::GenerateGraph)", "Error generating images graph", err)
 // 			}
 // 		}
 // 	}
 
 // 	imagesGraph, index, err := RenderizeGraph(imagesTemplateGraph)
 // 	if err != nil {
-// 		return nil, nil, errors.New("(tree::GenerateGraph)", "Error renderizing images tree", err)
+// 		return nil, nil, errors.New("(images::GenerateGraph)", "Error renderizing images tree", err)
 // 	}
 
 // 	return imagesGraph, index, nil
@@ -241,7 +312,7 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 // func (t *ImagesConfiguration) generateTemplateGraph(imageName string, imageVersion string, nodeImage *Image, imagesGraph *gdsexttree.Graph, parent *gdsexttree.Node) error {
 
 // 	if nodeImage == nil {
-// 		return errors.New("(tree::generateGraphRec)", "Node Image is null")
+// 		return errors.New("(images::generateGraphRec)", "Node Image is null")
 // 	}
 
 // 	// enrich image date with a Name and a Version
@@ -265,7 +336,7 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 // 	} else {
 // 		err := imagesGraph.AddNode(node)
 // 		if err != nil {
-// 			return errors.New("(tree::generateTemplateGraph)", fmt.Sprintf("Node '%s' could not be added to tree", node.Name), err)
+// 			return errors.New("(images::generateTemplateGraph)", fmt.Sprintf("Node '%s' could not be added to tree", node.Name), err)
 // 		}
 // 	}
 
@@ -275,13 +346,13 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 // 		if !node.HasParent(parent) {
 // 			err := imagesGraph.AddRelationship(parent, node)
 // 			if err != nil {
-// 				return errors.New("(tree::generateTemplateGraph)", fmt.Sprintf("Relationship from '%s' to '%s' could not be created", parent.Name, node.Name), err)
+// 				return errors.New("(images::generateTemplateGraph)", fmt.Sprintf("Relationship from '%s' to '%s' could not be created", parent.Name, node.Name), err)
 // 			}
 // 		}
 // 	}
 
 // 	if imagesGraph.HasCycles() {
-// 		return errors.New("(tree::generateTemplateGraph)", "Cycle detected")
+// 		return errors.New("(images::generateTemplateGraph)", "Cycle detected")
 // 	}
 
 // 	for childName, childVersions := range nodeImage.Children {
@@ -291,7 +362,7 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 // 			if exist {
 // 				err := t.generateTemplateGraph(childName, childVersion, childImage, imagesGraph, node)
 // 				if err != nil {
-// 					return errors.New("(tree::generateTemplateGraph)", fmt.Sprintf("Error generating template tree from '%s' to '%s'", childName, node.Name), err)
+// 					return errors.New("(images::generateTemplateGraph)", fmt.Sprintf("Error generating template tree from '%s' to '%s'", childName, node.Name), err)
 // 				}
 // 			}
 // 		}
@@ -313,7 +384,7 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 // 	for _, root := range g.Root {
 // 		err := renderizeGraphRec(imagesGraph, index, nil, root)
 // 		if err != nil {
-// 			return nil, nil, errors.New("(tree::RenderizeGraph)", "Error renderizing images graph", err)
+// 			return nil, nil, errors.New("(images::RenderizeGraph)", "Error renderizing images graph", err)
 // 		}
 // 	}
 
@@ -334,12 +405,12 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 // 	originalImageNode := node.Item.(*Image)
 // 	imageNode, err := originalImageNode.Copy()
 // 	if err != nil {
-// 		return errors.New("(tree::renderizeGraphRec)", "Error coping image '"+originalImageNode.Name+"'", err)
+// 		return errors.New("(images::renderizeGraphRec)", "Error coping image '"+originalImageNode.Name+"'", err)
 // 	}
 
 // 	imageDetail := strings.Split(node.Name, ImageNodeNameSeparator)
 // 	if len(imageDetail) != 2 {
-// 		return errors.New("(tree::renderizeGraphRec)", "Node name '"+imageNode.Name+"' not valid")
+// 		return errors.New("(images::renderizeGraphRec)", "Node name '"+imageNode.Name+"' not valid")
 // 	}
 // 	imageName := imageDetail[0]
 // 	imageVersion := imageDetail[1]
@@ -353,7 +424,7 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 
 // 	err = RenderizeImage(renderImageData)
 // 	if err != nil {
-// 		return errors.New("(tree::renderizeGraphRec)", "Error renderinzing image '"+imageName+"'", err)
+// 		return errors.New("(images::renderizeGraphRec)", "Error renderinzing image '"+imageName+"'", err)
 // 	}
 
 // 	if len(renderParent.PersistentVars) > 0 {
@@ -400,7 +471,7 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 // 	for _, child := range node.Children {
 // 		err := renderizeGraphRec(imagesGraph, index, newImageNode, child)
 // 		if err != nil {
-// 			return errors.New("(tree::renderizeGraphRec)", "Error renderizing image graph", err)
+// 			return errors.New("(images::renderizeGraphRec)", "Error renderizing image graph", err)
 // 		}
 // 	}
 
@@ -409,10 +480,10 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 
 // func GetNodeImage(node *gdstree.Node) (*Image, error) {
 // 	if node == nil {
-// 		return nil, errors.New("(tree::GetNodeImage)", "Node is nil")
+// 		return nil, errors.New("(images::GetNodeImage)", "Node is nil")
 // 	}
 // 	if node.Item == nil {
-// 		return nil, errors.New("(tree::GetNodeImage)", "Node item is nil")
+// 		return nil, errors.New("(images::GetNodeImage)", "Node item is nil")
 // 	}
 // 	i := node.Item.(*Image)
 
@@ -430,26 +501,26 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 // 	var nodeAuxChilds []*gdstree.Node
 
 // 	if t == nil {
-// 		return nil, errors.New("(tree::GenerateNodeWithWilcardVersion)", "Images tree is nil")
+// 		return nil, errors.New("(images::GenerateNodeWithWilcardVersion)", "Images tree is nil")
 // 	}
 // 	if node == nil {
-// 		return nil, errors.New("(tree::GenerateNodeWithWilcardVersion)", "Node is nil")
+// 		return nil, errors.New("(images::GenerateNodeWithWilcardVersion)", "Node is nil")
 // 	}
 
 // 	imageAux, err = GetNodeImage(node)
 // 	if err != nil {
-// 		return nil, errors.New("(tree::GenerateNodeWithWilcardVersion)", "Error when achieve image from node '"+node.Name+"'")
+// 		return nil, errors.New("(images::GenerateNodeWithWilcardVersion)", "Error when achieve image from node '"+node.Name+"'")
 // 	}
 // 	nodeName := imageAux.Name
 
 // 	imageAuxWildcard, exist = t.Images[nodeName][wildCardVersionSymbol]
 // 	if !exist {
-// 		return nil, errors.New("(tree::GenerateNodeWithWilcardVersion)", "Node '"+nodeName+"' does not exists or not has not got a wildcard version")
+// 		return nil, errors.New("(images::GenerateNodeWithWilcardVersion)", "Node '"+nodeName+"' does not exists or not has not got a wildcard version")
 // 	}
 
 // 	imageWildcard, err = imageAuxWildcard.Copy()
 // 	if err != nil {
-// 		return nil, errors.New("(tree::GenerateNodeWithWilcardVersion)", "Error coping image '"+node.Name+"'", err)
+// 		return nil, errors.New("(images::GenerateNodeWithWilcardVersion)", "Error coping image '"+node.Name+"'", err)
 // 	}
 // 	imageWildcard.Version = version
 
@@ -469,7 +540,7 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 
 // 	err = RenderizeImage(renderImageData)
 // 	if err != nil {
-// 		return nil, errors.New("(tree::GenerateNodeWithWilcardVersion)", "Error renderinzing image '"+nodeName+"'", err)
+// 		return nil, errors.New("(images::GenerateNodeWithWilcardVersion)", "Error renderinzing image '"+nodeName+"'", err)
 // 	}
 
 // 	for _, aux := range node.Children {

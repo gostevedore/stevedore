@@ -586,6 +586,60 @@ images:
 	}
 }
 
+func TestIsAValidName(t *testing.T) {
+	tests := []struct {
+		desc string
+		name string
+		res  bool
+	}{
+		{
+			desc: "Testing valid name",
+			name: "valid",
+			res:  true,
+		},
+		{
+			desc: "Testing invalid name",
+			name: "in:valid",
+			res:  false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			assert.Equal(t, test.res, isAValidName(test.name))
+		})
+	}
+}
+
+func TestIsAValidVersion(t *testing.T) {
+	tests := []struct {
+		desc    string
+		version string
+		res     bool
+	}{
+		{
+			desc:    "Testing valid version",
+			version: "valid",
+			res:     true,
+		},
+		{
+			desc:    "Testing invalid version",
+			version: "in:valid",
+			res:     false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			assert.Equal(t, test.res, isAValidVersion(test.version))
+		})
+	}
+}
+
 // LoadImagesConfiguration test
 // func TestLoadImagesConfiguration(t *testing.T) {
 

@@ -1,20 +1,21 @@
 package graph
 
-import gdsexttree "github.com/apenella/go-data-structures/extendedTree"
-
 // GraphTemplateNoder is the interface for the graph template node
 type GraphTemplateNoder interface {
 	AddChild(GraphTemplateNoder) error
 	AddParent(GraphTemplateNoder) error
 	AddItem(interface{})
-	// getNode() *gdsexttree.Node
+	Name() string
+	Item() interface{}
+	Children() []GraphTemplateNoder
+	Parents() []GraphTemplateNoder
 }
 
-// graphTemplateNoder is the interface for the graph template node
-type graphTemplateNoder interface {
-	GraphTemplateNoder
-	getNode() *gdsexttree.Node
-}
+// // graphTemplateNoder is the interface for the graph template node
+// type graphTemplateNoder interface {
+// 	GraphTemplateNoder
+// 	getNode() *gdsexttree.Node
+// }
 
 // GraphTemplater is the interface for the graph template for images
 type GraphTemplater interface {
@@ -23,6 +24,7 @@ type GraphTemplater interface {
 	AddRelationship(GraphTemplateNoder, GraphTemplateNoder) error
 	Exists(string) bool
 	HasCycles() bool
+	Iterate() <-chan GraphTemplateNoder
 }
 
 // // Grapher is a graph template for images
