@@ -95,6 +95,13 @@ func WithLabels(labels map[string]string) OptionFunc {
 	}
 }
 
+// WithParent sets the parent image
+func WithParent(parent *Image) OptionFunc {
+	return func(i *Image) {
+		i.Parent = parent
+	}
+}
+
 // WithPersistentVars sets the persistent variables
 func WithPersistentVars(persistentVars map[string]interface{}) OptionFunc {
 	return func(i *Image) {
@@ -130,6 +137,7 @@ func WithVars(vars map[string]interface{}) OptionFunc {
 	}
 }
 
+// Parse generates an image skeleton using a docker images name passed as parameter
 func Parse(name string) (*Image, error) {
 	errContext := "(image::Parse)"
 

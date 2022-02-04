@@ -8,6 +8,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/configuration/compatibility"
 	"github.com/gostevedore/stevedore/internal/configuration/images/graph"
 	"github.com/gostevedore/stevedore/internal/configuration/images/image"
+	"github.com/gostevedore/stevedore/internal/images/store"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
@@ -210,13 +211,19 @@ image:
 			path: filepath.Join(baseDir, "tab_error_file.yaml"),
 			tree: NewImagesConfiguration(testFs,
 				graph.NewMockImagesGraphTemplate(),
-				compatibility.NewMockCompatibility()),
+				store.NewMockImageStore(),
+				compatibility.NewMockCompatibility(),
+			),
 			err: errors.New(errContext, "Error loading images tree from file '/imagestree/tab_error_file.yaml'\nfound:\n\nimages:\nimage:\n  version:\n\tregistry: registry\n\tnamespace: namespace\n\n\tyaml: line 5: found character that cannot start any token"),
 		},
 		{
 			desc: "Testing load images tree from file",
 			path: filepath.Join(baseDir, "file1.yaml"),
-			tree: NewImagesConfiguration(testFs, graph.NewMockImagesGraphTemplate(), compatibility.NewMockCompatibility()),
+			tree: NewImagesConfiguration(testFs,
+				graph.NewMockImagesGraphTemplate(),
+				store.NewMockImageStore(),
+				compatibility.NewMockCompatibility(),
+			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
 				tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "image", "version", &image.Image{
 					Name:              "image",
@@ -247,7 +254,11 @@ image:
 		{
 			desc: "Testing load images tree from file with deprecated definition",
 			path: filepath.Join(baseDir, "deprecated_definition.yaml"),
-			tree: NewImagesConfiguration(testFs, graph.NewMockImagesGraphTemplate(), compatibility.NewMockCompatibility()),
+			tree: NewImagesConfiguration(testFs,
+				graph.NewMockImagesGraphTemplate(),
+				store.NewMockImageStore(),
+				compatibility.NewMockCompatibility(),
+			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
 				tree.compatibility.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'images_tree' is deprecated and will be removed on v0.12.0, please use 'images' instead"}).Return(nil)
 				tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "deprecated_image", "deprecated_version", &image.Image{
@@ -279,7 +290,11 @@ image:
 		{
 			desc: "Testing error when adding image to images graph store",
 			path: filepath.Join(baseDir, "file1.yaml"),
-			tree: NewImagesConfiguration(testFs, graph.NewMockImagesGraphTemplate(), compatibility.NewMockCompatibility()),
+			tree: NewImagesConfiguration(testFs,
+				graph.NewMockImagesGraphTemplate(),
+				store.NewMockImageStore(),
+				compatibility.NewMockCompatibility(),
+			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
 				tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "image", "version", &image.Image{
 					Name:              "image",
@@ -407,7 +422,11 @@ image:
 		{
 			desc: "Testing load images tree from directory",
 			path: baseDir,
-			tree: NewImagesConfiguration(testFs, graph.NewMockImagesGraphTemplate(), compatibility.NewMockCompatibility()),
+			tree: NewImagesConfiguration(testFs,
+				graph.NewMockImagesGraphTemplate(),
+				store.NewMockImageStore(),
+				compatibility.NewMockCompatibility(),
+			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
 				tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "image", "version", &image.Image{
 					Name:              "image",
@@ -447,7 +466,11 @@ image:
 		{
 			desc: "Testing error when adding and existing image on images tree",
 			path: baseDir,
-			tree: NewImagesConfiguration(testFs, graph.NewMockImagesGraphTemplate(), compatibility.NewMockCompatibility()),
+			tree: NewImagesConfiguration(testFs,
+				graph.NewMockImagesGraphTemplate(),
+				store.NewMockImageStore(),
+				compatibility.NewMockCompatibility(),
+			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
 				tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "image", "version", &image.Image{
 					Name:              "image",
@@ -539,7 +562,11 @@ images:
 		{
 			desc: "Testing load images tree from file",
 			path: filepath.Join(baseDir, "file1.yaml"),
-			tree: NewImagesConfiguration(testFs, graph.NewMockImagesGraphTemplate(), compatibility.NewMockCompatibility()),
+			tree: NewImagesConfiguration(testFs,
+				graph.NewMockImagesGraphTemplate(),
+				store.NewMockImageStore(),
+				compatibility.NewMockCompatibility(),
+			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
 				tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "image", "version", &image.Image{
 					Name:              "image",
@@ -554,7 +581,11 @@ images:
 		{
 			desc: "Testing load images tree from dir",
 			path: baseDir,
-			tree: NewImagesConfiguration(testFs, graph.NewMockImagesGraphTemplate(), compatibility.NewMockCompatibility()),
+			tree: NewImagesConfiguration(testFs,
+				graph.NewMockImagesGraphTemplate(),
+				store.NewMockImageStore(),
+				compatibility.NewMockCompatibility(),
+			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
 				tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "image", "version", &image.Image{
 					Name:              "image",

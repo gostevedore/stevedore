@@ -177,10 +177,10 @@ func (m *ImagesGraphTemplate) Iterate() <-chan GraphNoder {
 	it := make(chan GraphNoder)
 
 	go func() {
+		defer close(it)
 		for node := range m.graph.Iterate() {
 			it <- node
 		}
-		close(it)
 	}()
 
 	return it

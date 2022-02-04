@@ -16,6 +16,12 @@ func NewMockImageStore() *MockImageStore {
 	return &MockImageStore{}
 }
 
+// AddImage is a mock implementation of the AddImage method
+func (m *MockImageStore) AddImage(name string, version string, parent *image.Image) error {
+	args := m.Called(name, version, parent)
+	return args.Error(0)
+}
+
 // All is a mock implementation of the All method
 func (m *MockImageStore) All(name string) ([]*image.Image, error) {
 	args := m.Called(name)

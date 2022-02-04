@@ -2,6 +2,7 @@ package image
 
 import (
 	errors "github.com/apenella/go-common-utils/error"
+	domainimage "github.com/gostevedore/stevedore/internal/images/image"
 	"gopkg.in/yaml.v2"
 )
 
@@ -25,17 +26,6 @@ type Image struct {
 	Version string                 `yaml:"version"`
 	Parents map[string][]string    `yaml:"parents"`
 }
-
-// LoadImage
-// func LoadImage(file string) (*Image, error) {
-// 	image := &Image{}
-// 	err := data.LoadYAMLFile(file, image)
-// 	if err != nil {
-// 		return nil, errors.New("(images::LoadImage)", "Images file could not be load", err)
-// 	}
-
-// 	return image, nil
-// }
 
 // Copy method return a copy of the instanced Image
 func (i *Image) Copy() (*Image, error) {
@@ -76,6 +66,29 @@ func (i *Image) Copy() (*Image, error) {
 	}
 
 	return &copiedImage, nil
+}
+
+// CreateDomainImage creates a domain image from the image
+func (i *Image) CreateDomainImage() (*domainimage.Image, error) {
+
+	errContext := "(image::CreateDomainImage)"
+
+	image, err := domainimage.NewImage(
+		i.Name,
+		i.Version,
+		i.RegistryHost,
+		i.RegistryNamespace,
+		domainimage.WithBuilder(i.Builder),
+		domainimage.WithLabels(i.Labels),
+		domainimage.WithPersistentVars(i.PersistentVars),
+		domainimage.WithVars(i.Vars),
+		domainimage.WithTags(i.Tags...),
+	)
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+
+	return image, nil
 }
 
 // func (i *Image) ToArray() ([]string, error) {

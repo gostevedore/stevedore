@@ -15,27 +15,31 @@ func TestRender(t *testing.T) {
 	_ = errContext
 
 	tests := []struct {
-		desc   string
-		render *ImageRender
-		res    ImageSerializer
-		err    error
+		desc    string
+		render  *ImageRender
+		name    string
+		version string
+		parent  *domainimage.Image
+		image   ImageSerializer
+		res     ImageSerializer
+		err     error
 	}{
 		{
-			desc: "Testing render domain image",
-			render: &ImageRender{
-				Name:    "image_name",
-				Version: "Image_version",
-				Parent: &domainimage.Image{
-					Name:              "parent_name",
-					Version:           "parent_version",
-					RegistryNamespace: "parent_registry_namespace",
-				},
-				Image: &domainimage.Image{
-					Name:              "{{.Name}}-{{.Parent.Name}}",
-					Version:           "{{.Version}}-{{.Parent.Version}}",
-					RegistryNamespace: "{{.Parent.RegistryNamespace}}",
-				},
+			desc:    "Testing render domain image",
+			render:  &ImageRender{},
+			name:    "image_name",
+			version: "Image_version",
+			parent: &domainimage.Image{
+				Name:              "parent_name",
+				Version:           "parent_version",
+				RegistryNamespace: "parent_registry_namespace",
 			},
+			image: &domainimage.Image{
+				Name:              "{{.Name}}-{{.Parent.Name}}",
+				Version:           "{{.Version}}-{{.Parent.Version}}",
+				RegistryNamespace: "{{.Parent.RegistryNamespace}}",
+			},
+
 			res: &domainimage.Image{
 				Name:              "image_name-parent_name",
 				Version:           "Image_version-parent_version",
@@ -48,24 +52,23 @@ func TestRender(t *testing.T) {
 			err: &errors.Error{},
 		},
 		{
-			desc: "Testing render domain image using grand parent details",
-			render: &ImageRender{
-				Name:    "image_name",
-				Version: "Image_version",
+			desc:    "Testing render domain image using grand parent details",
+			render:  &ImageRender{},
+			name:    "image_name",
+			version: "Image_version",
+			parent: &domainimage.Image{
+				Name:    "parent_name",
+				Version: "parent_version",
 				Parent: &domainimage.Image{
-					Name:    "parent_name",
-					Version: "parent_version",
-					Parent: &domainimage.Image{
-						Name:              "parent_parent_name",
-						Version:           "parent_parent_version",
-						RegistryNamespace: "parent_parent_registry_namespace",
-					},
+					Name:              "parent_parent_name",
+					Version:           "parent_parent_version",
+					RegistryNamespace: "parent_parent_registry_namespace",
 				},
-				Image: &domainimage.Image{
-					Name:              "{{.Name}}-{{.Parent.Name}}",
-					Version:           "{{.Version}}-{{.Parent.Version}}",
-					RegistryNamespace: "{{.Parent.Parent.RegistryNamespace}}",
-				},
+			},
+			image: &domainimage.Image{
+				Name:              "{{.Name}}-{{.Parent.Name}}",
+				Version:           "{{.Version}}-{{.Parent.Version}}",
+				RegistryNamespace: "{{.Parent.Parent.RegistryNamespace}}",
 			},
 			res: &domainimage.Image{
 				Name:              "image_name-parent_name",
@@ -79,21 +82,21 @@ func TestRender(t *testing.T) {
 			err: &errors.Error{},
 		},
 		{
-			desc: "Testing render configuration image",
-			render: &ImageRender{
-				Name:    "image_name",
-				Version: "Image_version",
-				Parent: &domainimage.Image{
-					Name:              "parent_name",
-					Version:           "parent_version",
-					RegistryNamespace: "parent_registry_namespace",
-				},
-				Image: &configimage.Image{
-					Name:              "{{.Name}}-{{.Parent.Name}}",
-					Version:           "{{.Version}}-{{.Parent.Version}}",
-					RegistryNamespace: "{{.Parent.RegistryNamespace}}",
-				},
+			desc:    "Testing render configuration image",
+			render:  &ImageRender{},
+			name:    "image_name",
+			version: "Image_version",
+			parent: &domainimage.Image{
+				Name:              "parent_name",
+				Version:           "parent_version",
+				RegistryNamespace: "parent_registry_namespace",
 			},
+			image: &configimage.Image{
+				Name:              "{{.Name}}-{{.Parent.Name}}",
+				Version:           "{{.Version}}-{{.Parent.Version}}",
+				RegistryNamespace: "{{.Parent.RegistryNamespace}}",
+			},
+
 			res: &configimage.Image{
 				Name:              "image_name-parent_name",
 				Version:           "Image_version-parent_version",
@@ -112,11 +115,11 @@ func TestRender(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			err := test.render.Render()
+			err := test.render.Render(test.name, test.version, test.parent, test.image)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				assert.Equal(t, test.res, test.render.Image)
+				assert.Equal(t, test.res, test.image)
 			}
 
 		})

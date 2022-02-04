@@ -14,7 +14,8 @@ type ImagesGraphTemplatesStorer interface {
 
 // ImagesStorer interfaces defines the storage of images
 type ImagesStorer interface {
-	AddImage(*domainimage.Image) error
+	AddImage(name string, version string, parent *domainimage.Image) error
+	Find(name string, version string) (*domainimage.Image, error)
 }
 
 // Compatibilitier is the interface for the compatibility checker

@@ -148,6 +148,7 @@ func (b *Builders) LoadBuildersFromDir(dir string) error {
 	}
 	files := append(yamlFiles, ymlFiles...)
 
+	// promise function to load builders from file
 	loadBuildersFromFile := func(path string) func() error {
 		var err error
 
