@@ -7,11 +7,6 @@ import (
 // GraphTemplateStorer is the interface for the graph template store
 type GraphTemplateStorer interface{}
 
-type ImageSerializer interface {
-	YAMLMarshal() ([]byte, error)
-	YAMLUnmarshal([]byte) error
-}
-
 type ImageRenderer interface {
-	Render(name, version string, parent *image.Image, image ImageSerializer) error
+	Render(name, version string, image *image.Image) error
 }

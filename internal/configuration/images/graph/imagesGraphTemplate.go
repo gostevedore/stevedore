@@ -16,8 +16,7 @@ type ImagesGraphTemplate struct {
 	graphFactory graph.GraphTemplateFactory
 
 	mutex sync.RWMutex
-	//addedNode    map[string]map[string]struct{}
-	pendingNodes map[string]map[string]GraphNoder
+	// pendingNodes map[string]map[string]GraphNoder
 }
 
 // NewImagesGraphTemplate creates a new graph template for images
@@ -25,8 +24,7 @@ func NewImagesGraphTemplate(factory graph.GraphTemplateFactory) *ImagesGraphTemp
 	return &ImagesGraphTemplate{
 		graph:        factory.NewGraphTemplate(),
 		graphFactory: factory,
-		//addedNode:    make(map[string]map[string]struct{}),
-		pendingNodes: make(map[string]map[string]GraphNoder),
+		// pendingNodes: make(map[string]map[string]GraphNoder),
 	}
 }
 
@@ -57,7 +55,6 @@ func (m *ImagesGraphTemplate) AddImage(name, version string, image *image.Image)
 
 	var err error
 	var node GraphNoder
-	var isPendingNode bool
 
 	errContext := "(graph::AddImage)"
 
@@ -73,42 +70,33 @@ func (m *ImagesGraphTemplate) AddImage(name, version string, image *image.Image)
 		return errors.New(errContext, "To add and image, image must be provided")
 	}
 
-	if m.pendingNodes == nil {
-		m.pendingNodes = make(map[string]map[string]GraphNoder)
-	}
-
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	if m.graph.Exists(generateNodeName(name, version)) {
-		return errors.New(errContext, fmt.Sprintf("Image '%s:%s' already added to images graph template", name, version))
-	}
-
-	node, isPendingNode = m.pendingNodes[name][version]
-	if !isPendingNode {
+	node = m.graph.GetNode(generateNodeName(name, version))
+	if node == nil {
 		node = m.graphFactory.NewGraphTemplateNode(generateNodeName(name, version))
-	} else {
-		delete(m.pendingNodes[name], version)
-		if len(m.pendingNodes[name]) <= 0 {
-			delete(m.pendingNodes, name)
+		err = m.graph.AddNode(node)
+		if err != nil {
+			return errors.New(errContext, err.Error())
 		}
 	}
 	node.AddItem(image)
 
-	err = m.graph.AddNode(node)
-	if err != nil {
-		return errors.New(errContext, err.Error())
-	}
-
-	if m.graph.HasCycles() {
-		return errors.New(errContext, fmt.Sprintf("Detected a cycle in the graph template after adding node '%s'", generateNodeName(name, version)))
-	}
-
 	if len(image.Parents) > 0 {
 		for parentName, versions := range image.Parents {
 			for _, parentVersion := range versions {
-				parentNode := m.achieveGraphNode(parentName, parentVersion)
-				err = node.AddParent(parentNode)
+
+				parentNode := m.graph.GetNode(generateNodeName(parentName, parentVersion))
+				if parentNode == nil {
+					parentNode = m.graphFactory.NewGraphTemplateNode(generateNodeName(parentName, parentVersion))
+					err = m.graph.AddNode(parentNode)
+					if err != nil {
+						return errors.New(errContext, err.Error())
+					}
+				}
+
+				err = m.graph.AddRelationship(parentNode, node)
 				if err != nil {
 					return errors.New(errContext, err.Error())
 				}
@@ -119,13 +107,26 @@ func (m *ImagesGraphTemplate) AddImage(name, version string, image *image.Image)
 	if len(image.Children) > 0 {
 		for childName, versions := range image.Children {
 			for _, childVersion := range versions {
-				childNode := m.achieveGraphNode(childName, childVersion)
-				node.AddChild(childNode)
+
+				childNode := m.graph.GetNode(generateNodeName(childName, childVersion))
+				if childNode == nil {
+					childNode = m.graphFactory.NewGraphTemplateNode(generateNodeName(childName, childVersion))
+					err = m.graph.AddNode(childNode)
+					if err != nil {
+						return errors.New(errContext, err.Error())
+					}
+				}
+
+				err = m.graph.AddRelationship(node, childNode)
 				if err != nil {
 					return errors.New(errContext, err.Error())
 				}
 			}
 		}
+	}
+
+	if m.graph.HasCycles() {
+		return errors.New(errContext, fmt.Sprintf("Detected a cycle in the graph template after adding node '%s'", generateNodeName(name, version)))
 	}
 
 	return nil
@@ -139,37 +140,6 @@ func (m *ImagesGraphTemplate) Validate() error {
 		return errors.New(errContext, "Graph template has cycles")
 	}
 	return nil
-}
-
-// achieveGraphNode creates a new node
-func (m *ImagesGraphTemplate) achieveGraphNode(name, version string) GraphNoder {
-	var node GraphNoder
-	var exists bool
-
-	// if node is on pending nodes, use that node
-	// if node is already defined on graph, use that node
-	// otherwise, create a new node and add it to pending nodes, and use that node
-	node, exists = m.pendingNodes[name][version]
-	if !exists {
-		node = m.graph.GetNode(generateNodeName(name, version))
-		// when node does not exist
-		if node == nil {
-			node = m.graphFactory.NewGraphTemplateNode(generateNodeName(name, version))
-			m.addNodeToPendingNodes(name, version, node)
-		}
-	}
-
-	return node
-}
-
-// addNodeToPendingNodes adds a node to the pending nodes
-func (m *ImagesGraphTemplate) addNodeToPendingNodes(name, version string, node GraphNoder) {
-
-	if m.pendingNodes[name] == nil {
-		m.pendingNodes[name] = make(map[string]GraphNoder)
-	}
-
-	m.pendingNodes[name][version] = node
 }
 
 // Iterate iterates over the graph template

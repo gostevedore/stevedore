@@ -8,9 +8,12 @@ import (
 	"github.com/gostevedore/stevedore/internal/configuration/compatibility"
 	"github.com/gostevedore/stevedore/internal/configuration/images/graph"
 	"github.com/gostevedore/stevedore/internal/configuration/images/image"
+	imagesgraph "github.com/gostevedore/stevedore/internal/images/graph"
+	domainimage "github.com/gostevedore/stevedore/internal/images/image"
 	"github.com/gostevedore/stevedore/internal/images/store"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestCheckCompatibility(t *testing.T) {
@@ -58,69 +61,195 @@ func TestCheckCompatibility(t *testing.T) {
 	}
 }
 
-// func TestAddImage(t *testing.T) {
-// 	errContext := "(tree::AddImage)"
+func TestLoadImagesToStore(t *testing.T) {
 
-// 	tests := []struct {
-// 		desc    string
-// 		name    string
-// 		version string
-// 		image   *image.Image
-// 		err     error
-// 		tree    *ImagesConfiguration
-// 		res     *ImagesConfiguration
-// 	}{
-// 		{
-// 			desc:    "Testing add image to an empty tree",
-// 			name:    "name",
-// 			version: "version",
-// 			image:   &image.Image{},
-// 			tree:    &ImagesConfiguration{},
-// 			res: &ImagesConfiguration{
-// 				Images: map[string]map[string]*image.Image{
-// 					"name": {
-// 						"version": &image.Image{},
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			desc:    "Testing add image an existing image",
-// 			name:    "name",
-// 			version: "version",
-// 			image:   &image.Image{},
-// 			tree: &ImagesConfiguration{
-// 				Images: map[string]map[string]*image.Image{
-// 					"name": {
-// 						"version": &image.Image{},
-// 					},
-// 				},
-// 			},
-// 			res: &ImagesConfiguration{
-// 				Images: map[string]map[string]*image.Image{
-// 					"name": {
-// 						"version": &image.Image{},
-// 					},
-// 				},
-// 			},
-// 			err: errors.New(errContext, "Image 'name:version' already defined on image tree"),
-// 		},
-// 	}
+	var err error
+	errContext := "(images::LoadImagesToStore)"
+	_ = errContext
 
-// 	for _, test := range tests {
-// 		t.Run(test.desc, func(t *testing.T) {
-// 			t.Log(test.desc)
+	baseDir := "/imagestree"
+	baseErrorDir := "/imagestree_error"
+	testFs := afero.NewMemMapFs()
+	testFs.MkdirAll(baseDir, 0755)
 
-// 			err := test.tree.AddImage(test.name, test.version, test.image)
+	err = afero.WriteFile(testFs, filepath.Join(baseDir, "file1.yaml"), []byte(`
+images:
+  parent1:
+    parent1_version:
+      registry: registry.test
+      namespace: namespace
+      name: parent1
+      version: parent1_version
+      builder: builder
+  parent2:
+    parent2_version:
+      registry: registry.test
+      namespace: namespace
+      name: parent2
+      version: parent2_version
+      builder: builder
+      children:
+        other_child:
+        - other_child_version
+  child:
+    version:
+      registry: registry.test
+      namespace: namespace
+      name: child
+      version: version
+      builder: builder
+      parents:
+        parent1:
+        - parent1_version
+        parent2:
+        - parent2_version
+  other_child:
+    other_child_version:
+      registry: registry.test
+      namespace: namespace
+      name: other_child
+      version: other_child_version
+      builder: builder
+`), 0644)
+	if err != nil {
+		t.Log(err)
+	}
 
-// 			if err != nil {
-// 				assert.Equal(t, test.err.Error(), err.Error())
-// 			} else {
-// 				assert.Equal(t, test.res, test.tree)
-// 			}
-// 		})
-// 	}
-// }
+	err = afero.WriteFile(testFs, filepath.Join(baseErrorDir, "tab_error_file.yaml"), []byte(`
+images:
+image:
+  version:
+	registry: registry.test
+	namespace: namespace
+`), 0644)
+	if err != nil {
+		t.Log(err)
+	}
+
+	tests := []struct {
+		desc              string
+		path              string
+		err               error
+		images            *ImagesConfiguration
+		prepareAssertFunc func(*ImagesConfiguration)
+		assertFunc        func(*ImagesConfiguration)
+	}{
+		{
+			desc: "Testing load images to store",
+			path: baseDir,
+			images: NewImagesConfiguration(
+				testFs,
+				graph.NewImagesGraphTemplate(
+					*imagesgraph.NewGraphTemplateFactory(false),
+				),
+				store.NewMockImageStore(),
+				compatibility.NewMockCompatibility(),
+			),
+			prepareAssertFunc: func(images *ImagesConfiguration) {
+
+				images.store.(*store.MockImageStore).On("Find", "parent1", "parent1_version").Return(&domainimage.Image{
+					RegistryHost:      "registry.test",
+					RegistryNamespace: "namespace",
+					Name:              "parent1",
+					Version:           "parent1_version",
+					Builder:           "builder",
+				}, nil)
+				images.store.(*store.MockImageStore).On("Find", "parent2", "parent2_version").Return(&domainimage.Image{
+					RegistryHost:      "registry.test",
+					RegistryNamespace: "namespace",
+					Name:              "parent2",
+					Version:           "parent2_version",
+					Builder:           "builder",
+				}, nil)
+
+				parent1 := &domainimage.Image{
+					RegistryHost:      "registry.test",
+					RegistryNamespace: "namespace",
+					Name:              "parent1",
+					Version:           "parent1_version",
+					Builder:           "builder",
+				}
+				parent2 := &domainimage.Image{
+					RegistryHost:      "registry.test",
+					RegistryNamespace: "namespace",
+					Name:              "parent2",
+					Version:           "parent2_version",
+					Builder:           "builder",
+				}
+				childParent1 := &domainimage.Image{
+					RegistryHost:      "registry.test",
+					RegistryNamespace: "namespace",
+					Name:              "child",
+					Version:           "version",
+					Builder:           "builder",
+					Labels:            map[string]string{},
+					PersistentVars:    map[string]interface{}{},
+					Tags:              []string{},
+					Vars:              map[string]interface{}{},
+				}
+				childParent2 := &domainimage.Image{
+					RegistryHost:      "registry.test",
+					RegistryNamespace: "namespace",
+					Name:              "child",
+					Version:           "version",
+					Builder:           "builder",
+					Labels:            map[string]string{},
+					PersistentVars:    map[string]interface{}{},
+					Tags:              []string{},
+					Vars:              map[string]interface{}{},
+				}
+				addOtherChild := &domainimage.Image{
+					RegistryHost:      "registry.test",
+					RegistryNamespace: "namespace",
+					Name:              "other_child",
+					Version:           "other_child_version",
+					Builder:           "builder",
+				}
+
+				addOtherChild.Options(
+					domainimage.WithParent(parent2),
+				)
+				// parent2.AddChild(addOtherChild)
+				childParent1.Options(
+					domainimage.WithParent(parent1),
+				)
+				// parent1.AddChild(childParent1)
+				childParent2.Options(
+					domainimage.WithParent(parent2),
+				)
+				// parent2.AddChild(childParent2)
+
+				images.store.(*store.MockImageStore).On("AddImage", "parent1", "parent1_version", mock.AnythingOfType("*image.Image")).Return(nil)
+				images.store.(*store.MockImageStore).On("AddImage", "parent2", "parent2_version", mock.AnythingOfType("*image.Image")).Return(nil)
+				images.store.(*store.MockImageStore).On("AddImage", "child", "version", mock.AnythingOfType("*image.Image")).Return(nil)
+				images.store.(*store.MockImageStore).On("AddImage", "child", "version", mock.AnythingOfType("*image.Image")).Return(nil)
+				images.store.(*store.MockImageStore).On("AddImage", "other_child", "other_child_version", mock.AnythingOfType("*image.Image")).Return(nil)
+			},
+			assertFunc: func(images *ImagesConfiguration) {
+
+			},
+			err: &errors.Error{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.images)
+			}
+
+			err := test.images.LoadImagesToStore(test.path)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				test.images.store.(*store.MockImageStore).AssertExpectations(t)
+				test.images.store.(*store.MockImageStore).AssertNumberOfCalls(t, "AddImage", 5)
+			}
+		})
+	}
+}
 
 func TestLoadImagesConfigurationFromFile(t *testing.T) {
 	var err error
@@ -199,6 +328,49 @@ image:
 		t.Log(err)
 	}
 
+	err = afero.WriteFile(testFs, filepath.Join(baseDir, "multiple_images.yaml"), []byte(`
+images:
+  parent1:
+    parent1_version:
+      registry: registry.test
+      namespace: namespace
+      name: parent1
+      version: parent1_version
+      builder: builder
+  parent2:
+    parent2_version:
+      registry: registry.test
+      namespace: namespace
+      name: parent2
+      version: parent2_version
+      builder: builder
+      children:
+        other_child:
+        - other_child_version
+  child:
+    version:
+      registry: registry.test
+      namespace: namespace
+      name: child
+      version: version
+      builder: builder
+      parents:
+        parent1:
+        - parent1_version
+        parent2:
+        - parent2_version
+  other_child:
+    other_child_version:
+      registry: registry.test
+      namespace: namespace
+      name: other_child
+      version: other_child_version
+      builder: builder
+`), 0644)
+	if err != nil {
+		t.Log(err)
+	}
+
 	tests := []struct {
 		desc              string
 		path              string
@@ -209,7 +381,8 @@ image:
 		{
 			desc: "Testing error on load images tree from file",
 			path: filepath.Join(baseDir, "tab_error_file.yaml"),
-			tree: NewImagesConfiguration(testFs,
+			tree: NewImagesConfiguration(
+				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				store.NewMockImageStore(),
 				compatibility.NewMockCompatibility(),
@@ -219,7 +392,8 @@ image:
 		{
 			desc: "Testing load images tree from file",
 			path: filepath.Join(baseDir, "file1.yaml"),
-			tree: NewImagesConfiguration(testFs,
+			tree: NewImagesConfiguration(
+				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				store.NewMockImageStore(),
 				compatibility.NewMockCompatibility(),
@@ -251,10 +425,60 @@ image:
 			},
 			err: &errors.Error{},
 		},
+
+		{
+			desc: "Testing load images tree from file with multiple images an relationships",
+			path: filepath.Join(baseDir, "multiple_images.yaml"),
+			tree: NewImagesConfiguration(
+				testFs,
+				graph.NewMockImagesGraphTemplate(),
+				store.NewMockImageStore(),
+				compatibility.NewMockCompatibility(),
+			),
+			prepareAssertFunc: func(tree *ImagesConfiguration) {
+				tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "parent1", "parent1_version", &image.Image{
+					Name:              "parent1",
+					Version:           "parent1_version",
+					RegistryHost:      "registry.test",
+					RegistryNamespace: "namespace",
+					Builder:           "builder",
+				}).Return(nil)
+				tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "parent2", "parent2_version", &image.Image{
+					Name:              "parent2",
+					Version:           "parent2_version",
+					RegistryHost:      "registry.test",
+					RegistryNamespace: "namespace",
+					Builder:           "builder",
+					Children: map[string][]string{
+						"other_child": {"other_child_version"},
+					},
+				}).Return(nil)
+				tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "child", "version", &image.Image{
+					Name:              "child",
+					Version:           "version",
+					RegistryHost:      "registry.test",
+					RegistryNamespace: "namespace",
+					Builder:           "builder",
+					Parents: map[string][]string{
+						"parent1": {"parent1_version"},
+						"parent2": {"parent2_version"},
+					},
+				}).Return(nil)
+				tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "other_child", "other_child_version", &image.Image{
+					Name:              "other_child",
+					Version:           "other_child_version",
+					RegistryHost:      "registry.test",
+					RegistryNamespace: "namespace",
+					Builder:           "builder",
+				}).Return(nil)
+			},
+			err: &errors.Error{},
+		},
 		{
 			desc: "Testing load images tree from file with deprecated definition",
 			path: filepath.Join(baseDir, "deprecated_definition.yaml"),
-			tree: NewImagesConfiguration(testFs,
+			tree: NewImagesConfiguration(
+				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				store.NewMockImageStore(),
 				compatibility.NewMockCompatibility(),
@@ -290,7 +514,8 @@ image:
 		{
 			desc: "Testing error when adding image to images graph store",
 			path: filepath.Join(baseDir, "file1.yaml"),
-			tree: NewImagesConfiguration(testFs,
+			tree: NewImagesConfiguration(
+				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				store.NewMockImageStore(),
 				compatibility.NewMockCompatibility(),
@@ -422,7 +647,8 @@ image:
 		{
 			desc: "Testing load images tree from directory",
 			path: baseDir,
-			tree: NewImagesConfiguration(testFs,
+			tree: NewImagesConfiguration(
+				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				store.NewMockImageStore(),
 				compatibility.NewMockCompatibility(),
@@ -466,7 +692,8 @@ image:
 		{
 			desc: "Testing error when adding and existing image on images tree",
 			path: baseDir,
-			tree: NewImagesConfiguration(testFs,
+			tree: NewImagesConfiguration(
+				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				store.NewMockImageStore(),
 				compatibility.NewMockCompatibility(),
@@ -555,14 +782,15 @@ images:
 	tests := []struct {
 		desc              string
 		path              string
-		tree              *ImagesConfiguration
+		images            *ImagesConfiguration
 		prepareAssertFunc func(tree *ImagesConfiguration)
 		err               error
 	}{
 		{
 			desc: "Testing load images tree from file",
 			path: filepath.Join(baseDir, "file1.yaml"),
-			tree: NewImagesConfiguration(testFs,
+			images: NewImagesConfiguration(
+				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				store.NewMockImageStore(),
 				compatibility.NewMockCompatibility(),
@@ -581,7 +809,8 @@ images:
 		{
 			desc: "Testing load images tree from dir",
 			path: baseDir,
-			tree: NewImagesConfiguration(testFs,
+			images: NewImagesConfiguration(
+				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				store.NewMockImageStore(),
 				compatibility.NewMockCompatibility(),
@@ -604,14 +833,14 @@ images:
 			t.Log(test.desc)
 
 			if test.prepareAssertFunc != nil {
-				test.prepareAssertFunc(test.tree)
+				test.prepareAssertFunc(test.images)
 			}
 
-			err := test.tree.LoadImagesConfiguration(test.path)
+			err := test.images.LoadImagesConfiguration(test.path)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				test.tree.graph.(*graph.MockImagesGraphTemplate).AssertExpectations(t)
+				test.images.graph.(*graph.MockImagesGraphTemplate).AssertExpectations(t)
 			}
 		})
 	}

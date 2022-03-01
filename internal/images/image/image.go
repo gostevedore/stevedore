@@ -203,6 +203,17 @@ func (i *Image) Copy() (*Image, error) {
 	if err != nil {
 		return nil, errors.New(errContext, err.Error())
 	}
+
+	opts := []OptionFunc{}
+	if i.Builder != nil {
+		opts = append(opts, WithBuilder(i.Builder))
+	}
+
+	if i.Parent != nil {
+		opts = append(opts, WithParent(i.Parent))
+	}
+	copiedImage.Options(opts...)
+
 	copiedImage.Tags = append([]string{}, i.Tags...)
 
 	copiedImage.PersistentVars = map[string]interface{}{}

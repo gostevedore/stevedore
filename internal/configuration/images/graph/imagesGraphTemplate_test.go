@@ -7,6 +7,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/configuration/images/image"
 	"github.com/gostevedore/stevedore/internal/images/graph"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestAddImage(t *testing.T) {
@@ -65,43 +66,26 @@ func TestAddImage(t *testing.T) {
 			graph: NewImagesGraphTemplate(*graph.NewGraphTemplateFactory(true)),
 			prepareAssertFunc: func(g *ImagesGraphTemplate, i *image.Image) {
 				// node
-				g.graph.(*graph.MockGraphTemplate).On("Exists", "image_name:image_version").Return(false, nil)
+				g.graph.(*graph.MockGraphTemplate).On("GetNode", generateNodeName("image_name", "image_version")).Return(nil)
 				node := g.graphFactory.NewGraphTemplateNode(generateNodeName("image_name", "image_version"))
-				node.AddItem(i)
 				g.graph.(*graph.MockGraphTemplate).On("AddNode", node).Return(nil)
-				g.graph.(*graph.MockGraphTemplate).On("HasCycles").Return(false)
 
 				// parents
 				g.graph.(*graph.MockGraphTemplate).On("GetNode", generateNodeName("parent_name", "parent_version")).Return(nil)
+				parent := g.graphFactory.NewGraphTemplateNode(generateNodeName("parent_name", "parent_version"))
+				g.graph.(*graph.MockGraphTemplate).On("AddNode", parent).Return(nil)
+				g.graph.(*graph.MockGraphTemplate).On("AddRelationship", parent, mock.Anything).Return(nil)
 
 				// children
 				g.graph.(*graph.MockGraphTemplate).On("GetNode", generateNodeName("child_name", "child_version")).Return(nil)
+				child := g.graphFactory.NewGraphTemplateNode(generateNodeName("child_name", "child_version"))
+				g.graph.(*graph.MockGraphTemplate).On("AddNode", child).Return(nil)
+				g.graph.(*graph.MockGraphTemplate).On("AddRelationship", mock.Anything, child).Return(nil)
 
+				g.graph.(*graph.MockGraphTemplate).On("HasCycles").Return(false)
 			},
 			assertFunc: func(t *testing.T, g *ImagesGraphTemplate, i *image.Image) {
 				g.graph.(*graph.MockGraphTemplate).AssertExpectations(t)
-
-				node := g.graphFactory.NewGraphTemplateNode(generateNodeName("image_name", "image_version"))
-				node.AddItem(i)
-
-				parent := g.graphFactory.NewGraphTemplateNode(generateNodeName("parent_name", "parent_version"))
-				node.AddParent(parent)
-
-				child := g.graphFactory.NewGraphTemplateNode(generateNodeName("child_name", "child_version"))
-				node.AddChild(child)
-
-				res := &ImagesGraphTemplate{
-					pendingNodes: map[string]map[string]GraphNoder{
-						"parent_name": {
-							"parent_version": parent,
-						},
-						"child_name": {
-							"child_version": child,
-						},
-					},
-				}
-
-				assert.Equal(t, res.pendingNodes, g.pendingNodes)
 			},
 			err: &errors.Error{},
 		},
@@ -125,76 +109,28 @@ func TestAddImage(t *testing.T) {
 			},
 			graph: NewImagesGraphTemplate(*graph.NewGraphTemplateFactory(true)),
 			prepareAssertFunc: func(g *ImagesGraphTemplate, i *image.Image) {
-
 				// node
-				g.graph.(*graph.MockGraphTemplate).On("Exists", "image_name:image_version").Return(false, nil)
+				g.graph.(*graph.MockGraphTemplate).On("GetNode", generateNodeName("image_name", "image_version")).Return(nil)
 				node := g.graphFactory.NewGraphTemplateNode(generateNodeName("image_name", "image_version"))
-				node.AddItem(i)
 				g.graph.(*graph.MockGraphTemplate).On("AddNode", node).Return(nil)
-				g.graph.(*graph.MockGraphTemplate).On("HasCycles").Return(false)
 
 				// parents
 				parent := g.graphFactory.NewGraphTemplateNode(generateNodeName("parent_name", "parent_version"))
 				g.graph.(*graph.MockGraphTemplate).On("GetNode", generateNodeName("parent_name", "parent_version")).Return(parent)
+				g.graph.(*graph.MockGraphTemplate).On("AddRelationship", parent, mock.Anything).Return(nil)
 
 				// children
 				child := g.graphFactory.NewGraphTemplateNode(generateNodeName("child_name", "child_version"))
 				g.graph.(*graph.MockGraphTemplate).On("GetNode", generateNodeName("child_name", "child_version")).Return(child)
-			},
+				g.graph.(*graph.MockGraphTemplate).On("AddRelationship", mock.Anything, child).Return(nil)
 
-			assertFunc: func(t *testing.T, g *ImagesGraphTemplate, i *image.Image) {
-				g.graph.(*graph.MockGraphTemplate).AssertExpectations(t)
-
-				res := &ImagesGraphTemplate{
-					pendingNodes: map[string]map[string]GraphNoder{},
-				}
-
-				assert.Equal(t, res.pendingNodes, g.pendingNodes)
-			},
-			err: &errors.Error{},
-		},
-		{
-			desc:    "Testing add an image defined on pending nodes",
-			name:    "image_name",
-			version: "image_version",
-			image: &image.Image{
-				Name:    "image_name",
-				Version: "image_version",
-			},
-			graph: NewImagesGraphTemplate(*graph.NewGraphTemplateFactory(true)),
-			prepareAssertFunc: func(g *ImagesGraphTemplate, i *image.Image) {
-
-				node := g.graphFactory.NewGraphTemplateNode(generateNodeName("image_name", "image_version"))
-				node.AddItem(i)
-
-				g.graph.(*graph.MockGraphTemplate).On("Exists", "image_name:image_version").Return(false, nil)
-				g.graph.(*graph.MockGraphTemplate).On("AddNode", node).Return(nil)
 				g.graph.(*graph.MockGraphTemplate).On("HasCycles").Return(false)
 			},
+
 			assertFunc: func(t *testing.T, g *ImagesGraphTemplate, i *image.Image) {
 				g.graph.(*graph.MockGraphTemplate).AssertExpectations(t)
-
-				res := &ImagesGraphTemplate{
-					pendingNodes: map[string]map[string]GraphNoder{},
-				}
-
-				assert.Equal(t, res.pendingNodes, g.pendingNodes)
 			},
 			err: &errors.Error{},
-		},
-		{
-			desc:    "Testing error when adding an existing image",
-			name:    "image_name",
-			version: "image_version",
-			image: &image.Image{
-				Name:    "image_name",
-				Version: "image_version",
-			},
-			graph: NewImagesGraphTemplate(*graph.NewGraphTemplateFactory(true)),
-			prepareAssertFunc: func(g *ImagesGraphTemplate, i *image.Image) {
-				g.graph.(*graph.MockGraphTemplate).On("Exists", "image_name:image_version").Return(true)
-			},
-			err: errors.New("", "Image 'image_name:image_version' already added to images graph template"),
 		},
 		{
 			desc:    "Testing error adding node that creates a cycles",
@@ -207,13 +143,10 @@ func TestAddImage(t *testing.T) {
 			graph: NewImagesGraphTemplate(*graph.NewGraphTemplateFactory(true)),
 			prepareAssertFunc: func(g *ImagesGraphTemplate, i *image.Image) {
 				// node
-				g.graph.(*graph.MockGraphTemplate).On("Exists", "image_name:image_version").Return(false, nil)
 				g.graph.(*graph.MockGraphTemplate).On("GetNode", generateNodeName("image_name", "image_version")).Return(nil)
 				node := g.graphFactory.NewGraphTemplateNode(generateNodeName("image_name", "image_version"))
-				node.AddItem(i)
 				g.graph.(*graph.MockGraphTemplate).On("AddNode", node).Return(nil)
 				g.graph.(*graph.MockGraphTemplate).On("HasCycles").Return(true)
-
 			},
 			err: errors.New("", "Detected a cycle in the graph template after adding node 'image_name:image_version'"),
 		},

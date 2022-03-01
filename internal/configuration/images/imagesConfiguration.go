@@ -63,18 +63,19 @@ func (t *ImagesConfiguration) CheckCompatibility() error {
 }
 
 // LoadImagesToStore method loads images defined on configuration to images store
-func (t *ImagesConfiguration) LoadImagesToStore(path string, store ImagesStorer) error {
+func (t *ImagesConfiguration) LoadImagesToStore(path string) error {
 
 	var err error
 	errContext := "(images::LoadImagesToStore)"
 	var nodeDomainImage, copyDomainImage *domainimage.Image
+	_ = copyDomainImage
 
 	err = t.LoadImagesConfiguration(path)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
 
-	// render de la image
+	// render image
 	/*
 		- get parent domain image
 		- prepare render object with parent domain image, image name, image version and config image
@@ -85,7 +86,14 @@ func (t *ImagesConfiguration) LoadImagesToStore(path string, store ImagesStorer)
 		- initiate render of child config images
 	*/
 
+	storedNodes := map[string]struct{}{}
 	for node := range t.graph.Iterate() {
+
+		// skip node if already stored
+		_, stored := storedNodes[node.Name()]
+		if stored {
+			continue
+		}
 
 		name, version, err := graph.ParseNodeName(node)
 		if err != nil {
@@ -94,132 +102,43 @@ func (t *ImagesConfiguration) LoadImagesToStore(path string, store ImagesStorer)
 
 		nodeImage := node.Item().(*image.Image)
 		nodeDomainImage, err = nodeImage.CreateDomainImage()
-		if err == nil {
+		if err != nil {
 			return errors.New(errContext, err.Error())
 		}
 
-		for parentName, parentVersions := range nodeImage.Parents {
-			for _, parentVersion := range parentVersions {
+		if node.Parents() == nil || len(node.Parents()) <= 0 {
+			err = t.store.AddImage(name, version, nodeDomainImage)
+			if err != nil {
+				return errors.New(errContext, err.Error())
+			}
+		} else {
+			for _, parent := range node.Parents() {
+
+				parentName, parentVersion, err := graph.ParseNodeName(parent.(graph.GraphNoder))
 				parentImage, err := t.store.Find(parentName, parentVersion)
 				if err != nil {
 					return errors.New(errContext, err.Error())
 				}
+
 				copyDomainImage, err = nodeDomainImage.Copy()
 				if err != nil {
 					return errors.New(errContext, err.Error())
 				}
 
 				copyDomainImage.Options(domainimage.WithParent(parentImage))
-				//				parentImage.AddChild(copyDomainImage)
+				parentImage.AddChild(copyDomainImage)
 				err = t.store.AddImage(name, version, copyDomainImage)
 				if err != nil {
 					return errors.New(errContext, err.Error())
 				}
+
+				storedNodes[node.Name()] = struct{}{}
 			}
 		}
-
-		// nodeImages, err := t.generateDomainImagesFromNode(node)
-		// if err != nil {
-		// 	return errors.New(errContext, err.Error())
-		// }
-		// images = append(images, nodeImages...)
 	}
-
-	// for _, image := range images {
-	// 	err = store.AddImage(image)
-	// 	if err != nil {
-	// 		return errors.New(errContext, err.Error())
-	// 	}
-	// }
 
 	return nil
 }
-
-// func (t *ImagesConfiguration) generateDomainImagesFromNode(node graph.GraphNoder) ([]*domainimage.Image, error) {
-
-// 	errContext := "(images::generateImages)"
-// 	//parents := []*domainimage.Image{}
-// 	images := []*domainimage.Image{}
-// 	errFuncs := []func() error{}
-// 	var wg sync.WaitGroup
-// 	var mutex sync.RWMutex
-
-// 	name, version, err := graph.ParseNodeName(node)
-// 	if err != nil {
-// 		return nil, errors.New(errContext, err.Error())
-// 	}
-
-// 	nodeImage := node.Item().(*image.Image)
-
-// 	// promise function to load builders from file
-// 	renderFunc := func(p *domainimage.Image) func() error {
-// 		var err error
-
-// 		c := make(chan struct{}, 1)
-// 		go func() {
-// 			var copy *image.Image
-// 			var domainImage *domainimage.Image
-// 			defer close(c)
-
-// 			copy, err = nodeImage.Copy()
-// 			if err == nil {
-// 				err = t.render.Render(name, version, p, copy)
-// 				if err == nil {
-// 					return
-// 				}
-
-// 				domainImage, err = copy.CreateDomainImage()
-// 				if err == nil {
-// 					return
-// 				}
-
-// 				mutex.Lock()
-// 				defer mutex.Unlock()
-
-// 				images = append(images, domainImage)
-// 				p.AddChild(domainImage)
-// 			}
-
-// 			wg.Done()
-// 		}()
-
-// 		return func() error {
-// 			<-c
-// 			return err
-// 		}
-// 	}
-
-// 	for parentName, parentVersions := range nodeImage.Parents {
-// 		for _, parentVersion := range parentVersions {
-// 			parentImage, err := t.store.Find(parentName, parentVersion)
-// 			if err != nil {
-// 				return nil, errors.New(errContext, err.Error())
-// 			}
-// 			//parents = append(parents, parentImage)
-// 			wg.Add(1)
-// 			errFuncs = append(errFuncs, renderFunc(parentImage))
-// 		}
-// 	}
-// 	if len(errFuncs) <= 0 {
-// 		wg.Add(1)
-// 		errFuncs = append(errFuncs, renderFunc(nil))
-// 	}
-
-// 	wg.Wait()
-
-// 	errMsg := ""
-// 	for _, f := range errFuncs {
-// 		err = f()
-// 		if err != nil {
-// 			errMsg = fmt.Sprintf("%s%s\n", errMsg, err.Error())
-// 		}
-// 	}
-// 	if errMsg != "" {
-// 		return nil, errors.New(errContext, errMsg)
-// 	}
-
-// 	return images, nil
-// }
 
 // LoadImagesConfiguration method generate and return an ImagesConfiguration struct from a file
 func (t *ImagesConfiguration) LoadImagesConfiguration(path string) error {

@@ -1,7 +1,7 @@
 package graph
 
 import (
-	gdsexttree "github.com/apenella/go-data-structures/extendedTree"
+	gdsexttree "github.com/gostevedore/stevedore/pkg/extendedTree"
 )
 
 // GraphTemplate holds the graph template for images
@@ -19,6 +19,11 @@ func NewGraphTemplate() *GraphTemplate {
 // GetNode gets a node from the graph template
 func (m *GraphTemplate) GetNode(name string) GraphTemplateNoder {
 	node, _ := m.Graph.GetNode(name)
+
+	if node == nil {
+		return nil
+	}
+
 	return &GraphTemplateNode{node}
 }
 
@@ -29,7 +34,6 @@ func (m *GraphTemplate) AddNode(node GraphTemplateNoder) error {
 
 // AddRelationship adds a relationship to the graph template
 func (m *GraphTemplate) AddRelationship(parent, child GraphTemplateNoder) error {
-
 	return m.Graph.AddRelationship(parent.(*GraphTemplateNode).Node, child.(*GraphTemplateNode).Node)
 }
 
@@ -60,7 +64,6 @@ func (m *GraphTemplate) Iterate() <-chan GraphTemplateNoder {
 
 // iterateOverNode iterates over a root node
 func iterateOverNode(node GraphTemplateNoder, it chan GraphTemplateNoder) {
-
 	it <- node
 	for _, child := range node.Children() {
 		iterateOverNode(child, it)

@@ -22,7 +22,7 @@ func NewImageRender() *ImageRender {
 }
 
 // Render renders template image into incomming object
-func (r *ImageRender) Render(name, version string, parent *image.Image, img ImageSerializer) error {
+func (r *ImageRender) Render(name, version string, i *image.Image) error {
 	var renderBuffer bytes.Buffer
 	errContext := "(render::Render)"
 
@@ -30,12 +30,12 @@ func (r *ImageRender) Render(name, version string, parent *image.Image, img Imag
 		Name    string
 		Version string
 		Parent  *image.Image
-		Image   ImageSerializer
+		Image   *image.Image
 	}{
 		Name:    name,
 		Version: version,
-		Parent:  parent,
-		Image:   img,
+		Parent:  i.Parent,
+		Image:   i,
 	}
 
 	serialized, err := renderObj.Image.YAMLMarshal()
