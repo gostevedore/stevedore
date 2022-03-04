@@ -363,12 +363,330 @@ func TestStoreWildcardImage(t *testing.T) {
 
 func TestList(t *testing.T) {
 
+	errContext := "(store::List)"
+
+	tests := []struct {
+		desc              string
+		store             *ImageStore
+		prepareAssertFunc func(*ImageStore)
+		assertFunc        func(*testing.T, *ImageStore, []*image.Image)
+		err               error
+	}{
+		{
+			desc:  "Testing error listing images when store is not initialized",
+			store: &ImageStore{},
+			err:   errors.New(errContext, "Store has not been initialized"),
+		},
+		{
+			desc:  "Testing list images",
+			store: NewImageStore(render.NewMockImageRender()),
+			prepareAssertFunc: func(s *ImageStore) {
+
+				s.store = []*image.Image{
+					&image.Image{
+						Name:    "image_1",
+						Version: "version_1",
+					},
+					&image.Image{
+						Name:    "image_2",
+						Version: "version_2",
+					},
+					&image.Image{
+						Name:    "image_3",
+						Version: "version_3",
+					},
+					&image.Image{
+						Name:    "image_1",
+						Version: "version_12",
+					},
+				}
+			},
+			assertFunc: func(t *testing.T, s *ImageStore, list []*image.Image) {
+				expected := []*image.Image{
+					&image.Image{
+						Name:    "image_1",
+						Version: "version_1",
+					},
+					&image.Image{
+						Name:    "image_1",
+						Version: "version_12",
+					},
+					&image.Image{
+						Name:    "image_2",
+						Version: "version_2",
+					},
+					&image.Image{
+						Name:    "image_3",
+						Version: "version_3",
+					},
+				}
+
+				assert.Equal(t, expected, list)
+			},
+			err: &errors.Error{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.store)
+			}
+
+			list, err := test.store.List()
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				test.assertFunc(t, test.store, list)
+			}
+		})
+	}
 }
 
 func TestFindByName(t *testing.T) {
+	errContext := "(store::FindByName)"
 
+	tests := []struct {
+		desc              string
+		store             *ImageStore
+		name              string
+		prepareAssertFunc func(*ImageStore)
+		assertFunc        func(*testing.T, *ImageStore, []*image.Image)
+		err               error
+	}{
+		{
+			desc:  "Testing error finding images by name when store is not initialized",
+			store: &ImageStore{},
+			err:   errors.New(errContext, "Store has not been initialized"),
+		},
+		{
+			desc:  "Testing find images by name",
+			store: NewImageStore(render.NewMockImageRender()),
+			name:  "image_1",
+			prepareAssertFunc: func(s *ImageStore) {
+
+				s.imageNameVersionIndex = map[string]map[string]*image.Image{
+					"image_1": {
+						"version_1": &image.Image{
+							Name:    "image_1",
+							Version: "version_1",
+						},
+						"version_12": &image.Image{
+							Name:    "image_1",
+							Version: "version_12",
+						},
+					},
+					"image_2": {
+						"version_2": &image.Image{
+							Name:    "image_2",
+							Version: "version_2",
+						},
+					},
+					"image_3": {
+						"version_3": &image.Image{
+							Name:    "image_3",
+							Version: "version_3",
+						},
+					},
+				}
+			},
+			assertFunc: func(t *testing.T, s *ImageStore, list []*image.Image) {
+				expected := []*image.Image{
+					&image.Image{
+						Name:    "image_1",
+						Version: "version_1",
+					},
+					&image.Image{
+						Name:    "image_1",
+						Version: "version_12",
+					},
+				}
+
+				assert.Equal(t, expected, list)
+			},
+			err: &errors.Error{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.store)
+			}
+
+			list, err := test.store.FindByName(test.name)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				test.assertFunc(t, test.store, list)
+			}
+		})
+	}
 }
 
 func TestFind(t *testing.T) {
 
+	errContext := "(store::Find)"
+
+	tests := []struct {
+		desc              string
+		store             *ImageStore
+		name              string
+		version           string
+		prepareAssertFunc func(*ImageStore)
+		assertFunc        func(*testing.T, *ImageStore, *image.Image)
+		err               error
+	}{
+		{
+			desc:  "Testing error finding an image when store is not initialized",
+			store: &ImageStore{},
+			err:   errors.New(errContext, "Store has not been initialized"),
+		},
+		{
+			desc:    "Testing find an image",
+			store:   NewImageStore(render.NewMockImageRender()),
+			name:    "image_1",
+			version: "version_1",
+			prepareAssertFunc: func(s *ImageStore) {
+				s.imageNameVersionIndex = map[string]map[string]*image.Image{
+					"image_1": {
+						"version_1": &image.Image{
+							Name:    "image_1",
+							Version: "version_1",
+						},
+						"version_12": &image.Image{
+							Name:    "image_1",
+							Version: "version_12",
+						},
+					},
+					"image_2": {
+						"version_2": &image.Image{
+							Name:    "image_2",
+							Version: "version_2",
+						},
+					},
+					"image_3": {
+						"version_3": &image.Image{
+							Name:    "image_3",
+							Version: "version_3",
+						},
+					},
+				}
+			},
+			assertFunc: func(t *testing.T, s *ImageStore, i *image.Image) {
+				expected := &image.Image{
+					Name:    "image_1",
+					Version: "version_1",
+				}
+
+				assert.Equal(t, expected, i)
+			},
+			err: &errors.Error{},
+		},
+
+		{
+			desc:    "Testing find a wildcard image",
+			store:   NewImageStore(render.NewMockImageRender()),
+			name:    "image_1",
+			version: "wildcard",
+			prepareAssertFunc: func(s *ImageStore) {
+
+				s.store = []*image.Image{
+					{
+						Name:    "image_1",
+						Version: "version_1",
+					},
+					{
+						Name:    "image_2",
+						Version: "version_2",
+					},
+					{
+						Name:    "image_3",
+						Version: "version_3",
+					},
+					{
+						Name:    "image_1",
+						Version: "version_12",
+					},
+				}
+
+				s.imageNameVersionIndex = map[string]map[string]*image.Image{
+					"image_1": {
+						"version_1": &image.Image{
+							Name:    "image_1",
+							Version: "version_1",
+						},
+						"version_12": &image.Image{
+							Name:    "image_1",
+							Version: "version_12",
+						},
+					},
+					"image_2": {
+						"version_2": &image.Image{
+							Name:    "image_2",
+							Version: "version_2",
+						},
+					},
+					"image_3": {
+						"version_3": &image.Image{
+							Name:    "image_3",
+							Version: "version_3",
+						},
+					},
+				}
+
+				s.imageWildcardIndex = map[string]*image.Image{
+					"image_1": {
+						Name:    "image_1",
+						Version: "{{ .Version }}",
+					},
+				}
+
+				s.render.(*render.MockImageRender).On("Render", "image_1", "wildcard", &image.Image{
+					Name:           "image_1",
+					Version:        "{{ .Version }}",
+					Labels:         map[string]string{},
+					PersistentVars: map[string]interface{}{},
+					Vars:           map[string]interface{}{},
+					Tags:           []string{},
+				}).Return(
+					&image.Image{
+						Name:    "image_1",
+						Version: "wildcard",
+					},
+					nil,
+				)
+			},
+			assertFunc: func(t *testing.T, s *ImageStore, i *image.Image) {
+				expected := &image.Image{
+					Name:    "image_1",
+					Version: "wildcard",
+				}
+
+				assert.Equal(t, expected, i)
+			},
+			err: &errors.Error{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.store)
+			}
+
+			i, err := test.store.Find(test.name, test.version)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				test.assertFunc(t, test.store, i)
+			}
+		})
+	}
 }

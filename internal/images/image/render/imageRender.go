@@ -2,7 +2,6 @@ package render
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 
 	errors "github.com/apenella/go-common-utils/error"
@@ -46,8 +45,6 @@ func (r *ImageRender) Render(name, version string, i *image.Image) (*image.Image
 		Image:   renderedImage,
 	}
 
-	fmt.Printf(">>> %+v\n", renderObj)
-
 	serialized, err := renderObj.Image.YAMLMarshal()
 	if err != nil {
 		return nil, errors.New(errContext, err.Error())
@@ -64,6 +61,9 @@ func (r *ImageRender) Render(name, version string, i *image.Image) (*image.Image
 	}
 
 	err = renderObj.Image.YAMLUnmarshal(renderBuffer.Bytes())
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
 
 	return renderedImage, nil
 }

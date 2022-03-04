@@ -2,10 +2,12 @@ package store
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/images/image"
+	"github.com/gostevedore/stevedore/internal/images/store/filter"
 )
 
 const (
@@ -150,33 +152,111 @@ func (s *ImageStore) storeWildcardImage(name string, i *image.Image) error {
 	return nil
 }
 
-// List returns the list of all images
-func (s *ImageStore) List(name string) []*image.Image {
-	return s.store
+// List returns a sorted list of all images
+func (s *ImageStore) List() ([]*image.Image, error) {
+
+	errContext := "(store::List)"
+
+	if s.store == nil {
+		return nil, errors.New(errContext, "Store has not been initialized")
+	}
+
+	sort.Sort(filter.SortedImages(s.store))
+	return s.store, nil
 }
 
-// List returns all the images asociated to the image name
+// FindByName returns all the images asociated to the image name
 func (s *ImageStore) FindByName(name string) ([]*image.Image, error) {
 
-	// rerturn all images associated to an image name
+	errContext := "(store::FindByName)"
+	list := []*image.Image{}
 
-	return nil, nil
+	if s.store == nil {
+		return nil, errors.New(errContext, "Store has not been initialized")
+	}
+
+	listOfVersion, _ := s.imageNameVersionIndex[name]
+	for _, i := range listOfVersion {
+		list = append(list, i)
+	}
+
+	sort.Sort(filter.SortedImages(list))
+	return list, nil
 }
 
 // Find returns the image associated to the image name and version
 func (s *ImageStore) Find(name string, version string) (*image.Image, error) {
+	var err error
+	errContext := "(store::Find)"
+
+	if s.store == nil {
+		return nil, errors.New(errContext, "Store has not been initialized")
+	}
 
 	// version is *
 	//  return the image associated to the image name and version
+	if version == ImageWildcardVersionSymbol {
+		i, _ := s.imageWildcardIndex[name]
+		return i, nil
+	}
 
 	// lookup names index
 	// return image associated to the image name and version
 
 	// lookup tags index
 	//  return image associated to the image name and version
+	i, exist := s.imageNameVersionIndex[name][version]
+	if !exist {
+		i, err = s.GenerateImageFromWildcard(name, version)
+		if err != nil {
+			return nil, errors.New(errContext, err.Error())
+		}
+	}
 
 	// lookup wildcard
 	//  generate the image based on the wildcard version and return it
 
-	return nil, nil
+	return i, nil
+}
+
+func (s *ImageStore) GenerateImageFromWildcard(name string, version string) (*image.Image, error) {
+
+	var err error
+	var parent, aux *image.Image
+	errContext := "(store::GenerateImageFromWildcard)"
+
+	i, exists := s.imageWildcardIndex[name]
+	if !exists {
+		return nil, nil
+	}
+
+	parent = i.Parent
+
+	if i.Parent != nil {
+		if i.Parent.Version == ImageWildcardVersionSymbol {
+			// next level
+			parent, err = s.GenerateImageFromWildcard(i.Parent.Name, version)
+			if err != nil {
+				return nil, errors.New(errContext, err.Error())
+			}
+
+			err = s.AddImage(i.Parent.Name, version, parent)
+			if err != nil {
+				return nil, errors.New(errContext, err.Error())
+			}
+		}
+	}
+
+	aux, err = i.Copy()
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+	aux.Options(image.WithParent(parent))
+
+	aux, err = s.render.Render(name, version, aux)
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+
+	return aux, nil
 }
