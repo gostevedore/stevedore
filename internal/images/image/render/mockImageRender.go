@@ -16,7 +16,7 @@ func NewMockImageRender() *MockImageRender {
 }
 
 // Render is a mock implementation of the Render method
-func (m *MockImageRender) Render(name, version string, i *image.Image) error {
+func (m *MockImageRender) Render(name, version string, i *image.Image) (*image.Image, error) {
 	args := m.Called(name, version, i)
-	return args.Error(0)
+	return args.Get(0).(*image.Image), args.Error(1)
 }

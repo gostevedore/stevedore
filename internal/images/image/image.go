@@ -197,11 +197,11 @@ func (i *Image) DockerNormalizedNamed() (string, error) {
 // Copy method return a copy of the instanced Image
 func (i *Image) Copy() (*Image, error) {
 
-	errContext := "(image::Copy)"
-
-	copiedImage, err := NewImage(i.Name, i.Version, i.RegistryHost, i.RegistryNamespace)
-	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+	copiedImage := &Image{
+		Name:              i.Name,
+		Version:           i.Version,
+		RegistryHost:      i.RegistryHost,
+		RegistryNamespace: i.RegistryNamespace,
 	}
 
 	opts := []OptionFunc{}

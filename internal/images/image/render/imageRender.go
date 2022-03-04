@@ -2,6 +2,7 @@ package render
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 
 	errors "github.com/apenella/go-common-utils/error"
@@ -22,9 +23,16 @@ func NewImageRender() *ImageRender {
 }
 
 // Render renders template image into incomming object
-func (r *ImageRender) Render(name, version string, i *image.Image) error {
+func (r *ImageRender) Render(name, version string, i *image.Image) (*image.Image, error) {
 	var renderBuffer bytes.Buffer
+	var renderedImage *image.Image
+	var err error
 	errContext := "(render::Render)"
+
+	renderedImage, err = i.Copy()
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
 
 	renderObj := struct {
 		Name    string
@@ -35,25 +43,27 @@ func (r *ImageRender) Render(name, version string, i *image.Image) error {
 		Name:    name,
 		Version: version,
 		Parent:  i.Parent,
-		Image:   i,
+		Image:   renderedImage,
 	}
+
+	fmt.Printf(">>> %+v\n", renderObj)
 
 	serialized, err := renderObj.Image.YAMLMarshal()
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, err.Error())
 	}
 
 	tmpl, err := template.New(renderObj.Name + ":" + renderObj.Version).Parse(string(serialized))
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, err.Error())
 	}
 
 	err = tmpl.Execute(&renderBuffer, renderObj)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, err.Error())
 	}
 
 	err = renderObj.Image.YAMLUnmarshal(renderBuffer.Bytes())
 
-	return nil
+	return renderedImage, nil
 }

@@ -97,11 +97,11 @@ func TestRender(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			err := test.render.Render(test.name, test.version, test.image)
+			image, err := test.render.Render(test.name, test.version, test.image)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				assert.Equal(t, test.res, test.image)
+				assert.Equal(t, test.res, image)
 			}
 
 		})

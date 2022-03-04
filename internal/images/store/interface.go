@@ -8,5 +8,5 @@ import (
 type GraphTemplateStorer interface{}
 
 type ImageRenderer interface {
-	Render(name, version string, image *image.Image) error
+	Render(name, version string, image *image.Image) (*image.Image, error)
 }

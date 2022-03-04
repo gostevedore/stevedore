@@ -22,8 +22,14 @@ func (m *MockImageStore) AddImage(name string, version string, parent *image.Ima
 	return args.Error(0)
 }
 
-// All is a mock implementation of the All method
-func (m *MockImageStore) All(name string) ([]*image.Image, error) {
+// List is a mock implementation of the List method
+func (m *MockImageStore) List() []*image.Image {
+	args := m.Called()
+	return args.Get(0).([]*image.Image)
+}
+
+// FindByName is a mock implementation of the All method
+func (m *MockImageStore) FindByName(name string) ([]*image.Image, error) {
 	args := m.Called(name)
 	return args.Get(0).([]*image.Image), args.Error(1)
 }

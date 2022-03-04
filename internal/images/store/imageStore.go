@@ -2,14 +2,15 @@ package store
 
 import (
 	"fmt"
+	"sync"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/images/image"
 )
 
 const (
-	// ImageWildcardVersion is the wildcard version
-	ImageWildcardVersion = "*"
+	// ImageWildcardVersionSymbol is the wildcard version
+	ImageWildcardVersionSymbol = "*"
 )
 
 // ImageStore is a store for images
@@ -17,15 +18,18 @@ type ImageStore struct {
 	render ImageRenderer
 	//tree
 	//index
+	store                 []*image.Image
 	imageNameVersionIndex map[string]map[string]*image.Image
-	imageTagsIndex        map[string]map[string]*image.Image
 	imageWildcardIndex    map[string]*image.Image
+
+	mutex sync.Mutex
 }
 
 // NewImageStore returns a new instance of the ImageStore
 func NewImageStore(render ImageRenderer) *ImageStore {
 	return &ImageStore{
 		render:                render,
+		store:                 []*image.Image{},
 		imageNameVersionIndex: make(map[string]map[string]*image.Image),
 	}
 }
@@ -33,9 +37,29 @@ func NewImageStore(render ImageRenderer) *ImageStore {
 // AddImage adds an image to the store
 func (s *ImageStore) AddImage(name string, version string, i *image.Image) error {
 	var err error
+	var renderedImage *image.Image
 	errContext := "(store::AddImage)"
 
-	if version == ImageWildcardVersion {
+	if s.render == nil {
+		return errors.New(errContext, "To add an image to the store an image render is required")
+	}
+
+	if name == "" {
+		return errors.New(errContext, "To add an image to the store a name is required")
+	}
+
+	if version == "" {
+		return errors.New(errContext, "To add an image to the store a version is required")
+	}
+
+	if i == nil {
+		return errors.New(errContext, "To add an image to the store an image is required")
+	}
+
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	if version == ImageWildcardVersionSymbol {
 		err = s.storeWildcardImage(name, i)
 		if err != nil {
 			return errors.New(errContext, err.Error())
@@ -45,30 +69,72 @@ func (s *ImageStore) AddImage(name string, version string, i *image.Image) error
 	}
 
 	// render the image
-	err = s.render.Render(name, version, i)
+	renderedImage, err = s.render.Render(name, version, i)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
 
 	// store the image
-	err = s.storeImageNameVersion(name, version, i)
+	err = s.storeImage(name, version, renderedImage)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
 
-	if i.Version != version {
-		err = s.storeImageTags(name, version, i)
+	if renderedImage.Version != version {
+		err = s.storeImage(name, renderedImage.Version, renderedImage)
 		if err != nil {
 			return errors.New(errContext, err.Error())
 		}
 	}
 
+	for _, tag := range i.Tags {
+		err = s.storeImage(name, tag, renderedImage)
+		if err != nil {
+			return errors.New(errContext, err.Error())
+		}
+	}
+
+	s.store = append(s.store, renderedImage)
+
 	return nil
 }
 
+// storeImage stores the image in the store
+func (s *ImageStore) storeImage(name string, version string, i *image.Image) error {
+
+	errContext := "(store::storeImage)"
+
+	if i == nil {
+		return errors.New(errContext, fmt.Sprintf("Provided image for '%s:%s' is nil", name, version))
+	}
+
+	if s.imageNameVersionIndex == nil {
+		s.imageNameVersionIndex = make(map[string]map[string]*image.Image)
+	}
+
+	if s.imageNameVersionIndex[name] == nil {
+		s.imageNameVersionIndex[name] = make(map[string]*image.Image)
+	}
+
+	_, exist := s.imageNameVersionIndex[name][version]
+	if exist {
+		return errors.New(errContext, fmt.Sprintf("Image '%s:%s' already exists", name, version))
+	}
+
+	s.imageNameVersionIndex[name][version] = i
+
+	return nil
+}
+
+//  wildcard images are those images that have * on its version. Wildcard images are used to generate a default image definition, and accepts any version value
+// storeWildcardImage stores the image in the store
 func (s *ImageStore) storeWildcardImage(name string, i *image.Image) error {
 
 	errContext := "(store::storeWildcardImage)"
+
+	if i == nil {
+		return errors.New(errContext, fmt.Sprintf("Provided wildcard image for '%s' is nil", name))
+	}
 
 	if s.imageWildcardIndex == nil {
 		s.imageWildcardIndex = make(map[string]*image.Image)
@@ -76,61 +142,21 @@ func (s *ImageStore) storeWildcardImage(name string, i *image.Image) error {
 
 	_, exist := s.imageWildcardIndex[name]
 	if exist {
-		return errors.New(errContext, fmt.Sprintf("Image %s already exists on wildcard images index", name))
+		return errors.New(errContext, fmt.Sprintf("Image '%s' already exists on wildcard images index", name))
 	}
 
 	s.imageWildcardIndex[name] = i
 
 	return nil
-
 }
 
-func (s *ImageStore) storeImageNameVersion(name string, version string, i *image.Image) error {
-
-	errContext := "(store::storeImageNameVersion)"
-
-	if s.imageNameVersionIndex == nil {
-		s.imageNameVersionIndex = make(map[string]map[string]*image.Image)
-	}
-
-	if s.imageNameVersionIndex[name] == nil {
-		s.imageNameVersionIndex[name] = make(map[string]*image.Image)
-	}
-
-	_, exist := s.imageNameVersionIndex[name][version]
-	if exist {
-		return errors.New(errContext, fmt.Sprintf("Image %s:%s already exists", name, version))
-	}
-
-	s.imageNameVersionIndex[name][version] = i
-
-	return nil
+// List returns the list of all images
+func (s *ImageStore) List(name string) []*image.Image {
+	return s.store
 }
 
-func (s *ImageStore) storeImageTags(name string, version string, i *image.Image) error {
-
-	errContext := "(store::storeImageNameVersion)"
-
-	if s.imageNameVersionIndex == nil {
-		s.imageNameVersionIndex = make(map[string]map[string]*image.Image)
-	}
-
-	if s.imageNameVersionIndex[name] == nil {
-		s.imageNameVersionIndex[name] = make(map[string]*image.Image)
-	}
-
-	_, exist := s.imageNameVersionIndex[name][version]
-	if exist {
-		return errors.New(errContext, fmt.Sprintf("Image %s:%s already exists", name, version))
-	}
-
-	s.imageNameVersionIndex[name][version] = i
-
-	return nil
-}
-
-// All returns all the images asociated to the image name
-func (s *ImageStore) All(name string) ([]*image.Image, error) {
+// List returns all the images asociated to the image name
+func (s *ImageStore) FindByName(name string) ([]*image.Image, error) {
 
 	// rerturn all images associated to an image name
 
