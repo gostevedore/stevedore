@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAddBuilder(t *testing.T) {
-	errContext := "(builders::AddBuilder)"
+func TestStore(t *testing.T) {
+	errContext := "(builders::Store)"
 
 	tests := []struct {
 		desc     string
@@ -51,7 +51,7 @@ func TestAddBuilder(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			err := test.builders.AddBuilder(test.builder)
+			err := test.builders.Store(test.builder)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {

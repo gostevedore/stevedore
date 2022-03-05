@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAddImage(t *testing.T) {
+func TestStore(t *testing.T) {
 
-	errContext := "(store::AddImage)"
+	errContext := "(store::Store)"
 
 	tests := []struct {
 		desc              string
@@ -133,7 +133,7 @@ func TestAddImage(t *testing.T) {
 				test.prepareAssertFunc(test.store, test.image)
 			}
 
-			err := test.store.AddImage(test.name, test.version, test.image)
+			err := test.store.Store(test.name, test.version, test.image)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
@@ -587,84 +587,319 @@ func TestFind(t *testing.T) {
 			},
 			err: &errors.Error{},
 		},
-
 		{
-			desc:    "Testing find a wildcard image",
+			desc:    "Testing find a wildcard image to be rendered",
 			store:   NewImageStore(render.NewMockImageRender()),
-			name:    "image_1",
+			name:    "image_wildcard",
 			version: "wildcard",
 			prepareAssertFunc: func(s *ImageStore) {
 
-				s.store = []*image.Image{
-					{
-						Name:    "image_1",
-						Version: "version_1",
-					},
-					{
-						Name:    "image_2",
-						Version: "version_2",
-					},
-					{
-						Name:    "image_3",
-						Version: "version_3",
-					},
-					{
-						Name:    "image_1",
-						Version: "version_12",
-					},
-				}
-
-				s.imageNameVersionIndex = map[string]map[string]*image.Image{
-					"image_1": {
-						"version_1": &image.Image{
-							Name:    "image_1",
-							Version: "version_1",
-						},
-						"version_12": &image.Image{
-							Name:    "image_1",
-							Version: "version_12",
-						},
-					},
-					"image_2": {
-						"version_2": &image.Image{
-							Name:    "image_2",
-							Version: "version_2",
-						},
-					},
-					"image_3": {
-						"version_3": &image.Image{
-							Name:    "image_3",
-							Version: "version_3",
-						},
-					},
-				}
-
 				s.imageWildcardIndex = map[string]*image.Image{
-					"image_1": {
-						Name:    "image_1",
-						Version: "{{ .Version }}",
+					"image_wildcard": {
+						Name:    "image_wildcard",
+						Version: "{{ .Version }}-{{ .Parent.Version }}",
+						Parent: &image.Image{
+							Name:    "image_parent",
+							Version: "version_parent",
+						},
+					},
+					"image_parent": {
+						Name:    "image_parent",
+						Version: "{{ .Parent.Version }}",
+						Parent: &image.Image{
+							Name:    "image_grandparent",
+							Version: "version_grandparent",
+						},
 					},
 				}
 
-				s.render.(*render.MockImageRender).On("Render", "image_1", "wildcard", &image.Image{
-					Name:           "image_1",
-					Version:        "{{ .Version }}",
+				s.render.(*render.MockImageRender).On("Render", "image_parent", "wildcard", &image.Image{
+					Name:    "image_parent",
+					Version: "{{ .Parent.Version }}",
+					Parent: &image.Image{
+						Name:    "image_grandparent",
+						Version: "version_grandparent",
+					},
 					Labels:         map[string]string{},
 					PersistentVars: map[string]interface{}{},
 					Vars:           map[string]interface{}{},
 					Tags:           []string{},
 				}).Return(
 					&image.Image{
-						Name:    "image_1",
-						Version: "wildcard",
+						Name:    "image_parent",
+						Version: "version_grandparent",
+						Parent: &image.Image{
+							Name:    "image_grandparent",
+							Version: "version_grandparent",
+						},
+						Labels:         map[string]string{},
+						PersistentVars: map[string]interface{}{},
+						Vars:           map[string]interface{}{},
+						Tags:           []string{},
+					},
+					nil,
+				)
+
+				s.render.(*render.MockImageRender).On("Render", "image_wildcard", "wildcard", &image.Image{
+					Name:    "image_wildcard",
+					Version: "{{ .Version }}-{{ .Parent.Version }}",
+					Parent: &image.Image{
+						Name:    "image_parent",
+						Version: "version_grandparent",
+						Parent: &image.Image{
+							Name:    "image_grandparent",
+							Version: "version_grandparent",
+						},
+						Labels:         map[string]string{},
+						PersistentVars: map[string]interface{}{},
+						Vars:           map[string]interface{}{},
+						Tags:           []string{},
+					},
+					Labels:         map[string]string{},
+					PersistentVars: map[string]interface{}{},
+					Vars:           map[string]interface{}{},
+					Tags:           []string{},
+				}).Return(
+					&image.Image{
+						Name:    "image_wildcard",
+						Version: "wildcard-version_grandparent",
+						Parent: &image.Image{
+							Name:    "image_parent",
+							Version: "version_grandparent",
+							Parent: &image.Image{
+								Name:    "image_grandparent",
+								Version: "version_grandparent",
+							},
+							Labels:         map[string]string{},
+							PersistentVars: map[string]interface{}{},
+							Vars:           map[string]interface{}{},
+							Tags:           []string{},
+						},
+						Labels:         map[string]string{},
+						PersistentVars: map[string]interface{}{},
+						Vars:           map[string]interface{}{},
+						Tags:           []string{},
 					},
 					nil,
 				)
 			},
 			assertFunc: func(t *testing.T, s *ImageStore, i *image.Image) {
 				expected := &image.Image{
-					Name:    "image_1",
-					Version: "wildcard",
+					Name:    "image_wildcard",
+					Version: "wildcard-version_grandparent",
+					Parent: &image.Image{
+						Name:    "image_parent",
+						Version: "version_grandparent",
+						Parent: &image.Image{
+							Name:    "image_grandparent",
+							Version: "version_grandparent",
+						},
+						Labels:         map[string]string{},
+						PersistentVars: map[string]interface{}{},
+						Vars:           map[string]interface{}{},
+						Tags:           []string{},
+					},
+					Labels:         map[string]string{},
+					PersistentVars: map[string]interface{}{},
+					Vars:           map[string]interface{}{},
+					Tags:           []string{},
+				}
+
+				assert.Equal(t, expected, i)
+			},
+			err: &errors.Error{},
+		},
+		{
+			desc:    "Testing find the wildcard image",
+			store:   NewImageStore(render.NewMockImageRender()),
+			name:    "image",
+			version: "*",
+			prepareAssertFunc: func(s *ImageStore) {
+
+				s.imageWildcardIndex = map[string]*image.Image{
+					"image": {
+						Name:    "image_wildcard",
+						Version: "{{ .Version }}",
+					},
+				}
+
+			},
+			assertFunc: func(t *testing.T, s *ImageStore, i *image.Image) {
+				expected := &image.Image{
+					Name:    "image_wildcard",
+					Version: "{{ .Version }}",
+				}
+
+				assert.Equal(t, expected, i)
+			},
+			err: &errors.Error{},
+		},
+		{
+			desc:    "Testing find unexisting image",
+			store:   NewImageStore(render.NewMockImageRender()),
+			name:    "image",
+			version: "unexisting",
+			prepareAssertFunc: func(s *ImageStore) {
+				s.imageWildcardIndex = map[string]*image.Image{}
+			},
+			assertFunc: func(t *testing.T, s *ImageStore, i *image.Image) {
+				assert.Nil(t, i)
+			},
+			err: &errors.Error{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.store)
+			}
+
+			i, err := test.store.Find(test.name, test.version)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				test.assertFunc(t, test.store, i)
+			}
+		})
+	}
+}
+
+func TestGenerateImageFromWildcard(t *testing.T) {
+	errContext := "(store::GenerateImageFromWildcard)"
+
+	tests := []struct {
+		desc              string
+		store             *ImageStore
+		name              string
+		version           string
+		prepareAssertFunc func(*ImageStore)
+		assertFunc        func(*testing.T, *ImageStore, *image.Image)
+		err               error
+	}{
+		{
+			desc:  "Testing error generating a wildcard image when store is not initialized",
+			store: &ImageStore{},
+			err:   errors.New(errContext, "Wildcard index has not been initialized"),
+		},
+		{
+			desc:    "Testing  generating a wildcard image",
+			store:   NewImageStore(render.NewMockImageRender()),
+			name:    "image_wildcard",
+			version: "wildcard",
+			prepareAssertFunc: func(s *ImageStore) {
+
+				s.imageWildcardIndex = map[string]*image.Image{
+					"image_wildcard": {
+						Name:    "image_wildcard",
+						Version: "{{ .Version }}-{{ .Parent.Version }}",
+						Parent: &image.Image{
+							Name:    "image_parent",
+							Version: "version_parent",
+						},
+					},
+					"image_parent": {
+						Name:    "image_parent",
+						Version: "{{ .Parent.Version }}",
+						Parent: &image.Image{
+							Name:    "image_grandparent",
+							Version: "version_grandparent",
+						},
+					},
+				}
+
+				s.render.(*render.MockImageRender).On("Render", "image_parent", "wildcard", &image.Image{
+					Name:    "image_parent",
+					Version: "{{ .Parent.Version }}",
+					Parent: &image.Image{
+						Name:    "image_grandparent",
+						Version: "version_grandparent",
+					},
+					Labels:         map[string]string{},
+					PersistentVars: map[string]interface{}{},
+					Vars:           map[string]interface{}{},
+					Tags:           []string{},
+				}).Return(
+					&image.Image{
+						Name:    "image_parent",
+						Version: "version_grandparent",
+						Parent: &image.Image{
+							Name:    "image_grandparent",
+							Version: "version_grandparent",
+						},
+						Labels:         map[string]string{},
+						PersistentVars: map[string]interface{}{},
+						Vars:           map[string]interface{}{},
+						Tags:           []string{},
+					},
+					nil,
+				)
+
+				s.render.(*render.MockImageRender).On("Render", "image_wildcard", "wildcard", &image.Image{
+					Name:    "image_wildcard",
+					Version: "{{ .Version }}-{{ .Parent.Version }}",
+					Parent: &image.Image{
+						Name:    "image_parent",
+						Version: "version_grandparent",
+						Parent: &image.Image{
+							Name:    "image_grandparent",
+							Version: "version_grandparent",
+						},
+						Labels:         map[string]string{},
+						PersistentVars: map[string]interface{}{},
+						Vars:           map[string]interface{}{},
+						Tags:           []string{},
+					},
+					Labels:         map[string]string{},
+					PersistentVars: map[string]interface{}{},
+					Vars:           map[string]interface{}{},
+					Tags:           []string{},
+				}).Return(
+					&image.Image{
+						Name:    "image_wildcard",
+						Version: "wildcard-version_grandparent",
+						Parent: &image.Image{
+							Name:    "image_parent",
+							Version: "version_grandparent",
+							Parent: &image.Image{
+								Name:    "image_grandparent",
+								Version: "version_grandparent",
+							},
+							Labels:         map[string]string{},
+							PersistentVars: map[string]interface{}{},
+							Vars:           map[string]interface{}{},
+							Tags:           []string{},
+						},
+						Labels:         map[string]string{},
+						PersistentVars: map[string]interface{}{},
+						Vars:           map[string]interface{}{},
+						Tags:           []string{},
+					},
+					nil,
+				)
+			},
+			assertFunc: func(t *testing.T, s *ImageStore, i *image.Image) {
+				expected := &image.Image{
+					Name:    "image_wildcard",
+					Version: "wildcard-version_grandparent",
+					Parent: &image.Image{
+						Name:    "image_parent",
+						Version: "version_grandparent",
+						Parent: &image.Image{
+							Name:    "image_grandparent",
+							Version: "version_grandparent",
+						},
+						Labels:         map[string]string{},
+						PersistentVars: map[string]interface{}{},
+						Vars:           map[string]interface{}{},
+						Tags:           []string{},
+					},
+					Labels:         map[string]string{},
+					PersistentVars: map[string]interface{}{},
+					Vars:           map[string]interface{}{},
+					Tags:           []string{},
 				}
 
 				assert.Equal(t, expected, i)
@@ -681,7 +916,7 @@ func TestFind(t *testing.T) {
 				test.prepareAssertFunc(test.store)
 			}
 
-			i, err := test.store.Find(test.name, test.version)
+			i, err := test.store.GenerateImageFromWildcard(test.name, test.version)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {

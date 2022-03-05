@@ -21,10 +21,10 @@ func NewBuildersStore() *BuildersStore {
 	}
 }
 
-// AddBuilder include a new builder to builders
-func (b *BuildersStore) AddBuilder(builder *builder.Builder) error {
+// Store include a new builder to builders
+func (b *BuildersStore) Store(builder *builder.Builder) error {
 
-	errContext := "(builders::AddBuilder)"
+	errContext := "(builders::Store)"
 
 	if b == nil {
 		return errors.New(errContext, "Builders is nil")

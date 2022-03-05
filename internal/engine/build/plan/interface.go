@@ -6,6 +6,7 @@ import (
 
 // ImagesStorer interfaces defines the storage of images
 type ImagesStorer interface {
-	All(string) ([]*image.Image, error)
+	List() ([]*image.Image, error)
+	FindByName(name string) ([]*image.Image, error)
 	Find(string, string) (*image.Image, error)
 }

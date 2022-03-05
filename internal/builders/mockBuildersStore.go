@@ -16,7 +16,7 @@ func NewMockBuildersStore() *MockBuildersStore {
 }
 
 // AddBuilder add a builder
-func (b *MockBuildersStore) AddBuilder(builder *builder.Builder) error {
+func (b *MockBuildersStore) Store(builder *builder.Builder) error {
 	args := b.Called(builder)
 	return args.Error(0)
 }

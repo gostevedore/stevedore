@@ -63,7 +63,7 @@ builders:
 			err:      &errors.Error{},
 			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
 			prepareAssertFunc: func(b *Builders) {
-				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+				b.store.(*builders.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "first",
 						Driver: "docker",
@@ -73,7 +73,7 @@ builders:
 						},
 					},
 				).Return(nil)
-				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+				b.store.(*builders.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "second",
 						Driver: "docker",
@@ -192,7 +192,7 @@ builders:
 			err:      &errors.Error{},
 			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
 			prepareAssertFunc: func(b *Builders) {
-				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+				b.store.(*builders.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "first",
 						Driver: "docker",
@@ -202,7 +202,7 @@ builders:
 						},
 					},
 				).Return(nil)
-				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+				b.store.(*builders.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "second",
 						Driver: "docker",
@@ -212,7 +212,7 @@ builders:
 						},
 					},
 				).Return(nil)
-				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+				b.store.(*builders.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "third",
 						Driver: "docker",
@@ -313,7 +313,7 @@ builders:
 			path:     "/builders/file1.yml",
 			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
 			prepareAssertFunc: func(b *Builders) {
-				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+				b.store.(*builders.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "first",
 						Driver: "docker",
@@ -323,7 +323,7 @@ builders:
 						},
 					},
 				).Return(nil)
-				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+				b.store.(*builders.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "second",
 						Driver: "docker",
@@ -341,7 +341,7 @@ builders:
 			path:     "/builders",
 			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
 			prepareAssertFunc: func(b *Builders) {
-				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+				b.store.(*builders.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "first",
 						Driver: "docker",
@@ -351,7 +351,7 @@ builders:
 						},
 					},
 				).Return(nil)
-				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+				b.store.(*builders.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "second",
 						Driver: "docker",
@@ -361,7 +361,7 @@ builders:
 						},
 					},
 				).Return(nil)
-				b.store.(*builders.MockBuildersStore).On("AddBuilder",
+				b.store.(*builders.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "third",
 						Driver: "docker",

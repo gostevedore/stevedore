@@ -17,6 +17,7 @@ type Step struct {
 	subscriptions []chan struct{}
 }
 
+// NewStep returns a new instance of the Step
 func NewStep(image *image.Image, desc string, sync chan struct{}) *Step {
 	return &Step{
 		image:         image,

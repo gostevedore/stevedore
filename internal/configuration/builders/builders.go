@@ -118,7 +118,7 @@ func (b *Builders) LoadBuildersFromFile(path string) error {
 			builder.Name = name
 		}
 
-		err = b.store.AddBuilder(builder)
+		err = b.store.Store(builder)
 		if err != nil {
 			return errors.New(errContext, fmt.Sprintf("Error loading builders from file '%s'", path), err)
 		}

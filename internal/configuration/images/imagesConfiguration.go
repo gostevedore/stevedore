@@ -107,7 +107,7 @@ func (t *ImagesConfiguration) LoadImagesToStore(path string) error {
 		}
 
 		if node.Parents() == nil || len(node.Parents()) <= 0 {
-			err = t.store.AddImage(name, version, nodeDomainImage)
+			err = t.store.Store(name, version, nodeDomainImage)
 			if err != nil {
 				return errors.New(errContext, err.Error())
 			}
@@ -127,7 +127,7 @@ func (t *ImagesConfiguration) LoadImagesToStore(path string) error {
 
 				copyDomainImage.Options(domainimage.WithParent(parentImage))
 				parentImage.AddChild(copyDomainImage)
-				err = t.store.AddImage(name, version, copyDomainImage)
+				err = t.store.Store(name, version, copyDomainImage)
 				if err != nil {
 					return errors.New(errContext, err.Error())
 				}

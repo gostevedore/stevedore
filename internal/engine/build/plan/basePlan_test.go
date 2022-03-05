@@ -59,7 +59,7 @@ func TestFindImages(t *testing.T) {
 			versions: []string{},
 			err:      &errors.Error{},
 			prepareAssertFunc: func(p *BasePlan) {
-				p.images.(*store.MockImageStore).On("All", "image").Return([]*image.Image{
+				p.images.(*store.MockImageStore).On("FindByName", "image").Return([]*image.Image{
 					{
 						Name:    "image",
 						Version: "version1",

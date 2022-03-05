@@ -36,11 +36,11 @@ func NewImageStore(render ImageRenderer) *ImageStore {
 	}
 }
 
-// AddImage adds an image to the store
-func (s *ImageStore) AddImage(name string, version string, i *image.Image) error {
+// Store adds an image to the store
+func (s *ImageStore) Store(name string, version string, i *image.Image) error {
 	var err error
 	var renderedImage *image.Image
-	errContext := "(store::AddImage)"
+	errContext := "(store::Store)"
 
 	if s.render == nil {
 		return errors.New(errContext, "To add an image to the store an image render is required")
@@ -193,18 +193,12 @@ func (s *ImageStore) Find(name string, version string) (*image.Image, error) {
 		return nil, errors.New(errContext, "Store has not been initialized")
 	}
 
-	// version is *
 	//  return the image associated to the image name and version
 	if version == ImageWildcardVersionSymbol {
 		i, _ := s.imageWildcardIndex[name]
 		return i, nil
 	}
 
-	// lookup names index
-	// return image associated to the image name and version
-
-	// lookup tags index
-	//  return image associated to the image name and version
 	i, exist := s.imageNameVersionIndex[name][version]
 	if !exist {
 		i, err = s.GenerateImageFromWildcard(name, version)
@@ -213,18 +207,20 @@ func (s *ImageStore) Find(name string, version string) (*image.Image, error) {
 		}
 	}
 
-	// lookup wildcard
-	//  generate the image based on the wildcard version and return it
-
 	return i, nil
 }
 
 func (s *ImageStore) GenerateImageFromWildcard(name string, version string) (*image.Image, error) {
 
 	var err error
-	var parent, aux *image.Image
+	var parent, renderedImage, imageToRender *image.Image
 	errContext := "(store::GenerateImageFromWildcard)"
 
+	if s.imageWildcardIndex == nil {
+		return nil, errors.New(errContext, "Wildcard index has not been initialized")
+	}
+
+	// when images is not stored as a wildcard image, return
 	i, exists := s.imageWildcardIndex[name]
 	if !exists {
 		return nil, nil
@@ -232,31 +228,27 @@ func (s *ImageStore) GenerateImageFromWildcard(name string, version string) (*im
 
 	parent = i.Parent
 
-	if i.Parent != nil {
-		if i.Parent.Version == ImageWildcardVersionSymbol {
-			// next level
-			parent, err = s.GenerateImageFromWildcard(i.Parent.Name, version)
-			if err != nil {
-				return nil, errors.New(errContext, err.Error())
-			}
-
-			err = s.AddImage(i.Parent.Name, version, parent)
+	// ensure that parent is properly rended when it is also a wildcard image
+	if parent != nil {
+		_, exists := s.imageWildcardIndex[parent.Name]
+		if exists {
+			parent, err = s.GenerateImageFromWildcard(parent.Name, version)
 			if err != nil {
 				return nil, errors.New(errContext, err.Error())
 			}
 		}
 	}
 
-	aux, err = i.Copy()
+	imageToRender, err = i.Copy()
 	if err != nil {
 		return nil, errors.New(errContext, err.Error())
 	}
-	aux.Options(image.WithParent(parent))
+	imageToRender.Options(image.WithParent(parent))
 
-	aux, err = s.render.Render(name, version, aux)
+	renderedImage, err = s.render.Render(name, version, imageToRender)
 	if err != nil {
 		return nil, errors.New(errContext, err.Error())
 	}
 
-	return aux, nil
+	return renderedImage, nil
 }

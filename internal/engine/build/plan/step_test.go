@@ -32,10 +32,7 @@ func TestStepSecuence(t *testing.T) {
 
 		stepFunc := func(step *Step) {
 			wg.Add(1)
-			// t.Log("Waiting for: " + step.description)
 			step.Wait()
-			// t.Log("Notified: " + step.description)
-			// t.Log("Working: " + step.description)
 			step.Notify()
 			wg.Done()
 		}

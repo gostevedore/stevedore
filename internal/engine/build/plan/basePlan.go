@@ -22,7 +22,7 @@ func (p *BasePlan) findImages(name string, versions []string) ([]*image.Image, e
 	}
 
 	if versions == nil || len(versions) < 1 {
-		images, err = p.images.All(name)
+		images, err = p.images.FindByName(name)
 		if err != nil {
 			return nil, errors.New(errContext, err.Error())
 		}
