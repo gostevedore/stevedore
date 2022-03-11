@@ -3,8 +3,8 @@ package filter
 import (
 	"testing"
 
-	"github.com/gostevedore/stevedore/internal/builders"
 	"github.com/gostevedore/stevedore/internal/builders/builder"
+	"github.com/gostevedore/stevedore/internal/builders/store"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,7 +17,7 @@ func TestAll(t *testing.T) {
 		{
 			desc: "Testing filter to get all builders",
 			Builders: NewBuildersFilter(
-				&builders.BuildersStore{
+				&store.BuildersStore{
 					Builders: map[string]*builder.Builder{
 						"builder1": {
 							Name:   "builder1",
@@ -64,7 +64,7 @@ func TestFilterByName(t *testing.T) {
 			desc: "Testing filter by name",
 			name: "test",
 			Builders: NewBuildersFilter(
-				&builders.BuildersStore{
+				&store.BuildersStore{
 					Builders: map[string]*builder.Builder{
 						"test": {
 							Name: "test",
@@ -99,7 +99,7 @@ func TestFilterByDriver(t *testing.T) {
 			desc:   "Testing filter by driver",
 			driver: "driver1",
 			Builders: NewBuildersFilter(
-				&builders.BuildersStore{
+				&store.BuildersStore{
 					Builders: map[string]*builder.Builder{
 						"driver1": {
 							Driver: "driver1",

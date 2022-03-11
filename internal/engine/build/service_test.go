@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/builders"
 	"github.com/gostevedore/stevedore/internal/builders/builder"
+	"github.com/gostevedore/stevedore/internal/builders/store"
 	"github.com/gostevedore/stevedore/internal/builders/varsmap"
 	"github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/driver"
@@ -50,7 +50,7 @@ func TestBuild(t *testing.T) {
 			desc: "Testing build an image",
 			service: NewService(
 				plan.NewMockPlan(),
-				builders.NewMockBuildersStore(),
+				store.NewMockBuildersStore(),
 				command.NewMockBuildCommandFactory(),
 				&driver.BuildDriverFactory{
 					"mock": mockdriver.NewMockDriver(),
@@ -114,6 +114,7 @@ func TestBuild(t *testing.T) {
 				}, nil)
 				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
 					mockdriver.NewMockDriver(),
+					stepParent.Image(),
 					&driver.BuildDriverOptions{
 						BuilderName:           "builder_mock__parent_0.0.0",
 						ConnectionLocal:       false,
@@ -134,6 +135,7 @@ func TestBuild(t *testing.T) {
 					}).Return(command.NewMockBuildCommand(), nil)
 				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
 					mockdriver.NewMockDriver(),
+					stepChild.Image(),
 					&driver.BuildDriverOptions{
 						BuilderName:           "builder_mock__child_0.0.0",
 						ConnectionLocal:       false,
@@ -186,7 +188,7 @@ func TestWorker(t *testing.T) {
 		image             *image.Image
 		options           *ServiceOptions
 		err               error
-		prepareAssertFunc func(*Service)
+		prepareAssertFunc func(*Service, *image.Image)
 		assertFunc        func(*Service) bool
 	}{
 		{
@@ -242,7 +244,7 @@ func TestWorker(t *testing.T) {
 			desc: "Testing worker to build an image",
 			service: NewService(
 				nil,
-				builders.NewMockBuildersStore(),
+				store.NewMockBuildersStore(),
 				command.NewMockBuildCommandFactory(),
 				&driver.BuildDriverFactory{
 					"mock": mockdriver.NewMockDriver(),
@@ -294,7 +296,7 @@ func TestWorker(t *testing.T) {
 					service.dispatch.(*dispatch.MockDispatch).AssertExpectations(t) &&
 					service.jobFactory.(*job.MockJobFactory).AssertExpectations(t)
 			},
-			prepareAssertFunc: func(service *Service) {
+			prepareAssertFunc: func(service *Service, image *image.Image) {
 
 				mockJob := job.NewMockJob()
 				mockJob.On("Wait").Return(nil)
@@ -310,6 +312,7 @@ func TestWorker(t *testing.T) {
 				}, nil)
 				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
 					mockdriver.NewMockDriver(),
+					image,
 					&driver.BuildDriverOptions{
 						BuilderName:                "builder_mock_namespace_image_0.0.0",
 						ConnectionLocal:            false,
@@ -357,7 +360,7 @@ func TestWorker(t *testing.T) {
 			t.Log(test.desc)
 
 			if test.prepareAssertFunc != nil {
-				test.prepareAssertFunc(test.service)
+				test.prepareAssertFunc(test.service, test.image)
 			}
 
 			err := test.service.worker(context.TODO(), test.image, test.options)
@@ -428,9 +431,10 @@ func TestCommand(t *testing.T) {
 		desc              string
 		service           *Service
 		driver            driver.BuildDriverer
+		image             *image.Image
 		options           *driver.BuildDriverOptions
 		res               job.Commander
-		prepareAssertFunc func(*Service)
+		prepareAssertFunc func(*Service, *image.Image)
 		err               error
 	}{
 		{
@@ -446,14 +450,22 @@ func TestCommand(t *testing.T) {
 			err: errors.New(errContext, "To create a build command, is required a driver"),
 		},
 		{
+			desc: "Testing error when no image is provided",
+			service: &Service{
+				commandFactory: command.NewMockBuildCommandFactory(),
+			},
+			driver: mockdriver.NewMockDriver(),
+			err:    errors.New(errContext, "To create a build command, is required a image"),
+		},
+		{
 			desc: "Testing error when no options are provided",
 			service: &Service{
 				commandFactory: command.NewMockBuildCommandFactory(),
 			},
 			driver: mockdriver.NewMockDriver(),
+			image:  &image.Image{},
 			err:    errors.New(errContext, "To create a build command, is required a service options"),
 		},
-
 		{
 			desc: "Testing create build command",
 			service: NewService(
@@ -466,10 +478,11 @@ func TestCommand(t *testing.T) {
 				nil,
 				nil,
 			),
-			options: &driver.BuildDriverOptions{},
 			driver:  mockdriver.NewMockDriver(),
-			prepareAssertFunc: func(s *Service) {
-				s.commandFactory.(*command.MockBuildCommandFactory).On("New", mockdriver.NewMockDriver(), &driver.BuildDriverOptions{}).Return(command.NewMockBuildCommand(), nil)
+			image:   &image.Image{},
+			options: &driver.BuildDriverOptions{},
+			prepareAssertFunc: func(s *Service, image *image.Image) {
+				s.commandFactory.(*command.MockBuildCommandFactory).On("New", mockdriver.NewMockDriver(), image, &driver.BuildDriverOptions{}).Return(command.NewMockBuildCommand(), nil)
 			},
 			res: &command.MockBuildCommand{},
 			err: &errors.Error{},
@@ -481,10 +494,10 @@ func TestCommand(t *testing.T) {
 			t.Log(test.desc)
 
 			if test.prepareAssertFunc != nil {
-				test.prepareAssertFunc(test.service)
+				test.prepareAssertFunc(test.service, test.image)
 			}
 
-			res, err := test.service.command(test.driver, test.options)
+			res, err := test.service.command(test.driver, test.image, test.options)
 
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
@@ -522,10 +535,10 @@ func TestBuilder(t *testing.T) {
 		},
 		{
 			desc:              "Testing return a builder defined by an string",
-			service:           &Service{builders: builders.NewMockBuildersStore()},
+			service:           &Service{builders: store.NewMockBuildersStore()},
 			builderDefinition: "test",
 			prepareAssertFunc: func(s *Service) {
-				s.builders.(*builders.MockBuildersStore).On("Find", "test").Return(&builder.Builder{
+				s.builders.(*store.MockBuildersStore).On("Find", "test").Return(&builder.Builder{
 					Name: "test",
 				}, nil)
 			},

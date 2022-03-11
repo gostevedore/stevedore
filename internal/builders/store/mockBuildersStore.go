@@ -1,4 +1,4 @@
-package builders
+package store
 
 import (
 	"github.com/gostevedore/stevedore/internal/builders/builder"

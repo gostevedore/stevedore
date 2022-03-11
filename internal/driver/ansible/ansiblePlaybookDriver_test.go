@@ -1,4 +1,4 @@
-package ansibledriver
+package driver
 
 import (
 	"context"
@@ -377,7 +377,7 @@ func TestBuild(t *testing.T) {
 				test.prepareAssertFunc(test.driver.driver)
 			}
 
-			err := test.driver.Build(context.TODO(), test.options)
+			err := test.driver.Build(context.TODO(), nil, test.options)
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {

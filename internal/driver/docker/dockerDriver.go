@@ -1,4 +1,4 @@
-package dockerdriver
+package driver
 
 import (
 	"context"
@@ -42,7 +42,7 @@ func NewDockerDriver(driver DockerDriverer, writer io.Writer) (*DockerDriver, er
 }
 
 // Build performs the build. In case the build could not performed it returns an error
-func (d *DockerDriver) Build(ctx context.Context, options *driver.BuildDriverOptions) error {
+func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *driver.BuildDriverOptions) error {
 
 	var err error
 	//var dockerBuildContext dockercontext.DockerBuildContexter

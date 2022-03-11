@@ -132,7 +132,7 @@ image:
 		err               error
 		images            *ImagesConfiguration
 		prepareAssertFunc func(*ImagesConfiguration)
-		assertFunc        func(*ImagesConfiguration)
+		assertFunc        func(*testing.T, *ImagesConfiguration)
 	}{
 		{
 			desc: "Testing load images to store",
@@ -219,14 +219,15 @@ image:
 				)
 				// parent2.AddChild(childParent2)
 
-				images.store.(*store.MockImageStore).On("AddImage", "parent1", "parent1_version", mock.AnythingOfType("*image.Image")).Return(nil)
-				images.store.(*store.MockImageStore).On("AddImage", "parent2", "parent2_version", mock.AnythingOfType("*image.Image")).Return(nil)
-				images.store.(*store.MockImageStore).On("AddImage", "child", "version", mock.AnythingOfType("*image.Image")).Return(nil)
-				images.store.(*store.MockImageStore).On("AddImage", "child", "version", mock.AnythingOfType("*image.Image")).Return(nil)
-				images.store.(*store.MockImageStore).On("AddImage", "other_child", "other_child_version", mock.AnythingOfType("*image.Image")).Return(nil)
+				images.store.(*store.MockImageStore).On("Store", "parent1", "parent1_version", mock.AnythingOfType("*image.Image")).Return(nil)
+				images.store.(*store.MockImageStore).On("Store", "parent2", "parent2_version", mock.AnythingOfType("*image.Image")).Return(nil)
+				images.store.(*store.MockImageStore).On("Store", "child", "version", mock.AnythingOfType("*image.Image")).Return(nil)
+				images.store.(*store.MockImageStore).On("Store", "child", "version", mock.AnythingOfType("*image.Image")).Return(nil)
+				images.store.(*store.MockImageStore).On("Store", "other_child", "other_child_version", mock.AnythingOfType("*image.Image")).Return(nil)
 			},
-			assertFunc: func(images *ImagesConfiguration) {
-
+			assertFunc: func(t *testing.T, images *ImagesConfiguration) {
+				images.store.(*store.MockImageStore).AssertExpectations(t)
+				images.store.(*store.MockImageStore).AssertNumberOfCalls(t, "Store", 5)
 			},
 			err: &errors.Error{},
 		},
@@ -244,8 +245,7 @@ image:
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				test.images.store.(*store.MockImageStore).AssertExpectations(t)
-				test.images.store.(*store.MockImageStore).AssertNumberOfCalls(t, "AddImage", 5)
+				test.assertFunc(t, test.images)
 			}
 		})
 	}

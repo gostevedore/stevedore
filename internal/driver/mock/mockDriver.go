@@ -1,9 +1,10 @@
-package mockdriver
+package driver
 
 import (
 	"context"
 
 	"github.com/gostevedore/stevedore/internal/driver"
+	"github.com/gostevedore/stevedore/internal/images/image"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -22,7 +23,7 @@ func NewMockDriver() *MockDriver {
 }
 
 // Build simulate a new image build
-func (d *MockDriver) Build(ctx context.Context, options *driver.BuildDriverOptions) error {
-	args := d.Called(ctx, options)
+func (d *MockDriver) Build(ctx context.Context, i *image.Image, options *driver.BuildDriverOptions) error {
+	args := d.Called(ctx, i, options)
 	return args.Error(0)
 }

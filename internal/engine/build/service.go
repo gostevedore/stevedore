@@ -273,7 +273,7 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 
 	buildOptions.RemoveImageAfterBuild = options.RemoveAfterBuild
 
-	cmd, err := s.command(driver, buildOptions)
+	cmd, err := s.command(driver, image, buildOptions)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
@@ -310,7 +310,7 @@ func (s *Service) job(ctx context.Context, cmd job.Commander) (schedule.Jobber, 
 	return s.jobFactory.New(cmd), nil
 }
 
-func (s *Service) command(driver driver.BuildDriverer, options *driver.BuildDriverOptions) (job.Commander, error) {
+func (s *Service) command(driver driver.BuildDriverer, image *image.Image, options *driver.BuildDriverOptions) (job.Commander, error) {
 	errContext := "(build::command)"
 
 	if s.commandFactory == nil {
@@ -321,11 +321,15 @@ func (s *Service) command(driver driver.BuildDriverer, options *driver.BuildDriv
 		return nil, errors.New(errContext, "To create a build command, is required a driver")
 	}
 
+	if image == nil {
+		return nil, errors.New(errContext, "To create a build command, is required a image")
+	}
+
 	if options == nil {
 		return nil, errors.New(errContext, "To create a build command, is required a service options")
 	}
 
-	return s.commandFactory.New(driver, options), nil
+	return s.commandFactory.New(driver, image, options), nil
 }
 
 func (s *Service) builder(builderDefinition interface{}) (*builder.Builder, error) {

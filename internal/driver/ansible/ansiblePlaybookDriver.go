@@ -1,4 +1,4 @@
-package ansibledriver
+package driver
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/builders/varsmap"
 	"github.com/gostevedore/stevedore/internal/driver"
+	"github.com/gostevedore/stevedore/internal/images/image"
 )
 
 const (
@@ -44,7 +45,7 @@ func NewAnsiblePlaybookDriver(driver AnsibleDriverer, writer io.Writer) (*Ansibl
 }
 
 // Build performs the build. In case the build could not performed it returns an error
-func (d *AnsiblePlaybookDriver) Build(ctx context.Context, o *driver.BuildDriverOptions) error {
+func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *driver.BuildDriverOptions) error {
 
 	builderName := "builder"
 	errContext := "(ansibledriver::Build)"

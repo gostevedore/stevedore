@@ -2,6 +2,7 @@ package command
 
 import (
 	"github.com/gostevedore/stevedore/internal/driver"
+	"github.com/gostevedore/stevedore/internal/images/image"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -16,7 +17,7 @@ func NewMockBuildCommandFactory() *MockBuildCommandFactory {
 }
 
 // New returns a new build command constructor
-func (f *MockBuildCommandFactory) New(driver driver.BuildDriverer, options *driver.BuildDriverOptions) BuildCommander {
-	args := f.Called(driver, options)
+func (f *MockBuildCommandFactory) New(driver driver.BuildDriverer, image *image.Image, options *driver.BuildDriverOptions) BuildCommander {
+	args := f.Called(driver, image, options)
 	return args.Get(0).(BuildCommander)
 }

@@ -1,4 +1,4 @@
-package dockerdriver
+package driver
 
 import (
 	"context"
@@ -362,7 +362,7 @@ func TestBuild(t *testing.T) {
 				test.prepareAssertFunc(test.driver.driver)
 			}
 
-			err := test.driver.Build(test.ctx, test.options)
+			err := test.driver.Build(test.ctx, nil, test.options)
 			if err != nil && assert.Error(t, err) {
 				assert.Equal(t, test.err, err)
 			} else {

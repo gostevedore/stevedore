@@ -1,4 +1,4 @@
-package dockerdriver
+package driver
 
 import (
 	"context"

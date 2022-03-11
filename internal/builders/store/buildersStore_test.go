@@ -1,4 +1,4 @@
-package builders
+package store
 
 import (
 	"testing"

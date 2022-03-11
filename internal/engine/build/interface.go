@@ -30,7 +30,7 @@ type BuildersStorer interface {
 
 // BuildCommandFactorier interface defines the factory of build commands
 type BuildCommandFactorier interface {
-	New(driver.BuildDriverer, *driver.BuildDriverOptions) command.BuildCommander
+	New(driver.BuildDriverer, *image.Image, *driver.BuildDriverOptions) command.BuildCommander
 }
 
 // JobFactorier interface defines the factory of build jobs

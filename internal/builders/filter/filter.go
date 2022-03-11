@@ -3,17 +3,17 @@ package filter
 import (
 	"sort"
 
-	"github.com/gostevedore/stevedore/internal/builders"
 	"github.com/gostevedore/stevedore/internal/builders/builder"
+	"github.com/gostevedore/stevedore/internal/builders/store"
 )
 
 // BuildersFilter is a filter that filters the builders
 type BuildersFilter struct {
-	*builders.BuildersStore
+	*store.BuildersStore
 }
 
 // NewBuildersFilter returns a new BuildersFilter
-func NewBuildersFilter(builders *builders.BuildersStore) *BuildersFilter {
+func NewBuildersFilter(builders *store.BuildersStore) *BuildersFilter {
 	return &BuildersFilter{builders}
 }
 

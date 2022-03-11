@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/builders"
 	"github.com/gostevedore/stevedore/internal/builders/builder"
+	"github.com/gostevedore/stevedore/internal/builders/store"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
@@ -61,9 +61,9 @@ builders:
 			desc:     "Testing loading builders from file",
 			path:     "/builders/file1.yml",
 			err:      &errors.Error{},
-			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
+			builders: NewBuilders(testFs, store.NewMockBuildersStore()),
 			prepareAssertFunc: func(b *Builders) {
-				b.store.(*builders.MockBuildersStore).On("Store",
+				b.store.(*store.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "first",
 						Driver: "docker",
@@ -73,7 +73,7 @@ builders:
 						},
 					},
 				).Return(nil)
-				b.store.(*builders.MockBuildersStore).On("Store",
+				b.store.(*store.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "second",
 						Driver: "docker",
@@ -88,7 +88,7 @@ builders:
 		{
 			desc:     "Testing error loading builders from file",
 			path:     "/builders/tab_error_file.yml",
-			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
+			builders: NewBuilders(testFs, store.NewMockBuildersStore()),
 			err:      errors.New(errContext, "Error loading builders from file '/builders/tab_error_file.yml'\nfound:\n\nbuilders:\n  first:\n    driver: docker\n    options:\n\t  dockerfile: Dockerfile.test\n      context:\n      path: /path/to/context\n\n\tyaml: line 6: found character that cannot start any token"),
 		},
 	}
@@ -105,7 +105,7 @@ builders:
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				test.builders.store.(*builders.MockBuildersStore).AssertExpectations(t)
+				test.builders.store.(*store.MockBuildersStore).AssertExpectations(t)
 			}
 		})
 	}
@@ -190,9 +190,9 @@ builders:
 			desc:     "Testing loading builders from directory",
 			path:     "/builders",
 			err:      &errors.Error{},
-			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
+			builders: NewBuilders(testFs, store.NewMockBuildersStore()),
 			prepareAssertFunc: func(b *Builders) {
-				b.store.(*builders.MockBuildersStore).On("Store",
+				b.store.(*store.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "first",
 						Driver: "docker",
@@ -202,7 +202,7 @@ builders:
 						},
 					},
 				).Return(nil)
-				b.store.(*builders.MockBuildersStore).On("Store",
+				b.store.(*store.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "second",
 						Driver: "docker",
@@ -212,7 +212,7 @@ builders:
 						},
 					},
 				).Return(nil)
-				b.store.(*builders.MockBuildersStore).On("Store",
+				b.store.(*store.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "third",
 						Driver: "docker",
@@ -228,7 +228,7 @@ builders:
 			desc:     "Testing error loading builders from directory",
 			path:     "/builders_error",
 			err:      errors.New(errContext, "Error loading builders from file '/builders_error/file1.yml'\nfound:\n\nbuilders:\n  third:\n    driver: docker\n    options:\n\t  dockerfile: Dockerfile.test\n      context:\n        - path: /even/another/path/to/context\n\n\tyaml: line 6: found character that cannot start any token\nError loading builders from file '/builders_error/file2.yml'\nfound:\n\nbuilders:\n  fourth:\n    driver: docker\n    options:\n\t  dockerfile: Dockerfile.test\n      context:\n        - path: /even/another/path/to/context\n\n\tyaml: line 6: found character that cannot start any token\n"),
-			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
+			builders: NewBuilders(testFs, store.NewMockBuildersStore()),
 		},
 	}
 
@@ -244,7 +244,7 @@ builders:
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				test.builders.store.(*builders.MockBuildersStore).AssertExpectations(t)
+				test.builders.store.(*store.MockBuildersStore).AssertExpectations(t)
 			}
 		})
 	}
@@ -311,9 +311,9 @@ builders:
 		{
 			desc:     "Testing loading builders from file",
 			path:     "/builders/file1.yml",
-			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
+			builders: NewBuilders(testFs, store.NewMockBuildersStore()),
 			prepareAssertFunc: func(b *Builders) {
-				b.store.(*builders.MockBuildersStore).On("Store",
+				b.store.(*store.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "first",
 						Driver: "docker",
@@ -323,7 +323,7 @@ builders:
 						},
 					},
 				).Return(nil)
-				b.store.(*builders.MockBuildersStore).On("Store",
+				b.store.(*store.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "second",
 						Driver: "docker",
@@ -339,9 +339,9 @@ builders:
 		{
 			desc:     "Testing loading builders from directory",
 			path:     "/builders",
-			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
+			builders: NewBuilders(testFs, store.NewMockBuildersStore()),
 			prepareAssertFunc: func(b *Builders) {
-				b.store.(*builders.MockBuildersStore).On("Store",
+				b.store.(*store.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "first",
 						Driver: "docker",
@@ -351,7 +351,7 @@ builders:
 						},
 					},
 				).Return(nil)
-				b.store.(*builders.MockBuildersStore).On("Store",
+				b.store.(*store.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "second",
 						Driver: "docker",
@@ -361,7 +361,7 @@ builders:
 						},
 					},
 				).Return(nil)
-				b.store.(*builders.MockBuildersStore).On("Store",
+				b.store.(*store.MockBuildersStore).On("Store",
 					&builder.Builder{
 						Name:   "third",
 						Driver: "docker",
@@ -378,7 +378,7 @@ builders:
 		{
 			desc:     "Testing error loading builders from unexisting directory",
 			path:     "/builders_unexisting",
-			builders: NewBuilders(testFs, builders.NewMockBuildersStore()),
+			builders: NewBuilders(testFs, store.NewMockBuildersStore()),
 			err:      errors.New(errContext, "open /builders_unexisting: file does not exist"),
 		},
 	}
@@ -395,7 +395,7 @@ builders:
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				test.builders.store.(*builders.MockBuildersStore).AssertExpectations(t)
+				test.builders.store.(*store.MockBuildersStore).AssertExpectations(t)
 			}
 		})
 	}

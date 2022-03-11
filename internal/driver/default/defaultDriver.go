@@ -1,4 +1,4 @@
-package defaultdriver
+package driver
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/gostevedore/stevedore/internal/driver"
+	"github.com/gostevedore/stevedore/internal/images/image"
 )
 
 // DefaultDriver is a driver that just simulates the build process
@@ -27,7 +28,7 @@ func NewDefaultDriver(w io.Writer) *DefaultDriver {
 }
 
 // Build simulate a new image build
-func (d *DefaultDriver) Build(ctx context.Context, options *driver.BuildDriverOptions) error {
+func (d *DefaultDriver) Build(ctx context.Context, i *image.Image, options *driver.BuildDriverOptions) error {
 	fmt.Fprintln(d.write, fmt.Sprintf("%+v", *options))
 	return nil
 }
