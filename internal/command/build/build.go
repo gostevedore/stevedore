@@ -2,196 +2,172 @@ package build
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	errors "github.com/apenella/go-common-utils/error"
+	dockerclient "github.com/docker/docker/client"
 	"github.com/gostevedore/stevedore/internal/command"
+	handler "github.com/gostevedore/stevedore/internal/command/build/handler"
 	"github.com/gostevedore/stevedore/internal/configuration"
-	"github.com/gostevedore/stevedore/internal/engine"
-	"github.com/gostevedore/stevedore/internal/types"
-
+	"github.com/gostevedore/stevedore/internal/ui/console"
 	"github.com/spf13/cobra"
 )
 
-const (
-	setVarsSplitToken = "="
-)
+var buildHandler Handlerer
 
-type buildCmdFlags struct {
-	BuildBuilderName            string
-	BuildConfiguraction         string
-	BuildDryRun                 bool
-	BuildOnCascade              bool
-	ConnectionLocal             bool
-	CascadeDepth                int
-	Debug                       bool
-	EnableSemanticVersionTags   bool
-	ImageFromName               string
-	ImageFromRegistryHost       string
-	ImageFromRegistryNamespace  string
-	ImageFromVersion            string
-	ImageName                   string
-	ImageRegistryHost           string
-	ImageRegistryNamespace      string
-	Inventory                   string
-	Limit                       string
-	NumWorkers                  int
-	PersistentVars              []string
-	PushImages                  bool
-	SemanticVersionTagsTemplate []string
-	Tags                        []string
-	Vars                        []string
-	Versions                    []string
-}
+// NewCommand returns a new command to build images
+func NewCommand(ctx context.Context, conf *configuration.Configuration) *command.StevedoreCommand {
 
-var buildCmdFlagsVar *buildCmdFlags
-
-// init define the arguments and add build command to root command cli
-func NewCommand(ctx context.Context, config *configuration.Configuration) *command.StevedoreCommand {
-	buildCmdFlagsVar = &buildCmdFlags{}
+	handlerOptions := &handler.HandlerOptions{}
 
 	buildCmd := &cobra.Command{
-		Use:   "build <image>",
-		Short: "Stevedore command to build images",
-		Long: `Stevedore command to build images
+		Use:     "build <image>",
+		Short:   "Stevedore command to build images",
+		Long:    "Stevedore command to build images",
+		Example: "stevedore build ubuntu-base --image-version impish --tag 21.10 --pull-parent-image --push-after-build --remove-local-images-after-push",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			errContext := "(build::PreRunE)"
 
-  Example: 
-  	Command to build the 'focal' version of an image named 'ubuntu-base':
-    stevedore build ubuntu-base --image-version focal
-		`,
-		RunE: buildHandler(ctx, config),
+			dockerClient, err := dockerclient.NewClientWithOpts(dockerclient.FromEnv)
+			if err != nil {
+				return errors.New(errContext, err.Error())
+			}
+			_ = dockerClient
+
+			// drivers
+
+			// service
+
+			// handlers
+
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			return runeHandler(ctx, buildHandler, handlerOptions)
+		},
 	}
 
-	buildCmd.Flags().StringVarP(&buildCmdFlagsVar.BuildBuilderName, "builder-name", "b", "", "Intermediate builder's container name [only applies to ansible-playbook builders]")
-	buildCmd.Flags().BoolVarP(&buildCmdFlagsVar.BuildOnCascade, "cascade", "C", false, "Build images on cascade. Children's image build is started once the image build finishes")
-	buildCmd.Flags().BoolVarP(&buildCmdFlagsVar.ConnectionLocal, "connection-local", "L", false, "Use local connection for ansible [only applies to ansible-playbook builders]")
-	buildCmd.Flags().IntVarP(&buildCmdFlagsVar.CascadeDepth, "cascade-depth", "d", -1, "Number images levels to build when build on cascade is executed")
-	buildCmd.Flags().BoolVar(&buildCmdFlagsVar.Debug, "debug", false, "Enable debug mode to show build options")
-	buildCmd.Flags().BoolVarP(&buildCmdFlagsVar.BuildDryRun, "dry-run", "D", false, "Run a dry-run build")
-	buildCmd.Flags().BoolVarP(&buildCmdFlagsVar.EnableSemanticVersionTags, "enable-semver-tags", "S", false, "Generate a set of tags for the image based on the semantic version tree when main version is semver 2.0.0 compliance")
-	buildCmd.Flags().StringSliceVarP(&buildCmdFlagsVar.Versions, "image-version", "v", []string{}, "Image versions to be built. One or more image versions could be built")
-	buildCmd.Flags().StringVarP(&buildCmdFlagsVar.ImageFromName, "image-from", "I", "", "Image (FROM) parent's name")
-	buildCmd.Flags().StringVarP(&buildCmdFlagsVar.ImageFromRegistryHost, "image-from-registry", "R", "", "Image (FROM) parent's registry host")
-	buildCmd.Flags().StringVarP(&buildCmdFlagsVar.ImageFromRegistryNamespace, "image-from-namespace", "N", "", "Image (FROM) parent's registry namespace")
-	buildCmd.Flags().StringVarP(&buildCmdFlagsVar.ImageFromVersion, "image-from-version", "V", "", "Image (FROM) parent's version")
-	buildCmd.Flags().StringVarP(&buildCmdFlagsVar.ImageName, "image-name", "i", "", "Image name- It overrides image tree image name")
-	buildCmd.Flags().StringVarP(&buildCmdFlagsVar.Inventory, "inventory", "H", "", "Specify inventory hosts' path or comma separated list of hosts [only applies to Ansible builders]")
-	buildCmd.Flags().StringVarP(&buildCmdFlagsVar.Limit, "limit", "l", "", "Further limit selected hosts to an additional pattern [only applies to Ansible builders]")
-	buildCmd.Flags().StringVarP(&buildCmdFlagsVar.ImageRegistryNamespace, "namespace", "n", "", "Image's registry namespace where image will be stored")
-	buildCmd.Flags().IntVarP(&buildCmdFlagsVar.NumWorkers, "num-workers", "w", 0, "Number of workers to execute builds")
-	buildCmd.Flags().BoolVarP(&buildCmdFlagsVar.PushImages, "no-push", "P", false, "Do not push the image to registry once it is built")
-	buildCmd.Flags().StringVarP(&buildCmdFlagsVar.ImageRegistryHost, "registry", "r", "", "Image's registry host where image will be stored")
-	buildCmd.Flags().StringSliceVarP(&buildCmdFlagsVar.SemanticVersionTagsTemplate, "semver-tags-template", "T", []string{}, "List templates to generate tags following semantic version expression")
-	buildCmd.Flags().StringSliceVarP(&buildCmdFlagsVar.PersistentVars, "set-persistent", "p", []string{}, "Set persistent variables to use during the build. A persistent variable will be available on child image during its build and could not be overwrite. The format of each variable must be <key>=<value>")
-	buildCmd.Flags().StringSliceVarP(&buildCmdFlagsVar.Vars, "set", "s", []string{}, "Set variables to use during the build. The format of each variable must be <key>=<value>")
-	buildCmd.Flags().StringSliceVarP(&buildCmdFlagsVar.Tags, "tag", "t", []string{}, "Give an extra tag for the docker image")
+	// ansible driver flags
+	buildCmd.Flags().BoolVar(&handlerOptions.AnsibleConnectionLocal, "connection-local", false, "Use ansible local connection [only applies to ansible-playbook driver]")
+	DeprecatedFlagMessageConnectionLocal := "[DEPRECATED FLAG] use 'ansible-connection-local' instead of 'connection-local'"
+	DEPRECATEDConnectionLocal := buildCmd.Flags().Bool("connection-local", false, DeprecatedFlagMessageConnectionLocal)
+	if *DEPRECATEDConnectionLocal {
+		console.Warn(DeprecatedFlagMessageConnectionLocal)
+		handlerOptions.AnsibleConnectionLocal = *DEPRECATEDConnectionLocal
+	}
+	buildCmd.Flags().StringVar(&handlerOptions.AnsibleIntermediateContainerName, "ansible-intermediate-container-name", "", "Name of an intermediate container that can be used during ansible build process [only applies to ansible-playbook driver]")
+	DeprecatedFlagMessageBuildBuilderName := "[DEPRECATED FLAG] use 'ansible-intermediate-container-name' instead of 'builder-name'"
+	DEPRECATEDBuildBuilderName := buildCmd.Flags().String("builder-name", "", DeprecatedFlagMessageBuildBuilderName)
+	if *DEPRECATEDBuildBuilderName != "" {
+		console.Warn(DeprecatedFlagMessageBuildBuilderName)
+		handlerOptions.AnsibleIntermediateContainerName = *DEPRECATEDBuildBuilderName
+	}
+	buildCmd.Flags().StringVar(&handlerOptions.AnsibleInventoryPath, "ansible-inventory-path", "", "Specify inventory hosts' path or comma separated list of hosts [only applies to ansible-playbook driver]")
+	DeprecatedFlagMessageInventory := "[DEPRECATED FLAG] use 'ansible-inventory-path' instead of 'inventory'"
+	DEPRECATEDInventory := buildCmd.Flags().String("inventory", "", DeprecatedFlagMessageInventory)
+	if *DEPRECATEDInventory != "" {
+		console.Warn(DeprecatedFlagMessageInventory)
+		handlerOptions.AnsibleInventoryPath = *DEPRECATEDInventory
+	}
+	buildCmd.Flags().StringVar(&handlerOptions.AnsibleLimit, "ansible-limit", "", "Further limit selected hosts to an additional pattern [only applies to ansible-playbook driver]")
+	DeprecatedFlagMessageLimit := "[DEPRECATED FLAG] use 'ansible-limit' instead of 'limit'"
+	DEPRECATEDLimit := buildCmd.Flags().String("limit", "", DeprecatedFlagMessageLimit)
+	if *DEPRECATEDLimit != "" {
+		console.Warn(DeprecatedFlagMessageLimit)
+		handlerOptions.AnsibleInventoryPath = *DEPRECATEDLimit
+	}
+
+	// image definition flags
+	buildCmd.Flags().StringVarP(&handlerOptions.ImageFromName, "image-from-name", "I", "", "Image parent's name")
+	DeprecatedFlagMessageImageFrom := "[DEPRECATED FLAG] use 'image-from-name' instead of 'image-from'"
+	DEPRECATEDImageFrom := buildCmd.Flags().String("image-from", "", DeprecatedFlagMessageImageFrom)
+	if *DEPRECATEDImageFrom != "" {
+		console.Warn(DEPRECATEDImageFrom)
+		handlerOptions.ImageFromName = *DEPRECATEDImageFrom
+	}
+	buildCmd.Flags().StringVarP(&handlerOptions.ImageFromRegistryNamespace, "image-from-namespace", "N", "", "Image parent's registry namespace")
+	buildCmd.Flags().StringVarP(&handlerOptions.ImageFromRegistryHost, "image-from-registry", "R", "", "Image parent's registry host")
+	buildCmd.Flags().StringVarP(&handlerOptions.ImageFromVersion, "image-from-version", "V", "", "Image parent's version")
+
+	buildCmd.Flags().StringVarP(&handlerOptions.ImageName, "image-name", "i", "", "Image name. Its value overrides the name on the images tree definition")
+	buildCmd.Flags().StringVarP(&handlerOptions.ImageRegistryHost, "image-registry-host", "r", "", "Image registry host")
+	DeprecatedFlagMessageRegistry := "[DEPRECATED FLAG] use 'image-registry-host' instead of 'registry'"
+	DEPRECATEDRegistry := buildCmd.Flags().String("registry", "", DeprecatedFlagMessageRegistry)
+	if *DEPRECATEDRegistry != "" {
+		console.Warn(DEPRECATEDRegistry)
+		handlerOptions.ImageFromRegistryHost = *DEPRECATEDRegistry
+	}
+	buildCmd.Flags().StringVarP(&handlerOptions.ImageRegistryNamespace, "image-registry-namespace", "n", "", "Image namespace")
+	DeprecatedFlagMessageNamespace := "[DEPRECATED FLAG] use 'image-registry-namespace' instead of 'namespace'"
+	DEPRECATEDNamespace := buildCmd.Flags().String("namespace", "", DeprecatedFlagMessageNamespace)
+	if *DEPRECATEDNamespace != "" {
+		console.Warn(DEPRECATEDNamespace)
+		handlerOptions.ImageRegistryNamespace = *DEPRECATEDNamespace
+	}
+	buildCmd.Flags().StringSliceVarP(&handlerOptions.Versions, "image-version", "v", []string{}, "List of versions to build")
+	buildCmd.Flags().StringSliceVarP(&handlerOptions.PersistentVars, "persistent-variable", "p", []string{}, "List of persistent variables to set during the build process. Persistent variable that child image inherits from its parent and could not be override. The format of each variable must be <key>=<value>")
+	DeprecatedFlagMessageSetPersistent := "[DEPRECATED FLAG] use 'persistent-variable' instead of 'set-persistent'"
+	DEPRECATEDSetPersistent := buildCmd.Flags().StringSlice("set-persistent", []string{}, DeprecatedFlagMessageSetPersistent)
+	if len(*DEPRECATEDSetPersistent) > 0 {
+		console.Warn(DeprecatedFlagMessageSetPersistent)
+		handlerOptions.PersistentVars = *DEPRECATEDSetPersistent
+	}
+	buildCmd.Flags().StringSliceVarP(&handlerOptions.Vars, "variable", "x", []string{}, "Variables to set during the build process. The format of each variable must be <key>=<value>")
+	DeprecatedFlagMessageSet := "[DEPRECATED FLAG] use 'variable' instead of 'set'"
+	DEPRECATEDSet := buildCmd.Flags().StringSlice("set", []string{}, DeprecatedFlagMessageSet)
+	if len(*DEPRECATEDSet) > 0 {
+		console.Warn(DeprecatedFlagMessageSet)
+		handlerOptions.PersistentVars = *DEPRECATEDSet
+	}
+	buildCmd.Flags().StringSliceVarP(&handlerOptions.Tags, "tag", "t", []string{}, "List of extra tags to generate")
+	buildCmd.Flags().StringSliceVarP(&handlerOptions.Labels, "label", "l", []string{}, "List of labels to assign to the image")
+	buildCmd.Flags().StringSliceVarP(&handlerOptions.SemanticVersionTagsTemplates, "semver-tags-template", "T", []string{}, "List of templates to generate tags following semantic version expression")
+
+	// behavior flags
+	buildCmd.Flags().BoolVar(&handlerOptions.BuildOnCascade, "build-on-cascade", false, "Build images on cascade. Children's image build is started once the image build finishes")
+	DeprecatedFlagMessageCascade := "[DEPRECATED FLAG] use 'build-on-cascade' instead of 'cascade'"
+	DEPRECATEDCascade := buildCmd.Flags().Bool("cascade", false, DeprecatedFlagMessageCascade)
+	if *DEPRECATEDCascade {
+		console.Warn(DeprecatedFlagMessageCascade)
+		handlerOptions.BuildOnCascade = *DEPRECATEDCascade
+	}
+	buildCmd.Flags().IntVar(&handlerOptions.CascadeDepth, "cascade-depth", -1, "Number images levels to build when build on cascade is executed")
+	buildCmd.Flags().IntVar(&handlerOptions.Concurrency, "concurrency", 0, "Number of images builds that can be excuted at the same time")
+	DeprecatedFlagMessageNumWorkers := "[DEPRECATED FLAG] use 'concurrency' instead of 'num-workers'"
+	DEPRECATEDNumWorkers := buildCmd.Flags().Int("num-workers", 0, DeprecatedFlagMessageNumWorkers)
+	if *DEPRECATEDNumWorkers > 0 {
+		console.Warn(DEPRECATEDNumWorkers)
+		handlerOptions.Concurrency = *DEPRECATEDNumWorkers
+	}
+	// buildCmd.Flags().BoolVar(&handlerOptions.Debug, "debug", false, "Enable debug mode to show build options")
+	buildCmd.Flags().BoolVar(&handlerOptions.DryRun, "dry-run", false, "Run build on dry-run mode")
+	buildCmd.Flags().BoolVar(&handlerOptions.EnableSemanticVersionTags, "enable-semver-tags", false, "Generate a set of tags for the image based on the semantic version tree when main version is semver 2.0.0 compliance")
+	buildCmd.Flags().BoolVar(&handlerOptions.PullParentImage, "pull-parent-image", false, "When is defined parent image is pulled from docker registry")
+	buildCmd.Flags().BoolVar(&handlerOptions.PushImagesAfterBuild, "push-after-build", false, "When is defined the image is pushed to docker registry after the build")
+	DeprecatedFlagMessagePushImages := "[DEPRECATED FLAG] 'no-push' has no effect because is the default behavior"
+	DEPRECATEDPushImages := buildCmd.Flags().Bool("no-push", false, DeprecatedFlagMessagePushImages)
+	if *DEPRECATEDPushImages {
+		console.Warn(DEPRECATEDPushImages)
+	}
+	buildCmd.Flags().BoolVar(&handlerOptions.RemoveImagesAfterPush, "remove-local-images-after-push", false, "When is defined images are removed from local after push")
 
 	command := &command.StevedoreCommand{
 		Command: buildCmd,
 	}
 
 	return command
+
 }
 
-func buildHandler(ctx context.Context, config *configuration.Configuration) command.CobraRunEFunc {
+func runeHandler(ctx context.Context, handler Handlerer, options *handler.HandlerOptions) error {
 
-	return func(cmd *cobra.Command, args []string) error {
+	errContext := "(build::runeHandler)"
 
-		var err error
-		var imagesEngine *engine.ImagesEngine
-		var persistentVars map[string]interface{}
-		var vars map[string]interface{}
-		var buildImageName string
-
-		if cmd.Flags().NArg() == 0 {
-			return errors.New("(command::buildHandler)", "Is required an image name")
-		} else {
-			buildImageName = cmd.Flags().Arg(0)
-			if cmd.Flags().NArg() > 1 {
-				args := cmd.Flags().Args()
-				fmt.Println("Arguments to be ignored:", args[1:])
-			}
-		}
-
-		vars, err = varListToMap(buildCmdFlagsVar.Vars)
-		if err != nil {
-			return errors.New("(command::buildHandler)", "", err)
-		}
-		persistentVars, err = varListToMap(buildCmdFlagsVar.PersistentVars)
-		if err != nil {
-			return errors.New("(command::buildHandler)", "", err)
-		}
-
-		semverTemplates := config.SemanticVersionTagsTemplates
-		if len(buildCmdFlagsVar.SemanticVersionTagsTemplate) > 0 {
-			semverTemplates = buildCmdFlagsVar.SemanticVersionTagsTemplate
-		}
-
-		pushImages := false
-		if !buildCmdFlagsVar.PushImages && config.PushImages {
-			pushImages = true
-		}
-
-		options := &types.BuildOptions{
-			BuilderName:                 buildCmdFlagsVar.BuildBuilderName,
-			Cascade:                     buildCmdFlagsVar.BuildOnCascade,
-			EnableSemanticVersionTags:   buildCmdFlagsVar.EnableSemanticVersionTags,
-			DryRun:                      buildCmdFlagsVar.BuildDryRun,
-			PushImages:                  pushImages,
-			ConnectionLocal:             buildCmdFlagsVar.ConnectionLocal,
-			PersistentVars:              persistentVars,
-			Vars:                        vars,
-			Tags:                        buildCmdFlagsVar.Tags,
-			SemanticVersionTagsTemplate: semverTemplates,
-			RegistryNamespace:           buildCmdFlagsVar.ImageRegistryNamespace,
-			RegistryHost:                buildCmdFlagsVar.ImageRegistryHost,
-			ImageFromName:               buildCmdFlagsVar.ImageFromName,
-			ImageFromVersion:            buildCmdFlagsVar.ImageFromVersion,
-			ImageFromRegistryNamespace:  buildCmdFlagsVar.ImageFromRegistryNamespace,
-			ImageFromRegistryHost:       buildCmdFlagsVar.ImageFromRegistryHost,
-		}
-
-		if buildCmdFlagsVar.ImageName != "" {
-			// Behavior: Could not override the image name and build all children to avoid unexpected behaviors on the built images names
-			if buildCmdFlagsVar.BuildOnCascade {
-				return errors.New("(command::buildHandler)", "Could not override image name with build on cascade")
-			}
-			options.ImageName = buildCmdFlagsVar.ImageName
-		}
-
-		// Define num of workers when num workers flag is defined over 0
-		if buildCmdFlagsVar.NumWorkers > 0 {
-			config.NumWorkers = buildCmdFlagsVar.NumWorkers
-		}
-
-		imagesEngine, err = engine.NewImagesEngine(ctx, config.NumWorkers, config.TreePathFile, config.BuilderPathFile)
-		if err != nil {
-			return errors.New("(command::buildHandler)", "Error creating new image engine", err)
-		}
-
-		err = imagesEngine.Build(buildImageName, buildCmdFlagsVar.Versions, options, buildCmdFlagsVar.CascadeDepth)
-		if err != nil {
-			return errors.New("(command::buildHandler)", fmt.Sprintf("Error building image '%s'", buildImageName), err)
-		}
-
-		return nil
-	}
-}
-
-// someone need to semd vars []string to options
-func varListToMap(varsList []string) (map[string]interface{}, error) {
-
-	vars := map[string]interface{}{}
-
-	for _, v := range varsList {
-		tokens := strings.Split(v, setVarsSplitToken)
-
-		if len(tokens) != 2 {
-			return nil, errors.New("(command::varListToMap)", fmt.Sprintf("Invalid extra variable format on '%v'", v))
-		}
-		vars[tokens[0]] = tokens[1]
+	err := handler.Handler(ctx, options)
+	if err != nil {
+		return errors.New(errContext, err.Error())
 	}
 
-	return vars, nil
+	return nil
+
 }

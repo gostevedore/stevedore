@@ -4,19 +4,22 @@ package build
 type HandlerOptions struct {
 	// AnsibleConnectionLocal if is true ansible driver uses local connection
 	AnsibleConnectionLocal bool
+	// AnsibleIntermediateContainerName is the name of an intermediate container that can be used during ansible build process
+	AnsibleIntermediateContainerName string
 	// AnsibleInventoryPath is the path to the ansible inventory file ??
 	AnsibleInventoryPath string
 	// AnsibleLimit is the ansible limit ??
 	AnsibleLimit string
-
-	// BuildBuilderName is the name of the builder to use
-	BuildBuilderName string
-	// DryRun is true if the build should be a dry run
-	DryRun bool
-	// BuildOnCascade if is true the build should be cascaded
+	// BuildOnCascade if is true the build should be cascaded: ???
 	BuildOnCascade bool
-	// CascadeDepth is the number of levels to build when build on cascade is executed
+	// CascadeDepth is the number of levels to build when build on cascade is executed: ???
 	CascadeDepth int
+	// Concurrency is the number of images builds that can be excuted at the same time
+	Concurrency int
+	// Debug if is true debug mode is enabled: ???
+	Debug bool
+	// DryRun is true if the build should be a dry run: ???
+	DryRun bool
 	// EnableSemanticVersionTags if is true semantic version tags are generated
 	EnableSemanticVersionTags bool
 	// ImageFromName is the name of the image to use as source
@@ -33,12 +36,16 @@ type HandlerOptions struct {
 	ImageRegistryHost string
 	// ImageRegistryNamespace is the namespace of the registry to use
 	ImageRegistryNamespace string
-	// NumWorkers is the number of workers to use
-	NumWorkers int
+	// Labels is the list of labes to assign to the image
+	Labels []string
 	// PersistentVars is the list of persistent vars to use
 	PersistentVars []string
-	// PushImagesAfterBuild is true if the images should be pushed
+	// PullParentImage if is true the parent image is pull
+	PullParentImage bool
+	// PushImagesAfterBuild if is true the image is pushed after build
 	PushImagesAfterBuild bool
+	// RemoveImagesAfterPush if is true the images are removed from local after push
+	RemoveImagesAfterPush bool
 	// SemanticVersionTagsTemplates is the list of semantic version tags templates
 	SemanticVersionTagsTemplates []string
 	// Tags is the list of tags to generate
