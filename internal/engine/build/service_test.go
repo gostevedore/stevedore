@@ -82,15 +82,17 @@ func TestBuild(t *testing.T) {
 				mockJob.On("Wait").Return(nil)
 
 				childSyncChan := make(chan struct{})
-				stepChild := plan.NewStep(&image.Image{
-					Name:         "child",
-					Version:      "0.0.0",
-					RegistryHost: "registry",
-					Builder: &builder.Builder{
-						Name:   "builder",
-						Driver: "mock",
-					},
-				}, "child_image", childSyncChan)
+				stepChild := plan.NewStep(
+					&image.Image{
+						Name:         "child",
+						Version:      "0.0.0",
+						RegistryHost: "registry",
+						Builder: &builder.Builder{
+							Name:   "builder",
+							Driver: "mock",
+						},
+						Tags: []string{"0"},
+					}, "child_image", childSyncChan)
 				stepParent := plan.NewStep(
 					&image.Image{
 						Name:         "parent",
@@ -100,6 +102,7 @@ func TestBuild(t *testing.T) {
 							Name:   "builder",
 							Driver: "mock",
 						},
+						Tags: []string{"0"},
 					}, "parent_image", nil)
 				stepParent.Subscribe(childSyncChan)
 
@@ -116,43 +119,29 @@ func TestBuild(t *testing.T) {
 					mockdriver.NewMockDriver(),
 					stepParent.Image(),
 					&driver.BuildDriverOptions{
-						BuilderName:           "builder_mock__parent_0.0.0",
-						ConnectionLocal:       false,
-						ImageName:             "parent",
-						ImageVersion:          "0.0.0",
-						RegistryHost:          "registry",
-						PullParentImage:       true,
-						PushAuthUsername:      "user",
-						PushAuthPassword:      "pass",
-						PushImageAfterBuild:   true,
-						RemoveImageAfterBuild: true,
-						Labels:                map[string]string{},
-						PersistentVars:        map[string]interface{}{},
-						Vars:                  map[string]interface{}{},
-						Tags:                  []string{"0"},
-						BuilderVarMappings:    varsmap.New(),
-						BuilderOptions:        &builder.BuilderOptions{},
+						BuilderName:            "builder_mock__parent_0.0.0",
+						AnsibleConnectionLocal: false,
+						PullParentImage:        true,
+						PushAuthUsername:       "user",
+						PushAuthPassword:       "pass",
+						PushImageAfterBuild:    true,
+						RemoveImageAfterBuild:  true,
+						BuilderVarMappings:     varsmap.New(),
+						BuilderOptions:         &builder.BuilderOptions{},
 					}).Return(command.NewMockBuildCommand(), nil)
 				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
 					mockdriver.NewMockDriver(),
 					stepChild.Image(),
 					&driver.BuildDriverOptions{
-						BuilderName:           "builder_mock__child_0.0.0",
-						ConnectionLocal:       false,
-						ImageName:             "child",
-						ImageVersion:          "0.0.0",
-						RegistryHost:          "registry",
-						PullParentImage:       true,
-						PushAuthUsername:      "user",
-						PushAuthPassword:      "pass",
-						PushImageAfterBuild:   true,
-						RemoveImageAfterBuild: true,
-						Labels:                map[string]string{},
-						PersistentVars:        map[string]interface{}{},
-						Vars:                  map[string]interface{}{},
-						Tags:                  []string{"0"},
-						BuilderVarMappings:    varsmap.New(),
-						BuilderOptions:        &builder.BuilderOptions{},
+						BuilderName:            "builder_mock__child_0.0.0",
+						AnsibleConnectionLocal: false,
+						PullParentImage:        true,
+						PushAuthUsername:       "user",
+						PushAuthPassword:       "pass",
+						PushImageAfterBuild:    true,
+						RemoveImageAfterBuild:  true,
+						BuilderVarMappings:     varsmap.New(),
+						BuilderOptions:         &builder.BuilderOptions{},
 					}).Return(command.NewMockBuildCommand(), nil)
 				service.jobFactory.(*job.MockJobFactory).On("New", command.NewMockBuildCommand()).Return(mockJob, nil)
 				service.dispatch.(*dispatch.MockDispatch).On("Enqueue", mockJob)
@@ -278,6 +267,30 @@ func TestWorker(t *testing.T) {
 				Vars:           map[string]interface{}{"imagevar": "value"},
 				Labels:         map[string]string{"imagelabel": "value"},
 				Tags:           []string{"imagetag"},
+
+				// ImageFromName:              "parent",
+				// ImageFromRegistryNamespace: "parent_namespace",
+				// ImageFromRegistryHost:      "parent_registry",
+				// ImageFromVersion:           "parent_version",
+				// ImageName:                  "image",
+				// ImageVersion:               "0.0.0",
+				// Labels: map[string]string{
+				// 	"optlabel":   "value",
+				// 	"imagelabel": "value",
+				// },
+				// PersistentVars: map[string]interface{}{
+				// 	"optpvar":    "value",
+				// 	"imagepvar":  "value",
+				// 	"parentpvar": "value",
+				// },
+				// RegistryNamespace:     "namespace",
+				// RegistryHost:          "registry",
+				// Tags:                  []string{"0", "opttag", "imagetag"},
+				// Vars: map[string]interface{}{
+				// 	"optvar":   "value",
+				// 	"imagevar": "value",
+				// },
+
 				Parent: &image.Image{
 					Name:              "parent",
 					Version:           "parent_version",
@@ -314,26 +327,10 @@ func TestWorker(t *testing.T) {
 					mockdriver.NewMockDriver(),
 					image,
 					&driver.BuildDriverOptions{
-						BuilderName:                "builder_mock_namespace_image_0.0.0",
-						ConnectionLocal:            false,
-						ImageFromName:              "parent",
-						ImageFromRegistryNamespace: "parent_namespace",
-						ImageFromRegistryHost:      "parent_registry",
-						ImageFromVersion:           "parent_version",
-						ImageName:                  "image",
-						ImageVersion:               "0.0.0",
-						Labels: map[string]string{
-							"optlabel":   "value",
-							"imagelabel": "value",
-						},
-						OutputPrefix: "",
-						PersistentVars: map[string]interface{}{
-							"optpvar":    "value",
-							"imagepvar":  "value",
-							"parentpvar": "value",
-						},
-						RegistryNamespace:     "namespace",
-						RegistryHost:          "registry",
+						BuilderName:            "builder_mock_namespace_image_0.0.0",
+						AnsibleConnectionLocal: false,
+						OutputPrefix:           "",
+
 						PullAuthUsername:      "parent_user",
 						PullAuthPassword:      "parent_pass",
 						PullParentImage:       true,
@@ -341,13 +338,8 @@ func TestWorker(t *testing.T) {
 						PushAuthPassword:      "pass",
 						PushImageAfterBuild:   true,
 						RemoveImageAfterBuild: true,
-						Tags:                  []string{"0", "opttag", "imagetag"},
-						Vars: map[string]interface{}{
-							"optvar":   "value",
-							"imagevar": "value",
-						},
-						BuilderVarMappings: varsmap.New(),
-						BuilderOptions:     &builder.BuilderOptions{},
+						BuilderVarMappings:    varsmap.New(),
+						BuilderOptions:        &builder.BuilderOptions{},
 					}).Return(command.NewMockBuildCommand(), nil)
 				service.jobFactory.(*job.MockJobFactory).On("New", command.NewMockBuildCommand()).Return(mockJob, nil)
 				service.dispatch.(*dispatch.MockDispatch).On("Enqueue", mockJob)

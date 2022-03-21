@@ -13,6 +13,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/builders/varsmap"
 	"github.com/gostevedore/stevedore/internal/driver"
 	"github.com/gostevedore/stevedore/internal/driver/ansible/goansible"
+	"github.com/gostevedore/stevedore/internal/images/image"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -68,6 +69,7 @@ func TestBuild(t *testing.T) {
 	tests := []struct {
 		desc              string
 		driver            *AnsiblePlaybookDriver
+		image             *image.Image
 		options           *driver.BuildDriverOptions
 		err               error
 		prepareAssertFunc func(driver AnsibleDriverer)
@@ -82,7 +84,17 @@ func TestBuild(t *testing.T) {
 			err:     errors.New(errContext, "To build an image is required a driver"),
 		},
 		{
-			desc: "Testing error building an image with nil options",
+			desc: "Testing error building an image with nil image",
+			driver: &AnsiblePlaybookDriver{
+				driver: goansible.NewMockAnsibleDriver(),
+				writer: nil,
+			},
+			options: nil,
+			err:     errors.New(errContext, "To build an image is required a image"),
+		},
+		{
+			desc:  "Testing error building an image with nil options",
+			image: &image.Image{},
 			driver: &AnsiblePlaybookDriver{
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: nil,
@@ -91,7 +103,8 @@ func TestBuild(t *testing.T) {
 			err:     errors.New(errContext, "To build an image is required a build options"),
 		},
 		{
-			desc: "Testing error building without options from the builder",
+			desc:  "Testing error building without options from the builder",
+			image: &image.Image{},
 			driver: &AnsiblePlaybookDriver{
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: nil,
@@ -100,7 +113,8 @@ func TestBuild(t *testing.T) {
 			err:     errors.New(errContext, "To build an image are required the options from the builder"),
 		},
 		{
-			desc: "Testing error building without a playbook defined on builder options",
+			desc:  "Testing error building without a playbook defined on builder options",
+			image: &image.Image{},
 			driver: &AnsiblePlaybookDriver{
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: nil,
@@ -111,7 +125,8 @@ func TestBuild(t *testing.T) {
 			err: errors.New(errContext, "Playbook has not been defined on build options"),
 		},
 		{
-			desc: "Testing error building an image with undefined image name",
+			desc:  "Testing error building an image with undefined image name",
+			image: &image.Image{},
 			driver: &AnsiblePlaybookDriver{
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: nil,
@@ -124,7 +139,8 @@ func TestBuild(t *testing.T) {
 			err: errors.New(errContext, "Inventory has not been defined on build options"),
 		},
 		{
-			desc: "Testing error building an image with undefined inventory",
+			desc:  "Testing error building an image with undefined inventory",
+			image: &image.Image{},
 			driver: &AnsiblePlaybookDriver{
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: nil,
@@ -143,16 +159,18 @@ func TestBuild(t *testing.T) {
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: os.Stdout,
 			},
+			image: &image.Image{
+				Name:              "image_name",
+				Version:           "version",
+				RegistryNamespace: "namespace",
+				RegistryHost:      "registry",
+			},
 			options: &driver.BuildDriverOptions{
 				BuilderOptions: &builder.BuilderOptions{
 					Playbook:  "site.yml",
 					Inventory: "inventory.yml",
 				},
-				ImageName:         "image_name",
-				ImageVersion:      "version",
-				RegistryNamespace: "namespace",
-				RegistryHost:      "registry",
-				ConnectionLocal:   true,
+				AnsibleConnectionLocal: true,
 				BuilderVarMappings: map[string]string{
 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
@@ -207,22 +225,17 @@ func TestBuild(t *testing.T) {
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: os.Stdout,
 			},
-			options: &driver.BuildDriverOptions{
-				BuilderOptions: &builder.BuilderOptions{
-					Playbook:  "site.yml",
-					Inventory: "inventory.yml",
+			image: &image.Image{
+				Name:              "image_name",
+				Version:           "version",
+				RegistryNamespace: "namespace",
+				RegistryHost:      "registry",
+				Parent: &image.Image{
+					Name:              "from_image",
+					Version:           "from_version",
+					RegistryNamespace: "from_namespace",
+					RegistryHost:      "from_registry",
 				},
-				BuilderName:                "builder",
-				ImageName:                  "image_name",
-				ImageVersion:               "version",
-				RegistryNamespace:          "namespace",
-				RegistryHost:               "registry",
-				ImageFromName:              "from_image",
-				ImageFromVersion:           "from_version",
-				ImageFromRegistryNamespace: "from_namespace",
-				ImageFromRegistryHost:      "from_registry",
-				OutputPrefix:               "prefix",
-				ConnectionLocal:            true,
 				Tags: []string{
 					"tag1",
 					"tag2",
@@ -235,6 +248,15 @@ func TestBuild(t *testing.T) {
 					"var1": "value1",
 					"var2": "value2",
 				},
+			},
+			options: &driver.BuildDriverOptions{
+				BuilderOptions: &builder.BuilderOptions{
+					Playbook:  "site.yml",
+					Inventory: "inventory.yml",
+				},
+				BuilderName:            "builder",
+				OutputPrefix:           "prefix",
+				AnsibleConnectionLocal: true,
 				BuilderVarMappings: map[string]string{
 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
@@ -254,7 +276,6 @@ func TestBuild(t *testing.T) {
 				},
 			},
 			prepareAssertFunc: func(driver AnsibleDriverer) {
-
 				ansibleOptions := &ansible.AnsiblePlaybookOptions{
 					Inventory: "inventory.yml",
 					ExtraVars: map[string]interface{}{
@@ -299,16 +320,11 @@ func TestBuild(t *testing.T) {
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: os.Stdout,
 			},
-			options: &driver.BuildDriverOptions{
-				BuilderOptions: &builder.BuilderOptions{
-					Playbook:  "site.yml",
-					Inventory: "inventory.yml",
-				},
-				ImageName:         "image_name",
-				ImageVersion:      "version",
+			image: &image.Image{
+				Name:              "image_name",
+				Version:           "version",
 				RegistryNamespace: "namespace",
 				RegistryHost:      "registry",
-				ConnectionLocal:   true,
 				PersistentVars: map[string]interface{}{
 					"var1": "persistent_value1",
 					"var2": "persistent_value2",
@@ -317,6 +333,13 @@ func TestBuild(t *testing.T) {
 					"var1": "value1",
 					"var2": "value2",
 				},
+			},
+			options: &driver.BuildDriverOptions{
+				BuilderOptions: &builder.BuilderOptions{
+					Playbook:  "site.yml",
+					Inventory: "inventory.yml",
+				},
+				AnsibleConnectionLocal: true,
 				BuilderVarMappings: map[string]string{
 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
@@ -377,7 +400,7 @@ func TestBuild(t *testing.T) {
 				test.prepareAssertFunc(test.driver.driver)
 			}
 
-			err := test.driver.Build(context.TODO(), nil, test.options)
+			err := test.driver.Build(context.TODO(), test.image, test.options)
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {

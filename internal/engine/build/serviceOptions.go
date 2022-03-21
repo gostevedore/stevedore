@@ -11,8 +11,8 @@ type ServiceOptions struct {
 	ImageName string
 	// ImageVersions is a list of versions to build
 	ImageVersions []string
-	// ConnectionLocal is the local connection to use on ansible driver
-	ConnectionLocal bool
+	// AnsibleConnectionLocal is the local connection to use on ansible driver
+	AnsibleConnectionLocal bool
 	// EnableSemanticVersionTags is a flag to enable semantic version tags
 	EnableSemanticVersionTags bool
 	// ImageFromName is the parent's image name
@@ -68,7 +68,7 @@ func (o *ServiceOptions) Copy() *ServiceOptions {
 	copy.RemoveAfterBuild = o.RemoveAfterBuild
 	// copy.Cascade = o.Cascade
 	// copy.CascadeDepth = o.CascadeDepth
-	copy.ConnectionLocal = o.ConnectionLocal
+	copy.AnsibleConnectionLocal = o.AnsibleConnectionLocal
 
 	copy.PersistentVars = map[string]interface{}{}
 	for name, value := range o.PersistentVars {

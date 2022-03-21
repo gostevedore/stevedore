@@ -54,6 +54,10 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *drive
 		return errors.New(errContext, "To build an image is required a driver")
 	}
 
+	if i == nil {
+		return errors.New(errContext, "To build an image is required a image")
+	}
+
 	if options == nil {
 		return errors.New(errContext, "To build an image is required a build options")
 	}
@@ -62,15 +66,15 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *drive
 		return errors.New(errContext, "To build an image is required a golang context")
 	}
 
-	if options.ImageName == "" {
+	if i.Name == "" {
 		return errors.New(errContext, "To build an image is required an image name")
 	}
 
-	imageAux, err := image.NewImage(options.ImageName, options.ImageVersion, options.RegistryHost, options.RegistryNamespace)
-	if err != nil {
-		return errors.New(errContext, err.Error())
-	}
-	imageName, err = imageAux.DockerNormalizedNamed()
+	// imageAux, err := image.NewImage(options.ImageName, options.ImageVersion, options.RegistryHost, options.RegistryNamespace)
+	// if err != nil {
+	// 	return errors.New(errContext, err.Error())
+	// }
+	imageName, err = i.DockerNormalizedNamed()
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
@@ -86,24 +90,24 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *drive
 	}
 
 	// add docker build arguments: Persistent vars contains the variables defined by the user on execution time and has precedences over vars and the persistent vars defined on the image
-	if len(options.PersistentVars) > 0 {
-		for varName, varValue := range options.PersistentVars {
+	if len(i.PersistentVars) > 0 {
+		for varName, varValue := range i.PersistentVars {
 			d.driver.AddBuildArgs(varName, varValue.(string))
 		}
 	}
 
 	// add docker build arguments: Vars contains the variables defined by the user on execution time and has precedences over the default values
-	if len(options.Vars) > 0 {
-		for varName, varValue := range options.Vars {
+	if len(i.Vars) > 0 {
+		for varName, varValue := range i.Vars {
 			d.driver.AddBuildArgs(varName, varValue.(string))
 		}
 	}
 
 	// add docker tags
-	if len(options.Tags) > 0 {
-		for _, tag := range options.Tags {
+	if len(i.Tags) > 0 {
+		for _, tag := range i.Tags {
 
-			imageTaggedAux, err := image.NewImage(options.ImageName, tag, options.RegistryHost, options.RegistryNamespace)
+			imageTaggedAux, err := image.NewImage(i.Name, tag, i.RegistryHost, i.RegistryNamespace)
 			if err != nil {
 				return errors.New(errContext, err.Error())
 			}
@@ -116,36 +120,36 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *drive
 		}
 	}
 
-	if len(options.Labels) > 0 {
-		for label, value := range options.Labels {
+	if len(i.Labels) > 0 {
+		for label, value := range i.Labels {
 			d.driver.AddLabel(label, value)
 		}
 	}
 
 	// add docker build arguments
-	if options.ImageFromRegistryNamespace != "" {
-		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromRegistryNamespaceKey], options.ImageFromRegistryNamespace)
+	if i.Parent != nil && i.Parent.RegistryNamespace != "" {
+		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromRegistryNamespaceKey], i.Parent.RegistryNamespace)
 	}
 
-	if options.ImageFromName != "" {
-		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromNameKey], options.ImageFromName)
+	if i.Parent != nil && i.Parent.Name != "" {
+		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromNameKey], i.Parent.Name)
 	}
 
-	if options.ImageFromVersion != "" {
-		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromTagKey], options.ImageFromVersion)
+	if i.Parent != nil && i.Parent.Version != "" {
+		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromTagKey], i.Parent.Version)
 	}
 
 	// add docker build arguments: map de command flag options to build argurments
-	if options.ImageFromRegistryHost != "" {
-		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromRegistryHostKey], options.ImageFromRegistryHost)
+	if i.Parent != nil && i.Parent.RegistryHost != "" {
+		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromRegistryHostKey], i.Parent.RegistryHost)
 
 		if options.PullAuthUsername != "" && options.PullAuthPassword != "" {
-			d.driver.AddAuth(options.PullAuthUsername, options.PullAuthPassword, options.ImageFromRegistryHost)
+			d.driver.AddAuth(options.PullAuthUsername, options.PullAuthPassword, i.Parent.RegistryHost)
 		}
 	}
 
 	if options.PushAuthUsername != "" && options.PushAuthPassword != "" {
-		d.driver.AddAuth(options.PushAuthUsername, options.PushAuthPassword, options.RegistryHost)
+		d.driver.AddAuth(options.PushAuthUsername, options.PushAuthPassword, i.RegistryHost)
 	}
 
 	if options.PushImageAfterBuild {

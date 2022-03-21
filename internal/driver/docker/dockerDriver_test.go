@@ -11,6 +11,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/builders/varsmap"
 	"github.com/gostevedore/stevedore/internal/driver"
 	"github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder"
+	"github.com/gostevedore/stevedore/internal/images/image"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -66,9 +67,10 @@ func TestBuild(t *testing.T) {
 		desc              string
 		driver            *DockerDriver
 		ctx               context.Context
+		image             *image.Image
 		options           *driver.BuildDriverOptions
 		prepareAssertFunc func(DockerDriverer)
-		assertFunc        func(DockerDriverer) bool
+		assertFunc        func(*testing.T, DockerDriverer)
 		err               error
 	}{
 		{
@@ -79,14 +81,23 @@ func TestBuild(t *testing.T) {
 			err: errors.New(errContext, "To build an image is required a driver"),
 		},
 		{
-			desc: "Testing error building a docker image with nil options",
+			desc: "Testing error building a docker image with nil image",
+			driver: &DockerDriver{
+				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
+			},
+			err: errors.New(errContext, "To build an image is required a image"),
+		},
+		{
+			desc:  "Testing error building a docker image with nil options",
+			image: &image.Image{},
 			driver: &DockerDriver{
 				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
 			},
 			err: errors.New(errContext, "To build an image is required a build options"),
 		},
 		{
-			desc: "Testing error building a docker image with nil golang context",
+			desc:  "Testing error building a docker image with nil golang context",
+			image: &image.Image{},
 			driver: &DockerDriver{
 				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
 			},
@@ -94,7 +105,8 @@ func TestBuild(t *testing.T) {
 			err:     errors.New(errContext, "To build an image is required a golang context"),
 		},
 		{
-			desc: "Testing error building a docker image with not defined image name",
+			desc:  "Testing error building a docker image with not defined image name",
+			image: &image.Image{},
 			driver: &DockerDriver{
 				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
 			},
@@ -109,19 +121,32 @@ func TestBuild(t *testing.T) {
 				writer: os.Stdout,
 			},
 			ctx: context.TODO(),
+			image: &image.Image{
+				Name:              "image",
+				Version:           "version",
+				RegistryNamespace: "namespace",
+				RegistryHost:      "myregistry.test",
+				Parent: &image.Image{
+					Name:              "image-from-name",
+					Version:           "image-from-version",
+					RegistryNamespace: "image-from-registry-namespace",
+					RegistryHost:      "image-from-registry-host.test",
+				},
+				PersistentVars: map[string]interface{}{
+					"pvar1": "pvalue1",
+					"pvar2": "pvalue2",
+				},
+				Vars: map[string]interface{}{
+					"var1": "value1",
+				},
+				Tags:   []string{"tag1", "tag2"},
+				Labels: map[string]string{"label1": "value1", "label2": "value2"},
+			},
 			options: &driver.BuildDriverOptions{
-				ImageName:                  "image",
-				ImageVersion:               "version",
-				RegistryNamespace:          "namespace",
-				RegistryHost:               "myregistry.test",
-				ImageFromName:              "image-from-name",
-				ImageFromVersion:           "image-from-version",
-				ImageFromRegistryNamespace: "image-from-registry-namespace",
-				ImageFromRegistryHost:      "image-from-registry-host.test",
-				PushImageAfterBuild:        true,
-				PullParentImage:            true,
-				RemoveImageAfterBuild:      true,
-				OutputPrefix:               "output-prefix",
+				PushImageAfterBuild:   true,
+				PullParentImage:       true,
+				RemoveImageAfterBuild: true,
+				OutputPrefix:          "output-prefix",
 				BuilderVarMappings: map[string]string{
 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
@@ -136,15 +161,6 @@ func TestBuild(t *testing.T) {
 					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
 					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
 				},
-				PersistentVars: map[string]interface{}{
-					"pvar1": "pvalue1",
-					"pvar2": "pvalue2",
-				},
-				Vars: map[string]interface{}{
-					"var1": "value1",
-				},
-				Tags:             []string{"tag1", "tag2"},
-				Labels:           map[string]string{"label1": "value1", "label2": "value2"},
 				PullAuthUsername: "pull-user",
 				PullAuthPassword: "pull-pass",
 				PushAuthUsername: "push-user",
@@ -211,28 +227,39 @@ func TestBuild(t *testing.T) {
 
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("Run", context.TODO()).Return(nil)
 			},
-			assertFunc: func(driver DockerDriverer) bool {
-				return driver.(*godockerbuilder.MockGoDockerBuildDriver).AssertExpectations(t)
+			assertFunc: func(t *testing.T, driver DockerDriverer) {
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).AssertExpectations(t)
 			},
 			err: &errors.Error{},
 		},
-
 		{
 			desc: "Testing error context not defined on build options",
 			driver: &DockerDriver{
 				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
 			},
 			ctx: context.TODO(),
+			image: &image.Image{
+				Name:              "image",
+				Version:           "version",
+				RegistryNamespace: "namespace",
+				RegistryHost:      "myregistry.test",
+				Parent: &image.Image{
+					Name:              "image-from-name",
+					Version:           "image-from-version",
+					RegistryNamespace: "image-from-registry-namespace",
+					RegistryHost:      "image-from-registry-host.test",
+					PersistentVars: map[string]interface{}{
+						"pvar1": "pvalue1",
+						"pvar2": "pvalue2",
+					},
+					Vars: map[string]interface{}{
+						"var1": "value1",
+					},
+					Tags: []string{"tag1", "tag2"},
+				},
+			},
 			options: &driver.BuildDriverOptions{
-				ImageName:                  "image",
-				ImageVersion:               "version",
-				RegistryNamespace:          "namespace",
-				RegistryHost:               "myregistry.test",
-				ImageFromName:              "image-from-name",
-				ImageFromVersion:           "image-from-version",
-				ImageFromRegistryNamespace: "image-from-registry-namespace",
-				ImageFromRegistryHost:      "image-from-registry-host.test",
-				PushImageAfterBuild:        true,
+				PushImageAfterBuild: true,
 				BuilderVarMappings: map[string]string{
 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
@@ -247,14 +274,6 @@ func TestBuild(t *testing.T) {
 					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
 					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
 				},
-				PersistentVars: map[string]interface{}{
-					"pvar1": "pvalue1",
-					"pvar2": "pvalue2",
-				},
-				Vars: map[string]interface{}{
-					"var1": "value1",
-				},
-				Tags:             []string{"tag1", "tag2"},
 				PullAuthUsername: "pull-user",
 				PullAuthPassword: "pull-pass",
 				PushAuthUsername: "push-user",
@@ -290,16 +309,28 @@ func TestBuild(t *testing.T) {
 				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
 			},
 			ctx: context.TODO(),
+			image: &image.Image{
+				Name:              "image",
+				Version:           "version",
+				RegistryNamespace: "namespace",
+				RegistryHost:      "myregistry.test",
+				Parent: &image.Image{
+					Name:              "image-from-name",
+					Version:           "image-from-version",
+					RegistryNamespace: "image-from-registry-namespace",
+					RegistryHost:      "image-from-registry-host.test",
+					PersistentVars: map[string]interface{}{
+						"pvar1": "pvalue1",
+						"pvar2": "pvalue2",
+					},
+					Vars: map[string]interface{}{
+						"var1": "value1",
+					},
+					Tags: []string{"tag1", "tag2"},
+				},
+			},
 			options: &driver.BuildDriverOptions{
-				ImageName:                  "image",
-				ImageVersion:               "version",
-				RegistryNamespace:          "namespace",
-				RegistryHost:               "myregistry.test",
-				ImageFromName:              "image-from-name",
-				ImageFromVersion:           "image-from-version",
-				ImageFromRegistryNamespace: "image-from-registry-namespace",
-				ImageFromRegistryHost:      "image-from-registry-host.test",
-				PushImageAfterBuild:        true,
+				PushImageAfterBuild: true,
 				BuilderVarMappings: map[string]string{
 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
@@ -314,14 +345,6 @@ func TestBuild(t *testing.T) {
 					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
 					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
 				},
-				PersistentVars: map[string]interface{}{
-					"pvar1": "pvalue1",
-					"pvar2": "pvalue2",
-				},
-				Vars: map[string]interface{}{
-					"var1": "value1",
-				},
-				Tags:             []string{"tag1", "tag2"},
 				PullAuthUsername: "pull-user",
 				PullAuthPassword: "pull-pass",
 				PushAuthUsername: "push-user",
@@ -362,12 +385,12 @@ func TestBuild(t *testing.T) {
 				test.prepareAssertFunc(test.driver.driver)
 			}
 
-			err := test.driver.Build(test.ctx, nil, test.options)
+			err := test.driver.Build(test.ctx, test.image, test.options)
 			if err != nil && assert.Error(t, err) {
 				assert.Equal(t, test.err, err)
 			} else {
 				if test.assertFunc != nil {
-					assert.True(t, test.assertFunc(test.driver.driver))
+					test.assertFunc(t, test.driver.driver)
 				} else {
 					t.Error(test.desc, "missing assertFunc")
 				}

@@ -54,6 +54,10 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *dr
 		return errors.New(errContext, "To build an image is required a driver")
 	}
 
+	if i == nil {
+		return errors.New(errContext, "To build an image is required a image")
+	}
+
 	if o == nil {
 		return errors.New(errContext, "To build an image is required a build options")
 	}
@@ -81,80 +85,81 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *dr
 	}
 
 	ansiblePlaybookConnectionOptions := &options.AnsibleConnectionOptions{}
-	if o.ConnectionLocal {
+	if o.AnsibleConnectionLocal {
 		ansiblePlaybookConnectionOptions.Connection = "local"
 	}
 
-	if o.ImageName == "" {
+	if i.Name == "" {
 		return errors.New(errContext, "Image has not been defined on build options")
 	}
 
-	ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageNameKey], o.ImageName)
+	ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageNameKey], i.Name)
 
-	if o.RegistryNamespace != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingRegistryNamespaceKey], o.RegistryNamespace)
-		builderName = strings.Join([]string{builderName, o.RegistryNamespace}, "_")
+	if i.RegistryNamespace != "" {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingRegistryNamespaceKey], i.RegistryNamespace)
+		builderName = strings.Join([]string{builderName, i.RegistryNamespace}, "_")
 	}
 
-	builderName = strings.Join([]string{builderName, o.ImageName}, "_")
-
-	if o.ImageVersion != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageTagKey], o.ImageVersion)
-		builderName = strings.Join([]string{builderName, o.ImageVersion}, "_")
+	builderName = strings.Join([]string{builderName, i.Name}, "_")
+	if i.Version != "" {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageTagKey], i.Version)
+		builderName = strings.Join([]string{builderName, i.Version}, "_")
 	}
 
 	if len(o.BuilderName) > 0 {
 		builderName = o.BuilderName
 	}
+
 	ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageBuilderLabelKey], builderName)
 
-	if o.RegistryHost != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingRegistryHostKey], o.RegistryHost)
+	if i.RegistryHost != "" {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingRegistryHostKey], i.RegistryHost)
 	}
 
 	// Persistent vars contains the variables defined by the user on execution time and has precedences over vars and the persistent vars defined on the image
-	if len(o.PersistentVars) > 0 {
-		for varName, varValue := range o.PersistentVars {
+	if len(i.PersistentVars) > 0 {
+		for varName, varValue := range i.PersistentVars {
 			ansiblePlaybookOptions.AddExtraVar(varName, varValue)
 		}
 	}
 
 	// Vars contains the variables defined by the user on execution time and has precedences over the default values
-	if len(o.Vars) > 0 {
-		for varName, varValue := range o.Vars {
+	if len(i.Vars) > 0 {
+		for varName, varValue := range i.Vars {
 			ansiblePlaybookOptions.AddExtraVar(varName, varValue)
 		}
 	}
 
-	if len(o.Tags) > 0 {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], o.Tags)
+	if len(i.Tags) > 0 {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], i.Tags)
 	}
 
-	if len(o.Labels) > 0 {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], o.Labels)
+	if len(i.Labels) > 0 {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], i.Labels)
 	}
 
 	if o.OutputPrefix == "" {
-		o.OutputPrefix = o.ImageName
-		if o.ImageVersion != "" {
-			o.OutputPrefix = strings.Join([]string{o.OutputPrefix, o.ImageVersion}, ":")
+		o.OutputPrefix = i.Name
+		if i.Version != "" {
+			o.OutputPrefix = strings.Join([]string{o.OutputPrefix, i.Version}, ":")
 		}
 	}
 
-	if o.ImageFromName != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromNameKey], o.ImageFromName)
+	if i.Parent != nil && i.Parent.Name != "" {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromNameKey], i.Parent.Name)
+
 	}
 
-	if o.ImageFromRegistryNamespace != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromRegistryNamespaceKey], o.ImageFromRegistryNamespace)
+	if i.Parent != nil && i.Parent.RegistryNamespace != "" {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromRegistryNamespaceKey], i.Parent.RegistryNamespace)
 	}
 
-	if o.ImageFromRegistryHost != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromRegistryHostKey], o.ImageFromRegistryHost)
+	if i.Parent != nil && i.Parent.RegistryHost != "" {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromRegistryHostKey], i.Parent.RegistryHost)
 	}
 
-	if o.ImageFromVersion != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromTagKey], o.ImageFromVersion)
+	if i.Parent != nil && i.Parent.Version != "" {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromTagKey], i.Parent.Version)
 	}
 
 	if !o.PushImageAfterBuild {
