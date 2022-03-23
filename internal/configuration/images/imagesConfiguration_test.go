@@ -26,7 +26,7 @@ func TestCheckCompatibility(t *testing.T) {
 		{
 			desc: "Testing check compatibility with deprecated configuration",
 			tree: &ImagesConfiguration{
-				DEPRECATED_ImagesTree: map[string]map[string]*image.Image{
+				DEPRECATEDImagesTree: map[string]map[string]*image.Image{
 					"image": {
 						"version": &image.Image{
 							Name:    "image",

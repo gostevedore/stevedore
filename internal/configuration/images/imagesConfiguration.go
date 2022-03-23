@@ -34,9 +34,9 @@ type ImagesConfiguration struct {
 	wg            sync.WaitGroup
 	store         ImagesStorer
 
-	// DEPRECATED_ImagesTree is replaced by Images
-	DEPRECATED_ImagesTree map[string]map[string]*image.Image `yaml:"images_tree"`
-	Images                map[string]map[string]*image.Image `yaml:"images"`
+	// DEPRECATEDImagesTree is replaced by Images
+	DEPRECATEDImagesTree map[string]map[string]*image.Image `yaml:"images_tree"`
+	Images               map[string]map[string]*image.Image `yaml:"images"`
 }
 
 // NewImagesConfiguration method create a new ImagesConfiguration struct
@@ -47,15 +47,15 @@ func NewImagesConfiguration(fs afero.Fs, graph ImagesGraphTemplatesStorer, store
 		graph:         graph,
 		store:         store,
 
-		DEPRECATED_ImagesTree: make(map[string]map[string]*image.Image),
-		Images:                make(map[string]map[string]*image.Image),
+		DEPRECATEDImagesTree: make(map[string]map[string]*image.Image),
+		Images:               make(map[string]map[string]*image.Image),
 	}
 }
 
 // CheckCompatibility method ensures that ImagesConfiguration is compatible with current version
 func (t *ImagesConfiguration) CheckCompatibility() error {
 
-	if t.DEPRECATED_ImagesTree != nil && len(t.DEPRECATED_ImagesTree) > 0 {
+	if t.DEPRECATEDImagesTree != nil && len(t.DEPRECATEDImagesTree) > 0 {
 		t.compatibility.AddDeprecated("'images_tree' is deprecated and will be removed on v0.12.0, please use 'images' instead")
 	}
 
@@ -251,7 +251,7 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 	}
 
 	// TO BE REMOVE on v0.12: is kept just for compatibility concerns
-	for name, images := range imageTreeAux.DEPRECATED_ImagesTree {
+	for name, images := range imageTreeAux.DEPRECATEDImagesTree {
 		if !isAValidName(name) {
 			return errors.New(errContext, fmt.Sprintf("Found an invalid image name '%s' defined in file '%s'", name, path))
 		}
