@@ -51,29 +51,31 @@ func (g *Graph) AddRelationship(parent, child *Node) error {
 	var exist bool
 	var err error
 
+	errContext := "(graph::AddRelationship)"
+
 	if g == nil {
-		return errors.New("(graph::AddRelationship)", "Graph is null")
+		return errors.New(errContext, "Graph is null")
 	}
 	if parent == nil {
-		return errors.New("(graph::AddRelationship)", "Parent is null")
+		return errors.New(errContext, "Parent is null")
 	}
 	if child == nil {
-		return errors.New("(graph::AddRelationship)", "Child is null")
+		return errors.New(errContext, "Child is null")
 	}
 
 	_, exist = g.NodesIndex[parent.Name]
 	if !exist {
-		return errors.New("(graph::AddRelationship)", "Parent does not exist")
+		return errors.New(errContext, "Parent does not exist")
 	}
 
 	_, exist = g.NodesIndex[child.Name]
 	if !exist {
-		return errors.New("(graph::AddRelationship)", "Child does not exist")
+		return errors.New(errContext, "Child does not exist")
 	}
 
 	err = child.AddParent(parent)
 	if err != nil {
-		return errors.New("(graph::AddRelationship)", fmt.Sprintf("Parent can not be added to '%s'", child.Name), err)
+		return errors.New(errContext, fmt.Sprintf("Parent can not be added to '%s'", child.Name), err)
 	}
 
 	// remove child from root nodes when child node was defined on root nodes
@@ -87,7 +89,7 @@ func (g *Graph) AddRelationship(parent, child *Node) error {
 
 	// returns an error when the new relationship has generated a cycle
 	if hasCyclesRec(parent, map[string]int8{}) {
-		return errors.New("(graph::AddRelationship)", fmt.Sprintf("Cycle detected adding relationship from '%s' to '%s'", parent.Name, child.Name))
+		return errors.New(errContext, fmt.Sprintf("Cycle detected adding relationship from '%s' to '%s'", parent.Name, child.Name))
 	}
 
 	return nil
@@ -141,7 +143,6 @@ func hasCyclesRec(node *Node, visitedNodes map[string]int8) bool {
 	}
 
 	nv[node.Name] = int8(0)
-
 	for _, child := range node.Children {
 		if hasCyclesRec(child, nv) {
 			return true

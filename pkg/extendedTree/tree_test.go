@@ -251,6 +251,8 @@ func TestDrawGraph(t *testing.T) {
 // TestAddRelationship
 func TestAddRelationship(t *testing.T) {
 
+	errContext := "(graph::AddRelationship)"
+
 	tests := []struct {
 		desc   string
 		graph  *Graph
@@ -264,7 +266,7 @@ func TestAddRelationship(t *testing.T) {
 			graph:  nil,
 			parent: nil,
 			node:   nil,
-			err:    errors.New("(graph::AddRelationship)", "Graph is null"),
+			err:    errors.New(errContext, "Graph is null"),
 			res:    nil,
 		},
 		{
@@ -272,7 +274,7 @@ func TestAddRelationship(t *testing.T) {
 			graph:  &Graph{},
 			parent: nil,
 			node:   nil,
-			err:    errors.New("(graph::AddRelationship)", "Parent is null"),
+			err:    errors.New(errContext, "Parent is null"),
 			res:    nil,
 		},
 		{
@@ -280,20 +282,20 @@ func TestAddRelationship(t *testing.T) {
 			graph: &Graph{
 				Root: []*Node{
 					{
-						Name: "root",
+						Name: "A",
 					},
 				},
 				NodesIndex: map[string]*Node{
-					"root": {
-						Name: "root",
+					"A": {
+						Name: "A",
 					},
 				},
 			},
 			parent: &Node{
-				Name: "root",
+				Name: "A",
 			},
 			node: nil,
-			err:  errors.New("(graph::AddRelationship)", "Child is null"),
+			err:  errors.New(errContext, "Child is null"),
 			res:  nil,
 		},
 		{
@@ -301,7 +303,7 @@ func TestAddRelationship(t *testing.T) {
 			graph: &Graph{
 				Root: []*Node{
 					{
-						Name: "root",
+						Name: "A",
 					},
 					{
 						Name:    "orphan",
@@ -309,8 +311,8 @@ func TestAddRelationship(t *testing.T) {
 					},
 				},
 				NodesIndex: map[string]*Node{
-					"root": {
-						Name: "root",
+					"A": {
+						Name: "A",
 					},
 					"orphan": {
 						Name:    "orphan",
@@ -319,7 +321,7 @@ func TestAddRelationship(t *testing.T) {
 				},
 			},
 			parent: &Node{
-				Name: "root",
+				Name: "A",
 			},
 			node: &Node{
 				Name:    "orphan",
@@ -329,12 +331,12 @@ func TestAddRelationship(t *testing.T) {
 			res: &Graph{
 				Root: []*Node{
 					{
-						Name: "root",
+						Name: "A",
 					},
 				},
 				NodesIndex: map[string]*Node{
-					"root": {
-						Name: "root",
+					"A": {
+						Name: "A",
 					},
 					"orphan": {
 						Name:    "orphan",
@@ -348,15 +350,15 @@ func TestAddRelationship(t *testing.T) {
 			graph: &Graph{
 				Root: []*Node{
 					{
-						Name: "root",
+						Name: "A",
 					},
 					{
 						Name: "orphan",
 					},
 				},
 				NodesIndex: map[string]*Node{
-					"root": {
-						Name: "root",
+					"A": {
+						Name: "A",
 					},
 					"orphan": {
 						Name: "orphan",
@@ -369,7 +371,7 @@ func TestAddRelationship(t *testing.T) {
 			node: &Node{
 				Name: "orphan",
 			},
-			err: errors.New("(graph::AddRelationship)", "Parent does not exist"),
+			err: errors.New(errContext, "Parent does not exist"),
 			res: nil,
 		},
 		{
@@ -377,22 +379,22 @@ func TestAddRelationship(t *testing.T) {
 			graph: &Graph{
 				Root: []*Node{
 					{
-						Name: "root",
+						Name: "A",
 					},
 				},
 				NodesIndex: map[string]*Node{
-					"root": {
-						Name: "root",
+					"A": {
+						Name: "A",
 					},
 				},
 			},
 			parent: &Node{
-				Name: "root",
+				Name: "A",
 			},
 			node: &Node{
 				Name: "unexistent",
 			},
-			err: errors.New("(graph::AddRelationship)", "Child does not exist"),
+			err: errors.New(errContext, "Child does not exist"),
 			res: nil,
 		},
 		{
@@ -400,43 +402,43 @@ func TestAddRelationship(t *testing.T) {
 			graph: &Graph{
 				Root: []*Node{
 					{
-						Name: "root",
+						Name: "A",
 					},
 					{
-						Name: "child",
+						Name: "B",
 						Parents: []*Node{
 							{
-								Name: "root",
+								Name: "A",
 							},
 						},
 					},
 				},
 				NodesIndex: map[string]*Node{
-					"root": {
-						Name: "root",
+					"A": {
+						Name: "A",
 					},
-					"child": {
-						Name: "child",
+					"B": {
+						Name: "B",
 						Parents: []*Node{
 							{
-								Name: "root",
+								Name: "A",
 							},
 						},
 					},
 				},
 			},
 			parent: &Node{
-				Name: "root",
+				Name: "A",
 			},
 			node: &Node{
-				Name: "child",
+				Name: "B",
 				Parents: []*Node{
 					{
-						Name: "root",
+						Name: "A",
 					},
 				},
 			},
-			err: errors.New("(graph::AddRelationship)", "Parent can not be added to 'child'", errors.New("(graph::AddParent)", "Parent 'root' already exists to 'child'")),
+			err: errors.New(errContext, "Parent can not be added to 'B'", errors.New("(graph::AddParent)", "Parent 'A' already exists to 'B'")),
 			res: nil,
 		},
 		{
@@ -444,13 +446,13 @@ func TestAddRelationship(t *testing.T) {
 			graph: &Graph{
 				Root: []*Node{
 					{
-						Name: "root",
+						Name: "A",
 						Children: []*Node{
 							{
-								Name: "child",
+								Name: "B",
 								Parents: []*Node{
 									{
-										Name: "root",
+										Name: "A",
 									},
 								},
 							},
@@ -458,44 +460,52 @@ func TestAddRelationship(t *testing.T) {
 					},
 				},
 				NodesIndex: map[string]*Node{
-					"root": {
-						Name: "root",
+					"A": {
+						Name: "A",
 						Children: []*Node{
 							{
-								Name: "child",
+								Name: "B",
 								Parents: []*Node{
 									{
-										Name: "root",
+										Name: "B",
 									},
 								},
 							},
 						},
 					},
-					"child": {
-						Name: "child",
+					"B": {
+						Name: "B",
 						Parents: []*Node{
 							{
-								Name: "root",
+								Name: "A",
 							},
 						},
 					},
 				},
 			},
 			parent: &Node{
-				Name: "child",
+				Name: "B",
 				Parents: []*Node{
-					{Name: "root"},
-				},
-			},
-			node: &Node{
-				Name: "root",
-				Children: []*Node{
 					{
-						Name: "child",
+						Name: "A",
+						Children: []*Node{
+							{Name: "B"},
+						},
 					},
 				},
 			},
-			err: errors.New("(graph::AddRelationship)", "Cycle detected adding relationship from 'child' to 'root'"),
+			node: &Node{
+				Name: "A",
+				Children: []*Node{
+					{
+						Name: "B",
+						Children: []*Node{
+							{Name: "A"},
+						},
+					},
+				},
+			},
+			err: errors.New(errContext, "Cycle detected adding relationship from 'B' to 'A'"),
 			res: nil,
 		},
 	}
@@ -506,8 +516,9 @@ func TestAddRelationship(t *testing.T) {
 			t.Log(test.desc)
 
 			err := test.graph.AddRelationship(test.parent, test.node)
-			if err != nil && assert.Error(t, err) {
-				assert.Equal(t, test.err, err)
+
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
 				assert.Equal(t, len(test.graph.Root), len(test.res.Root), "Root size not equal")
 				assert.Equal(t, len(test.graph.NodesIndex), len(test.res.NodesIndex), "Root size not equal")
@@ -519,71 +530,30 @@ func TestAddRelationship(t *testing.T) {
 func TestHasCycles(t *testing.T) {
 
 	tests := []struct {
-		desc  string
-		graph *Graph
-		res   bool
+		desc              string
+		graph             *Graph
+		prepareAssertFunc func(*Graph)
+		res               bool
 	}{
 		{
-			desc: "Testing cyclic graph",
-			graph: &Graph{
-				Root: []*Node{
-					{
-						Name: "parent1",
-						Children: []*Node{
-							{
-								Name: "p1child1",
-								Parents: []*Node{
-									{Name: "parent1"},
-								},
-								Children: []*Node{
-									{
-										Name: "p1child3",
-										Parents: []*Node{
-											{Name: "p1child1"},
-										},
-										Children: []*Node{
-											{Name: "parent1"},
-										},
-									},
-								},
-							},
-							{Name: "p1child2"},
-						},
-					},
-				},
-				NodesIndex: map[string]*Node{
-					"parent1": {
-						Name: "parent1",
-						Children: []*Node{
-							{Name: "p1child1"},
-							{Name: "p1child2"},
-						},
-					},
-					"p1child1": {
-						Name: "p1child1",
-						Parents: []*Node{
-							{Name: "parent1"},
-						},
-						Children: []*Node{
-							{Name: "p1child3"},
-						},
-					},
-					"p1child2": {
-						Name: "p1child2",
-						Parents: []*Node{
-							{Name: "parent1"},
-						},
-					},
-					"p1child3": {
-						Name: "p1child3",
-						Parents: []*Node{
-							{Name: "p1child1"},
-						},
-						Children: []*Node{
-							{Name: "parent1"},
-						},
-					},
-				},
+			desc:  "Testing cyclic graph",
+			graph: &Graph{},
+			prepareAssertFunc: func(graph *Graph) {
+				nodeA := &Node{Name: "A"}
+				nodeB := &Node{Name: "B"}
+				nodeC := &Node{Name: "C"}
+				nodeD := &Node{Name: "D"}
+
+				graph.AddNode(nodeA)
+				graph.AddNode(nodeB)
+				graph.AddNode(nodeC)
+				graph.AddNode(nodeD)
+
+				graph.AddRelationship(nodeA, nodeB)
+				graph.AddRelationship(nodeB, nodeC)
+				graph.AddRelationship(nodeC, nodeD)
+
+				nodeA.AddParent(nodeC)
 			},
 			res: true,
 		},
@@ -592,6 +562,10 @@ func TestHasCycles(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
+
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.graph)
+			}
 
 			res := test.graph.HasCycles()
 			assert.Equal(t, test.res, res)
