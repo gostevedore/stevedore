@@ -17,9 +17,7 @@ const (
 
 // ImageStore is a store for images
 type ImageStore struct {
-	render ImageRenderer
-	//tree
-	//index
+	render                ImageRenderer
 	store                 []*image.Image
 	imageNameVersionIndex map[string]map[string]*image.Image
 	imageWildcardIndex    map[string]*image.Image
@@ -186,7 +184,6 @@ func (s *ImageStore) FindByName(name string) ([]*image.Image, error) {
 
 // Find returns the image associated to the image name and version
 func (s *ImageStore) Find(name string, version string) (*image.Image, error) {
-	var err error
 	errContext := "(store::Find)"
 
 	if s.store == nil {
@@ -201,49 +198,99 @@ func (s *ImageStore) Find(name string, version string) (*image.Image, error) {
 
 	i, exist := s.imageNameVersionIndex[name][version]
 	if !exist {
-		i, err = s.GenerateImageFromWildcard(name, version)
-		if err != nil {
-			return nil, errors.New(errContext, err.Error())
-		}
+		return nil, nil
 	}
 
 	return i, nil
 }
 
-func (s *ImageStore) GenerateImageFromWildcard(name string, version string) (*image.Image, error) {
+// FindGuaranteed returns the image associated to the image name and version. In case of a wildcard image, it generates the image. Otherwise, it returns a nil image and an error
+func (s *ImageStore) FindGuaranteed(findName, findVersion, imageName, imageVersion string) (*image.Image, error) {
 
 	var err error
-	var parent, renderedImage, imageToRender *image.Image
-	errContext := "(store::GenerateImageFromWildcard)"
+	errContext := "(store::FindGuaranteed)"
+	var image, imageWildcard *image.Image
+
+	if s.store == nil {
+		return nil, errors.New(errContext, "Store has not been initialized")
+	}
+
+	image, err = s.Find(findName, findVersion)
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+
+	if image != nil {
+		return image, nil
+	}
+
+	imageWildcard, err = s.FindWildcardImage(findName)
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+
+	if imageWildcard == nil {
+		return nil, errors.New(errContext, fmt.Sprintf("Image '%s:%s' does not exist on the store", findName, findVersion))
+	}
+
+	image, err = s.GenerateImageFromWildcard(imageWildcard, imageName, imageVersion)
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+
+	return image, nil
+}
+
+func (s *ImageStore) FindWildcardImage(name string) (*image.Image, error) {
+
+	errContext := "(store::FindWildcardImage)"
+
+	if s.store == nil {
+		return nil, errors.New(errContext, "Store has not been initialized")
+	}
 
 	if s.imageWildcardIndex == nil {
 		return nil, errors.New(errContext, "Wildcard index has not been initialized")
 	}
 
-	// when images is not stored as a wildcard image, return
-	i, exists := s.imageWildcardIndex[name]
-	if !exists {
+	i, exist := s.imageWildcardIndex[name]
+	if !exist {
 		return nil, nil
 	}
 
-	parent = i.Parent
+	return i, nil
+}
 
-	// ensure that parent is properly rended when it is also a wildcard image
-	if parent != nil {
-		_, exists := s.imageWildcardIndex[parent.Name]
-		if exists {
-			parent, err = s.GenerateImageFromWildcard(parent.Name, version)
-			if err != nil {
-				return nil, errors.New(errContext, err.Error())
-			}
-		}
+func (s *ImageStore) GenerateImageFromWildcard(i *image.Image, name string, version string) (*image.Image, error) {
+
+	var err error
+	var parent, parentWildcard, renderedImage, imageToRender *image.Image
+	errContext := "(store::GenerateImageFromWildcard)"
+
+	if i == nil {
+		return nil, errors.New(errContext, "Provided wildcard image is nil")
 	}
 
 	imageToRender, err = i.Copy()
 	if err != nil {
 		return nil, errors.New(errContext, err.Error())
 	}
-	imageToRender.Options(image.WithParent(parent))
+	parent = i.Parent
+
+	// ensure that parent is properly rended when it is also a wildcard image
+	if parent != nil {
+		parentWildcard, err = s.FindWildcardImage(parent.Name)
+		if err != nil {
+			return nil, errors.New(errContext, err.Error())
+		}
+		if parentWildcard != nil {
+			parent, err = s.GenerateImageFromWildcard(parentWildcard, parent.Name, version)
+			if err != nil {
+				return nil, errors.New(errContext, err.Error())
+			}
+		}
+		imageToRender.Options(image.WithParent(parent))
+	}
 
 	renderedImage, err = s.render.Render(name, version, imageToRender)
 	if err != nil {
