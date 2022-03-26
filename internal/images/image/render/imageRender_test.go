@@ -5,6 +5,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	domainimage "github.com/gostevedore/stevedore/internal/images/image"
+	"github.com/gostevedore/stevedore/internal/images/image/render/now"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,14 +24,20 @@ func TestRender(t *testing.T) {
 		err     error
 	}{
 		{
-			desc:    "Testing render domain image",
-			render:  &ImageRender{},
+			desc: "Testing render domain image",
+			render: &ImageRender{
+				now: now.NewMockNow(),
+			},
 			name:    "image_name",
 			version: "Image_version",
 			image: &domainimage.Image{
 				Name:              "{{.Name}}-{{.Parent.Name}}",
 				Version:           "{{.Version}}-{{.Parent.Version}}",
 				RegistryNamespace: "{{.Parent.RegistryNamespace}}",
+				Labels: map[string]string{
+					"labelRFC3339":     "{{.DateRFC3339}}",
+					"labelRFC3339Nano": "{{.DateRFC3339Nano}}",
+				},
 				Parent: &domainimage.Image{
 					Name:              "parent_name",
 					Version:           "parent_version",
@@ -38,13 +45,18 @@ func TestRender(t *testing.T) {
 				},
 			},
 			res: &domainimage.Image{
+				Children:          []*domainimage.Image{},
 				Name:              "image_name-parent_name",
 				Version:           "Image_version-parent_version",
 				RegistryNamespace: "parent_registry_namespace",
-				Labels:            map[string]string{},
-				PersistentVars:    map[string]interface{}{},
-				Tags:              []string{},
-				Vars:              map[string]interface{}{},
+				Labels: map[string]string{
+					"labelRFC3339":     "2006-01-02T15:04:05Z07:00",
+					"labelRFC3339Nano": "2006-01-02T15:04:05.999999999Z07:00",
+				},
+				PersistentLabels: map[string]string{},
+				PersistentVars:   map[string]interface{}{},
+				Tags:             []string{},
+				Vars:             map[string]interface{}{},
 				Parent: &domainimage.Image{
 					Name:              "parent_name",
 					Version:           "parent_version",
@@ -73,10 +85,12 @@ func TestRender(t *testing.T) {
 				},
 			},
 			res: &domainimage.Image{
+				Children:          []*domainimage.Image{},
 				Name:              "image_name-parent_name",
 				Version:           "Image_version-parent_version",
 				RegistryNamespace: "parent_parent_registry_namespace",
 				Labels:            map[string]string{},
+				PersistentLabels:  map[string]string{},
 				PersistentVars:    map[string]interface{}{},
 				Tags:              []string{},
 				Vars:              map[string]interface{}{},
