@@ -17,6 +17,7 @@ func TestNewImage(t *testing.T) {
 		version           string
 		registryHost      string
 		registryNamesapce string
+		options           []OptionFunc
 		res               *Image
 		err               error
 	}{
@@ -41,7 +42,7 @@ func TestNewImage(t *testing.T) {
 			},
 		},
 		{
-			desc:              "Testing create image providing all the parameters",
+			desc:              "Testing create image providing all parameters",
 			name:              "image",
 			version:           "version",
 			registryHost:      "registry.test",
@@ -53,19 +54,83 @@ func TestNewImage(t *testing.T) {
 				RegistryNamespace: "namespace",
 			},
 		},
+		{
+			desc:              "Testing create image with options",
+			name:              "image",
+			version:           "version",
+			registryHost:      "registry.test",
+			registryNamesapce: "namespace",
+			res: &Image{
+				Builder:           "builder",
+				Children:          []*Image{{Name: "child"}},
+				Labels:            map[string]string{"label": "value"},
+				Name:              "image",
+				Parent:            &Image{Name: "parent"},
+				PersistentLabels:  map[string]string{"plabel": "pvalue"},
+				PersistentVars:    map[string]interface{}{"pvar": "pvalue"},
+				RegistryHost:      "registry.test",
+				RegistryNamespace: "namespace",
+				Tags:              []string{"tag"},
+				Vars:              map[string]interface{}{"var": "value"},
+				Version:           "version",
+			},
+			options: []OptionFunc{
+				WithBuilder("builder"),
+				WithChildren([]*Image{{Name: "child"}}...),
+				WithLabels(map[string]string{"label": "value"}),
+				WithParent(&Image{Name: "parent"}),
+				WithPersistentLabels(map[string]string{"plabel": "pvalue"}),
+				WithPersistentVars(map[string]interface{}{"pvar": "pvalue"}),
+				WithTags([]string{"tag"}...),
+				WithVars(map[string]interface{}{"var": "value"}),
+			},
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			image, err := NewImage(test.name, test.version, test.registryHost, test.registryNamesapce)
+			image, err := NewImage(test.name, test.version, test.registryHost, test.registryNamesapce, test.options...)
 
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
 				assert.Equal(t, test.res, image)
 			}
+		})
+	}
+}
+
+func TestAddChild(t *testing.T) {
+	tests := []struct {
+		desc  string
+		image *Image
+		child *Image
+		res   *Image
+	}{
+		{
+			desc: "Testing add child to image",
+			image: &Image{
+				Name: "image",
+			},
+			child: &Image{
+				Name: "child",
+			},
+			res: &Image{
+				Name:     "image",
+				Children: []*Image{{Name: "child"}},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			test.image.AddChild(test.child)
+
+			assert.Equal(t, test.res, test.image)
 		})
 	}
 }
@@ -135,4 +200,113 @@ func TestDockerNormalizedNamed(t *testing.T) {
 		})
 	}
 
+}
+
+func TestCopy(t *testing.T) {
+	tests := []struct {
+		desc  string
+		image *Image
+		res   *Image
+		err   error
+	}{
+		{
+			desc: "Testing copy of an image",
+			image: &Image{
+				Builder:  "builder",
+				Children: []*Image{},
+				Labels: map[string]string{
+					"label": "value",
+				},
+				Name: "image",
+				PersistentLabels: map[string]string{
+					"plabel": "value",
+				},
+				PersistentVars: map[string]interface{}{
+					"pvar": "value",
+				},
+				RegistryHost:      "registry.test",
+				RegistryNamespace: "namespace",
+				Tags: []string{
+					"tag",
+				},
+				Vars: map[string]interface{}{
+					"var": "value",
+				},
+				Version: "version",
+			},
+			res: &Image{
+				Builder:  "builder",
+				Children: []*Image{},
+				Labels: map[string]string{
+					"label": "value",
+				},
+				Name: "image",
+				PersistentLabels: map[string]string{
+					"plabel": "value",
+				},
+				PersistentVars: map[string]interface{}{
+					"pvar": "value",
+				},
+				RegistryHost:      "registry.test",
+				RegistryNamespace: "namespace",
+				Tags: []string{
+					"tag",
+				},
+				Vars: map[string]interface{}{
+					"var": "value",
+				},
+				Version: "version",
+			},
+			err: &errors.Error{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			image, err := test.image.Copy()
+
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				assert.Equal(t, test.res, image)
+			}
+		})
+	}
+}
+
+func TestIsWildcardImage(t *testing.T) {
+	tests := []struct {
+		desc  string
+		image *Image
+		res   bool
+	}{
+		{
+			desc: "Testing wildcard image when is not a wildcard image",
+			image: &Image{
+				Name:    "image",
+				Version: "version",
+			},
+			res: false,
+		},
+		{
+			desc: "Testing wildcard image when is wildcard image",
+			image: &Image{
+				Name:    "image",
+				Version: "*",
+			},
+			res: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			res := test.image.IsWildcardImage()
+
+			assert.Equal(t, test.res, res)
+		})
+	}
 }

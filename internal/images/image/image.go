@@ -10,6 +10,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	// ImageWildcardVersionSymbol is the wildcard version
+	ImageWildcardVersionSymbol = "*"
+)
+
 // Image defines the image on the system
 type Image struct {
 	// Builder is the builder to use to build the image
@@ -20,7 +25,11 @@ type Image struct {
 	Labels map[string]string `yaml:"labels"`
 	// Name is the name of the image
 	Name string `yaml:"name"`
-	// PresistentVars is a map of persistent variables
+	// Parent is the parent image
+	Parent *Image `yaml:"-"`
+	// PersistentLabels persistent labels
+	PersistentLabels map[string]string `yaml:"persistent_labels"`
+	// PresistentVars are persistent variables
 	PersistentVars map[string]interface{} `yaml:"persistent_vars"`
 	// RegistryHost is the host of the registry
 	RegistryHost string `yaml:"registry_host"`
@@ -32,8 +41,6 @@ type Image struct {
 	Vars map[string]interface{} `yaml:"vars"`
 	// Version is the version of the image
 	Version string `yaml:"version"`
-	// Parent is the parent image
-	Parent *Image `yaml:"-"`
 
 	addChildMutex sync.RWMutex
 }
@@ -109,19 +116,12 @@ func WithPersistentVars(persistentVars map[string]interface{}) OptionFunc {
 	}
 }
 
-// WithRegistryHost sets the registry host
-// func WithRegistryHost(registryHost string) OptionFunc {
-// 	return func(i *Image) {
-// 		i.RegistryHost = registryHost
-// 	}
-// }
-
-// WithRegistryNamespace sets the registry namespace
-// func WithRegistryNamespace(registryNamespace string) OptionFunc {
-// 	return func(i *Image) {
-// 		i.RegistryNamespace = registryNamespace
-// 	}
-// }
+// WithPersistentLabels sets the persistent variables
+func WithPersistentLabels(persistentLabels map[string]string) OptionFunc {
+	return func(i *Image) {
+		i.PersistentLabels = persistentLabels
+	}
+}
 
 // WithTags sets the tags
 func WithTags(tags ...string) OptionFunc {
@@ -205,6 +205,7 @@ func (i *Image) Copy() (*Image, error) {
 	}
 
 	opts := []OptionFunc{}
+
 	if i.Builder != nil {
 		opts = append(opts, WithBuilder(i.Builder))
 	}
@@ -213,6 +214,8 @@ func (i *Image) Copy() (*Image, error) {
 		opts = append(opts, WithParent(i.Parent))
 	}
 	copiedImage.Options(opts...)
+
+	copiedImage.Children = append([]*Image{}, i.Children...)
 
 	copiedImage.Tags = append([]string{}, i.Tags...)
 
@@ -224,18 +227,21 @@ func (i *Image) Copy() (*Image, error) {
 	for keyVar, keyValue := range i.Vars {
 		copiedImage.Vars[keyVar] = keyValue
 	}
+	copiedImage.PersistentLabels = map[string]string{}
+	for keyVar, keyValue := range i.PersistentLabels {
+		copiedImage.PersistentLabels[keyVar] = keyValue
+	}
 	copiedImage.Labels = map[string]string{}
 	for keyVar, keyValue := range i.Labels {
 		copiedImage.Labels[keyVar] = keyValue
 	}
 
-	if i.Children != nil {
-		for _, child := range i.Children {
-			copiedImage.Children = append(copiedImage.Children, child)
-		}
-	}
-
 	return copiedImage, nil
+}
+
+// IsWildcardImage returns true if the image is a wildcard image
+func (i *Image) IsWildcardImage() bool {
+	return i.Version == ImageWildcardVersionSymbol
 }
 
 // YAMLMarshal marshals the image to YAML
