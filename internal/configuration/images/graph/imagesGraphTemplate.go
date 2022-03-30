@@ -51,7 +51,7 @@ func ParseNodeName(node GraphNoder) (string, string, error) {
 }
 
 // AddImage is a mock implementation of the AddImage method
-func (m *ImagesGraphTemplate) AddImage(name, version string, image *image.Image) error {
+func (m *ImagesGraphTemplate) AddImage(name, version string, i *image.Image) error {
 
 	var err error
 	var node GraphNoder
@@ -66,7 +66,7 @@ func (m *ImagesGraphTemplate) AddImage(name, version string, image *image.Image)
 		return errors.New(errContext, "To add an image, the version must be specified")
 	}
 
-	if image == nil {
+	if i == nil {
 		return errors.New(errContext, "To add and image, image must be provided")
 	}
 
@@ -81,10 +81,10 @@ func (m *ImagesGraphTemplate) AddImage(name, version string, image *image.Image)
 			return errors.New(errContext, err.Error())
 		}
 	}
-	node.AddItem(image)
+	node.AddItem(i)
 
-	if len(image.Parents) > 0 {
-		for parentName, versions := range image.Parents {
+	if len(i.Parents) > 0 {
+		for parentName, versions := range i.Parents {
 			for _, parentVersion := range versions {
 
 				parentNode := m.graph.GetNode(generateNodeName(parentName, parentVersion))
@@ -104,8 +104,8 @@ func (m *ImagesGraphTemplate) AddImage(name, version string, image *image.Image)
 		}
 	}
 
-	if len(image.Children) > 0 {
-		for childName, versions := range image.Children {
+	if len(i.Children) > 0 {
+		for childName, versions := range i.Children {
 			for _, childVersion := range versions {
 
 				childNode := m.graph.GetNode(generateNodeName(childName, childVersion))

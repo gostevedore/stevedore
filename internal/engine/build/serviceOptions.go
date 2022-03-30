@@ -2,47 +2,42 @@ package build
 
 // ServiceOptions
 type ServiceOptions struct {
-
-	// TODO: move to handler
-	// Cascade      bool
-	// CascadeDepth int
-
-	// ImageName is the name of the image to build
-	ImageName string
-	// ImageVersions is a list of versions to build
-	ImageVersions []string
 	// AnsibleConnectionLocal is the local connection to use on ansible driver
 	AnsibleConnectionLocal bool
 	// EnableSemanticVersionTags is a flag to enable semantic version tags
 	EnableSemanticVersionTags bool
 	// ImageFromName is the parent's image name
 	ImageFromName string `yaml:"image_from_name"`
-	// ImageFromRegistryNamespace is the parent's image namespace
-	ImageFromRegistryNamespace string `yaml:"image_from_namespace"`
 	// ImageFromRegistryHost is the parent's image registry host
 	ImageFromRegistryHost string `yaml:"image_from_registry_host"`
+	// ImageFromRegistryNamespace is the parent's image namespace
+	ImageFromRegistryNamespace string `yaml:"image_from_namespace"`
 	// ImageFromVersion is the paren't image version
 	ImageFromVersion string `yaml:"image_from_version"`
-	// PersistentVars is a persistent variables list to be sent to driver
-	PersistentVars map[string]interface{} `yaml:"persistent_variables"`
-	// ImageRegistryNamespace is the namespace of the image to be built
-	ImageRegistryNamespace string `yaml:"image_namespace"`
+	// ImageName is the name of the image to build
+	ImageName string
 	// ImageRegistryHost is the registry's host of the image to be built
 	ImageRegistryHost string `yaml:"image_registry_host"`
-	// PushImageAfterBuild flag indicate whether to push the image to the registry once it has been built
-	PushImageAfterBuild bool `yaml:"push_image_after_build"`
+	// ImageRegistryNamespace is the namespace of the image to be built
+	ImageRegistryNamespace string `yaml:"image_namespace"`
+	// ImageVersions is a list of versions to build
+	ImageVersions []string
+	// Lables is a list of labels to add to the image
+	Labels map[string]string
+	// PersistentVars is a persistent variables list to be sent to driver
+	PersistentVars map[string]interface{} `yaml:"persistent_variables"`
 	// PullParentImage flag indicate whether to pull the parent image before building
 	PullParentImage bool `yaml:"pull_parent_image"`
+	// PushImageAfterBuild flag indicate whether to push the image to the registry once it has been built
+	PushImageAfterBuild bool `yaml:"push_image_after_build"`
+	// RemoveImagesAfterPush flag indicate whether to remove the image after build
+	RemoveImagesAfterPush bool
 	// SemanticVersionTagsTemplate are the semantic version tags templates to generate automatically
 	SemanticVersionTagsTemplates []string `yaml:"semantic_version_tags_template"`
 	// Tags is a list of tags to generate
 	Tags []string `yaml:"tags"`
 	// Vars is a variables list to be sent to driver
 	Vars map[string]interface{} `yaml:"variables"`
-	// RemoveAfterBuild flag indicate whether to remove the image after build
-	RemoveAfterBuild bool
-	// Lables is a list of labels to add to the image
-	Labels map[string]string
 }
 
 // Copy returns a copy of the ServiceOptions
@@ -65,7 +60,7 @@ func (o *ServiceOptions) Copy() *ServiceOptions {
 	copy.ImageFromVersion = o.ImageFromVersion
 
 	copy.PushImageAfterBuild = o.PushImageAfterBuild
-	copy.RemoveAfterBuild = o.RemoveAfterBuild
+	copy.RemoveImagesAfterPush = o.RemoveImagesAfterPush
 	// copy.Cascade = o.Cascade
 	// copy.CascadeDepth = o.CascadeDepth
 	copy.AnsibleConnectionLocal = o.AnsibleConnectionLocal

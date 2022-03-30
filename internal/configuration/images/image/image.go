@@ -17,6 +17,7 @@ type Image struct {
 	//	Childs            map[string][]string    `yaml:"childs"`
 	Labels            map[string]string      `yaml:"labels"`
 	Name              string                 `yaml:"name"`
+	PersistentLabels  map[string]string      `yaml:"persistent_labels"`
 	PersistentVars    map[string]interface{} `yaml:"persistent_vars"`
 	RegistryHost      string                 `yaml:"registry"`
 	RegistryNamespace string                 `yaml:"namespace"`
@@ -35,15 +36,22 @@ func (i *Image) Copy() (*Image, error) {
 	}
 
 	copiedImage := *i
-	copiedImage.Tags = append([]string{}, i.Tags...)
+
+	if i.Children != nil {
+		copiedImage.Children = map[string][]string{}
+		for keyVar, keyValue := range i.Children {
+			copiedImage.Children[keyVar] = append([]string{}, keyValue...)
+		}
+	}
+
+	copiedImage.PersistentLabels = map[string]string{}
+	for keyVar, keyValue := range i.PersistentLabels {
+		copiedImage.PersistentLabels[keyVar] = keyValue
+	}
 
 	copiedImage.PersistentVars = map[string]interface{}{}
 	for keyVar, keyValue := range i.PersistentVars {
 		copiedImage.PersistentVars[keyVar] = keyValue
-	}
-	copiedImage.Vars = map[string]interface{}{}
-	for keyVar, keyValue := range i.Vars {
-		copiedImage.Vars[keyVar] = keyValue
 	}
 
 	copiedImage.Labels = map[string]string{}
@@ -58,11 +66,11 @@ func (i *Image) Copy() (*Image, error) {
 		}
 	}
 
-	if i.Children != nil {
-		copiedImage.Children = map[string][]string{}
-		for keyVar, keyValue := range i.Children {
-			copiedImage.Children[keyVar] = append([]string{}, keyValue...)
-		}
+	copiedImage.Tags = append([]string{}, i.Tags...)
+
+	copiedImage.Vars = map[string]interface{}{}
+	for keyVar, keyValue := range i.Vars {
+		copiedImage.Vars[keyVar] = keyValue
 	}
 
 	return &copiedImage, nil
@@ -79,10 +87,11 @@ func (i *Image) CreateDomainImage() (*domainimage.Image, error) {
 		i.RegistryHost,
 		i.RegistryNamespace,
 		domainimage.WithBuilder(i.Builder),
-		domainimage.WithLabels(i.Labels),
+		domainimage.WithPersistentLabels(i.PersistentLabels),
 		domainimage.WithPersistentVars(i.PersistentVars),
-		domainimage.WithVars(i.Vars),
+		domainimage.WithLabels(i.Labels),
 		domainimage.WithTags(i.Tags...),
+		domainimage.WithVars(i.Vars),
 	)
 	if err != nil {
 		return nil, errors.New(errContext, err.Error())
@@ -90,33 +99,6 @@ func (i *Image) CreateDomainImage() (*domainimage.Image, error) {
 
 	return image, nil
 }
-
-// func (i *Image) ToArray() ([]string, error) {
-
-// 	if i == nil {
-// 		return nil, errors.New("(image::Image::ToArray)", "Image is nil")
-// 	}
-
-// 	arrayImage := []string{}
-// 	arrayImage = append(arrayImage, i.Name)
-// 	arrayImage = append(arrayImage, i.Version)
-// 	arrayImage = append(arrayImage, i.getBuilderType())
-// 	arrayImage = append(arrayImage, i.RegistryNamespace)
-// 	arrayImage = append(arrayImage, i.RegistryHost)
-
-// 	return arrayImage, nil
-// }
-
-// // getBuilderType return the name of the builder or <in-line> when the builder is defined on the image
-// func (i *Image) getBuilderType() string {
-// 	switch i.Builder.(type) {
-// 	case string:
-// 		return i.Builder.(string)
-// 	default:
-// 		return InlineBuilder
-// 	}
-
-// }
 
 // CheckCompatibility checks that image compatibility
 func (i *Image) CheckCompatibility(compabilitiy Compatibilitier) {

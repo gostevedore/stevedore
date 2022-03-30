@@ -19,7 +19,6 @@ import (
 
 // Service is an application service to build docker images
 type Service struct {
-	plan           Planner
 	builders       BuildersStorer
 	commandFactory BuildCommandFactorier
 	driverFactory  DriverFactorier
@@ -30,10 +29,9 @@ type Service struct {
 }
 
 // NewService creates a Service to build docker images
-func NewService(plans Planner, builders BuildersStorer, commandFactory BuildCommandFactorier, driverFactory DriverFactorier, jobFactory JobFactorier, dispatch Dispatcher, semver Semverser, credentials CredentialsStorer) *Service {
+func NewService(builders BuildersStorer, commandFactory BuildCommandFactorier, driverFactory DriverFactorier, jobFactory JobFactorier, dispatch Dispatcher, semver Semverser, credentials CredentialsStorer) *Service {
 
 	return &Service{
-		plan:           plans,
 		builders:       builders,
 		commandFactory: commandFactory,
 		driverFactory:  driverFactory,
@@ -45,7 +43,7 @@ func NewService(plans Planner, builders BuildersStorer, commandFactory BuildComm
 }
 
 // Build starts the building process
-func (s *Service) Build(ctx context.Context, name string, version []string, options *ServiceOptions) error {
+func (s *Service) Build(ctx context.Context, buildPlan Planner, name string, version []string, options *ServiceOptions) error {
 
 	var err error
 	var steps []*plan.Step
@@ -58,17 +56,17 @@ func (s *Service) Build(ctx context.Context, name string, version []string, opti
 		return errors.New(errContext, "To build an image, service options are required")
 	}
 
-	if s.plan == nil {
-		return errors.New(errContext, "To build an image, execution plan is required")
+	if buildPlan == nil {
+		return errors.New(errContext, "To build an image, a build plan is required")
 	}
 
-	steps, err = s.plan.Plan(name, version)
+	steps, err = buildPlan.Plan(name, version)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
 
 	// future promise which triggers the image build
-	buildWorkerFunc := func(ctx context.Context, step Steper, options *ServiceOptions) func() error {
+	buildWorkerFunc := func(ctx context.Context, step PlanSteper, options *ServiceOptions) func() error {
 		var err error
 
 		c := make(chan struct{}, 1)
@@ -81,7 +79,7 @@ func (s *Service) Build(ctx context.Context, name string, version []string, opti
 			// wait to be notified before start building
 			step.Wait()
 
-			err = s.worker(ctx, image, options)
+			err = s.build(ctx, image, options)
 			wg.Done()
 		}()
 
@@ -115,8 +113,8 @@ func (s *Service) Build(ctx context.Context, name string, version []string, opti
 	return nil
 }
 
-func (s *Service) worker(ctx context.Context, image *image.Image, options *ServiceOptions) error {
-	errContext := "(build::worker)"
+func (s *Service) build(ctx context.Context, image *image.Image, options *ServiceOptions) error {
+	errContext := "(build::build)"
 
 	if options == nil {
 		return errors.New(errContext, "Build worker requires service options")
@@ -256,8 +254,6 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 
 	buildOptions.BuilderName = strings.Join([]string{"builder", imageBuilder.Driver, image.RegistryNamespace, image.Name, image.Version}, "_")
 
-	fmt.Println(">>>>", image)
-
 	// used by ansible driver
 	buildOptions.AnsibleConnectionLocal = options.AnsibleConnectionLocal
 
@@ -265,7 +261,7 @@ func (s *Service) worker(ctx context.Context, image *image.Image, options *Servi
 
 	buildOptions.PushImageAfterBuild = options.PushImageAfterBuild
 
-	buildOptions.RemoveImageAfterBuild = options.RemoveAfterBuild
+	buildOptions.RemoveImageAfterBuild = options.RemoveImagesAfterPush
 
 	cmd, err := s.command(driver, image, buildOptions)
 	if err != nil {

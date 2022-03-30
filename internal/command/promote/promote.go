@@ -34,7 +34,7 @@ func NewCommand(ctx context.Context, conf *configuration.Configuration) *command
 		Aliases: []string{"publish", "copy"},
 		Short:   "Stevedore command to promote, publish or copy images to a docker registry or namespace",
 		Long:    "Stevedore command to promote, publish or copy images to a docker registry or namespace",
-		Example: "stevedore promote ubuntu:focal --romote-image-registry myregistry.example.com --promote-image-namespace mynamespace",
+		Example: "stevedore promote ubuntu:impish --romote-image-registry myregistry.example.com --promote-image-namespace mynamespace",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			errContext := "(promote::PreRunE)"
 

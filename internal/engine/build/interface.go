@@ -11,16 +11,16 @@ import (
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 )
 
-// Steper interface defines the step plan
-type Steper interface {
+// Planner interfaces defines the storage of images
+type Planner interface {
+	Plan(name string, versions []string) ([]*plan.Step, error)
+}
+
+// PlanSteper interface defines the step plan
+type PlanSteper interface {
 	Image() *image.Image
 	Notify()
 	Wait()
-}
-
-// Planner interface defines the execution plan
-type Planner interface {
-	Plan(string, []string) ([]*plan.Step, error)
 }
 
 // BuildersStorer interface defines the storage of builders

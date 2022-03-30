@@ -383,19 +383,19 @@ func TestList(t *testing.T) {
 			prepareAssertFunc: func(s *ImageStore) {
 
 				s.store = []*image.Image{
-					&image.Image{
+					{
 						Name:    "image_1",
 						Version: "version_1",
 					},
-					&image.Image{
+					{
 						Name:    "image_2",
 						Version: "version_2",
 					},
-					&image.Image{
+					{
 						Name:    "image_3",
 						Version: "version_3",
 					},
-					&image.Image{
+					{
 						Name:    "image_1",
 						Version: "version_12",
 					},
@@ -403,19 +403,19 @@ func TestList(t *testing.T) {
 			},
 			assertFunc: func(t *testing.T, s *ImageStore, list []*image.Image) {
 				expected := []*image.Image{
-					&image.Image{
+					{
 						Name:    "image_1",
 						Version: "version_1",
 					},
-					&image.Image{
+					{
 						Name:    "image_1",
 						Version: "version_12",
 					},
-					&image.Image{
+					{
 						Name:    "image_2",
 						Version: "version_2",
 					},
-					&image.Image{
+					{
 						Name:    "image_3",
 						Version: "version_3",
 					},
@@ -494,11 +494,11 @@ func TestFindByName(t *testing.T) {
 			},
 			assertFunc: func(t *testing.T, s *ImageStore, list []*image.Image) {
 				expected := []*image.Image{
-					&image.Image{
+					{
 						Name:    "image_1",
 						Version: "version_1",
 					},
-					&image.Image{
+					{
 						Name:    "image_1",
 						Version: "version_12",
 					},
@@ -743,10 +743,9 @@ func TestFindGuaranteed(t *testing.T) {
 						Name:    "image_grandparent",
 						Version: "version_grandparent",
 					},
-					Labels:         map[string]string{},
-					PersistentVars: map[string]interface{}{},
-					Vars:           map[string]interface{}{},
-					Tags:           []string{},
+					Labels: map[string]string{},
+					Vars:   map[string]interface{}{},
+					Tags:   []string{},
 				}).Return(
 					&image.Image{
 						Name:    "image_parent",
@@ -755,10 +754,9 @@ func TestFindGuaranteed(t *testing.T) {
 							Name:    "image_grandparent",
 							Version: "version_grandparent",
 						},
-						Labels:         map[string]string{},
-						PersistentVars: map[string]interface{}{},
-						Vars:           map[string]interface{}{},
-						Tags:           []string{},
+						Labels: map[string]string{},
+						Vars:   map[string]interface{}{},
+						Tags:   []string{},
 					},
 					nil,
 				)
@@ -773,15 +771,13 @@ func TestFindGuaranteed(t *testing.T) {
 							Name:    "image_grandparent",
 							Version: "version_grandparent",
 						},
-						Labels:         map[string]string{},
-						PersistentVars: map[string]interface{}{},
-						Vars:           map[string]interface{}{},
-						Tags:           []string{},
+						Labels: map[string]string{},
+						Vars:   map[string]interface{}{},
+						Tags:   []string{},
 					},
-					Labels:         map[string]string{},
-					PersistentVars: map[string]interface{}{},
-					Vars:           map[string]interface{}{},
-					Tags:           []string{},
+					Labels: map[string]string{},
+					Vars:   map[string]interface{}{},
+					Tags:   []string{},
 				}).Return(
 					&image.Image{
 						Name:    "image_wildcard",
@@ -793,15 +789,13 @@ func TestFindGuaranteed(t *testing.T) {
 								Name:    "image_grandparent",
 								Version: "version_grandparent",
 							},
-							Labels:         map[string]string{},
-							PersistentVars: map[string]interface{}{},
-							Vars:           map[string]interface{}{},
-							Tags:           []string{},
+							Labels: map[string]string{},
+							Vars:   map[string]interface{}{},
+							Tags:   []string{},
 						},
-						Labels:         map[string]string{},
-						PersistentVars: map[string]interface{}{},
-						Vars:           map[string]interface{}{},
-						Tags:           []string{},
+						Labels: map[string]string{},
+						Vars:   map[string]interface{}{},
+						Tags:   []string{},
 					},
 					nil,
 				)
@@ -817,15 +811,13 @@ func TestFindGuaranteed(t *testing.T) {
 							Name:    "image_grandparent",
 							Version: "version_grandparent",
 						},
-						Labels:         map[string]string{},
-						PersistentVars: map[string]interface{}{},
-						Vars:           map[string]interface{}{},
-						Tags:           []string{},
+						Labels: map[string]string{},
+						Vars:   map[string]interface{}{},
+						Tags:   []string{},
 					},
-					Labels:         map[string]string{},
-					PersistentVars: map[string]interface{}{},
-					Vars:           map[string]interface{}{},
-					Tags:           []string{},
+					Labels: map[string]string{},
+					Vars:   map[string]interface{}{},
+					Tags:   []string{},
 				}
 
 				assert.Equal(t, expected, i)
@@ -1020,10 +1012,9 @@ func TestGenerateImageFromWildcard(t *testing.T) {
 						Name:    "image_grandparent",
 						Version: "version_grandparent",
 					},
-					Labels:         map[string]string{},
-					PersistentVars: map[string]interface{}{},
-					Vars:           map[string]interface{}{},
-					Tags:           []string{},
+					Labels: map[string]string{},
+					Vars:   map[string]interface{}{},
+					Tags:   []string{},
 				}).Return(
 					&image.Image{
 						Name:    "image_parent",
@@ -1032,10 +1023,9 @@ func TestGenerateImageFromWildcard(t *testing.T) {
 							Name:    "image_grandparent",
 							Version: "version_grandparent",
 						},
-						Labels:         map[string]string{},
-						PersistentVars: map[string]interface{}{},
-						Vars:           map[string]interface{}{},
-						Tags:           []string{},
+						Labels: map[string]string{},
+						Vars:   map[string]interface{}{},
+						Tags:   []string{},
 					},
 					nil,
 				)
@@ -1050,15 +1040,13 @@ func TestGenerateImageFromWildcard(t *testing.T) {
 							Name:    "image_grandparent",
 							Version: "version_grandparent",
 						},
-						Labels:         map[string]string{},
-						PersistentVars: map[string]interface{}{},
-						Vars:           map[string]interface{}{},
-						Tags:           []string{},
+						Labels: map[string]string{},
+						Vars:   map[string]interface{}{},
+						Tags:   []string{},
 					},
-					Labels:         map[string]string{},
-					PersistentVars: map[string]interface{}{},
-					Vars:           map[string]interface{}{},
-					Tags:           []string{},
+					Labels: map[string]string{},
+					Vars:   map[string]interface{}{},
+					Tags:   []string{},
 				}).Return(
 					&image.Image{
 						Name:    "image_wildcard",
@@ -1070,15 +1058,13 @@ func TestGenerateImageFromWildcard(t *testing.T) {
 								Name:    "image_grandparent",
 								Version: "version_grandparent",
 							},
-							Labels:         map[string]string{},
-							PersistentVars: map[string]interface{}{},
-							Vars:           map[string]interface{}{},
-							Tags:           []string{},
+							Labels: map[string]string{},
+							Vars:   map[string]interface{}{},
+							Tags:   []string{},
 						},
-						Labels:         map[string]string{},
-						PersistentVars: map[string]interface{}{},
-						Vars:           map[string]interface{}{},
-						Tags:           []string{},
+						Labels: map[string]string{},
+						Vars:   map[string]interface{}{},
+						Tags:   []string{},
 					},
 					nil,
 				)
@@ -1094,15 +1080,13 @@ func TestGenerateImageFromWildcard(t *testing.T) {
 							Name:    "image_grandparent",
 							Version: "version_grandparent",
 						},
-						Labels:         map[string]string{},
-						PersistentVars: map[string]interface{}{},
-						Vars:           map[string]interface{}{},
-						Tags:           []string{},
+						Labels: map[string]string{},
+						Vars:   map[string]interface{}{},
+						Tags:   []string{},
 					},
-					Labels:         map[string]string{},
-					PersistentVars: map[string]interface{}{},
-					Vars:           map[string]interface{}{},
-					Tags:           []string{},
+					Labels: map[string]string{},
+					Vars:   map[string]interface{}{},
+					Tags:   []string{},
 				}
 
 				assert.Equal(t, expected, i)

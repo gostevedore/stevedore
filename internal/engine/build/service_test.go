@@ -27,10 +27,11 @@ func TestBuild(t *testing.T) {
 	tests := []struct {
 		desc              string
 		service           *Service
+		buildPlan         Planner
 		name              string
 		versions          []string
 		options           *ServiceOptions
-		prepareAssertFunc func(*Service)
+		prepareAssertFunc func(*Service, Planner)
 		assertFunc        func(*Service) bool
 		err               error
 	}{
@@ -44,12 +45,11 @@ func TestBuild(t *testing.T) {
 			desc:    "Testing error building an image with no execution plan",
 			service: &Service{},
 			options: &ServiceOptions{},
-			err:     errors.New(errContext, "To build an image, execution plan is required"),
+			err:     errors.New(errContext, "To build an image, a build plan is required"),
 		},
 		{
 			desc: "Testing build an image",
 			service: NewService(
-				plan.NewMockPlan(),
 				store.NewMockBuildersStore(),
 				command.NewMockBuildCommandFactory(),
 				&driver.BuildDriverFactory{
@@ -60,14 +60,15 @@ func TestBuild(t *testing.T) {
 				semver.NewSemVerGenerator(),
 				credentials.NewCredentialsStoreMock(),
 			),
-			name:     "parent",
-			versions: []string{"0.0.0"},
+			buildPlan: plan.NewMockPlan(),
+			name:      "parent",
+			versions:  []string{"0.0.0"},
 			options: &ServiceOptions{
 				EnableSemanticVersionTags:    true,
 				PushImageAfterBuild:          true,
 				PullParentImage:              true,
 				SemanticVersionTagsTemplates: []string{"{{.Major}}"},
-				RemoveAfterBuild:             true,
+				RemoveImagesAfterPush:        true,
 			},
 			err: &errors.Error{},
 			assertFunc: func(service *Service) bool {
@@ -76,7 +77,7 @@ func TestBuild(t *testing.T) {
 					service.dispatch.(*dispatch.MockDispatch).AssertExpectations(t) &&
 					service.jobFactory.(*job.MockJobFactory).AssertExpectations(t)
 			},
-			prepareAssertFunc: func(service *Service) {
+			prepareAssertFunc: func(service *Service, buildPlan Planner) {
 
 				mockJob := job.NewMockJob()
 				mockJob.On("Wait").Return(nil)
@@ -84,9 +85,10 @@ func TestBuild(t *testing.T) {
 				childSyncChan := make(chan struct{})
 				stepChild := plan.NewStep(
 					&image.Image{
-						Name:         "child",
-						Version:      "0.0.0",
-						RegistryHost: "registry",
+						Name:              "child",
+						Version:           "0.0.0",
+						RegistryHost:      "registry",
+						RegistryNamespace: "namespace",
 						Builder: &builder.Builder{
 							Name:   "builder",
 							Driver: "mock",
@@ -95,9 +97,10 @@ func TestBuild(t *testing.T) {
 					}, "child_image", childSyncChan)
 				stepParent := plan.NewStep(
 					&image.Image{
-						Name:         "parent",
-						Version:      "0.0.0",
-						RegistryHost: "registry",
+						Name:              "parent",
+						Version:           "0.0.0",
+						RegistryHost:      "registry",
+						RegistryNamespace: "namespace",
 						Builder: &builder.Builder{
 							Name:   "builder",
 							Driver: "mock",
@@ -106,7 +109,7 @@ func TestBuild(t *testing.T) {
 					}, "parent_image", nil)
 				stepParent.Subscribe(childSyncChan)
 
-				service.plan.(*plan.MockPlan).On("Plan", "parent", []string{"0.0.0"}).Return([]*plan.Step{
+				buildPlan.(*plan.MockPlan).On("Plan", "parent", []string{"0.0.0"}).Return([]*plan.Step{
 					stepParent,
 					stepChild,
 				}, nil)
@@ -119,7 +122,7 @@ func TestBuild(t *testing.T) {
 					mockdriver.NewMockDriver(),
 					stepParent.Image(),
 					&driver.BuildDriverOptions{
-						BuilderName:            "builder_mock__parent_0.0.0",
+						BuilderName:            "builder_mock_namespace_parent_0.0.0",
 						AnsibleConnectionLocal: false,
 						PullParentImage:        true,
 						PushAuthUsername:       "user",
@@ -133,7 +136,7 @@ func TestBuild(t *testing.T) {
 					mockdriver.NewMockDriver(),
 					stepChild.Image(),
 					&driver.BuildDriverOptions{
-						BuilderName:            "builder_mock__child_0.0.0",
+						BuilderName:            "builder_mock_namespace_child_0.0.0",
 						AnsibleConnectionLocal: false,
 						PullParentImage:        true,
 						PushAuthUsername:       "user",
@@ -154,10 +157,10 @@ func TestBuild(t *testing.T) {
 			t.Log(test.desc)
 
 			if test.prepareAssertFunc != nil {
-				test.prepareAssertFunc(test.service)
+				test.prepareAssertFunc(test.service, test.buildPlan)
 			}
 
-			err := test.service.Build(context.TODO(), test.name, test.versions, test.options)
+			err := test.service.Build(context.TODO(), test.buildPlan, test.name, test.versions, test.options)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
@@ -167,7 +170,7 @@ func TestBuild(t *testing.T) {
 	}
 }
 
-func TestWorker(t *testing.T) {
+func TestBuildWorker(t *testing.T) {
 
 	errContext := "(build::worker)"
 
@@ -232,7 +235,6 @@ func TestWorker(t *testing.T) {
 		{
 			desc: "Testing worker to build an image",
 			service: NewService(
-				nil,
 				store.NewMockBuildersStore(),
 				command.NewMockBuildCommandFactory(),
 				&driver.BuildDriverFactory{
@@ -248,7 +250,7 @@ func TestWorker(t *testing.T) {
 				PushImageAfterBuild:          true,
 				PullParentImage:              true,
 				SemanticVersionTagsTemplates: []string{"{{.Major}}"},
-				RemoveAfterBuild:             true,
+				RemoveImagesAfterPush:        true,
 				PersistentVars:               map[string]interface{}{"optpvar": "value"},
 				Vars:                         map[string]interface{}{"optvar": "value"},
 				Labels:                       map[string]string{"optlabel": "value"},
@@ -267,30 +269,6 @@ func TestWorker(t *testing.T) {
 				Vars:           map[string]interface{}{"imagevar": "value"},
 				Labels:         map[string]string{"imagelabel": "value"},
 				Tags:           []string{"imagetag"},
-
-				// ImageFromName:              "parent",
-				// ImageFromRegistryNamespace: "parent_namespace",
-				// ImageFromRegistryHost:      "parent_registry",
-				// ImageFromVersion:           "parent_version",
-				// ImageName:                  "image",
-				// ImageVersion:               "0.0.0",
-				// Labels: map[string]string{
-				// 	"optlabel":   "value",
-				// 	"imagelabel": "value",
-				// },
-				// PersistentVars: map[string]interface{}{
-				// 	"optpvar":    "value",
-				// 	"imagepvar":  "value",
-				// 	"parentpvar": "value",
-				// },
-				// RegistryNamespace:     "namespace",
-				// RegistryHost:          "registry",
-				// Tags:                  []string{"0", "opttag", "imagetag"},
-				// Vars: map[string]interface{}{
-				// 	"optvar":   "value",
-				// 	"imagevar": "value",
-				// },
-
 				Parent: &image.Image{
 					Name:              "parent",
 					Version:           "parent_version",
@@ -330,16 +308,15 @@ func TestWorker(t *testing.T) {
 						BuilderName:            "builder_mock_namespace_image_0.0.0",
 						AnsibleConnectionLocal: false,
 						OutputPrefix:           "",
-
-						PullAuthUsername:      "parent_user",
-						PullAuthPassword:      "parent_pass",
-						PullParentImage:       true,
-						PushAuthUsername:      "user",
-						PushAuthPassword:      "pass",
-						PushImageAfterBuild:   true,
-						RemoveImageAfterBuild: true,
-						BuilderVarMappings:    varsmap.New(),
-						BuilderOptions:        &builder.BuilderOptions{},
+						PullAuthUsername:       "parent_user",
+						PullAuthPassword:       "parent_pass",
+						PullParentImage:        true,
+						PushAuthUsername:       "user",
+						PushAuthPassword:       "pass",
+						PushImageAfterBuild:    true,
+						RemoveImageAfterBuild:  true,
+						BuilderVarMappings:     varsmap.New(),
+						BuilderOptions:         &builder.BuilderOptions{},
 					}).Return(command.NewMockBuildCommand(), nil)
 				service.jobFactory.(*job.MockJobFactory).On("New", command.NewMockBuildCommand()).Return(mockJob, nil)
 				service.dispatch.(*dispatch.MockDispatch).On("Enqueue", mockJob)
@@ -355,7 +332,7 @@ func TestWorker(t *testing.T) {
 				test.prepareAssertFunc(test.service, test.image)
 			}
 
-			err := test.service.worker(context.TODO(), test.image, test.options)
+			err := test.service.build(context.TODO(), test.image, test.options)
 
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
@@ -461,7 +438,6 @@ func TestCommand(t *testing.T) {
 		{
 			desc: "Testing create build command",
 			service: NewService(
-				nil,
 				nil,
 				command.NewMockBuildCommandFactory(),
 				nil,

@@ -81,6 +81,8 @@ images:
       name: parent1
       version: parent1_version
       builder: builder
+      persistent_labels:
+        plabel: plabelvalue
   parent2:
     parent2_version:
       registry: registry.test
@@ -183,7 +185,6 @@ image:
 					Version:           "version",
 					Builder:           "builder",
 					Labels:            map[string]string{},
-					PersistentVars:    map[string]interface{}{},
 					Tags:              []string{},
 					Vars:              map[string]interface{}{},
 				}
@@ -194,7 +195,6 @@ image:
 					Version:           "version",
 					Builder:           "builder",
 					Labels:            map[string]string{},
-					PersistentVars:    map[string]interface{}{},
 					Tags:              []string{},
 					Vars:              map[string]interface{}{},
 				}

@@ -5,14 +5,14 @@ import (
 	"github.com/gostevedore/stevedore/internal/images/image"
 )
 
-// SimplePlan is a build plan
-type SimplePlan struct {
+// SinglePlan is a build plan
+type SinglePlan struct {
 	BasePlan
 }
 
-// NewSimplePlan returns a new SimplePlan
-func NewSimplePlan(imagesStorer ImagesStorer) *SimplePlan {
-	return &SimplePlan{
+// NewSinglePlan returns a new SinglePlan
+func NewSinglePlan(imagesStorer ImagesStorer) *SinglePlan {
+	return &SinglePlan{
 		BasePlan{
 			imagesStorer,
 		},
@@ -20,7 +20,7 @@ func NewSimplePlan(imagesStorer ImagesStorer) *SimplePlan {
 }
 
 // Plan return a list of images to build
-func (p *SimplePlan) Plan(name string, versions []string) ([]*Step, error) {
+func (p *SinglePlan) Plan(name string, versions []string) ([]*Step, error) {
 	var steps []*Step
 	var images []*image.Image
 	var err error

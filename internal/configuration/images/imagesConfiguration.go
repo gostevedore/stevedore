@@ -104,7 +104,7 @@ func (t *ImagesConfiguration) LoadImagesToStore(path string) error {
 			for _, parent := range node.Parents() {
 
 				parentName, parentVersion, err := graph.ParseNodeName(parent.(graph.GraphNoder))
-				parentImage, err := t.store.Find(parentName, parentVersion)
+				parentDomainImage, err := t.store.Find(parentName, parentVersion)
 				if err != nil {
 					return errors.New(errContext, err.Error())
 				}
@@ -114,8 +114,12 @@ func (t *ImagesConfiguration) LoadImagesToStore(path string) error {
 					return errors.New(errContext, err.Error())
 				}
 
-				copyDomainImage.Options(domainimage.WithParent(parentImage))
-				parentImage.AddChild(copyDomainImage)
+				copyDomainImage.Options(
+					domainimage.WithParent(parentDomainImage),
+				)
+
+				parentDomainImage.AddChild(copyDomainImage)
+
 				err = t.store.Store(name, version, copyDomainImage)
 				if err != nil {
 					return errors.New(errContext, err.Error())

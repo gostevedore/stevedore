@@ -5,70 +5,9 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/configuration/compatibility"
+	domainimage "github.com/gostevedore/stevedore/internal/images/image"
 	"github.com/stretchr/testify/assert"
 )
-
-// TestLoadImage tests
-// func TestLoadImage(t *testing.T) {
-
-// 	testBaseDir := "test"
-
-// 	tests := []struct {
-// 		desc  string
-// 		file  string
-// 		err   error
-// 		image *Image
-// 	}{
-// 		{
-// 			desc: "testing an unexistent file",
-// 			file: "nofile",
-// 			err: errors.New("(images::LoadImage)", "Images file could not be load",
-// 				errors.New("", "(LoadYAMLFile) Error loading file nofile. open nofile: no such file or directory")),
-// 			image: &Image{},
-// 		},
-// 		{
-// 			desc: "Testing a simple image",
-// 			file: filepath.Join(testBaseDir, "image.yml"),
-// 			err:  &errors.Error{},
-// 			image: &Image{
-// 				Name:         "ubuntu",
-// 				RegistryHost: "registry",
-// 				Builder:      "infrastructure",
-// 				Tags: []string{
-// 					"16.04",
-// 					"xenial",
-// 				},
-// 				Vars: map[string]interface{}{
-// 					"container_name":   "ubuntu",
-// 					"source_image_tag": "16.04",
-// 				},
-// 				Children: map[string][]string{
-// 					"php-builder": {
-// 						"7.1",
-// 						"7.2",
-// 					},
-// 					"php-fpm": {
-// 						"7.1",
-// 					},
-// 					"php-cli": {
-// 						"7.1",
-// 					},
-// 				},
-// 			},
-// 		},
-// 	}
-
-// 	for _, test := range tests {
-// 		t.Log(test.desc)
-
-// 		image, err := LoadImage(test.file)
-// 		if err != nil && assert.Error(t, err) {
-// 			assert.Equal(t, test.err.Error(), err.Error())
-// 		} else {
-// 			assert.Equal(t, image, test.image, "Unexpected value")
-// 		}
-// 	}
-// }
 
 func TestCopy(t *testing.T) {
 	tests := []struct {
@@ -86,82 +25,93 @@ func TestCopy(t *testing.T) {
 		{
 			desc: "Testing an image copy",
 			image: &Image{
-				Name:         "ubuntu",
-				RegistryHost: "registry",
-				Builder:      "infrastructure",
-				Tags: []string{
-					"16.04",
+				Builder: "builder",
+				Labels:  map[string]string{"label": "value"},
+				Name:    "ubuntu",
+				Parents: map[string][]string{"parent": {"parent_version"}},
+				PersistentLabels: map[string]string{
+					"plabel": "pvalue",
 				},
 				PersistentVars: map[string]interface{}{
 					"ubuntu_version": "16.04",
 				},
+				Tags: []string{
+					"16.04",
+				},
+				RegistryHost: "registry",
 				Vars: map[string]interface{}{
 					"container_name":   "ubuntu",
 					"source_image_tag": "16.04",
 				},
 			},
 			res: &Image{
-				Name:         "ubuntu",
-				RegistryHost: "registry",
-				Builder:      "infrastructure",
-				Tags: []string{
-					"16.04",
+				Builder: "builder",
+				Labels:  map[string]string{"label": "value"},
+				Name:    "ubuntu",
+				Parents: map[string][]string{"parent": {"parent_version"}},
+				PersistentLabels: map[string]string{
+					"plabel": "pvalue",
 				},
 				PersistentVars: map[string]interface{}{
 					"ubuntu_version": "16.04",
 				},
+				Tags: []string{
+					"16.04",
+				},
+				RegistryHost: "registry",
 				Vars: map[string]interface{}{
 					"container_name":   "ubuntu",
 					"source_image_tag": "16.04",
 				},
-				Labels: map[string]string{},
 			},
-			err: nil,
+			err: &errors.Error{},
 		},
 		{
 			desc: "Testing an image copy with childs",
 			image: &Image{
-				Name:         "ubuntu",
-				RegistryHost: "registry",
-				Builder:      "infrastructure",
-				Tags: []string{
-					"16.04",
-				},
-				PersistentVars: map[string]interface{}{
-					"ubuntu_version": "16.04",
-				},
-				Vars: map[string]interface{}{
-					"container_name":   "ubuntu",
-					"source_image_tag": "16.04",
-				},
+				Builder: "builder",
 				Children: map[string][]string{
 					"php-fpm": {
 						"7.1",
 						"7.3",
 					},
+				},
+				Name:             "ubuntu",
+				RegistryHost:     "registry",
+				PersistentLabels: map[string]string{},
+				PersistentVars: map[string]interface{}{
+					"ubuntu_version": "16.04",
+				},
+				Tags: []string{
+					"16.04",
+				},
+				Vars: map[string]interface{}{
+					"container_name":   "ubuntu",
+					"source_image_tag": "16.04",
 				},
 			},
 			res: &Image{
-				Name:         "ubuntu",
-				RegistryHost: "registry",
-				Builder:      "infrastructure",
-				Tags: []string{
-					"16.04",
-				},
-				PersistentVars: map[string]interface{}{
-					"ubuntu_version": "16.04",
-				},
-				Vars: map[string]interface{}{
-					"container_name":   "ubuntu",
-					"source_image_tag": "16.04",
-				},
+				Builder: "builder",
 				Children: map[string][]string{
 					"php-fpm": {
 						"7.1",
 						"7.3",
 					},
 				},
-				Labels: map[string]string{},
+				Labels:           map[string]string{},
+				Name:             "ubuntu",
+				RegistryHost:     "registry",
+				PersistentLabels: map[string]string{},
+				PersistentVars: map[string]interface{}{
+					"ubuntu_version": "16.04",
+				},
+				Tags: []string{
+					"16.04",
+				},
+				Vars: map[string]interface{}{
+					"container_name":   "ubuntu",
+					"source_image_tag": "16.04",
+				},
 			},
 			err: errors.New("(image::Image::Copy)", "Image is nil"),
 		},
@@ -179,97 +129,81 @@ func TestCopy(t *testing.T) {
 				assert.Equal(t, test.res, res)
 			}
 		})
-
 	}
-
 }
 
-// func TestImageToArray(t *testing.T) {
-// 	tests := []struct {
-// 		desc  string
-// 		image *Image
-// 		res   []string
-// 		err   error
-// 	}{
-// 		{
-// 			desc:  "Testing array generation from a nil image",
-// 			image: nil,
-// 			res:   nil,
-// 			err:   errors.New("(image::Image::ToArray)", "Image is nil"),
-// 		},
+func TestCreateDomainImage(t *testing.T) {
 
-// 		{
-// 			desc: "Testing array generation from an image",
-// 			image: &Image{
-// 				Name:              "name",
-// 				Version:           "version",
-// 				Builder:           "type",
-// 				RegistryNamespace: "namespace",
-// 				RegistryHost:      "registry",
-// 			},
-// 			res: []string{"name", "version", "type", "namespace", "registry"},
-// 			err: nil,
-// 		},
-// 	}
+	tests := []struct {
+		desc  string
+		image *Image
+		res   *domainimage.Image
+		err   error
+	}{
+		{
+			desc: "Testing create a domain image",
+			image: &Image{
+				Builder: "builder",
+				Labels: map[string]string{
+					"label": "value",
+				},
+				Name: "image",
+				PersistentLabels: map[string]string{
+					"plabel": "pvalue",
+				},
+				PersistentVars: map[string]interface{}{
+					"pvar": "pvalue",
+				},
+				RegistryHost:      "registry.test",
+				RegistryNamespace: "namespace",
+				Tags: []string{
+					"tag",
+				},
+				Vars: map[string]interface{}{
+					"var": "value",
+				},
+				Version: "1.0.0",
+			},
+			res: &domainimage.Image{
+				Builder: "builder",
+				Name:    "image",
+				Labels: map[string]string{
+					"label": "value",
+				},
+				PersistentLabels: map[string]string{
+					"plabel": "pvalue",
+				},
+				PersistentVars: map[string]interface{}{
+					"pvar": "pvalue",
+				},
+				RegistryHost:      "registry.test",
+				RegistryNamespace: "namespace",
+				Tags: []string{
+					"tag",
+				},
+				Vars: map[string]interface{}{
+					"var": "value",
+				},
+				Version: "1.0.0",
+			},
+			err: &errors.Error{},
+		},
+	}
 
-// 	for _, test := range tests {
-// 		t.Run(test.desc, func(t *testing.T) {
-// 			t.Log(test.desc)
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
 
-// 			res, err := test.image.ToArray()
+			res, err := test.image.CreateDomainImage()
 
-// 			if err != nil && assert.Error(t, err) {
-// 				assert.Equal(t, test.err, err)
-// 			} else {
-// 				assert.Equal(t, test.res, res)
-// 			}
-// 		})
-// 	}
-// }
-
-// func TestGetBuilderType(t *testing.T) {
-// 	tests := []struct {
-// 		desc  string
-// 		image *Image
-// 		res   string
-// 	}{
-// 		{
-// 			desc: "Testing get builder type when builder is an string",
-// 			image: &Image{
-// 				Name:              "name",
-// 				Version:           "version",
-// 				Builder:           "builder",
-// 				RegistryNamespace: "namespace",
-// 				RegistryHost:      "registry",
-// 			},
-// 			res: "builder",
-// 		},
-// 		{
-// 			desc: "Testing get builder type when builder is an string",
-// 			image: &Image{
-// 				Name:    "name",
-// 				Version: "version",
-// 				Builder: &builder.Builder{
-// 					Name:    "builder",
-// 					Driver:  "driver",
-// 					Options: &builder.BuilderOptions{},
-// 				},
-// 				RegistryNamespace: "namespace",
-// 				RegistryHost:      "registry",
-// 			},
-// 			res: InlineBuilder,
-// 		},
-// 	}
-
-// 	for _, test := range tests {
-// 		t.Run(test.desc, func(t *testing.T) {
-// 			t.Log(test.desc)
-
-// 			res := test.image.getBuilderType()
-// 			assert.Equal(t, test.res, res)
-// 		})
-// 	}
-// }
+			if err != nil && assert.Error(t, err) {
+				assert.Equal(t, test.err, err)
+			} else {
+				assert.Equal(t, test.res, res)
+			}
+		})
+	}
+}
 
 func TestImageCheckCompatibility(t *testing.T) {
 	tests := []struct {

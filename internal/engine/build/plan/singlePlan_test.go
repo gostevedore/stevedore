@@ -9,28 +9,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSimplePlanPlan(t *testing.T) {
+func TestSinglePlanPlan(t *testing.T) {
 
 	errContext := "(plan::Simple::Plan)"
 
 	tests := []struct {
 		desc              string
-		plan              *SimplePlan
+		plan              *SinglePlan
 		name              string
 		versions          []string
 		res               int
-		prepareAssertFunc func(*SimplePlan)
-		assertFunc        func(*SimplePlan) bool
+		prepareAssertFunc func(*SinglePlan)
+		assertFunc        func(*SinglePlan) bool
 		err               error
 	}{
 		{
 			desc: "Testing error when images storer is nil",
-			plan: &SimplePlan{},
+			plan: &SinglePlan{},
 			err:  errors.New(errContext, "Images storer is nil"),
 		},
 		{
 			desc: "Testing generate plan with an image name and versions",
-			plan: &SimplePlan{
+			plan: &SinglePlan{
 				BasePlan{
 					images: store.NewMockImageStore(),
 				},
@@ -39,7 +39,7 @@ func TestSimplePlanPlan(t *testing.T) {
 			versions: []string{"version1", "version2"},
 			err:      &errors.Error{},
 			res:      2,
-			prepareAssertFunc: func(p *SimplePlan) {
+			prepareAssertFunc: func(p *SinglePlan) {
 				p.images.(*store.MockImageStore).On("Find", "image", "version1").Return(&image.Image{
 					Name:    "image",
 					Version: "version1",
@@ -49,13 +49,13 @@ func TestSimplePlanPlan(t *testing.T) {
 					Version: "version2",
 				}, nil)
 			},
-			assertFunc: func(p *SimplePlan) bool {
+			assertFunc: func(p *SinglePlan) bool {
 				return p.images.(*store.MockImageStore).AssertExpectations(t)
 			},
 		},
 		{
 			desc: "Testing generate plan when no version is provided",
-			plan: &SimplePlan{
+			plan: &SinglePlan{
 				BasePlan{
 					images: store.NewMockImageStore(),
 				},
@@ -63,7 +63,7 @@ func TestSimplePlanPlan(t *testing.T) {
 			name:     "image",
 			versions: []string{},
 			err:      &errors.Error{},
-			prepareAssertFunc: func(p *SimplePlan) {
+			prepareAssertFunc: func(p *SinglePlan) {
 				p.images.(*store.MockImageStore).On("FindByName", "image").Return([]*image.Image{
 					{
 						Name:    "image",
@@ -76,7 +76,7 @@ func TestSimplePlanPlan(t *testing.T) {
 				}, nil)
 			},
 			res: 2,
-			assertFunc: func(p *SimplePlan) bool {
+			assertFunc: func(p *SinglePlan) bool {
 				return p.images.(*store.MockImageStore).AssertExpectations(t)
 			},
 		},
@@ -84,7 +84,7 @@ func TestSimplePlanPlan(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-			//t.Log(test.desc)
+			t.Log(test.desc)
 			if test.prepareAssertFunc != nil {
 				test.prepareAssertFunc(test.plan)
 			}

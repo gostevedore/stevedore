@@ -10,3 +10,8 @@ type ImagesStorer interface {
 	FindByName(name string) ([]*image.Image, error)
 	Find(name string, version string) (*image.Image, error)
 }
+
+// Planner interfaces defines the storage of images
+type Planner interface {
+	Plan(name string, versions []string) ([]*Step, error)
+}
