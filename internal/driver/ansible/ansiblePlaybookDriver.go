@@ -76,6 +76,10 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *dr
 	}
 
 	inventory := o.BuilderOptions.Inventory
+	if o.AnsibleInventoryPath != "" {
+		inventory = o.AnsibleInventoryPath
+	}
+
 	if inventory == "" {
 		return errors.New(errContext, "Inventory has not been defined on build options")
 	}
@@ -106,8 +110,12 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *dr
 		builderName = strings.Join([]string{builderName, i.Version}, "_")
 	}
 
-	if len(o.BuilderName) > 0 {
-		builderName = o.BuilderName
+	if len(o.AnsibleIntermediateContainerName) > 0 {
+		builderName = o.AnsibleIntermediateContainerName
+	}
+
+	if o.AnsibleLimit != "" {
+		ansiblePlaybookOptions.Limit = o.AnsibleLimit
 	}
 
 	ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageBuilderLabelKey], builderName)

@@ -4,6 +4,12 @@ package build
 type ServiceOptions struct {
 	// AnsibleConnectionLocal is the local connection to use on ansible driver
 	AnsibleConnectionLocal bool
+	// AnsibleIntermediateContainerName is the name of an intermediate container that can be used during ansible build process
+	AnsibleIntermediateContainerName string
+	// AnsibleInventoryPath is the path to the ansible inventory file ??
+	AnsibleInventoryPath string
+	// AnsibleLimit is the ansible limit ??
+	AnsibleLimit string
 	// EnableSemanticVersionTags is a flag to enable semantic version tags
 	EnableSemanticVersionTags bool
 	// ImageFromName is the parent's image name

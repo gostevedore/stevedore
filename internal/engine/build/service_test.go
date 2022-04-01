@@ -64,11 +64,15 @@ func TestBuild(t *testing.T) {
 			name:      "parent",
 			versions:  []string{"0.0.0"},
 			options: &ServiceOptions{
-				EnableSemanticVersionTags:    true,
-				PushImageAfterBuild:          true,
-				PullParentImage:              true,
-				SemanticVersionTagsTemplates: []string{"{{.Major}}"},
-				RemoveImagesAfterPush:        true,
+				AnsibleConnectionLocal:           true,
+				AnsibleIntermediateContainerName: "intermediate_container",
+				AnsibleInventoryPath:             "inventory",
+				AnsibleLimit:                     "limit",
+				EnableSemanticVersionTags:        true,
+				PushImageAfterBuild:              true,
+				PullParentImage:                  true,
+				SemanticVersionTagsTemplates:     []string{"{{.Major}}"},
+				RemoveImagesAfterPush:            true,
 			},
 			err: &errors.Error{},
 			assertFunc: func(service *Service) bool {
@@ -97,7 +101,7 @@ func TestBuild(t *testing.T) {
 					}, "child_image", childSyncChan)
 				stepParent := plan.NewStep(
 					&image.Image{
-						Name:              "parent",
+						Name:              "parent", // ERROR: this is the parent image
 						Version:           "0.0.0",
 						RegistryHost:      "registry",
 						RegistryNamespace: "namespace",
@@ -122,30 +126,37 @@ func TestBuild(t *testing.T) {
 					mockdriver.NewMockDriver(),
 					stepParent.Image(),
 					&driver.BuildDriverOptions{
-						BuilderName:            "builder_mock_namespace_parent_0.0.0",
-						AnsibleConnectionLocal: false,
-						PullParentImage:        true,
-						PushAuthUsername:       "user",
-						PushAuthPassword:       "pass",
-						PushImageAfterBuild:    true,
-						RemoveImageAfterBuild:  true,
-						BuilderVarMappings:     varsmap.New(),
-						BuilderOptions:         &builder.BuilderOptions{},
-					}).Return(command.NewMockBuildCommand(), nil)
+						AnsibleConnectionLocal:           true,
+						AnsibleIntermediateContainerName: "intermediate_container",
+						AnsibleInventoryPath:             "inventory",
+						AnsibleLimit:                     "limit",
+						PullParentImage:                  true,
+						PushAuthUsername:                 "user",
+						PushAuthPassword:                 "pass",
+						PushImageAfterBuild:              true,
+						RemoveImageAfterBuild:            true,
+						BuilderVarMappings:               varsmap.New(),
+						BuilderOptions:                   &builder.BuilderOptions{},
+					},
+				).Return(command.NewMockBuildCommand(), nil)
 				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
 					mockdriver.NewMockDriver(),
 					stepChild.Image(),
 					&driver.BuildDriverOptions{
-						BuilderName:            "builder_mock_namespace_child_0.0.0",
-						AnsibleConnectionLocal: false,
-						PullParentImage:        true,
-						PushAuthUsername:       "user",
-						PushAuthPassword:       "pass",
-						PushImageAfterBuild:    true,
-						RemoveImageAfterBuild:  true,
-						BuilderVarMappings:     varsmap.New(),
-						BuilderOptions:         &builder.BuilderOptions{},
-					}).Return(command.NewMockBuildCommand(), nil)
+						AnsibleConnectionLocal:           true,
+						AnsibleIntermediateContainerName: "intermediate_container",
+						AnsibleInventoryPath:             "inventory",
+						AnsibleLimit:                     "limit",
+						PullParentImage:                  true,
+						PushAuthUsername:                 "user",
+						PushAuthPassword:                 "pass",
+						PushImageAfterBuild:              true,
+						RemoveImageAfterBuild:            true,
+						BuilderVarMappings:               varsmap.New(),
+						BuilderOptions:                   &builder.BuilderOptions{},
+					},
+				).Return(command.NewMockBuildCommand(), nil)
+
 				service.jobFactory.(*job.MockJobFactory).On("New", command.NewMockBuildCommand()).Return(mockJob, nil)
 				service.dispatch.(*dispatch.MockDispatch).On("Enqueue", mockJob)
 			},
@@ -305,18 +316,18 @@ func TestBuildWorker(t *testing.T) {
 					mockdriver.NewMockDriver(),
 					image,
 					&driver.BuildDriverOptions{
-						BuilderName:            "builder_mock_namespace_image_0.0.0",
-						AnsibleConnectionLocal: false,
-						OutputPrefix:           "",
-						PullAuthUsername:       "parent_user",
-						PullAuthPassword:       "parent_pass",
-						PullParentImage:        true,
-						PushAuthUsername:       "user",
-						PushAuthPassword:       "pass",
-						PushImageAfterBuild:    true,
-						RemoveImageAfterBuild:  true,
-						BuilderVarMappings:     varsmap.New(),
-						BuilderOptions:         &builder.BuilderOptions{},
+						AnsibleConnectionLocal:           false,
+						AnsibleIntermediateContainerName: "builder_mock_namespace_image_0.0.0",
+						OutputPrefix:                     "",
+						PullAuthUsername:                 "parent_user",
+						PullAuthPassword:                 "parent_pass",
+						PullParentImage:                  true,
+						PushAuthUsername:                 "user",
+						PushAuthPassword:                 "pass",
+						PushImageAfterBuild:              true,
+						RemoveImageAfterBuild:            true,
+						BuilderVarMappings:               varsmap.New(),
+						BuilderOptions:                   &builder.BuilderOptions{},
 					}).Return(command.NewMockBuildCommand(), nil)
 				service.jobFactory.(*job.MockJobFactory).On("New", command.NewMockBuildCommand()).Return(mockJob, nil)
 				service.dispatch.(*dispatch.MockDispatch).On("Enqueue", mockJob)

@@ -252,10 +252,15 @@ func (s *Service) build(ctx context.Context, image *image.Image, options *Servic
 		return errors.New(errContext, err.Error())
 	}
 
-	buildOptions.BuilderName = strings.Join([]string{"builder", imageBuilder.Driver, image.RegistryNamespace, image.Name, image.Version}, "_")
-
 	// used by ansible driver
 	buildOptions.AnsibleConnectionLocal = options.AnsibleConnectionLocal
+	if options.AnsibleIntermediateContainerName != "" {
+		buildOptions.AnsibleIntermediateContainerName = options.AnsibleIntermediateContainerName
+	} else {
+		buildOptions.AnsibleIntermediateContainerName = strings.Join([]string{"builder", imageBuilder.Driver, image.RegistryNamespace, image.Name, image.Version}, "_")
+	}
+	buildOptions.AnsibleInventoryPath = options.AnsibleInventoryPath
+	buildOptions.AnsibleLimit = options.AnsibleLimit
 
 	buildOptions.PullParentImage = options.PullParentImage
 

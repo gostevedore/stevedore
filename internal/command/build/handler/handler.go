@@ -2,11 +2,15 @@ package build
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/engine/build"
 	"github.com/gostevedore/stevedore/internal/engine/build/plan"
 )
+
+const AssignmentTokenSymbol = '='
 
 // Handler is a handler for build commands
 type Handler struct {
@@ -40,12 +44,14 @@ func (h *Handler) Handler(ctx context.Context, options *HandlerOptions) error {
 	}
 
 	buildServiceOptions.AnsibleConnectionLocal = options.AnsibleConnectionLocal
-	// AnsibleIntermediateContainerName
-	// AnsibleInventoryPath
-	// AnsibleLimit
+	buildServiceOptions.AnsibleIntermediateContainerName = options.AnsibleIntermediateContainerName
+	buildServiceOptions.AnsibleInventoryPath = options.AnsibleInventoryPath
+	buildServiceOptions.AnsibleLimit = options.AnsibleLimit
+
 	// concurrency
 	// debug
 	// dryrun
+
 	buildServiceOptions.EnableSemanticVersionTags = options.EnableSemanticVersionTags
 
 	buildServiceOptions.ImageFromName = options.ImageFromName
@@ -58,11 +64,25 @@ func (h *Handler) Handler(ctx context.Context, options *HandlerOptions) error {
 	buildServiceOptions.ImageRegistryNamespace = options.ImageRegistryNamespace
 	buildServiceOptions.ImageVersions = append([]string{}, options.Versions...)
 
-	for kLabel, vLabel := range options.Labels {
+	for _, labels := range options.Labels {
+
+		if strings.IndexRune(labels, AssignmentTokenSymbol) < 0 {
+			return errors.New(errContext, fmt.Sprintf("Invalid label format '%s'", labels))
+		}
+		kLabel := labels[:strings.IndexRune(labels, AssignmentTokenSymbol)]
+		vLabel := labels[strings.IndexRune(labels, AssignmentTokenSymbol)+1:]
+
 		buildServiceOptions.Labels[kLabel] = vLabel
 	}
 
-	for kPVar, vPVar := range options.PersistentVars {
+	for _, persistentVars := range options.PersistentVars {
+
+		if strings.IndexRune(persistentVars, AssignmentTokenSymbol) < 0 {
+			return errors.New(errContext, fmt.Sprintf("Invalid label format '%s'", persistentVars))
+		}
+		kPVar := persistentVars[:strings.IndexRune(persistentVars, AssignmentTokenSymbol)]
+		vPVar := persistentVars[strings.IndexRune(persistentVars, AssignmentTokenSymbol)+1:]
+
 		buildServiceOptions.PersistentVars[kPVar] = vPVar
 	}
 
@@ -104,6 +124,10 @@ func (h *Handler) getPlan(options *HandlerOptions) (plan.Planner, error) {
 		planType = "cascade"
 		planParameters["depth"] = options.CascadeDepth
 
+		err = validateCascadePlanOptions(options)
+		if err != nil {
+			return nil, errors.New(errContext, err.Error())
+		}
 	}
 
 	plan, err = h.planFactory.NewPlan(planType, planParameters)
@@ -113,4 +137,23 @@ func (h *Handler) getPlan(options *HandlerOptions) (plan.Planner, error) {
 
 	return plan, nil
 
+}
+
+// validateCascadePlanOptions returns an error if the options are not valid for cascade plan
+func validateCascadePlanOptions(options *HandlerOptions) error {
+	errContext := "(build::validateCascadePlanOptions)"
+
+	if options.AnsibleIntermediateContainerName != "" {
+		return errors.New(errContext, "Cascade plan does not support intermediate containers name. It could cause an unpredictable result")
+	}
+
+	if options.AnsibleInventoryPath != "" {
+		return errors.New(errContext, "Cascade plan does not support ansible inventory path. It could cause an unpredictable result")
+	}
+
+	if options.AnsibleLimit != "" {
+		return errors.New(errContext, "Cascade plan does not support ansible limit. It could cause an unpredictable result")
+	}
+
+	return nil
 }

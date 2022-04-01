@@ -254,9 +254,11 @@ func TestBuild(t *testing.T) {
 					Playbook:  "site.yml",
 					Inventory: "inventory.yml",
 				},
-				BuilderName:            "builder",
-				OutputPrefix:           "prefix",
-				AnsibleConnectionLocal: true,
+				OutputPrefix:                     "prefix",
+				AnsibleConnectionLocal:           true,
+				AnsibleIntermediateContainerName: "intermediate_container",
+				AnsibleInventoryPath:             "override-inventory.yml",
+				AnsibleLimit:                     "limit",
 				BuilderVarMappings: map[string]string{
 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
 					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
@@ -277,9 +279,10 @@ func TestBuild(t *testing.T) {
 			},
 			prepareAssertFunc: func(driver AnsibleDriverer) {
 				ansibleOptions := &ansible.AnsiblePlaybookOptions{
-					Inventory: "inventory.yml",
+					Inventory: "override-inventory.yml",
+					Limit:     "limit",
 					ExtraVars: map[string]interface{}{
-						"image_builder_label":           "builder",
+						"image_builder_label":           "intermediate_container",
 						"image_name":                    "image_name",
 						"image_registry_host":           "registry",
 						"image_registry_namespace":      "namespace",
