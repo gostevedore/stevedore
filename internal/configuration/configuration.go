@@ -6,25 +6,31 @@ import (
 	"io"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 	"go.uber.org/zap/buffer"
 )
 
 type Configuration struct {
-	TreePathFile                 string
-	BuilderPathFile              string
+	DEPRECATEDTreePathFile       string
+	ImagesPath                   string
+	DEPRECATEDBuilderPath        string
+	BuildersPath                 string
 	LogPathFile                  string
-	NumWorkers                   int
+	DEPRECATEDNumWorkers         int
+	Concurrency                  int
 	PushImages                   bool
-	BuildOnCascade               bool
+	DEPRECATEDBuildOnCascade     bool
 	DockerCredentialsDir         string
 	EnableSemanticVersionTags    bool
 	SemanticVersionTagsTemplates []string
 
 	compatibility Compatibilitier
+	fs            afero.Fs
 }
 
 const (
@@ -33,33 +39,40 @@ const (
 
 	SecundaryConfigFolder = "."
 
-	DefaultTreePathFile                 = "stevedore.yaml"
-	DefaultBuilderPathFile              = "stevedore.yaml"
-	DefaultLogPathFile                  = "/dev/null"
-	DefaultNumWorker                    = 4
+	DEPRECATEDDefaultTreePathFile       = "stevedore.yaml"
+	DefaultImagesPath                   = "stevedore.yaml"
+	DEPRECATEDDefaultBuilderPath        = "stevedore.yaml"
+	DefaultBuildersPath                 = "stevedore.yaml"
+	DefaultLogPathFile                  = ""
+	DEPRECATEDDefaultNumWorker          = 4
 	DefaultPushImages                   = true
-	DefaultBuildOnCascade               = false
+	DEPRECATEDDefaultBuildOnCascade     = false
 	DefaultDockerCredentialsDir         = "credentials"
 	DefaultEnableSemanticVersionTags    = false
 	DefaultSemanticVersionTagsTemplates = "{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
 
-	TreePathFileKey                 = "tree_path"
-	BuilderPathFileKey              = "builder_path"
+	DEPRECATEDTreePathFileKey       = "tree_path"
+	ImagesPathKey                   = "images_path"
+	DEPRECATEDBuilderPathKey        = "builder_path"
+	BuildersPathKey                 = "builders_path"
 	LogPathFileKey                  = "log_path"
-	NumWorkerKey                    = "num_workers"
+	DEPRECATEDNumWorkerKey          = "num_workers"
+	ConcurrencyKey                  = "concurrency"
 	PushImagesKey                   = "push_images"
-	BuildOnCascadeKey               = "build_on_cascade"
+	DEPRECATEDBuildOnCascadeKey     = "build_on_cascade"
 	DockerCredentialsDirKey         = "docker_registry_credentials_dir"
 	EnableSemanticVersionTagsKey    = "semantic_version_tags_enabled"
 	SemanticVersionTagsTemplatesKey = "semantic_version_tags_templates"
 )
 
 // New method create a new configuration object
-func New() (*Configuration, error) {
+func New(fs afero.Fs, compatibility Compatibilitier) (*Configuration, error) {
+
+	errContext := "(Configuration::New)"
 
 	user, err := user.Current()
 	if err != nil {
-		return nil, errors.New("(configuration::New)", "Current user information can not be cached", err)
+		return nil, errors.New(errContext, "Current user information can not be cached", err)
 	}
 
 	alternativesConfigFolders := []string{
@@ -67,19 +80,26 @@ func New() (*Configuration, error) {
 		user.HomeDir,
 	}
 
+	viper.SetFs(fs)
+
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("stevedore")
 
 	viper.SetConfigName(DefaultConfigFile)
 	viper.SetConfigType("yaml")
 
-	viper.SetDefault(TreePathFileKey, filepath.Join(DefaultConfigFolder, DefaultTreePathFile))
-	viper.SetDefault(BuilderPathFileKey, filepath.Join(DefaultConfigFolder, DefaultBuilderPathFile))
-	viper.SetDefault(LogPathFileKey, DefaultLogPathFile)
-	viper.SetDefault(NumWorkerKey, DefaultNumWorker)
-	viper.SetDefault(PushImagesKey, DefaultPushImages)
-	viper.SetDefault(BuildOnCascadeKey, DefaultBuildOnCascade)
+	// dynamic default values
+	defaultConcurrency := runtime.NumCPU() / 4
 
+	viper.SetDefault(DEPRECATEDTreePathFileKey, filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultTreePathFile))
+	viper.SetDefault(ImagesPathKey, filepath.Join(DefaultConfigFolder, DefaultImagesPath))
+	viper.SetDefault(DEPRECATEDBuilderPathKey, filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultBuilderPath))
+	viper.SetDefault(BuildersPathKey, filepath.Join(DefaultConfigFolder, DefaultBuildersPath))
+	viper.SetDefault(LogPathFileKey, DefaultLogPathFile)
+	viper.SetDefault(DEPRECATEDNumWorkerKey, DEPRECATEDDefaultNumWorker)
+	viper.SetDefault(ConcurrencyKey, defaultConcurrency)
+	viper.SetDefault(PushImagesKey, DefaultPushImages)
+	viper.SetDefault(DEPRECATEDBuildOnCascadeKey, DEPRECATEDDefaultBuildOnCascade)
 	viper.SetDefault(DockerCredentialsDirKey, filepath.Join(user.HomeDir, ".config", "stevedore", DefaultDockerCredentialsDir))
 	viper.SetDefault(EnableSemanticVersionTagsKey, DefaultEnableSemanticVersionTags)
 	viper.SetDefault(SemanticVersionTagsTemplatesKey, []string{DefaultSemanticVersionTagsTemplates})
@@ -93,17 +113,26 @@ func New() (*Configuration, error) {
 	// when configuration is created no error is shown if readinconfig files. It will use the defaults
 	viper.ReadInConfig()
 
-	return &Configuration{
-		TreePathFile:                 viper.GetString(TreePathFileKey),
-		BuilderPathFile:              viper.GetString(BuilderPathFileKey),
+	config := &Configuration{
+		ImagesPath:                   viper.GetString(ImagesPathKey),
+		BuildersPath:                 viper.GetString(BuildersPathKey),
 		LogPathFile:                  viper.GetString(LogPathFileKey),
-		NumWorkers:                   viper.GetInt(NumWorkerKey),
+		Concurrency:                  viper.GetInt(ConcurrencyKey),
 		PushImages:                   viper.GetBool(PushImagesKey),
-		BuildOnCascade:               viper.GetBool(BuildOnCascadeKey),
 		DockerCredentialsDir:         viper.GetString(DockerCredentialsDirKey),
 		EnableSemanticVersionTags:    viper.GetBool(EnableSemanticVersionTagsKey),
 		SemanticVersionTagsTemplates: viper.GetStringSlice(SemanticVersionTagsTemplatesKey),
-	}, nil
+
+		compatibility: compatibility,
+		fs:            fs,
+	}
+
+	err = config.CheckCompatibility()
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+
+	return config, nil
 }
 
 func ConfigFileUsed() string {
@@ -111,33 +140,48 @@ func ConfigFileUsed() string {
 }
 
 // LoadFromFile method returns a configuration object loaded from a file
-func LoadFromFile(file string) (*Configuration, error) {
+func LoadFromFile(fs afero.Fs, file string, compatibility Compatibilitier) (*Configuration, error) {
 
-	//	viper.Reset()
+	errContext := "(configuration::LoadFromFile)"
+
+	viper.SetFs(fs)
 	viper.SetConfigFile(file)
 	err := viper.ReadInConfig()
 	if err != nil {
-		return nil, errors.New("(Configuration::LoadFromFile)", "Configuration could be load from '"+file+"'", err)
+		return nil, errors.New(errContext, "Configuration file could be loaded", err)
 	}
 
-	return &Configuration{
-		TreePathFile:                 viper.GetString(TreePathFileKey),
-		BuilderPathFile:              viper.GetString(BuilderPathFileKey),
+	config := &Configuration{
+		DEPRECATEDTreePathFile:       viper.GetString(DEPRECATEDTreePathFileKey),
+		DEPRECATEDBuilderPath:        viper.GetString(DEPRECATEDBuilderPathKey),
+		ImagesPath:                   viper.GetString(ImagesPathKey),
+		BuildersPath:                 viper.GetString(BuildersPathKey),
 		LogPathFile:                  viper.GetString(LogPathFileKey),
-		NumWorkers:                   viper.GetInt(NumWorkerKey),
+		DEPRECATEDNumWorkers:         viper.GetInt(DEPRECATEDNumWorkerKey),
+		Concurrency:                  viper.GetInt(ConcurrencyKey),
 		PushImages:                   viper.GetBool(PushImagesKey),
-		BuildOnCascade:               viper.GetBool(BuildOnCascadeKey),
+		DEPRECATEDBuildOnCascade:     viper.GetBool(DEPRECATEDBuildOnCascadeKey),
 		DockerCredentialsDir:         viper.GetString(DockerCredentialsDirKey),
 		EnableSemanticVersionTags:    viper.GetBool(EnableSemanticVersionTagsKey),
 		SemanticVersionTagsTemplates: viper.GetStringSlice(SemanticVersionTagsTemplatesKey),
-	}, nil
+
+		compatibility: compatibility,
+	}
+
+	err = config.CheckCompatibility()
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+
+	return config, nil
 }
 
 // ReloadConfigurationFromFile
-func (c *Configuration) ReloadConfigurationFromFile(file string) error {
-	newConfig, err := LoadFromFile(file)
+func (c *Configuration) ReloadConfigurationFromFile(fs afero.Fs, file string, compatibility Compatibilitier) error {
+	errContext := "(Configuration::ReloadConfigurationFromFile)"
+	newConfig, err := LoadFromFile(fs, file, compatibility)
 	if err != nil {
-		return errors.New("(Configuration::ReloadConfigurationFromFile)", "Configuration could not be reload from file '"+file+"'", err)
+		return errors.New(errContext, err.Error())
 	}
 
 	*c = *newConfig
@@ -149,12 +193,11 @@ func (c *Configuration) String() string {
 
 	str = fmt.Sprintln()
 
-	str = fmt.Sprintln(str, TreePathFileKey, ": ", c.TreePathFile)
-	str = fmt.Sprintln(str, BuilderPathFileKey, ": ", c.BuilderPathFile)
+	str = fmt.Sprintln(str, ImagesPathKey, ": ", c.ImagesPath)
+	str = fmt.Sprintln(str, BuildersPathKey, ": ", c.BuildersPath)
 	str = fmt.Sprintln(str, LogPathFileKey, ": ", c.LogPathFile)
-	str = fmt.Sprintln(str, NumWorkerKey, ": ", c.NumWorkers)
+	str = fmt.Sprintln(str, ConcurrencyKey, ": ", c.Concurrency)
 	str = fmt.Sprintln(str, PushImagesKey, ": ", c.PushImages)
-	str = fmt.Sprintln(str, BuildOnCascadeKey, ": ", c.BuildOnCascade)
 	str = fmt.Sprintln(str, DockerCredentialsDirKey, ": ", c.DockerCredentialsDir)
 	str = fmt.Sprintln(str, EnableSemanticVersionTagsKey, ":", c.EnableSemanticVersionTags)
 	str = fmt.Sprintln(str, SemanticVersionTagsTemplatesKey, ":", c.SemanticVersionTagsTemplates)
@@ -169,12 +212,11 @@ func (c *Configuration) ToArray() ([][]string, error) {
 	}
 
 	arrayConfig := [][]string{}
-	arrayConfig = append(arrayConfig, []string{TreePathFileKey, c.TreePathFile})
-	arrayConfig = append(arrayConfig, []string{BuilderPathFileKey, c.BuilderPathFile})
+	arrayConfig = append(arrayConfig, []string{ImagesPathKey, c.ImagesPath})
+	arrayConfig = append(arrayConfig, []string{BuildersPathKey, c.BuildersPath})
 	arrayConfig = append(arrayConfig, []string{LogPathFileKey, c.LogPathFile})
-	arrayConfig = append(arrayConfig, []string{NumWorkerKey, fmt.Sprint(c.NumWorkers)})
+	arrayConfig = append(arrayConfig, []string{ConcurrencyKey, fmt.Sprint(c.Concurrency)})
 	arrayConfig = append(arrayConfig, []string{PushImagesKey, fmt.Sprint(c.PushImages)})
-	arrayConfig = append(arrayConfig, []string{BuildOnCascadeKey, fmt.Sprint(c.BuildOnCascade)})
 	arrayConfig = append(arrayConfig, []string{DockerCredentialsDirKey, fmt.Sprint(c.DockerCredentialsDir)})
 	arrayConfig = append(arrayConfig, []string{EnableSemanticVersionTagsKey, fmt.Sprint(c.EnableSemanticVersionTags)})
 	semanticVersionTagsTemplatesValue := fmt.Sprint(c.SemanticVersionTagsTemplates)
@@ -197,12 +239,6 @@ func (c *Configuration) WriteConfigurationFile(w io.Writer) error {
 
 	var buff buffer.Buffer
 
-	// configFile, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-	// if err != nil {
-	// 	return errors.New("(configuration::CreateConfigurationFile)", fmt.Sprintf("File '%s' could not be opened", file), err)
-	// }
-	// defer configFile.Close()
-
 	tmpl, err := template.New("configuration").Parse(configurationTemplate)
 	if err != nil {
 		return errors.New("(configuration::CreateConfigurationFile)", "Configuration template could not be parsed", err)
@@ -221,6 +257,50 @@ func (c *Configuration) WriteConfigurationFile(w io.Writer) error {
 	config := replacer.Replace(buff.String())
 
 	fmt.Fprintln(w, config)
+
+	return nil
+}
+
+// CheckCompatibility
+func (c *Configuration) CheckCompatibility() error {
+
+	errContext := "(Configuration::CheckCompatibility)"
+
+	if c.compatibility == nil {
+		return errors.New(errContext, "To ckeck configuration compatiblity is required a compatibilitier")
+	}
+
+	if c.DEPRECATEDTreePathFile != "" {
+		c.compatibility.AddDeprecated(fmt.Sprintf("'%s' is deprecated and will be removed on v0.12.0, please use '%s' instead", DEPRECATEDTreePathFileKey, ImagesPathKey))
+
+		if c.ImagesPath == "" {
+			c.ImagesPath = c.DEPRECATEDTreePathFile
+		} else {
+			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and '%s' are both defined, '%s' will be used", DEPRECATEDTreePathFileKey, ImagesPathKey, ImagesPathKey))
+		}
+	}
+	if c.DEPRECATEDBuilderPath != "" {
+		c.compatibility.AddDeprecated(fmt.Sprintf("'%s' is deprecated and will be removed on v0.12.0, please use '%s' instead", DEPRECATEDBuilderPathKey, BuildersPathKey))
+
+		if c.BuildersPath == "" {
+			c.BuildersPath = c.DEPRECATEDBuilderPath
+		} else {
+			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and '%s' are both defined, '%s' will be used", DEPRECATEDBuilderPathKey, BuildersPathKey, BuildersPathKey))
+		}
+	}
+	if c.DEPRECATEDNumWorkers > 0 {
+		c.compatibility.AddDeprecated(fmt.Sprintf("'%s' is deprecated and will be removed on v0.12.0, please use '%s' instead", DEPRECATEDNumWorkerKey, ConcurrencyKey))
+
+		if c.Concurrency <= 0 {
+			c.Concurrency = c.DEPRECATEDNumWorkers
+		} else {
+			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and '%s' are both defined, '%s' will be used", DEPRECATEDNumWorkerKey, ConcurrencyKey, ConcurrencyKey))
+		}
+	}
+	if c.DEPRECATEDBuildOnCascade == true {
+		c.compatibility.AddChanged(fmt.Sprintf("'%s' is not available anymore as a configuration parameter. Cascade execution plan is only enabled by '--cascade' flag on build command", DEPRECATEDBuildOnCascadeKey))
+		c.DEPRECATEDBuildOnCascade = false
+	}
 
 	return nil
 }

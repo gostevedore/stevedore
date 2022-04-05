@@ -8,16 +8,15 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/configuration/compatibility"
+	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap/buffer"
-)
-
-const (
-	testBaseDir = "test"
 )
 
 func TestViperBehavior(t *testing.T) {
@@ -31,12 +30,13 @@ func TestViperBehavior(t *testing.T) {
 			desc:   "Testing empty configuration file",
 			config: []byte(""),
 			res: &Configuration{
-				TreePathFile:                 filepath.Join(DefaultConfigFolder, DefaultTreePathFile),
-				BuilderPathFile:              filepath.Join(DefaultConfigFolder, DefaultBuilderPathFile),
+				DEPRECATEDTreePathFile:       filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultTreePathFile),
+				DEPRECATEDBuilderPath:        filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultBuilderPath),
 				LogPathFile:                  DefaultLogPathFile,
-				NumWorkers:                   DefaultNumWorker,
+				DEPRECATEDNumWorkers:         DEPRECATEDDefaultNumWorker,
+				Concurrency:                  4,
 				PushImages:                   DefaultPushImages,
-				BuildOnCascade:               DefaultBuildOnCascade,
+				DEPRECATEDBuildOnCascade:     DEPRECATEDDefaultBuildOnCascade,
 				DockerCredentialsDir:         DefaultDockerCredentialsDir,
 				EnableSemanticVersionTags:    DefaultEnableSemanticVersionTags,
 				SemanticVersionTagsTemplates: []string{DefaultSemanticVersionTagsTemplates},
@@ -49,12 +49,13 @@ log_path: "/var/log/stevedore/stevedore.log"
 num_workers: 5 
 `),
 			res: &Configuration{
-				TreePathFile:                 filepath.Join(DefaultConfigFolder, DefaultTreePathFile),
-				BuilderPathFile:              filepath.Join(DefaultConfigFolder, DefaultBuilderPathFile),
+				DEPRECATEDTreePathFile:       filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultTreePathFile),
+				DEPRECATEDBuilderPath:        filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultBuilderPath),
 				LogPathFile:                  "/var/log/stevedore/stevedore.log",
-				NumWorkers:                   5,
+				DEPRECATEDNumWorkers:         5,
+				Concurrency:                  4,
 				PushImages:                   DefaultPushImages,
-				BuildOnCascade:               DefaultBuildOnCascade,
+				DEPRECATEDBuildOnCascade:     DEPRECATEDDefaultBuildOnCascade,
 				DockerCredentialsDir:         DefaultDockerCredentialsDir,
 				EnableSemanticVersionTags:    DefaultEnableSemanticVersionTags,
 				SemanticVersionTagsTemplates: []string{DefaultSemanticVersionTagsTemplates},
@@ -68,12 +69,12 @@ num_workers: 5
 
 		viper.Reset()
 		viper.SetConfigType("yaml")
-		viper.SetDefault(TreePathFileKey, filepath.Join(DefaultConfigFolder, DefaultTreePathFile))
-		viper.SetDefault(BuilderPathFileKey, filepath.Join(DefaultConfigFolder, DefaultBuilderPathFile))
+		viper.SetDefault(DEPRECATEDTreePathFileKey, filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultTreePathFile))
+		viper.SetDefault(DEPRECATEDBuilderPathKey, filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultBuilderPath))
 		viper.SetDefault(LogPathFileKey, DefaultLogPathFile)
-		viper.SetDefault(NumWorkerKey, DefaultNumWorker)
+		viper.SetDefault(DEPRECATEDNumWorkerKey, DEPRECATEDDefaultNumWorker)
 		viper.SetDefault(PushImagesKey, DefaultPushImages)
-		viper.SetDefault(BuildOnCascadeKey, DefaultBuildOnCascade)
+		viper.SetDefault(DEPRECATEDBuildOnCascadeKey, DEPRECATEDDefaultBuildOnCascade)
 		viper.SetDefault(DockerCredentialsDirKey, DefaultDockerCredentialsDir)
 		viper.SetDefault(EnableSemanticVersionTagsKey, DefaultEnableSemanticVersionTags)
 		viper.SetDefault(SemanticVersionTagsTemplatesKey, []string{DefaultSemanticVersionTagsTemplates})
@@ -81,12 +82,13 @@ num_workers: 5
 		viper.ReadConfig(bytes.NewBuffer(test.config))
 
 		c := &Configuration{
-			TreePathFile:                 viper.GetString(TreePathFileKey),
-			BuilderPathFile:              viper.GetString(BuilderPathFileKey),
+			DEPRECATEDTreePathFile:       viper.GetString(DEPRECATEDTreePathFileKey),
+			DEPRECATEDBuilderPath:        viper.GetString(DEPRECATEDBuilderPathKey),
 			LogPathFile:                  viper.GetString(LogPathFileKey),
-			NumWorkers:                   viper.GetInt(NumWorkerKey),
+			DEPRECATEDNumWorkers:         viper.GetInt(DEPRECATEDNumWorkerKey),
+			Concurrency:                  4,
 			PushImages:                   viper.GetBool(PushImagesKey),
-			BuildOnCascade:               viper.GetBool(BuildOnCascadeKey),
+			DEPRECATEDBuildOnCascade:     viper.GetBool(DEPRECATEDBuildOnCascadeKey),
 			DockerCredentialsDir:         viper.GetString(DockerCredentialsDirKey),
 			EnableSemanticVersionTags:    viper.GetBool(EnableSemanticVersionTagsKey),
 			SemanticVersionTagsTemplates: viper.GetStringSlice(SemanticVersionTagsTemplatesKey),
@@ -106,10 +108,12 @@ func TestNew(t *testing.T) {
 	}
 
 	tests := []struct {
-		desc     string
-		preFunc  func()
-		postFunc func()
-		res      *Configuration
+		desc              string
+		preFunc           func()
+		postFunc          func()
+		res               *Configuration
+		compatibility     Compatibilitier
+		prepareAssertFunc func(c Compatibilitier)
 	}{
 		{
 			desc: "Testing all defaults",
@@ -118,16 +122,17 @@ func TestNew(t *testing.T) {
 			},
 			postFunc: nil,
 			res: &Configuration{
-				TreePathFile:                 filepath.Join(DefaultConfigFolder, DefaultTreePathFile),
-				BuilderPathFile:              filepath.Join(DefaultConfigFolder, DefaultBuilderPathFile),
+				ImagesPath:                   filepath.Join(DefaultConfigFolder, DefaultImagesPath),
+				BuildersPath:                 filepath.Join(DefaultConfigFolder, DefaultBuildersPath),
 				LogPathFile:                  DefaultLogPathFile,
-				NumWorkers:                   DefaultNumWorker,
+				Concurrency:                  4,
 				PushImages:                   DefaultPushImages,
-				BuildOnCascade:               DefaultBuildOnCascade,
 				DockerCredentialsDir:         filepath.Join(user.HomeDir, ".config", "stevedore", DefaultDockerCredentialsDir),
 				EnableSemanticVersionTags:    DefaultEnableSemanticVersionTags,
 				SemanticVersionTagsTemplates: []string{DefaultSemanticVersionTagsTemplates},
 			},
+			compatibility:     &compatibility.MockCompatibility{},
+			prepareAssertFunc: func(c Compatibilitier) {},
 		},
 		{
 			desc: "Testing set num_workers using environment variables",
@@ -141,12 +146,11 @@ func TestNew(t *testing.T) {
 				os.Unsetenv("STEVEDORE_BUILD_ON_CASCADE")
 			},
 			res: &Configuration{
-				TreePathFile:                 filepath.Join(DefaultConfigFolder, DefaultTreePathFile),
-				BuilderPathFile:              filepath.Join(DefaultConfigFolder, DefaultBuilderPathFile),
+				ImagesPath:                   filepath.Join(DefaultConfigFolder, DefaultImagesPath),
+				BuildersPath:                 filepath.Join(DefaultConfigFolder, DefaultBuildersPath),
 				LogPathFile:                  DefaultLogPathFile,
-				NumWorkers:                   5,
+				Concurrency:                  4,
 				PushImages:                   DefaultPushImages,
-				BuildOnCascade:               true,
 				DockerCredentialsDir:         filepath.Join(user.HomeDir, ".config", "stevedore", DefaultDockerCredentialsDir),
 				EnableSemanticVersionTags:    DefaultEnableSemanticVersionTags,
 				SemanticVersionTagsTemplates: []string{DefaultSemanticVersionTagsTemplates},
@@ -161,12 +165,27 @@ func TestNew(t *testing.T) {
 			test.preFunc()
 		}
 
-		c, err := New()
+		if test.prepareAssertFunc != nil {
+			test.prepareAssertFunc(test.compatibility)
+		}
+
+		c, err := New(afero.NewMemMapFs(), test.compatibility)
 		if err != nil {
 			t.Error(err.Error())
+		} else {
+			assert.Equal(t, test.res.DEPRECATEDTreePathFile, c.DEPRECATEDTreePathFile)
+			assert.Equal(t, test.res.DEPRECATEDBuilderPath, c.DEPRECATEDBuilderPath)
+			assert.Equal(t, test.res.ImagesPath, c.ImagesPath)
+			assert.Equal(t, test.res.BuildersPath, c.BuildersPath)
+			assert.Equal(t, test.res.LogPathFile, c.LogPathFile)
+			assert.Equal(t, test.res.DEPRECATEDNumWorkers, c.DEPRECATEDNumWorkers)
+			assert.Equal(t, test.res.Concurrency, c.Concurrency)
+			assert.Equal(t, test.res.PushImages, c.PushImages)
+			assert.Equal(t, test.res.DEPRECATEDBuildOnCascade, c.DEPRECATEDBuildOnCascade)
+			assert.Equal(t, test.res.DockerCredentialsDir, c.DockerCredentialsDir)
+			assert.Equal(t, test.res.EnableSemanticVersionTags, c.EnableSemanticVersionTags)
+			assert.Equal(t, test.res.SemanticVersionTagsTemplates, c.SemanticVersionTagsTemplates)
 		}
-		assert.Equal(t, test.res, c, "Configuration values does not coincide")
-
 		if test.postFunc != nil {
 			test.postFunc()
 		}
@@ -175,35 +194,74 @@ func TestNew(t *testing.T) {
 
 func TestLoadFromFile(t *testing.T) {
 
+	var err error
+	errContext := "(Configuration::LoadFromFile)"
+
+	baseDir := "/config"
+	testFs := afero.NewMemMapFs()
+	testFs.MkdirAll(baseDir, 0755)
+	err = afero.WriteFile(testFs, filepath.Join(baseDir, "stevedore.yaml"), []byte(`
+images_path: mystevedore.yaml
+builders_path: mystevedore.yaml
+log_path: mystevedore.log
+concurrency: 10
+push_images: false
+build_on_cascade: true
+docker_registry_credentials_dir: mycredentials
+semantic_version_tags_enabled: true
+semantic_version_tags_templates:
+  - "{{ -Major }}"
+  - "{{ -Major }}.{{ .Minor }}"
+`), 0644)
+
+	if err != nil {
+		t.Log(err)
+	}
+
 	tests := []struct {
-		desc string
-		file string
-		err  error
-		res  *Configuration
+		desc              string
+		file              string
+		err               error
+		res               *Configuration
+		compatibility     Compatibilitier
+		prepareAssertFunc func(c Compatibilitier)
 	}{
 		{
 			desc: "Testing error when loading configuration from file",
 			file: "unknown",
-			err:  errors.New("(Configuration::LoadFromFile)", "Configuration could be load from 'unknown'", errors.New("", "open unknown: no such file or directory")),
+			err:  errors.New(errContext, "Configuration file could be loaded", errors.New("", "open unknown: file does not exist")),
 			res:  nil,
 		},
 		{
 			desc: "Testing loading configuration from file",
-			file: filepath.Join(testBaseDir, "stevedore.yaml"),
-			err:  nil,
+			file: filepath.Join(baseDir, "stevedore.yaml"),
+			err:  &errors.Error{},
 			res: &Configuration{
-				TreePathFile:              "mystevedore.yaml",
-				BuilderPathFile:           "mystevedore.yaml",
+				ImagesPath:                "mystevedore.yaml",
+				DEPRECATEDTreePathFile:    "stevedore.yaml",
+				BuildersPath:              "mystevedore.yaml",
+				DEPRECATEDBuilderPath:     "stevedore.yaml",
 				LogPathFile:               "mystevedore.log",
-				NumWorkers:                10,
+				DEPRECATEDNumWorkers:      4,
+				Concurrency:               10,
 				PushImages:                false,
-				BuildOnCascade:            true,
+				DEPRECATEDBuildOnCascade:  false,
 				DockerCredentialsDir:      "mycredentials",
 				EnableSemanticVersionTags: true,
 				SemanticVersionTagsTemplates: []string{
 					"{{ -Major }}",
 					"{{ -Major }}.{{ .Minor }}",
 				},
+			},
+			compatibility: compatibility.NewMockCompatibility(),
+			prepareAssertFunc: func(c Compatibilitier) {
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'tree_path' is deprecated and will be removed on v0.12.0, please use 'images_path' instead"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'tree_path' and 'images_path' are both defined, 'images_path' will be used"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' is deprecated and will be removed on v0.12.0, please use 'builders_path' instead"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' and 'builders_path' are both defined, 'builders_path' will be used"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' is deprecated and will be removed on v0.12.0, please use 'concurrency' instead"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' and 'concurrency' are both defined, 'concurrency' will be used"})
+				c.(*compatibility.MockCompatibility).On("AddChanged", []string{"'build_on_cascade' is not available anymore as a configuration parameter. Cascade execution plan is only enabled by '--cascade' flag on build command"})
 			},
 		},
 	}
@@ -212,11 +270,26 @@ func TestLoadFromFile(t *testing.T) {
 
 		t.Log(test.desc)
 
-		c, err := LoadFromFile(test.file)
+		if test.prepareAssertFunc != nil {
+			test.prepareAssertFunc(test.compatibility)
+		}
+
+		c, err := LoadFromFile(testFs, test.file, test.compatibility)
 		if err != nil {
 			assert.Equal(t, test.err.Error(), err.Error())
 		} else {
-			assert.Equal(t, test.res, c, "Configuration values does not coincide")
+			assert.Equal(t, test.res.DEPRECATEDTreePathFile, c.DEPRECATEDTreePathFile)
+			assert.Equal(t, test.res.DEPRECATEDBuilderPath, c.DEPRECATEDBuilderPath)
+			assert.Equal(t, test.res.ImagesPath, c.ImagesPath)
+			assert.Equal(t, test.res.BuildersPath, c.BuildersPath)
+			assert.Equal(t, test.res.LogPathFile, c.LogPathFile)
+			assert.Equal(t, test.res.DEPRECATEDNumWorkers, c.DEPRECATEDNumWorkers)
+			assert.Equal(t, test.res.Concurrency, c.Concurrency)
+			assert.Equal(t, test.res.PushImages, c.PushImages)
+			assert.Equal(t, test.res.DEPRECATEDBuildOnCascade, c.DEPRECATEDBuildOnCascade)
+			assert.Equal(t, test.res.DockerCredentialsDir, c.DockerCredentialsDir)
+			assert.Equal(t, test.res.EnableSemanticVersionTags, c.EnableSemanticVersionTags)
+			assert.Equal(t, test.res.SemanticVersionTagsTemplates, c.SemanticVersionTagsTemplates)
 		}
 
 	}
@@ -224,38 +297,74 @@ func TestLoadFromFile(t *testing.T) {
 }
 
 func TestReloadConfigurationFromFile(t *testing.T) {
+	errContext := "(Configuration::ReloadConfigurationFromFile)"
+	var err error
+
+	baseDir := "/config"
+	testFs := afero.NewMemMapFs()
+	testFs.MkdirAll(baseDir, 0755)
+	err = afero.WriteFile(testFs, filepath.Join(baseDir, "stevedore.yaml"), []byte(`
+images_path: mystevedore.yaml
+builders_path: mystevedore.yaml
+log_path: mystevedore.log
+concurrency: 10
+push_images: false
+build_on_cascade: true
+docker_registry_credentials_dir: mycredentials
+semantic_version_tags_enabled: true
+semantic_version_tags_templates:
+  - "{{ -Major }}"
+  - "{{ -Major }}.{{ .Minor }}"
+`), 0644)
+	if err != nil {
+		t.Log(err)
+	}
 
 	tests := []struct {
-		desc string
-		file string
-		err  error
-		res  *Configuration
+		desc              string
+		file              string
+		err               error
+		res               *Configuration
+		compatibility     Compatibilitier
+		prepareAssertFunc func(c Compatibilitier)
 	}{
 		{
 			desc: "Testing error when reload configuration from file",
 			file: "unknown",
-			err: errors.New("(Configuration::ReloadConfigurationFromFile)", "Configuration could not be reload from file 'unknown'",
-				errors.New("(Configuration::LoadFromFile)", "Configuration could be load from 'unknown'",
-					errors.New("", "open unknown: no such file or directory"))),
+			err: errors.New(errContext, "Configuration file could be loaded",
+				errors.New("", "open unknown: file does not exist")),
 			res: nil,
 		},
 		{
 			desc: "Testing reload configuration from file",
-			file: filepath.Join(testBaseDir, "stevedore.yaml"),
-			err:  nil,
+			file: filepath.Join(baseDir, "stevedore.yaml"),
+			err:  &errors.Error{},
 			res: &Configuration{
-				TreePathFile:              "mystevedore.yaml",
-				BuilderPathFile:           "mystevedore.yaml",
+				DEPRECATEDTreePathFile:    "stevedore.yaml",
+				ImagesPath:                "mystevedore.yaml",
+				DEPRECATEDBuilderPath:     "stevedore.yaml",
+				BuildersPath:              "mystevedore.yaml",
 				LogPathFile:               "mystevedore.log",
-				NumWorkers:                10,
+				DEPRECATEDNumWorkers:      4,
+				Concurrency:               10,
 				PushImages:                false,
-				BuildOnCascade:            true,
+				DEPRECATEDBuildOnCascade:  false,
 				DockerCredentialsDir:      "mycredentials",
 				EnableSemanticVersionTags: true,
 				SemanticVersionTagsTemplates: []string{
 					"{{ -Major }}",
 					"{{ -Major }}.{{ .Minor }}",
 				},
+			},
+			compatibility: compatibility.NewMockCompatibility(),
+			prepareAssertFunc: func(c Compatibilitier) {
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'tree_path' is deprecated and will be removed on v0.12.0, please use 'images_path' instead"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'tree_path' and 'images_path' are both defined, 'images_path' will be used"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' is deprecated and will be removed on v0.12.0, please use 'builders_path' instead"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' and 'builders_path' are both defined, 'builders_path' will be used"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' is deprecated and will be removed on v0.12.0, please use 'concurrency' instead"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' and 'concurrency' are both defined, 'concurrency' will be used"})
+				c.(*compatibility.MockCompatibility).On("AddChanged", []string{"'build_on_cascade' is not available anymore as a configuration parameter. Cascade execution plan is only enabled by '--cascade' flag on build command"})
 			},
 		},
 	}
@@ -264,16 +373,31 @@ func TestReloadConfigurationFromFile(t *testing.T) {
 
 		t.Log(test.desc)
 
-		config, err := New()
+		if test.prepareAssertFunc != nil {
+			test.prepareAssertFunc(test.compatibility)
+		}
+
+		config, err := New(testFs, test.compatibility)
 		if err != nil {
 			t.Error(err.Error())
 		}
-		err = config.ReloadConfigurationFromFile(test.file)
+		err = config.ReloadConfigurationFromFile(testFs, test.file, test.compatibility)
 
 		if err != nil {
 			assert.Equal(t, test.err.Error(), err.Error())
 		} else {
-			assert.Equal(t, test.res, config, "Configuration values does not coincide")
+			assert.Equal(t, test.res.DEPRECATEDTreePathFile, config.DEPRECATEDTreePathFile)
+			assert.Equal(t, test.res.DEPRECATEDBuilderPath, config.DEPRECATEDBuilderPath)
+			assert.Equal(t, test.res.ImagesPath, config.ImagesPath)
+			assert.Equal(t, test.res.BuildersPath, config.BuildersPath)
+			assert.Equal(t, test.res.LogPathFile, config.LogPathFile)
+			assert.Equal(t, test.res.DEPRECATEDNumWorkers, config.DEPRECATEDNumWorkers)
+			assert.Equal(t, test.res.Concurrency, config.Concurrency)
+			assert.Equal(t, test.res.PushImages, config.PushImages)
+			assert.Equal(t, test.res.DEPRECATEDBuildOnCascade, config.DEPRECATEDBuildOnCascade)
+			assert.Equal(t, test.res.DockerCredentialsDir, config.DockerCredentialsDir)
+			assert.Equal(t, test.res.EnableSemanticVersionTags, config.EnableSemanticVersionTags)
+			assert.Equal(t, test.res.SemanticVersionTagsTemplates, config.SemanticVersionTagsTemplates)
 		}
 	}
 }
@@ -295,23 +419,21 @@ func TestToArray(t *testing.T) {
 		{
 			desc: "Testing transform configuration to array",
 			config: &Configuration{
-				TreePathFile:                 filepath.Join(DefaultConfigFolder, DefaultTreePathFile),
-				BuilderPathFile:              filepath.Join(DefaultConfigFolder, DefaultBuilderPathFile),
+				ImagesPath:                   filepath.Join(DefaultConfigFolder, DefaultImagesPath),
+				BuildersPath:                 filepath.Join(DefaultConfigFolder, DefaultBuildersPath),
 				LogPathFile:                  DefaultLogPathFile,
-				NumWorkers:                   DefaultNumWorker,
+				Concurrency:                  4,
 				PushImages:                   DefaultPushImages,
-				BuildOnCascade:               DefaultBuildOnCascade,
 				DockerCredentialsDir:         filepath.Join("$HOME", ".config", "stevedore", DefaultDockerCredentialsDir),
 				EnableSemanticVersionTags:    DefaultEnableSemanticVersionTags,
 				SemanticVersionTagsTemplates: []string{DefaultSemanticVersionTagsTemplates},
 			},
 			res: [][]string{
-				{TreePathFileKey, filepath.Join(DefaultConfigFolder, DefaultTreePathFile)},
-				{BuilderPathFileKey, filepath.Join(DefaultConfigFolder, DefaultBuilderPathFile)},
+				{ImagesPathKey, filepath.Join(DefaultConfigFolder, DefaultImagesPath)},
+				{BuildersPathKey, filepath.Join(DefaultConfigFolder, DefaultBuildersPath)},
 				{LogPathFileKey, DefaultLogPathFile},
-				{NumWorkerKey, fmt.Sprint(DefaultNumWorker)},
+				{ConcurrencyKey, fmt.Sprintf("%d", runtime.NumCPU()/4)},
 				{PushImagesKey, fmt.Sprint(DefaultPushImages)},
-				{BuildOnCascadeKey, fmt.Sprint(DefaultBuildOnCascade)},
 				{DockerCredentialsDirKey, filepath.Join("$HOME", ".config", "stevedore", DefaultDockerCredentialsDir)},
 				{EnableSemanticVersionTagsKey, fmt.Sprint(DefaultEnableSemanticVersionTags)},
 				{SemanticVersionTagsTemplatesKey, fmt.Sprintf("[%s]", DefaultSemanticVersionTagsTemplates)},
@@ -344,23 +466,22 @@ func TestString(t *testing.T) {
 		{
 			desc: "Testing transform configuration to string",
 			config: &Configuration{
-				TreePathFile:                 filepath.Join(DefaultConfigFolder, DefaultTreePathFile),
-				BuilderPathFile:              filepath.Join(DefaultConfigFolder, DefaultBuilderPathFile),
+				ImagesPath:                   filepath.Join(DefaultConfigFolder, DefaultImagesPath),
+				BuildersPath:                 filepath.Join(DefaultConfigFolder, DefaultBuildersPath),
 				LogPathFile:                  DefaultLogPathFile,
-				NumWorkers:                   DefaultNumWorker,
+				Concurrency:                  4,
 				PushImages:                   DefaultPushImages,
-				BuildOnCascade:               DefaultBuildOnCascade,
+				DEPRECATEDBuildOnCascade:     DEPRECATEDDefaultBuildOnCascade,
 				DockerCredentialsDir:         filepath.Join(DefaultDockerCredentialsDir),
 				EnableSemanticVersionTags:    DefaultEnableSemanticVersionTags,
 				SemanticVersionTagsTemplates: []string{DefaultSemanticVersionTagsTemplates},
 			},
 			res: `
- tree_path :  stevedore.yaml
- builder_path :  stevedore.yaml
- log_path :  /dev/null
- num_workers :  4
+ images_path :  stevedore.yaml
+ builders_path :  stevedore.yaml
+ log_path :  
+ concurrency :  4
  push_images :  true
- build_on_cascade :  false
  docker_registry_credentials_dir :  credentials
  semantic_version_tags_enabled : false
  semantic_version_tags_templates : [{{ .Major }}.{{ .Minor }}.{{ .Patch }}]
@@ -394,12 +515,11 @@ func TestCreateConfigurationFile(t *testing.T) {
 	var expected []byte
 
 	config := &Configuration{
-		TreePathFile:              "test_stevedore.yaml",
-		BuilderPathFile:           "test_stevedore.yaml",
+		DEPRECATEDTreePathFile:    "test_stevedore.yaml",
+		DEPRECATEDBuilderPath:     "test_stevedore.yaml",
 		LogPathFile:               "test_stevedore.log",
-		NumWorkers:                8,
+		Concurrency:               8,
 		PushImages:                true,
-		BuildOnCascade:            true,
 		DockerCredentialsDir:      ".credentials",
 		EnableSemanticVersionTags: true,
 		SemanticVersionTagsTemplates: []string{
