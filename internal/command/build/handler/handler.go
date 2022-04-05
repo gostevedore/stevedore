@@ -8,32 +8,39 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/engine/build"
 	"github.com/gostevedore/stevedore/internal/engine/build/plan"
+	"github.com/gostevedore/stevedore/internal/schedule/dispatch"
 )
 
 const AssignmentTokenSymbol = '='
 
 // Handler is a handler for build commands
 type Handler struct {
+	dispatcher  Dispatcher
 	planFactory PlanFactorier
 	service     ServiceBuilder
 }
 
 // NewHandler creates a new handler for build commands
-func NewHandler(p PlanFactorier, s ServiceBuilder) *Handler {
+func NewHandler(d Dispatcher, p PlanFactorier, s ServiceBuilder) *Handler {
 	return &Handler{
+		dispatcher:  d,
 		planFactory: p,
 		service:     s,
 	}
 }
 
 // Handler handles build commands
-func (h *Handler) Handler(ctx context.Context, options *HandlerOptions) error {
+func (h *Handler) Handler(ctx context.Context, name string, options *HandlerOptions) error {
 
 	errContext := "(build::Handler)"
 	var err error
 	var buildPlan build.Planner
 
 	buildServiceOptions := &build.ServiceOptions{}
+
+	if h.dispatcher == nil {
+		return errors.New(errContext, "Build handler requires a dispatcher")
+	}
 
 	if h.planFactory == nil {
 		return errors.New(errContext, "Build handler requires a plan factory")
@@ -48,7 +55,6 @@ func (h *Handler) Handler(ctx context.Context, options *HandlerOptions) error {
 	buildServiceOptions.AnsibleInventoryPath = options.AnsibleInventoryPath
 	buildServiceOptions.AnsibleLimit = options.AnsibleLimit
 
-	// concurrency
 	// debug
 	// dryrun
 
@@ -59,7 +65,7 @@ func (h *Handler) Handler(ctx context.Context, options *HandlerOptions) error {
 	buildServiceOptions.ImageFromRegistryNamespace = options.ImageFromRegistryNamespace
 	buildServiceOptions.ImageFromVersion = options.ImageFromVersion
 
-	// imageName
+	buildServiceOptions.ImageName = options.ImageName
 	buildServiceOptions.ImageRegistryHost = options.ImageRegistryHost
 	buildServiceOptions.ImageRegistryNamespace = options.ImageRegistryNamespace
 	buildServiceOptions.ImageVersions = append([]string{}, options.Versions...)
@@ -95,7 +101,19 @@ func (h *Handler) Handler(ctx context.Context, options *HandlerOptions) error {
 		return errors.New(errContext, err.Error())
 	}
 
-	err = h.service.Build(ctx, buildPlan, options.ImageName, options.Versions, buildServiceOptions)
+	err = h.dispatcher.Start(ctx, dispatch.WithNumWorkers(options.Concurrency))
+	if err != nil {
+		return errors.New(errContext, err.Error())
+	}
+
+	err = h.service.Build(
+		ctx,
+		buildPlan,
+		name,
+		options.Versions,
+		buildServiceOptions,
+		build.WithDispatch(h.dispatcher),
+	)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
@@ -121,13 +139,13 @@ func (h *Handler) getPlan(options *HandlerOptions) (plan.Planner, error) {
 	}
 
 	if options.BuildOnCascade {
-		planType = "cascade"
-		planParameters["depth"] = options.CascadeDepth
-
 		err = validateCascadePlanOptions(options)
 		if err != nil {
 			return nil, errors.New(errContext, err.Error())
 		}
+
+		planType = "cascade"
+		planParameters["depth"] = options.CascadeDepth
 	}
 
 	plan, err = h.planFactory.NewPlan(planType, planParameters)
@@ -153,6 +171,14 @@ func validateCascadePlanOptions(options *HandlerOptions) error {
 
 	if options.AnsibleLimit != "" {
 		return errors.New(errContext, "Cascade plan does not support ansible limit. It could cause an unpredictable result")
+	}
+
+	if options.ImageName != "" {
+		return errors.New(errContext, "Cascade plan does not support image name. It could cause an unpredictable result")
+	}
+
+	if options.ImageFromName != "" {
+		return errors.New(errContext, "Cascade plan does not support image from name. It could cause an unpredictable result")
 	}
 
 	return nil

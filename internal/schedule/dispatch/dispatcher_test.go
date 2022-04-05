@@ -40,7 +40,7 @@ func TestNewDispatch(t *testing.T) {
 
 		t.Log(test.desc)
 
-		d := NewDispatch(test.numWorkers, test.workerFactory)
+		d := NewDispatch(test.workerFactory, WithNumWorkers(test.numWorkers))
 		assert.NotNil(t, d.WorkerPool)
 		assert.NotNil(t, d.inputJobQueue)
 		assert.Equal(t, test.resWorkers, d.NumWorkers)

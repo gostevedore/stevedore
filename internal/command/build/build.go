@@ -43,7 +43,7 @@ func NewCommand(ctx context.Context, conf *configuration.Configuration) *command
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			return runeHandler(ctx, buildHandler, handlerOptions)
+			return runeHandler(ctx, conf, buildHandler, handlerOptions)
 		},
 	}
 
@@ -159,9 +159,19 @@ func NewCommand(ctx context.Context, conf *configuration.Configuration) *command
 
 }
 
-func runeHandler(ctx context.Context, handler Handlerer, options *handler.HandlerOptions) error {
+func runeHandler(ctx context.Context, conf *configuration.Configuration, handler Handlerer, options *handler.HandlerOptions) error {
 
 	errContext := "(build::runeHandler)"
+
+	// conf.BuildOnCascade
+	// conf.EnableSemanticVersionTags
+	// conf.PushImages
+	// conf.SemanticVersionTagsTemplates
+
+	// when concurrency is set to 0, it means that the default value is used
+	if conf.Concurrency > 0 && options.Concurrency == 0 {
+		options.Concurrency = conf.Concurrency
+	}
 
 	err := handler.Handler(ctx, options)
 	if err != nil {

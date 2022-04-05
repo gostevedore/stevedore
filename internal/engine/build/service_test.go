@@ -50,15 +50,17 @@ func TestBuild(t *testing.T) {
 		{
 			desc: "Testing build an image",
 			service: NewService(
-				store.NewMockBuildersStore(),
-				command.NewMockBuildCommandFactory(),
-				&driver.BuildDriverFactory{
-					"mock": mockdriver.NewMockDriver(),
-				},
-				job.NewMockJobFactory(),
-				dispatch.NewMockDispatch(),
-				semver.NewSemVerGenerator(),
-				credentials.NewCredentialsStoreMock(),
+				WithBuilders(store.NewMockBuildersStore()),
+				WithCommandFactory(command.NewMockBuildCommandFactory()),
+				WithDriverFactory(
+					&driver.BuildDriverFactory{
+						"mock": mockdriver.NewMockDriver(),
+					},
+				),
+				WithJobFactory(job.NewMockJobFactory()),
+				WithDispatch(dispatch.NewMockDispatch()),
+				WithSemver(semver.NewSemVerGenerator()),
+				WithCredentials(credentials.NewCredentialsStoreMock()),
 			),
 			buildPlan: plan.NewMockPlan(),
 			name:      "parent",
@@ -216,7 +218,7 @@ func TestBuildWorker(t *testing.T) {
 		{
 			desc: "Testing error when no driver factory is given to worker",
 			service: &Service{
-				dispatch: dispatch.NewDispatch(1, worker.NewMockWorkerFactory()),
+				dispatch: dispatch.NewDispatch(worker.NewMockWorkerFactory()),
 			},
 			options: &ServiceOptions{},
 			image:   &image.Image{},
@@ -225,7 +227,7 @@ func TestBuildWorker(t *testing.T) {
 		{
 			desc: "Testing error when no semantic version generator is given to worker",
 			service: &Service{
-				dispatch:      dispatch.NewDispatch(1, worker.NewMockWorkerFactory()),
+				dispatch:      dispatch.NewDispatch(worker.NewMockWorkerFactory()),
 				driverFactory: driver.NewBuildDriverFactory(),
 			},
 			options: &ServiceOptions{},
@@ -235,7 +237,7 @@ func TestBuildWorker(t *testing.T) {
 		{
 			desc: "Testing error when no credentials store is given to worker",
 			service: &Service{
-				dispatch:      dispatch.NewDispatch(1, worker.NewMockWorkerFactory()),
+				dispatch:      dispatch.NewDispatch(worker.NewMockWorkerFactory()),
 				driverFactory: driver.NewBuildDriverFactory(),
 				semver:        semver.NewSemVerGenerator(),
 			},
@@ -246,15 +248,17 @@ func TestBuildWorker(t *testing.T) {
 		{
 			desc: "Testing worker to build an image",
 			service: NewService(
-				store.NewMockBuildersStore(),
-				command.NewMockBuildCommandFactory(),
-				&driver.BuildDriverFactory{
-					"mock": mockdriver.NewMockDriver(),
-				},
-				job.NewMockJobFactory(),
-				dispatch.NewMockDispatch(),
-				semver.NewSemVerGenerator(),
-				credentials.NewCredentialsStoreMock(),
+				WithBuilders(store.NewMockBuildersStore()),
+				WithCommandFactory(command.NewMockBuildCommandFactory()),
+				WithDriverFactory(
+					&driver.BuildDriverFactory{
+						"mock": mockdriver.NewMockDriver(),
+					},
+				),
+				WithJobFactory(job.NewMockJobFactory()),
+				WithDispatch(dispatch.NewMockDispatch()),
+				WithSemver(semver.NewSemVerGenerator()),
+				WithCredentials(credentials.NewCredentialsStoreMock()),
 			),
 			options: &ServiceOptions{
 				EnableSemanticVersionTags:    true,
@@ -449,13 +453,7 @@ func TestCommand(t *testing.T) {
 		{
 			desc: "Testing create build command",
 			service: NewService(
-				nil,
-				command.NewMockBuildCommandFactory(),
-				nil,
-				nil,
-				nil,
-				nil,
-				nil,
+				WithCommandFactory(command.NewMockBuildCommandFactory()),
 			),
 			driver:  mockdriver.NewMockDriver(),
 			image:   &image.Image{},

@@ -17,6 +17,9 @@ import (
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 )
 
+// OptionsFunc is a function used to configure the service
+type OptionsFunc func(*Service)
+
 // Service is an application service to build docker images
 type Service struct {
 	builders       BuildersStorer
@@ -29,21 +32,71 @@ type Service struct {
 }
 
 // NewService creates a Service to build docker images
-func NewService(builders BuildersStorer, commandFactory BuildCommandFactorier, driverFactory DriverFactorier, jobFactory JobFactorier, dispatch Dispatcher, semver Semverser, credentials CredentialsStorer) *Service {
+func NewService(options ...OptionsFunc) *Service {
 
-	return &Service{
-		builders:       builders,
-		commandFactory: commandFactory,
-		driverFactory:  driverFactory,
-		jobFactory:     jobFactory,
-		dispatch:       dispatch,
-		semver:         semver,
-		credentials:    credentials,
+	service := &Service{}
+	service.Options(options...)
+
+	return service
+}
+
+// WithBuilders sets the builders storer
+func WithBuilders(builders BuildersStorer) OptionsFunc {
+	return func(s *Service) {
+		s.builders = builders
+	}
+}
+
+// WithCommandFactory sets the command factory
+func WithCommandFactory(commandFactory BuildCommandFactorier) OptionsFunc {
+	return func(s *Service) {
+		s.commandFactory = commandFactory
+	}
+}
+
+// WithDriverFactory sets the driver factory
+func WithDriverFactory(driverFactory DriverFactorier) OptionsFunc {
+	return func(s *Service) {
+		s.driverFactory = driverFactory
+	}
+}
+
+// WithJobFactory sets the job factory
+func WithJobFactory(jobFactory JobFactorier) OptionsFunc {
+	return func(s *Service) {
+		s.jobFactory = jobFactory
+	}
+}
+
+// WithDispatch sets the dispatcher
+func WithDispatch(dispatch Dispatcher) OptionsFunc {
+	return func(s *Service) {
+		s.dispatch = dispatch
+	}
+}
+
+// WithSemver sets the semver
+func WithSemver(semver Semverser) OptionsFunc {
+	return func(s *Service) {
+		s.semver = semver
+	}
+}
+
+func WithCredentials(credentials CredentialsStorer) OptionsFunc {
+	return func(s *Service) {
+		s.credentials = credentials
+	}
+}
+
+// Options configure the service
+func (s *Service) Options(opts ...OptionsFunc) {
+	for _, opt := range opts {
+		opt(s)
 	}
 }
 
 // Build starts the building process
-func (s *Service) Build(ctx context.Context, buildPlan Planner, name string, version []string, options *ServiceOptions) error {
+func (s *Service) Build(ctx context.Context, buildPlan Planner, name string, version []string, options *ServiceOptions, optionsFunc ...OptionsFunc) error {
 
 	var err error
 	var steps []*plan.Step
@@ -64,6 +117,9 @@ func (s *Service) Build(ctx context.Context, buildPlan Planner, name string, ver
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
+
+	// configure service options before start build
+	s.Options(optionsFunc...)
 
 	// future promise which triggers the image build
 	buildWorkerFunc := func(ctx context.Context, step PlanSteper, options *ServiceOptions) func() error {

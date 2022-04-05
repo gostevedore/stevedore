@@ -11,6 +11,9 @@ import (
 // DefaultNumWorkers is the default number of workers
 const DefaultNumWorkers = 1
 
+// OptionsFunc is a function used to configure the dispatcher
+type OptionsFunc func(*Dispatch)
+
 // Dispatch is a dispatcher that executes jobs
 type Dispatch struct {
 	WorkerPool    chan chan schedule.Jobber
@@ -21,24 +24,39 @@ type Dispatch struct {
 }
 
 // New creates a new dispatcher
-func NewDispatch(numWorkers int, workerFactory WorkerFactorier) *Dispatch {
-
-	if numWorkers < 1 {
-		numWorkers = DefaultNumWorkers
-	}
+func NewDispatch(workerFactory WorkerFactorier, options ...OptionsFunc) *Dispatch {
 
 	dispatch := &Dispatch{
-		WorkerPool:    make(chan chan schedule.Jobber, numWorkers),
+		WorkerPool:    make(chan chan schedule.Jobber, DefaultNumWorkers),
 		inputJobQueue: make(chan schedule.Jobber),
-		NumWorkers:    numWorkers,
 		workerFactory: workerFactory,
 	}
+
+	dispatch.Options(options...)
 
 	return dispatch
 }
 
+// Options configure the stevedore command
+func (d *Dispatch) Options(opts ...OptionsFunc) {
+	for _, opt := range opts {
+		opt(d)
+	}
+}
+
+func WithNumWorkers(n int) OptionsFunc {
+	return func(d *Dispatch) {
+		if n < 1 {
+			d.NumWorkers = DefaultNumWorkers
+		} else {
+			d.NumWorkers = n
+		}
+		d.WorkerPool = make(chan chan schedule.Jobber, d.NumWorkers)
+	}
+}
+
 // Start prepares dispatcher to start workers and dispatch jobs
-func (d *Dispatch) Start(ctx context.Context) error {
+func (d *Dispatch) Start(ctx context.Context, opts ...OptionsFunc) error {
 
 	errContext := "(dispatch::Start)"
 
@@ -52,6 +70,12 @@ func (d *Dispatch) Start(ctx context.Context) error {
 
 	if d.WorkerPool == nil {
 		return errors.New(errContext, "Dispatch requires a worker pool")
+	}
+
+	d.Options(opts...)
+
+	if d.NumWorkers < 1 {
+		d.NumWorkers = DefaultNumWorkers
 	}
 
 	d.once.Do(func() {
