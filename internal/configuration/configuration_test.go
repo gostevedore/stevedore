@@ -274,22 +274,23 @@ semantic_version_tags_templates:
 			test.prepareAssertFunc(test.compatibility)
 		}
 
-		c, err := LoadFromFile(testFs, test.file, test.compatibility)
+		config, err := LoadFromFile(testFs, test.file, test.compatibility)
 		if err != nil {
 			assert.Equal(t, test.err.Error(), err.Error())
 		} else {
-			assert.Equal(t, test.res.DEPRECATEDTreePathFile, c.DEPRECATEDTreePathFile)
-			assert.Equal(t, test.res.DEPRECATEDBuilderPath, c.DEPRECATEDBuilderPath)
-			assert.Equal(t, test.res.ImagesPath, c.ImagesPath)
-			assert.Equal(t, test.res.BuildersPath, c.BuildersPath)
-			assert.Equal(t, test.res.LogPathFile, c.LogPathFile)
-			assert.Equal(t, test.res.DEPRECATEDNumWorkers, c.DEPRECATEDNumWorkers)
-			assert.Equal(t, test.res.Concurrency, c.Concurrency)
-			assert.Equal(t, test.res.PushImages, c.PushImages)
-			assert.Equal(t, test.res.DEPRECATEDBuildOnCascade, c.DEPRECATEDBuildOnCascade)
-			assert.Equal(t, test.res.DockerCredentialsDir, c.DockerCredentialsDir)
-			assert.Equal(t, test.res.EnableSemanticVersionTags, c.EnableSemanticVersionTags)
-			assert.Equal(t, test.res.SemanticVersionTagsTemplates, c.SemanticVersionTagsTemplates)
+			assert.Equal(t, test.res.BuildersPath, config.BuildersPath)
+			assert.Equal(t, test.res.Concurrency, config.Concurrency)
+			assert.Equal(t, test.res.DEPRECATEDBuilderPath, config.DEPRECATEDBuilderPath)
+			assert.Equal(t, test.res.DEPRECATEDBuildOnCascade, config.DEPRECATEDBuildOnCascade)
+			assert.Equal(t, test.res.DEPRECATEDNumWorkers, config.DEPRECATEDNumWorkers)
+			assert.Equal(t, test.res.DEPRECATEDTreePathFile, config.DEPRECATEDTreePathFile)
+			assert.Equal(t, test.res.DockerCredentialsDir, config.DockerCredentialsDir)
+			assert.Equal(t, test.res.EnableSemanticVersionTags, config.EnableSemanticVersionTags)
+			assert.Equal(t, test.res.ImagesPath, config.ImagesPath)
+			assert.Equal(t, test.res.LogPathFile, config.LogPathFile)
+			assert.Equal(t, test.res.PushImages, config.PushImages)
+			assert.Equal(t, test.res.SemanticVersionTagsTemplates, config.SemanticVersionTagsTemplates)
+
 		}
 
 	}
@@ -386,17 +387,17 @@ semantic_version_tags_templates:
 		if err != nil {
 			assert.Equal(t, test.err.Error(), err.Error())
 		} else {
-			assert.Equal(t, test.res.DEPRECATEDTreePathFile, config.DEPRECATEDTreePathFile)
-			assert.Equal(t, test.res.DEPRECATEDBuilderPath, config.DEPRECATEDBuilderPath)
-			assert.Equal(t, test.res.ImagesPath, config.ImagesPath)
 			assert.Equal(t, test.res.BuildersPath, config.BuildersPath)
-			assert.Equal(t, test.res.LogPathFile, config.LogPathFile)
-			assert.Equal(t, test.res.DEPRECATEDNumWorkers, config.DEPRECATEDNumWorkers)
 			assert.Equal(t, test.res.Concurrency, config.Concurrency)
-			assert.Equal(t, test.res.PushImages, config.PushImages)
+			assert.Equal(t, test.res.DEPRECATEDBuilderPath, config.DEPRECATEDBuilderPath)
 			assert.Equal(t, test.res.DEPRECATEDBuildOnCascade, config.DEPRECATEDBuildOnCascade)
+			assert.Equal(t, test.res.DEPRECATEDNumWorkers, config.DEPRECATEDNumWorkers)
+			assert.Equal(t, test.res.DEPRECATEDTreePathFile, config.DEPRECATEDTreePathFile)
 			assert.Equal(t, test.res.DockerCredentialsDir, config.DockerCredentialsDir)
 			assert.Equal(t, test.res.EnableSemanticVersionTags, config.EnableSemanticVersionTags)
+			assert.Equal(t, test.res.ImagesPath, config.ImagesPath)
+			assert.Equal(t, test.res.LogPathFile, config.LogPathFile)
+			assert.Equal(t, test.res.PushImages, config.PushImages)
 			assert.Equal(t, test.res.SemanticVersionTagsTemplates, config.SemanticVersionTagsTemplates)
 		}
 	}
@@ -429,13 +430,13 @@ func TestToArray(t *testing.T) {
 				SemanticVersionTagsTemplates: []string{DefaultSemanticVersionTagsTemplates},
 			},
 			res: [][]string{
-				{ImagesPathKey, filepath.Join(DefaultConfigFolder, DefaultImagesPath)},
 				{BuildersPathKey, filepath.Join(DefaultConfigFolder, DefaultBuildersPath)},
-				{LogPathFileKey, DefaultLogPathFile},
 				{ConcurrencyKey, fmt.Sprintf("%d", runtime.NumCPU()/4)},
-				{PushImagesKey, fmt.Sprint(DefaultPushImages)},
 				{DockerCredentialsDirKey, filepath.Join("$HOME", ".config", "stevedore", DefaultDockerCredentialsDir)},
 				{EnableSemanticVersionTagsKey, fmt.Sprint(DefaultEnableSemanticVersionTags)},
+				{ImagesPathKey, filepath.Join(DefaultConfigFolder, DefaultImagesPath)},
+				{LogPathFileKey, DefaultLogPathFile},
+				{PushImagesKey, fmt.Sprint(DefaultPushImages)},
 				{SemanticVersionTagsTemplatesKey, fmt.Sprintf("[%s]", DefaultSemanticVersionTagsTemplates)},
 			},
 			err: nil,
@@ -477,13 +478,13 @@ func TestString(t *testing.T) {
 				SemanticVersionTagsTemplates: []string{DefaultSemanticVersionTagsTemplates},
 			},
 			res: `
- images_path :  stevedore.yaml
  builders_path :  stevedore.yaml
- log_path :  
  concurrency :  4
- push_images :  true
  docker_registry_credentials_dir :  credentials
  semantic_version_tags_enabled : false
+ images_path :  stevedore.yaml
+ log_path :  
+ push_images :  true
  semantic_version_tags_templates : [{{ .Major }}.{{ .Minor }}.{{ .Patch }}]
 `,
 		},

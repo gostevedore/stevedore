@@ -16,17 +16,17 @@ import (
 )
 
 type Configuration struct {
-	DEPRECATEDTreePathFile       string
-	ImagesPath                   string
-	DEPRECATEDBuilderPath        string
 	BuildersPath                 string
-	LogPathFile                  string
-	DEPRECATEDNumWorkers         int
 	Concurrency                  int
-	PushImages                   bool
+	DEPRECATEDBuilderPath        string
 	DEPRECATEDBuildOnCascade     bool
+	DEPRECATEDNumWorkers         int
+	DEPRECATEDTreePathFile       string
 	DockerCredentialsDir         string
 	EnableSemanticVersionTags    bool
+	ImagesPath                   string
+	LogPathFile                  string
+	PushImages                   bool
 	SemanticVersionTagsTemplates []string
 
 	compatibility Compatibilitier
@@ -37,31 +37,29 @@ const (
 	DefaultConfigFile   = "stevedore.yaml"
 	DefaultConfigFolder = "."
 
-	SecundaryConfigFolder = "."
-
-	DEPRECATEDDefaultTreePathFile       = "stevedore.yaml"
-	DefaultImagesPath                   = "stevedore.yaml"
-	DEPRECATEDDefaultBuilderPath        = "stevedore.yaml"
 	DefaultBuildersPath                 = "stevedore.yaml"
-	DefaultLogPathFile                  = ""
-	DEPRECATEDDefaultNumWorker          = 4
-	DefaultPushImages                   = true
-	DEPRECATEDDefaultBuildOnCascade     = false
 	DefaultDockerCredentialsDir         = "credentials"
 	DefaultEnableSemanticVersionTags    = false
+	DefaultImagesPath                   = "stevedore.yaml"
+	DefaultLogPathFile                  = ""
+	DefaultPushImages                   = true
 	DefaultSemanticVersionTagsTemplates = "{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+	DEPRECATEDDefaultBuilderPath        = "stevedore.yaml"
+	DEPRECATEDDefaultBuildOnCascade     = false
+	DEPRECATEDDefaultNumWorker          = 4
+	DEPRECATEDDefaultTreePathFile       = "stevedore.yaml"
 
-	DEPRECATEDTreePathFileKey       = "tree_path"
-	ImagesPathKey                   = "images_path"
-	DEPRECATEDBuilderPathKey        = "builder_path"
 	BuildersPathKey                 = "builders_path"
-	LogPathFileKey                  = "log_path"
-	DEPRECATEDNumWorkerKey          = "num_workers"
 	ConcurrencyKey                  = "concurrency"
-	PushImagesKey                   = "push_images"
+	DEPRECATEDBuilderPathKey        = "builder_path"
 	DEPRECATEDBuildOnCascadeKey     = "build_on_cascade"
+	DEPRECATEDNumWorkerKey          = "num_workers"
+	DEPRECATEDTreePathFileKey       = "tree_path"
 	DockerCredentialsDirKey         = "docker_registry_credentials_dir"
 	EnableSemanticVersionTagsKey    = "semantic_version_tags_enabled"
+	ImagesPathKey                   = "images_path"
+	LogPathFileKey                  = "log_path"
+	PushImagesKey                   = "push_images"
 	SemanticVersionTagsTemplatesKey = "semantic_version_tags_templates"
 )
 
@@ -91,17 +89,17 @@ func New(fs afero.Fs, compatibility Compatibilitier) (*Configuration, error) {
 	// dynamic default values
 	defaultConcurrency := runtime.NumCPU() / 4
 
-	viper.SetDefault(DEPRECATEDTreePathFileKey, filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultTreePathFile))
-	viper.SetDefault(ImagesPathKey, filepath.Join(DefaultConfigFolder, DefaultImagesPath))
-	viper.SetDefault(DEPRECATEDBuilderPathKey, filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultBuilderPath))
 	viper.SetDefault(BuildersPathKey, filepath.Join(DefaultConfigFolder, DefaultBuildersPath))
-	viper.SetDefault(LogPathFileKey, DefaultLogPathFile)
-	viper.SetDefault(DEPRECATEDNumWorkerKey, DEPRECATEDDefaultNumWorker)
 	viper.SetDefault(ConcurrencyKey, defaultConcurrency)
-	viper.SetDefault(PushImagesKey, DefaultPushImages)
+	viper.SetDefault(DEPRECATEDBuilderPathKey, filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultBuilderPath))
 	viper.SetDefault(DEPRECATEDBuildOnCascadeKey, DEPRECATEDDefaultBuildOnCascade)
+	viper.SetDefault(DEPRECATEDNumWorkerKey, DEPRECATEDDefaultNumWorker)
+	viper.SetDefault(DEPRECATEDTreePathFileKey, filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultTreePathFile))
 	viper.SetDefault(DockerCredentialsDirKey, filepath.Join(user.HomeDir, ".config", "stevedore", DefaultDockerCredentialsDir))
 	viper.SetDefault(EnableSemanticVersionTagsKey, DefaultEnableSemanticVersionTags)
+	viper.SetDefault(ImagesPathKey, filepath.Join(DefaultConfigFolder, DefaultImagesPath))
+	viper.SetDefault(LogPathFileKey, DefaultLogPathFile)
+	viper.SetDefault(PushImagesKey, DefaultPushImages)
 	viper.SetDefault(SemanticVersionTagsTemplatesKey, []string{DefaultSemanticVersionTagsTemplates})
 
 	for _, alternativeConfigFolder := range alternativesConfigFolders {
@@ -114,13 +112,13 @@ func New(fs afero.Fs, compatibility Compatibilitier) (*Configuration, error) {
 	viper.ReadInConfig()
 
 	config := &Configuration{
-		ImagesPath:                   viper.GetString(ImagesPathKey),
 		BuildersPath:                 viper.GetString(BuildersPathKey),
-		LogPathFile:                  viper.GetString(LogPathFileKey),
 		Concurrency:                  viper.GetInt(ConcurrencyKey),
-		PushImages:                   viper.GetBool(PushImagesKey),
 		DockerCredentialsDir:         viper.GetString(DockerCredentialsDirKey),
 		EnableSemanticVersionTags:    viper.GetBool(EnableSemanticVersionTagsKey),
+		ImagesPath:                   viper.GetString(ImagesPathKey),
+		LogPathFile:                  viper.GetString(LogPathFileKey),
+		PushImages:                   viper.GetBool(PushImagesKey),
 		SemanticVersionTagsTemplates: viper.GetStringSlice(SemanticVersionTagsTemplatesKey),
 
 		compatibility: compatibility,
@@ -152,20 +150,21 @@ func LoadFromFile(fs afero.Fs, file string, compatibility Compatibilitier) (*Con
 	}
 
 	config := &Configuration{
-		DEPRECATEDTreePathFile:       viper.GetString(DEPRECATEDTreePathFileKey),
-		DEPRECATEDBuilderPath:        viper.GetString(DEPRECATEDBuilderPathKey),
-		ImagesPath:                   viper.GetString(ImagesPathKey),
 		BuildersPath:                 viper.GetString(BuildersPathKey),
-		LogPathFile:                  viper.GetString(LogPathFileKey),
-		DEPRECATEDNumWorkers:         viper.GetInt(DEPRECATEDNumWorkerKey),
 		Concurrency:                  viper.GetInt(ConcurrencyKey),
-		PushImages:                   viper.GetBool(PushImagesKey),
+		DEPRECATEDBuilderPath:        viper.GetString(DEPRECATEDBuilderPathKey),
 		DEPRECATEDBuildOnCascade:     viper.GetBool(DEPRECATEDBuildOnCascadeKey),
+		DEPRECATEDNumWorkers:         viper.GetInt(DEPRECATEDNumWorkerKey),
+		DEPRECATEDTreePathFile:       viper.GetString(DEPRECATEDTreePathFileKey),
 		DockerCredentialsDir:         viper.GetString(DockerCredentialsDirKey),
 		EnableSemanticVersionTags:    viper.GetBool(EnableSemanticVersionTagsKey),
+		ImagesPath:                   viper.GetString(ImagesPathKey),
+		LogPathFile:                  viper.GetString(LogPathFileKey),
+		PushImages:                   viper.GetBool(PushImagesKey),
 		SemanticVersionTagsTemplates: viper.GetStringSlice(SemanticVersionTagsTemplatesKey),
 
 		compatibility: compatibility,
+		fs:            fs,
 	}
 
 	err = config.CheckCompatibility()
@@ -193,13 +192,13 @@ func (c *Configuration) String() string {
 
 	str = fmt.Sprintln()
 
-	str = fmt.Sprintln(str, ImagesPathKey, ": ", c.ImagesPath)
 	str = fmt.Sprintln(str, BuildersPathKey, ": ", c.BuildersPath)
-	str = fmt.Sprintln(str, LogPathFileKey, ": ", c.LogPathFile)
 	str = fmt.Sprintln(str, ConcurrencyKey, ": ", c.Concurrency)
-	str = fmt.Sprintln(str, PushImagesKey, ": ", c.PushImages)
 	str = fmt.Sprintln(str, DockerCredentialsDirKey, ": ", c.DockerCredentialsDir)
 	str = fmt.Sprintln(str, EnableSemanticVersionTagsKey, ":", c.EnableSemanticVersionTags)
+	str = fmt.Sprintln(str, ImagesPathKey, ": ", c.ImagesPath)
+	str = fmt.Sprintln(str, LogPathFileKey, ": ", c.LogPathFile)
+	str = fmt.Sprintln(str, PushImagesKey, ": ", c.PushImages)
 	str = fmt.Sprintln(str, SemanticVersionTagsTemplatesKey, ":", c.SemanticVersionTagsTemplates)
 
 	return str
@@ -212,14 +211,14 @@ func (c *Configuration) ToArray() ([][]string, error) {
 	}
 
 	arrayConfig := [][]string{}
-	arrayConfig = append(arrayConfig, []string{ImagesPathKey, c.ImagesPath})
+	semanticVersionTagsTemplatesValue := fmt.Sprint(c.SemanticVersionTagsTemplates)
 	arrayConfig = append(arrayConfig, []string{BuildersPathKey, c.BuildersPath})
-	arrayConfig = append(arrayConfig, []string{LogPathFileKey, c.LogPathFile})
 	arrayConfig = append(arrayConfig, []string{ConcurrencyKey, fmt.Sprint(c.Concurrency)})
-	arrayConfig = append(arrayConfig, []string{PushImagesKey, fmt.Sprint(c.PushImages)})
 	arrayConfig = append(arrayConfig, []string{DockerCredentialsDirKey, fmt.Sprint(c.DockerCredentialsDir)})
 	arrayConfig = append(arrayConfig, []string{EnableSemanticVersionTagsKey, fmt.Sprint(c.EnableSemanticVersionTags)})
-	semanticVersionTagsTemplatesValue := fmt.Sprint(c.SemanticVersionTagsTemplates)
+	arrayConfig = append(arrayConfig, []string{ImagesPathKey, c.ImagesPath})
+	arrayConfig = append(arrayConfig, []string{LogPathFileKey, c.LogPathFile})
+	arrayConfig = append(arrayConfig, []string{PushImagesKey, fmt.Sprint(c.PushImages)})
 	arrayConfig = append(arrayConfig, []string{SemanticVersionTagsTemplatesKey, semanticVersionTagsTemplatesValue})
 
 	return arrayConfig, nil
