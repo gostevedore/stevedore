@@ -2,6 +2,7 @@ package build
 
 import (
 	"context"
+	"fmt"
 
 	errors "github.com/apenella/go-common-utils/error"
 	dockerclient "github.com/docker/docker/client"
@@ -43,7 +44,20 @@ func NewCommand(ctx context.Context, conf *configuration.Configuration) *command
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			return runeHandler(ctx, conf, buildHandler, handlerOptions)
+			var imageName string
+
+			errContext := "(build::RunE)"
+			if cmd.Flags().NArg() == 0 {
+				return errors.New(errContext, "Images name must be provided")
+			} else {
+				imageName = cmd.Flags().Arg(0)
+				if cmd.Flags().NArg() > 1 {
+					args := cmd.Flags().Args()
+					fmt.Println("Arguments to be ignored:", args[1:])
+				}
+			}
+
+			return runeHandler(ctx, imageName, conf, buildHandler, handlerOptions)
 		},
 	}
 
@@ -159,21 +173,28 @@ func NewCommand(ctx context.Context, conf *configuration.Configuration) *command
 
 }
 
-func runeHandler(ctx context.Context, conf *configuration.Configuration, handler Handlerer, options *handler.HandlerOptions) error {
+func runeHandler(ctx context.Context, imageName string, conf *configuration.Configuration, handler Handlerer, options *handler.HandlerOptions) error {
 
 	errContext := "(build::runeHandler)"
 
-	// conf.BuildOnCascade
-	// conf.EnableSemanticVersionTags
-	// conf.PushImages
-	// conf.SemanticVersionTagsTemplates
-
 	// when concurrency is set to 0, it means that the default value is used
-	if conf.Concurrency > 0 && options.Concurrency == 0 {
+	if conf.Concurrency > 0 && options.Concurrency < 1 {
 		options.Concurrency = conf.Concurrency
 	}
 
-	err := handler.Handler(ctx, options)
+	if conf.PushImages || options.PushImagesAfterBuild {
+		options.PushImagesAfterBuild = true
+	}
+
+	if conf.EnableSemanticVersionTags || options.EnableSemanticVersionTags {
+		options.EnableSemanticVersionTags = true
+	}
+
+	if len(conf.SemanticVersionTagsTemplates) > 0 && len(options.SemanticVersionTagsTemplates) == 0 {
+		options.SemanticVersionTagsTemplates = append([]string{}, conf.SemanticVersionTagsTemplates...)
+	}
+
+	err := handler.Handler(ctx, imageName, options)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}

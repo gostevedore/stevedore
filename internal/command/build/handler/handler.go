@@ -30,7 +30,7 @@ func NewHandler(d Dispatcher, p PlanFactorier, s ServiceBuilder) *Handler {
 }
 
 // Handler handles build commands
-func (h *Handler) Handler(ctx context.Context, name string, options *HandlerOptions) error {
+func (h *Handler) Handler(ctx context.Context, imageName string, options *HandlerOptions) error {
 
 	errContext := "(build::Handler)"
 	var err error
@@ -109,7 +109,7 @@ func (h *Handler) Handler(ctx context.Context, name string, options *HandlerOpti
 	err = h.service.Build(
 		ctx,
 		buildPlan,
-		name,
+		imageName,
 		options.Versions,
 		buildServiceOptions,
 		build.WithDispatch(h.dispatcher),
@@ -160,6 +160,10 @@ func (h *Handler) getPlan(options *HandlerOptions) (plan.Planner, error) {
 // validateCascadePlanOptions returns an error if the options are not valid for cascade plan
 func validateCascadePlanOptions(options *HandlerOptions) error {
 	errContext := "(build::validateCascadePlanOptions)"
+
+	if options == nil {
+		return errors.New(errContext, "Options to be validated are required")
+	}
 
 	if options.AnsibleIntermediateContainerName != "" {
 		return errors.New(errContext, "Cascade plan does not support intermediate containers name. It could cause an unpredictable result")

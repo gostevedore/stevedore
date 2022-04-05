@@ -1,6 +1,8 @@
 package dispatch
 
 import (
+	"context"
+
 	"github.com/gostevedore/stevedore/internal/schedule"
 	"github.com/stretchr/testify/mock"
 )
@@ -13,6 +15,11 @@ type MockDispatch struct {
 // NewMockDispatch provides a mock of Dispatch interface
 func NewMockDispatch() *MockDispatch {
 	return &MockDispatch{}
+}
+
+func (m *MockDispatch) Start(ctx context.Context, opts ...OptionsFunc) error {
+	args := m.Called(ctx, opts)
+	return args.Error(0)
 }
 
 // Enqueue provides a mock function with given fields: _a0, _a1

@@ -8,5 +8,5 @@ import (
 
 // Handlerer is a handler for build commands
 type Handlerer interface {
-	Handler(ctx context.Context, options *handler.HandlerOptions) error
+	Handler(ctx context.Context, imageName string, options *handler.HandlerOptions) error
 }
