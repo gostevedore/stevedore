@@ -14,12 +14,14 @@ type HandlerOptions struct {
 	BuildOnCascade bool
 	// CascadeDepth is the number of levels to build when build on cascade is executed: ???
 	CascadeDepth int
-	// Concurrency is the number of images builds that can be excuted at the same time
-	Concurrency int
-	// Debug if is true debug mode is enabled: ???
-	Debug bool
-	// DryRun is true if the build should be a dry run: ???
-	DryRun bool
+
+	// // Concurrency is the number of images builds that can be excuted at the same time
+	// Concurrency int
+	// // Debug if is true debug mode is enabled: ???
+	// Debug bool
+	// // DryRun is true if the build should be a dry run: ???
+	// DryRun bool
+
 	// EnableSemanticVersionTags if is true semantic version tags are generated
 	EnableSemanticVersionTags bool
 	// ImageFromName is the name of the image to use as source

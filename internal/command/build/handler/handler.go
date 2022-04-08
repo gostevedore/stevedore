@@ -8,22 +8,19 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/engine/build"
 	"github.com/gostevedore/stevedore/internal/engine/build/plan"
-	"github.com/gostevedore/stevedore/internal/schedule/dispatch"
 )
 
 const AssignmentTokenSymbol = '='
 
 // Handler is a handler for build commands
 type Handler struct {
-	dispatcher  Dispatcher
 	planFactory PlanFactorier
 	service     ServiceBuilder
 }
 
 // NewHandler creates a new handler for build commands
-func NewHandler(d Dispatcher, p PlanFactorier, s ServiceBuilder) *Handler {
+func NewHandler(p PlanFactorier, s ServiceBuilder) *Handler {
 	return &Handler{
-		dispatcher:  d,
 		planFactory: p,
 		service:     s,
 	}
@@ -37,10 +34,6 @@ func (h *Handler) Handler(ctx context.Context, imageName string, options *Handle
 	var buildPlan build.Planner
 
 	buildServiceOptions := &build.ServiceOptions{}
-
-	if h.dispatcher == nil {
-		return errors.New(errContext, "Build handler requires a dispatcher")
-	}
 
 	if h.planFactory == nil {
 		return errors.New(errContext, "Build handler requires a plan factory")
@@ -56,8 +49,6 @@ func (h *Handler) Handler(ctx context.Context, imageName string, options *Handle
 	buildServiceOptions.AnsibleLimit = options.AnsibleLimit
 
 	// debug
-	// dryrun
-
 	buildServiceOptions.EnableSemanticVersionTags = options.EnableSemanticVersionTags
 
 	buildServiceOptions.ImageFromName = options.ImageFromName
@@ -70,21 +61,23 @@ func (h *Handler) Handler(ctx context.Context, imageName string, options *Handle
 	buildServiceOptions.ImageRegistryNamespace = options.ImageRegistryNamespace
 	buildServiceOptions.ImageVersions = append([]string{}, options.Versions...)
 
-	for _, labels := range options.Labels {
+	buildServiceOptions.Labels = make(map[string]string)
+	for _, label := range options.Labels {
 
-		if strings.IndexRune(labels, AssignmentTokenSymbol) < 0 {
-			return errors.New(errContext, fmt.Sprintf("Invalid label format '%s'", labels))
+		if strings.IndexRune(label, AssignmentTokenSymbol) < 0 {
+			return errors.New(errContext, fmt.Sprintf("Invalid label format '%s'", label))
 		}
-		kLabel := labels[:strings.IndexRune(labels, AssignmentTokenSymbol)]
-		vLabel := labels[strings.IndexRune(labels, AssignmentTokenSymbol)+1:]
+		kLabel := label[:strings.IndexRune(label, AssignmentTokenSymbol)]
+		vLabel := label[strings.IndexRune(label, AssignmentTokenSymbol)+1:]
 
 		buildServiceOptions.Labels[kLabel] = vLabel
 	}
 
+	buildServiceOptions.PersistentVars = make(map[string]interface{})
 	for _, persistentVars := range options.PersistentVars {
 
 		if strings.IndexRune(persistentVars, AssignmentTokenSymbol) < 0 {
-			return errors.New(errContext, fmt.Sprintf("Invalid label format '%s'", persistentVars))
+			return errors.New(errContext, fmt.Sprintf("Invalid persistent variable format '%s'", persistentVars))
 		}
 		kPVar := persistentVars[:strings.IndexRune(persistentVars, AssignmentTokenSymbol)]
 		vPVar := persistentVars[strings.IndexRune(persistentVars, AssignmentTokenSymbol)+1:]
@@ -96,12 +89,7 @@ func (h *Handler) Handler(ctx context.Context, imageName string, options *Handle
 	buildServiceOptions.PushImageAfterBuild = options.PushImagesAfterBuild
 	buildServiceOptions.RemoveImagesAfterPush = options.RemoveImagesAfterPush
 
-	buildPlan, err = h.getPlan(options)
-	if err != nil {
-		return errors.New(errContext, err.Error())
-	}
-
-	err = h.dispatcher.Start(ctx, dispatch.WithNumWorkers(options.Concurrency))
+	buildPlan, err = h.createBuildPlan(options)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
@@ -112,7 +100,6 @@ func (h *Handler) Handler(ctx context.Context, imageName string, options *Handle
 		imageName,
 		options.Versions,
 		buildServiceOptions,
-		build.WithDispatch(h.dispatcher),
 	)
 	if err != nil {
 		return errors.New(errContext, err.Error())
@@ -121,8 +108,8 @@ func (h *Handler) Handler(ctx context.Context, imageName string, options *Handle
 	return nil
 }
 
-func (h *Handler) getPlan(options *HandlerOptions) (plan.Planner, error) {
-	errContext := "(build::getPlan)"
+func (h *Handler) createBuildPlan(options *HandlerOptions) (plan.Planner, error) {
+	errContext := "(build::createBuildPlan)"
 
 	var err error
 	var plan build.Planner
@@ -166,23 +153,23 @@ func validateCascadePlanOptions(options *HandlerOptions) error {
 	}
 
 	if options.AnsibleIntermediateContainerName != "" {
-		return errors.New(errContext, "Cascade plan does not support intermediate containers name. It could cause an unpredictable result")
+		return errors.New(errContext, "Cascade plan does not support intermediate containers name, it could cause an unpredictable result")
 	}
 
 	if options.AnsibleInventoryPath != "" {
-		return errors.New(errContext, "Cascade plan does not support ansible inventory path. It could cause an unpredictable result")
+		return errors.New(errContext, "Cascade plan does not support ansible inventory path, it could cause an unpredictable result")
 	}
 
 	if options.AnsibleLimit != "" {
-		return errors.New(errContext, "Cascade plan does not support ansible limit. It could cause an unpredictable result")
+		return errors.New(errContext, "Cascade plan does not support ansible limit, it could cause an unpredictable result")
 	}
 
 	if options.ImageName != "" {
-		return errors.New(errContext, "Cascade plan does not support image name. It could cause an unpredictable result")
+		return errors.New(errContext, "Cascade plan does not support image name, it could cause an unpredictable result")
 	}
 
 	if options.ImageFromName != "" {
-		return errors.New(errContext, "Cascade plan does not support image from name. It could cause an unpredictable result")
+		return errors.New(errContext, "Cascade plan does not support image from name, it could cause an unpredictable result")
 	}
 
 	return nil

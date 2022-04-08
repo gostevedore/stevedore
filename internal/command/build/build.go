@@ -2,11 +2,10 @@ package build
 
 import (
 	"context"
-	"fmt"
 
 	errors "github.com/apenella/go-common-utils/error"
-	dockerclient "github.com/docker/docker/client"
 	"github.com/gostevedore/stevedore/internal/command"
+	"github.com/gostevedore/stevedore/internal/command/build/entrypoint"
 	handler "github.com/gostevedore/stevedore/internal/command/build/handler"
 	"github.com/gostevedore/stevedore/internal/configuration"
 	"github.com/gostevedore/stevedore/internal/ui/console"
@@ -16,48 +15,31 @@ import (
 var buildHandler Handlerer
 
 // NewCommand returns a new command to build images
-func NewCommand(ctx context.Context, conf *configuration.Configuration) *command.StevedoreCommand {
+func NewCommand(ctx context.Context, conf *configuration.Configuration, e *entrypoint.Entrypoint) *command.StevedoreCommand {
 
 	handlerOptions := &handler.HandlerOptions{}
+	entrypointOptions := &entrypoint.EntrypointOptions{}
 
 	buildCmd := &cobra.Command{
 		Use:     "build <image>",
 		Short:   "Stevedore command to build images",
 		Long:    "Stevedore command to build images",
 		Example: "stevedore build ubuntu-base --image-version impish --tag 21.10 --pull-parent-image --push-after-build --remove-local-images-after-push",
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			errContext := "(build::PreRunE)"
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var err error
 
-			dockerClient, err := dockerclient.NewClientWithOpts(dockerclient.FromEnv)
+			errContext := "(build::RunE)"
+
+			e.Options(
+				entrypoint.WithConfiguration(conf),
+			)
+
+			err = e.Execute(ctx, args, entrypointOptions, handlerOptions)
 			if err != nil {
 				return errors.New(errContext, err.Error())
 			}
-			_ = dockerClient
-
-			// drivers
-
-			// service
-
-			// handlers
 
 			return nil
-		},
-		RunE: func(cmd *cobra.Command, args []string) error {
-
-			var imageName string
-
-			errContext := "(build::RunE)"
-			if cmd.Flags().NArg() == 0 {
-				return errors.New(errContext, "Images name must be provided")
-			} else {
-				imageName = cmd.Flags().Arg(0)
-				if cmd.Flags().NArg() > 1 {
-					args := cmd.Flags().Args()
-					fmt.Println("Arguments to be ignored:", args[1:])
-				}
-			}
-
-			return runeHandler(ctx, imageName, conf, buildHandler, handlerOptions)
 		},
 	}
 
@@ -146,15 +128,15 @@ func NewCommand(ctx context.Context, conf *configuration.Configuration) *command
 		handlerOptions.BuildOnCascade = *DEPRECATEDCascade
 	}
 	buildCmd.Flags().IntVar(&handlerOptions.CascadeDepth, "cascade-depth", -1, "Number images levels to build when build on cascade is executed")
-	buildCmd.Flags().IntVar(&handlerOptions.Concurrency, "concurrency", 0, "Number of images builds that can be excuted at the same time")
+	buildCmd.Flags().IntVar(&entrypointOptions.Concurrency, "concurrency", 0, "Number of images builds that can be excuted at the same time")
 	DeprecatedFlagMessageNumWorkers := "[DEPRECATED FLAG] use 'concurrency' instead of 'num-workers'"
 	DEPRECATEDNumWorkers := buildCmd.Flags().Int("num-workers", 0, DeprecatedFlagMessageNumWorkers)
 	if *DEPRECATEDNumWorkers > 0 {
 		console.Warn(DEPRECATEDNumWorkers)
-		handlerOptions.Concurrency = *DEPRECATEDNumWorkers
+		entrypointOptions.Concurrency = *DEPRECATEDNumWorkers
 	}
 	// buildCmd.Flags().BoolVar(&handlerOptions.Debug, "debug", false, "Enable debug mode to show build options")
-	buildCmd.Flags().BoolVar(&handlerOptions.DryRun, "dry-run", false, "Run build on dry-run mode")
+	buildCmd.Flags().BoolVar(&entrypointOptions.DryRun, "dry-run", false, "Run build on dry-run mode")
 	buildCmd.Flags().BoolVar(&handlerOptions.EnableSemanticVersionTags, "enable-semver-tags", false, "Generate a set of tags for the image based on the semantic version tree when main version is semver 2.0.0 compliance")
 	buildCmd.Flags().BoolVar(&handlerOptions.PullParentImage, "pull-parent-image", false, "When is defined parent image is pulled from docker registry")
 	buildCmd.Flags().BoolVar(&handlerOptions.PushImagesAfterBuild, "push-after-build", false, "When is defined the image is pushed to docker registry after the build")
@@ -170,35 +152,5 @@ func NewCommand(ctx context.Context, conf *configuration.Configuration) *command
 	}
 
 	return command
-
-}
-
-func runeHandler(ctx context.Context, imageName string, conf *configuration.Configuration, handler Handlerer, options *handler.HandlerOptions) error {
-
-	errContext := "(build::runeHandler)"
-
-	// when concurrency is set to 0, it means that the default value is used
-	if conf.Concurrency > 0 && options.Concurrency < 1 {
-		options.Concurrency = conf.Concurrency
-	}
-
-	if conf.PushImages || options.PushImagesAfterBuild {
-		options.PushImagesAfterBuild = true
-	}
-
-	if conf.EnableSemanticVersionTags || options.EnableSemanticVersionTags {
-		options.EnableSemanticVersionTags = true
-	}
-
-	if len(conf.SemanticVersionTagsTemplates) > 0 && len(options.SemanticVersionTagsTemplates) == 0 {
-		options.SemanticVersionTagsTemplates = append([]string{}, conf.SemanticVersionTagsTemplates...)
-	}
-
-	err := handler.Handler(ctx, imageName, options)
-	if err != nil {
-		return errors.New(errContext, err.Error())
-	}
-
-	return nil
 
 }

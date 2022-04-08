@@ -21,51 +21,34 @@ func TestNewPlan(t *testing.T) {
 	}{
 		{
 			desc:    "Testing new plan error when unknown id",
-			factory: NewPlanFactory(),
+			factory: NewPlanFactory(store.NewMockImageStore()),
 			id:      "unknown",
 			err:     errors.New(errContext, "Plan 'unknown' has not been registered"),
 		},
 		{
-			desc:    "Testing new plan error when store is not provided on cascade plan",
-			factory: NewPlanFactory(),
-			id:      "cascade",
-			err:     errors.New(errContext, "To create a cascade plan, is required a store"),
-		},
-		{
-			desc:    "Testing new plan error when depth is not provided on cascade plan",
-			factory: NewPlanFactory(),
-			id:      "cascade",
-			parameters: map[string]interface{}{
-				"store": store.NewMockImageStore(),
-			},
-			err: errors.New(errContext, "To create a cascade plan, is required a depth"),
-		},
-		{
-			desc:    "Testing new plan error when store is not provided on single plan",
-			factory: NewPlanFactory(),
-			id:      "single",
-			err:     errors.New(errContext, "To create a single plan, is required a depth"),
+			desc:       "Testing new plan error when depth is not provided on cascade plan",
+			factory:    NewPlanFactory(store.NewMockImageStore()),
+			id:         "cascade",
+			parameters: map[string]interface{}{},
+			err:        errors.New(errContext, "To create a cascade plan, is required a depth"),
 		},
 		{
 			desc:    "Testing new plan that returns a cascade plan",
-			factory: NewPlanFactory(),
+			factory: NewPlanFactory(store.NewMockImageStore()),
 			id:      "cascade",
 			parameters: map[string]interface{}{
-				"store": store.NewMockImageStore(),
 				"depth": -1,
 			},
 			res: &CascadePlan{},
 			err: &errors.Error{},
 		},
 		{
-			desc:    "Testing new plan that returns a single plan",
-			factory: NewPlanFactory(),
-			id:      "single",
-			parameters: map[string]interface{}{
-				"store": store.NewMockImageStore(),
-			},
-			res: &SinglePlan{},
-			err: &errors.Error{},
+			desc:       "Testing new plan that returns a single plan",
+			factory:    NewPlanFactory(store.NewMockImageStore()),
+			id:         "single",
+			parameters: map[string]interface{}{},
+			res:        &SinglePlan{},
+			err:        &errors.Error{},
 		},
 	}
 

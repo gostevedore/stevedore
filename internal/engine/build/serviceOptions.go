@@ -58,7 +58,6 @@ func (o *ServiceOptions) Copy() *ServiceOptions {
 	}
 	copy.ImageRegistryNamespace = o.ImageRegistryNamespace
 	copy.ImageRegistryHost = o.ImageRegistryHost
-
 	copy.EnableSemanticVersionTags = o.EnableSemanticVersionTags
 	copy.ImageFromName = o.ImageFromName
 	copy.ImageFromRegistryNamespace = o.ImageFromRegistryNamespace
@@ -67,8 +66,6 @@ func (o *ServiceOptions) Copy() *ServiceOptions {
 
 	copy.PushImageAfterBuild = o.PushImageAfterBuild
 	copy.RemoveImagesAfterPush = o.RemoveImagesAfterPush
-	// copy.Cascade = o.Cascade
-	// copy.CascadeDepth = o.CascadeDepth
 	copy.AnsibleConnectionLocal = o.AnsibleConnectionLocal
 
 	copy.PersistentVars = map[string]interface{}{}

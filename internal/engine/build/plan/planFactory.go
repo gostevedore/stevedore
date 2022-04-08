@@ -14,42 +14,40 @@ const (
 )
 
 // PlanFactory is a factory to create Planner
-type PlanFactory struct{}
+type PlanFactory struct {
+	imagesStore ImagesStorer
+}
 
 // NewPlanFactory creates a new PlanFactory
-func NewPlanFactory() *PlanFactory {
-	return &PlanFactory{}
+func NewPlanFactory(store ImagesStorer) *PlanFactory {
+	return &PlanFactory{
+		imagesStore: store,
+	}
 }
 
 // NewPlan creates a new Planner
 func (f *PlanFactory) NewPlan(id string, parameters map[string]interface{}) (Planner, error) {
-	var store ImagesStorer
 	var exists bool
 	var depth int
 
 	errContext := "(PlanFactory::NewPlan)"
 
+	if f.imagesStore == nil {
+		return nil, errors.New(errContext, "To create a build plan, is required a store")
+	}
+
 	switch id {
 	case CascadePlanID:
-		store, exists = parameters["store"].(ImagesStorer)
-		if !exists || store == nil {
-			return nil, errors.New(errContext, "To create a cascade plan, is required a store")
-		}
 
 		depth, exists = parameters["depth"].(int)
 		if !exists {
 			return nil, errors.New(errContext, "To create a cascade plan, is required a depth")
 		}
 
-		return NewCascadePlan(store, depth), nil
+		return NewCascadePlan(f.imagesStore, depth), nil
 
 	case SinglePlanID:
-		store, exists = parameters["store"].(ImagesStorer)
-		if !exists || store == nil {
-			return nil, errors.New(errContext, "To create a single plan, is required a depth")
-		}
-
-		return NewSinglePlan(store), nil
+		return NewSinglePlan(f.imagesStore), nil
 	default:
 		return nil, errors.New(errContext, fmt.Sprintf("Plan '%s' has not been registered", id))
 	}

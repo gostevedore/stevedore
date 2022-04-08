@@ -6,6 +6,7 @@ import (
 	"github.com/apenella/go-docker-builder/pkg/build"
 	godockerbuilderbuildcontext "github.com/apenella/go-docker-builder/pkg/build/context"
 	"github.com/apenella/go-docker-builder/pkg/types"
+	dockertypes "github.com/docker/docker/api/types"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -14,46 +15,66 @@ type MockDockerBuildCmd struct {
 	mock.Mock
 }
 
+func NewMockDockerBuildCmd() *MockDockerBuildCmd {
+	return &MockDockerBuildCmd{}
+}
+
 // WithDockerfile is a mock for WithDockerfile "github.com/apenella/go-docker-builder/pkg/build"
 func (d *MockDockerBuildCmd) WithDockerfile(dockerfile string) *build.DockerBuildCmd {
 	d.Called(dockerfile)
-	return &build.DockerBuildCmd{}
+	return &build.DockerBuildCmd{
+		ImageBuildOptions: &dockertypes.ImageBuildOptions{
+			Dockerfile: dockerfile,
+		},
+	}
 }
 
 // WithImageName is a mock for WithImageName "github.com/apenella/go-docker-builder/pkg/build"
 func (d *MockDockerBuildCmd) WithImageName(image string) *build.DockerBuildCmd {
 	d.Called(image)
-	return &build.DockerBuildCmd{}
+	return &build.DockerBuildCmd{
+		ImageName: image,
+	}
 }
 
 // WithPullParentImage is a mock for WithPullParentImage "github.com/apenella/go-docker-builder/pkg/build"
 func (d *MockDockerBuildCmd) WithPullParentImage() *build.DockerBuildCmd {
 	d.Called()
-	return &build.DockerBuildCmd{}
+	return &build.DockerBuildCmd{
+		PullParentImage: true,
+	}
 }
 
 // WithPushAfterBuild is a mock for WithPushAfterBuild "github.com/apenella/go-docker-builder/pkg/build"
 func (d *MockDockerBuildCmd) WithPushAfterBuild() *build.DockerBuildCmd {
 	d.Called()
-	return &build.DockerBuildCmd{}
+	return &build.DockerBuildCmd{
+		PushAfterBuild: true,
+	}
 }
 
 // WithResponse is a mock for WithResponse "github.com/apenella/go-docker-builder/pkg/build"
 func (d *MockDockerBuildCmd) WithResponse(response types.Responser) *build.DockerBuildCmd {
 	d.Called(response)
-	return &build.DockerBuildCmd{}
+	return &build.DockerBuildCmd{
+		Response: response,
+	}
 }
 
 // WithUseNormalizedNamed is a mock for WithUseNormalizedNamed "github.com/apenella/go-docker-builder/pkg/build"
 func (d *MockDockerBuildCmd) WithUseNormalizedNamed() *build.DockerBuildCmd {
 	d.Called()
-	return &build.DockerBuildCmd{}
+	return &build.DockerBuildCmd{
+		UseNormalizedNamed: true,
+	}
 }
 
 // WithRemoveAfterPush is a mock for WithRemoveAfterPush "github.com/apenella/go-docker-builder/pkg/build"
 func (d *MockDockerBuildCmd) WithRemoveAfterPush() *build.DockerBuildCmd {
 	d.Called()
-	return &build.DockerBuildCmd{}
+	return &build.DockerBuildCmd{
+		RemoveAfterPush: true,
+	}
 }
 
 // AddAuth is a mock for AddAuth "github.com/apenella/go-docker-builder/pkg/build"

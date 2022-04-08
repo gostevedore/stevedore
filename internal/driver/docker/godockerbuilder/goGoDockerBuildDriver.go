@@ -15,46 +15,46 @@ import (
 
 // GoDockerBuildDriver is a driver for building docker images
 type GoDockerBuildDriver struct {
-	docker         DockerBuilder
+	cmd            DockerBuilder
 	contextFactory *buildcontext.DockerBuildContextFactory
 }
 
 // NewGoDockerBuildDriver creates a new GoDockerBuildDriver
-func NewGoDockerBuildDriver(contextFactory *buildcontext.DockerBuildContextFactory) *GoDockerBuildDriver {
+func NewGoDockerBuildDriver(cmd *build.DockerBuildCmd, contextFactory *buildcontext.DockerBuildContextFactory) *GoDockerBuildDriver {
 	return &GoDockerBuildDriver{
-		docker:         &build.DockerBuildCmd{},
+		cmd:            cmd,
 		contextFactory: contextFactory,
 	}
 }
 
 // WithDockerfile sets dockerfile to use
 func (d *GoDockerBuildDriver) WithDockerfile(dockerfile string) {
-	d.docker = d.docker.WithDockerfile(dockerfile)
+	d.cmd = d.cmd.WithDockerfile(dockerfile)
 }
 
 // WithImageName sets the image name
 func (d *GoDockerBuildDriver) WithImageName(image string) {
-	d.docker = d.docker.WithImageName(image)
+	d.cmd = d.cmd.WithImageName(image)
 }
 
 // WithPullParentImage sets if the image should be pushed after build
 func (d *GoDockerBuildDriver) WithPullParentImage() {
-	d.docker = d.docker.WithPullParentImage()
+	d.cmd = d.cmd.WithPullParentImage()
 }
 
 // WithPushAfterBuild sets if the image should be pushed after build
 func (d *GoDockerBuildDriver) WithPushAfterBuild() {
-	d.docker = d.docker.WithPushAfterBuild()
+	d.cmd = d.cmd.WithPushAfterBuild()
 }
 
 // WithUseNormalizedNamed sets if image name should be normalized
 func (d *GoDockerBuildDriver) WithUseNormalizedNamed() {
-	d.docker = d.docker.WithUseNormalizedNamed()
+	d.cmd = d.cmd.WithUseNormalizedNamed()
 }
 
 // WithRemoveAfterPush sets if the image should be removed after push
 func (d *GoDockerBuildDriver) WithRemoveAfterPush() {
-	d.docker = d.docker.WithRemoveAfterPush()
+	d.cmd = d.cmd.WithRemoveAfterPush()
 }
 
 // WithResponse sets the responser to use
@@ -67,22 +67,22 @@ func (d *GoDockerBuildDriver) WithResponse(w io.Writer, prefix string) {
 		response.WithWriter(w),
 	)
 
-	d.docker = d.docker.WithResponse(res)
+	d.cmd = d.cmd.WithResponse(res)
 }
 
 // AddAuth defines the authentication to use for an specific registry
 func (d *GoDockerBuildDriver) AddAuth(username string, password string, registry string) error {
-	return d.docker.AddAuth(username, password, registry)
+	return d.cmd.AddAuth(username, password, registry)
 }
 
 // AddPushAuth defines the authentication to use for an specific registry
 func (d *GoDockerBuildDriver) AddPushAuth(username string, password string) error {
-	return d.docker.AddPushAuth(username, password)
+	return d.cmd.AddPushAuth(username, password)
 }
 
 // AddBuildArgs append new build args
 func (d *GoDockerBuildDriver) AddBuildArgs(arg string, value string) error {
-	return d.docker.AddBuildArgs(arg, value)
+	return d.cmd.AddBuildArgs(arg, value)
 }
 
 // AddBuildContext sets those docker build contexts required to build an image. It supports to use several context which are merged before to start the image build
@@ -108,20 +108,20 @@ func (d *GoDockerBuildDriver) AddBuildContext(options ...*builder.DockerDriverCo
 		buildContextList = append(buildContextList, c)
 	}
 
-	return d.docker.AddBuildContext(buildContextList...)
+	return d.cmd.AddBuildContext(buildContextList...)
 }
 
 // AddLabel adds a label to the image
 func (d *GoDockerBuildDriver) AddLabel(label string, value string) error {
-	return d.docker.AddLabel(label, value)
+	return d.cmd.AddLabel(label, value)
 }
 
 // AddTags adds tags to the image
 func (d *GoDockerBuildDriver) AddTags(tags ...string) error {
-	return d.docker.AddTags(tags...)
+	return d.cmd.AddTags(tags...)
 }
 
 // Run starts the build
 func (d *GoDockerBuildDriver) Run(ctx context.Context) error {
-	return d.docker.Run(ctx)
+	return d.cmd.Run(ctx)
 }
