@@ -1,4 +1,4 @@
-package entrypoint
+package build
 
 // EntrypointOptions defines the options for the entrypoint that initialize a build application
 type EntrypointOptions struct {

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/configuration/compatibility"
+	"github.com/gostevedore/stevedore/internal/compatibility"
 	"github.com/gostevedore/stevedore/internal/configuration/images/graph"
 	"github.com/gostevedore/stevedore/internal/configuration/images/image"
 	imagesgraph "github.com/gostevedore/stevedore/internal/images/graph"

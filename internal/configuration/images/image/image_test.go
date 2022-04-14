@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/configuration/compatibility"
+	"github.com/gostevedore/stevedore/internal/compatibility"
 	domainimage "github.com/gostevedore/stevedore/internal/images/image"
 	"github.com/stretchr/testify/assert"
 )

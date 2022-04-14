@@ -1,4 +1,4 @@
-package entrypoint
+package build
 
 import (
 	"context"
@@ -9,8 +9,6 @@ import (
 	godockerbuild "github.com/apenella/go-docker-builder/pkg/build"
 	dockerclient "github.com/docker/docker/client"
 	buildersstore "github.com/gostevedore/stevedore/internal/builders/store"
-	build "github.com/gostevedore/stevedore/internal/command/build/handler"
-	buildhandler "github.com/gostevedore/stevedore/internal/command/build/handler"
 	"github.com/gostevedore/stevedore/internal/configuration"
 	"github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/driver"
@@ -25,6 +23,8 @@ import (
 	buildservice "github.com/gostevedore/stevedore/internal/engine/build"
 	"github.com/gostevedore/stevedore/internal/engine/build/command"
 	"github.com/gostevedore/stevedore/internal/engine/build/plan"
+	build "github.com/gostevedore/stevedore/internal/handler/build"
+	buildhandler "github.com/gostevedore/stevedore/internal/handler/build"
 	"github.com/gostevedore/stevedore/internal/images/image/render"
 	"github.com/gostevedore/stevedore/internal/images/image/render/now"
 	"github.com/gostevedore/stevedore/internal/images/store"
@@ -39,8 +39,7 @@ type OptionsFunc func(opts *Entrypoint)
 
 // Entrypoint defines the entrypoint for the build application
 type Entrypoint struct {
-	configuration *configuration.Configuration
-	writer        io.Writer
+	writer io.Writer
 }
 
 // NewEntrypoint returns a new entrypoint
@@ -49,13 +48,6 @@ func NewEntrypoint(opts ...OptionsFunc) *Entrypoint {
 	e.Options(opts...)
 
 	return e
-}
-
-// WithConfiguration sets the configuration for the entrypoint
-func WithConfiguration(configuration *configuration.Configuration) OptionsFunc {
-	return func(e *Entrypoint) {
-		e.configuration = configuration
-	}
 }
 
 // WithWriter sets the writer for the entrypoint
@@ -73,7 +65,7 @@ func (e *Entrypoint) Options(opts ...OptionsFunc) {
 }
 
 // Execute executes the entrypoint
-func (e *Entrypoint) Execute(ctx context.Context, args []string, entrypointOptions *EntrypointOptions, handlerOptions *build.HandlerOptions) error {
+func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, entrypointOptions *EntrypointOptions, handlerOptions *build.HandlerOptions) error {
 	var err error
 	var buildHandler *buildhandler.Handler
 	var buildDriverFactory driver.BuildDriverFactory
@@ -83,7 +75,7 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, entrypointOptio
 
 	errContext := "(Entrypoint::Execute)"
 
-	if e.configuration == nil {
+	if conf == nil {
 		return errors.New(errContext, "To execute the build entrypoint, configuration is required")
 	}
 
@@ -104,13 +96,13 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, entrypointOptio
 		fmt.Fprintf(e.writer, "Ignoring extra arguments: %v\n", args[1:])
 	}
 
-	if e.configuration.Concurrency > 0 && entrypointOptions.Concurrency < 1 {
-		entrypointOptions.Concurrency = e.configuration.Concurrency
+	if conf.Concurrency > 0 && entrypointOptions.Concurrency < 1 {
+		entrypointOptions.Concurrency = conf.Concurrency
 	}
-	handlerOptions.PushImagesAfterBuild = e.configuration.PushImages || handlerOptions.PushImagesAfterBuild
-	handlerOptions.EnableSemanticVersionTags = e.configuration.EnableSemanticVersionTags || handlerOptions.EnableSemanticVersionTags
-	if handlerOptions.EnableSemanticVersionTags && len(e.configuration.SemanticVersionTagsTemplates) > 0 && len(handlerOptions.SemanticVersionTagsTemplates) == 0 {
-		handlerOptions.SemanticVersionTagsTemplates = append([]string{}, e.configuration.SemanticVersionTagsTemplates...)
+	handlerOptions.PushImagesAfterBuild = conf.PushImages || handlerOptions.PushImagesAfterBuild
+	handlerOptions.EnableSemanticVersionTags = conf.EnableSemanticVersionTags || handlerOptions.EnableSemanticVersionTags
+	if handlerOptions.EnableSemanticVersionTags && len(conf.SemanticVersionTagsTemplates) > 0 && len(handlerOptions.SemanticVersionTagsTemplates) == 0 {
+		handlerOptions.SemanticVersionTagsTemplates = append([]string{}, conf.SemanticVersionTagsTemplates...)
 	}
 
 	credentialsStore := credentials.NewCredentialsStore()

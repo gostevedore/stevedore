@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/configuration/compatibility"
+	"github.com/gostevedore/stevedore/internal/compatibility"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"

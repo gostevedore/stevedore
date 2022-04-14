@@ -1,4 +1,4 @@
-package entrypoint
+package build
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	build "github.com/gostevedore/stevedore/internal/command/build/handler"
 	"github.com/gostevedore/stevedore/internal/configuration"
 	"github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/driver"
@@ -15,6 +14,7 @@ import (
 	dockerdriver "github.com/gostevedore/stevedore/internal/driver/docker"
 	dryrundriver "github.com/gostevedore/stevedore/internal/driver/dryrun"
 	"github.com/gostevedore/stevedore/internal/engine/build/plan"
+	build "github.com/gostevedore/stevedore/internal/handler/build"
 	"github.com/gostevedore/stevedore/internal/images/store"
 	"github.com/stretchr/testify/assert"
 )
@@ -31,6 +31,7 @@ func TestExecute(t *testing.T) {
 		desc              string
 		entrypoint        *Entrypoint
 		args              []string
+		configuration     *configuration.Configuration
 		entrypointOptions *EntrypointOptions
 		handlerOptions    *build.HandlerOptions
 		err               error
@@ -42,25 +43,22 @@ func TestExecute(t *testing.T) {
 			err:        errors.New(errContext, "To execute the build entrypoint, configuration is required"),
 		},
 		{
-			desc: "Testing error when arguments are not provided",
-			entrypoint: &Entrypoint{
-				configuration: &configuration.Configuration{},
-			},
-			err: errors.New(errContext, "To execute the build entrypoint, arguments are required"),
+			desc:          "Testing error when arguments are not provided",
+			entrypoint:    &Entrypoint{},
+			configuration: &configuration.Configuration{},
+			err:           errors.New(errContext, "To execute the build entrypoint, arguments are required"),
 		},
 		{
-			desc: "Testing error when entrypoint options are not provided",
-			entrypoint: &Entrypoint{
-				configuration: &configuration.Configuration{},
-			},
-			args: []string{"image"},
-			err:  errors.New(errContext, "To execute the build entrypoint, entrypoint options are required"),
+			desc:          "Testing error when entrypoint options are not provided",
+			entrypoint:    &Entrypoint{},
+			configuration: &configuration.Configuration{},
+			args:          []string{"image"},
+			err:           errors.New(errContext, "To execute the build entrypoint, entrypoint options are required"),
 		},
 		{
-			desc: "Testing error when handler options are not provided",
-			entrypoint: &Entrypoint{
-				configuration: &configuration.Configuration{},
-			},
+			desc:              "Testing error when handler options are not provided",
+			entrypoint:        &Entrypoint{},
+			configuration:     &configuration.Configuration{},
 			args:              []string{"image"},
 			entrypointOptions: &EntrypointOptions{},
 			err:               errors.New(errContext, "To execute the build entrypoint, handler options are required"),
@@ -68,9 +66,9 @@ func TestExecute(t *testing.T) {
 		{
 			desc: "Testing execute entrypoint",
 			entrypoint: &Entrypoint{
-				configuration: &configuration.Configuration{},
-				writer:        ioutil.Discard,
+				writer: ioutil.Discard,
 			},
+			configuration:     &configuration.Configuration{},
 			args:              []string{"image"},
 			entrypointOptions: &EntrypointOptions{},
 			handlerOptions:    &build.HandlerOptions{},
@@ -80,17 +78,17 @@ func TestExecute(t *testing.T) {
 		{
 			desc: "Testing execute entrypoint overriding handler options with config",
 			entrypoint: &Entrypoint{
-				configuration: &configuration.Configuration{
-					Concurrency:               5,
-					PushImages:                true,
-					EnableSemanticVersionTags: true,
-					SemanticVersionTagsTemplates: []string{
-						"template",
-					},
-				},
 				writer: ioutil.Discard,
 			},
-			args:              []string{"image"},
+			args: []string{"image"},
+			configuration: &configuration.Configuration{
+				Concurrency:               5,
+				PushImages:                true,
+				EnableSemanticVersionTags: true,
+				SemanticVersionTagsTemplates: []string{
+					"template",
+				},
+			},
 			entrypointOptions: &EntrypointOptions{},
 			handlerOptions:    &build.HandlerOptions{},
 			err:               &errors.Error{},
@@ -106,7 +104,7 @@ func TestExecute(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
-			err := test.entrypoint.Execute(context.TODO(), test.args, test.entrypointOptions, test.handlerOptions)
+			err := test.entrypoint.Execute(context.TODO(), test.args, test.configuration, test.entrypointOptions, test.handlerOptions)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
