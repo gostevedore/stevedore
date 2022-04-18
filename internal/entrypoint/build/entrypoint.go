@@ -176,23 +176,17 @@ func (e *Entrypoint) createBuildDriverFactory(credentialsStore *credentials.Cred
 
 	factory := driver.NewBuildDriverFactory()
 
-	if options.DryRun {
-		ansiblePlaybookDriver = dryrundriver.NewDryRunDriver(e.writer)
-		dockerDriver = dryrundriver.NewDryRunDriver(e.writer)
-		defaultDriver = dryrundriver.NewDryRunDriver(e.writer)
-	} else {
-		ansiblePlaybookDriver, err = e.createAnsibleDriver()
-		if err != nil {
-			return nil, errors.New(errContext, err.Error())
-		}
-		dockerDriver, err = e.createDockerDriver(credentialsStore)
-		if err != nil {
-			return nil, errors.New(errContext, err.Error())
-		}
-		defaultDriver, err = e.createDefaultDriver()
-		if err != nil {
-			return nil, errors.New(errContext, err.Error())
-		}
+	ansiblePlaybookDriver, err = e.createAnsibleDriver(options)
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+	dockerDriver, err = e.createDockerDriver(credentialsStore, options)
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+	defaultDriver, err = e.createDefaultDriver(options)
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
 	}
 
 	factory.Register("ansible-playbook", ansiblePlaybookDriver)
@@ -202,13 +196,36 @@ func (e *Entrypoint) createBuildDriverFactory(credentialsStore *credentials.Cred
 	return factory, nil
 }
 
-func (e *Entrypoint) createDefaultDriver() (driver.BuildDriverer, error) {
+func (e *Entrypoint) createDryRunDriver() (driver.BuildDriverer, error) {
+	return dryrundriver.NewDryRunDriver(e.writer), nil
+}
+
+func (e *Entrypoint) createDefaultDriver(options *EntrypointOptions) (driver.BuildDriverer, error) {
+
+	errContext := "(entrypoint::createDefaultDriver)"
+
+	if options == nil {
+		return nil, errors.New(errContext, "Entrypoint options are required to create default driver")
+	}
+
+	if options.DryRun {
+		return e.createDryRunDriver()
+	}
+
 	return defaultdriver.NewDefaultDriver(e.writer), nil
 }
 
-func (e *Entrypoint) createAnsibleDriver() (driver.BuildDriverer, error) {
+func (e *Entrypoint) createAnsibleDriver(options *EntrypointOptions) (driver.BuildDriverer, error) {
 
 	errContext := "(entrypoint::createAnsibleDriver)"
+
+	if options == nil {
+		return nil, errors.New(errContext, "Entrypoint options are required to create ansible driver")
+	}
+
+	if options.DryRun {
+		return e.createDryRunDriver()
+	}
 
 	ansiblePlaybookDriver, err := ansibledriver.NewAnsiblePlaybookDriver(goansible.NewGoAnsibleDriver(), e.writer)
 	if err != nil {
@@ -218,7 +235,7 @@ func (e *Entrypoint) createAnsibleDriver() (driver.BuildDriverer, error) {
 	return ansiblePlaybookDriver, nil
 }
 
-func (e *Entrypoint) createDockerDriver(credentialsStore *credentials.CredentialsStore) (driver.BuildDriverer, error) {
+func (e *Entrypoint) createDockerDriver(credentialsStore *credentials.CredentialsStore, options *EntrypointOptions) (driver.BuildDriverer, error) {
 	var dockerClient *dockerclient.Client
 	var dockerDriver *dockerdriver.DockerDriver
 	var dockerDriverBuldContext *dockerdrivercontext.DockerBuildContextFactory
@@ -230,6 +247,14 @@ func (e *Entrypoint) createDockerDriver(credentialsStore *credentials.Credential
 
 	if credentialsStore == nil {
 		return nil, errors.New(errContext, "Docker driver requires a credentials store")
+	}
+
+	if options == nil {
+		return nil, errors.New(errContext, "Entrypoint options are required to create docker driver")
+	}
+
+	if options.DryRun {
+		return e.createDryRunDriver()
 	}
 
 	dockerClient, err = dockerclient.NewClientWithOpts(dockerclient.FromEnv)
