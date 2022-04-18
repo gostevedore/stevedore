@@ -170,31 +170,6 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 				assert.IsType(t, &defaultdriver.DefaultDriver{}, dDefault)
 			},
 		},
-		{
-			desc:        "Testing create build driver factory with dry run",
-			entrypoint:  NewEntrypoint(WithWriter(ioutil.Discard)),
-			credentials: credentials.NewCredentialsStore(),
-			options: &EntrypointOptions{
-				DryRun: true,
-			},
-			err: &errors.Error{},
-			assertions: func(t *testing.T, f driver.BuildDriverFactory) {
-				dDocker, eDocker := f.Get("docker")
-				assert.Nil(t, eDocker)
-				assert.NotNil(t, dDocker)
-				assert.IsType(t, &dryrundriver.DryRunDriver{}, dDocker)
-
-				dAnsible, eAnsible := f.Get("ansible-playbook")
-				assert.Nil(t, eAnsible)
-				assert.NotNil(t, dAnsible)
-				assert.IsType(t, &dryrundriver.DryRunDriver{}, dDocker)
-
-				dDefault, eDefault := f.Get("default")
-				assert.Nil(t, eDefault)
-				assert.NotNil(t, dDefault)
-				assert.IsType(t, &dryrundriver.DryRunDriver{}, dDocker)
-			},
-		},
 	}
 
 	for _, test := range tests {
@@ -214,52 +189,54 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 func TestCreateDryRunDriver(t *testing.T) {
 	desc := "Testing create dry-run driver"
 
-	t.Run(desc, func(t *testing.T) {
-		e := NewEntrypoint()
-
-		dryRunDriver, err := e.createDryRunDriver()
-
-		assert.Nil(t, err)
-		assert.NotNil(t, dryRunDriver)
-	})
-}
-
-func TestCreateDefaultDriver(t *testing.T) {
-
-	errContext := "(entrypoint::createDefaultDriver)"
-
 	tests := []struct {
 		desc       string
 		entrypoint *Entrypoint
-		options    *EntrypointOptions
 		res        driver.BuildDriverer
 		err        error
 	}{
 		{
-			desc:       "Testing error when creating default driver with nil options",
+			desc:       "Testing create dry-run driver",
 			entrypoint: NewEntrypoint(),
-			options:    nil,
-			err:        errors.New(errContext, "Entrypoint options are required to create default driver"),
+			res:        &dryrundriver.DryRunDriver{},
 		},
+	}
+
+	for _, test := range tests {
+		t.Run(desc, func(t *testing.T) {
+
+			driver, err := test.entrypoint.createDryRunDriver()
+
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				assert.Nil(t, err)
+				assert.NotNil(t, driver)
+				assert.IsType(t, test.res, driver)
+			}
+		})
+	}
+
+}
+
+func TestCreateDefaultDriver(t *testing.T) {
+
+	tests := []struct {
+		desc       string
+		entrypoint *Entrypoint
+		res        driver.BuildDriverer
+		err        error
+	}{
 		{
 			desc:       "Testing create default driver",
 			entrypoint: NewEntrypoint(),
-			options:    &EntrypointOptions{},
 			res:        &defaultdriver.DefaultDriver{},
-		},
-		{
-			desc:       "Testing create default driver with dry-run enabled",
-			entrypoint: NewEntrypoint(),
-			options: &EntrypointOptions{
-				DryRun: true,
-			},
-			res: &dryrundriver.DryRunDriver{},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-			driver, err := test.entrypoint.createDefaultDriver(test.options)
+			driver, err := test.entrypoint.createDefaultDriver()
 
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
@@ -294,14 +271,6 @@ func TestCreateAnsibleDriver(t *testing.T) {
 			entrypoint: NewEntrypoint(),
 			options:    &EntrypointOptions{},
 			res:        &ansibledriver.AnsiblePlaybookDriver{},
-		},
-		{
-			desc:       "Testing create ansible driver with dry-run enabled",
-			entrypoint: NewEntrypoint(),
-			options: &EntrypointOptions{
-				DryRun: true,
-			},
-			res: &dryrundriver.DryRunDriver{},
 		},
 	}
 
@@ -351,16 +320,6 @@ func TestCreateDockerDriver(t *testing.T) {
 			options:     &EntrypointOptions{},
 			res:         &dockerdriver.DockerDriver{},
 			err:         &errors.Error{},
-		},
-		{
-			desc:        "Testing create docker driver with dry-run enabled",
-			entrypoint:  NewEntrypoint(),
-			credentials: credentials.NewCredentialsStore(),
-			options: &EntrypointOptions{
-				DryRun: true,
-			},
-			res: &dryrundriver.DryRunDriver{},
-			err: &errors.Error{},
 		},
 	}
 

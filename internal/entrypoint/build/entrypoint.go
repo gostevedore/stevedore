@@ -158,6 +158,7 @@ func (e *Entrypoint) createBuildDriverFactory(credentialsStore *credentials.Cred
 	var ansiblePlaybookDriver driver.BuildDriverer
 	var defaultDriver driver.BuildDriverer
 	var dockerDriver driver.BuildDriverer
+	var dryRunDriver driver.BuildDriverer
 	var err error
 
 	errContext := "(entrypoint::createBuildDriverFactory)"
@@ -184,7 +185,12 @@ func (e *Entrypoint) createBuildDriverFactory(credentialsStore *credentials.Cred
 	if err != nil {
 		return nil, errors.New(errContext, err.Error())
 	}
-	defaultDriver, err = e.createDefaultDriver(options)
+	defaultDriver, err = e.createDefaultDriver()
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+
+	dryRunDriver, err = e.createDryRunDriver()
 	if err != nil {
 		return nil, errors.New(errContext, err.Error())
 	}
@@ -192,27 +198,17 @@ func (e *Entrypoint) createBuildDriverFactory(credentialsStore *credentials.Cred
 	factory.Register("ansible-playbook", ansiblePlaybookDriver)
 	factory.Register("docker", dockerDriver)
 	factory.Register("default", defaultDriver)
+	factory.Register("dry-run", dryRunDriver)
 
 	return factory, nil
 }
 
-func (e *Entrypoint) createDryRunDriver() (driver.BuildDriverer, error) {
-	return dryrundriver.NewDryRunDriver(e.writer), nil
+func (e *Entrypoint) createDefaultDriver() (driver.BuildDriverer, error) {
+	return defaultdriver.NewDefaultDriver(e.writer), nil
 }
 
-func (e *Entrypoint) createDefaultDriver(options *EntrypointOptions) (driver.BuildDriverer, error) {
-
-	errContext := "(entrypoint::createDefaultDriver)"
-
-	if options == nil {
-		return nil, errors.New(errContext, "Entrypoint options are required to create default driver")
-	}
-
-	if options.DryRun {
-		return e.createDryRunDriver()
-	}
-
-	return defaultdriver.NewDefaultDriver(e.writer), nil
+func (e *Entrypoint) createDryRunDriver() (driver.BuildDriverer, error) {
+	return dryrundriver.NewDryRunDriver(e.writer), nil
 }
 
 func (e *Entrypoint) createAnsibleDriver(options *EntrypointOptions) (driver.BuildDriverer, error) {
@@ -221,10 +217,6 @@ func (e *Entrypoint) createAnsibleDriver(options *EntrypointOptions) (driver.Bui
 
 	if options == nil {
 		return nil, errors.New(errContext, "Entrypoint options are required to create ansible driver")
-	}
-
-	if options.DryRun {
-		return e.createDryRunDriver()
 	}
 
 	ansiblePlaybookDriver, err := ansibledriver.NewAnsiblePlaybookDriver(goansible.NewGoAnsibleDriver(), e.writer)
@@ -251,10 +243,6 @@ func (e *Entrypoint) createDockerDriver(credentialsStore *credentials.Credential
 
 	if options == nil {
 		return nil, errors.New(errContext, "Entrypoint options are required to create docker driver")
-	}
-
-	if options.DryRun {
-		return e.createDryRunDriver()
 	}
 
 	dockerClient, err = dockerclient.NewClientWithOpts(dockerclient.FromEnv)

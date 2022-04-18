@@ -10,6 +10,8 @@ type ServiceOptions struct {
 	AnsibleInventoryPath string
 	// AnsibleLimit is the ansible limit ??
 	AnsibleLimit string
+	// DryRun if is true, the build is executed in dry run mode
+	DryRun bool
 	// EnableSemanticVersionTags is a flag to enable semantic version tags
 	EnableSemanticVersionTags bool
 	// ImageFromName is the parent's image name

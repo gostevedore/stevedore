@@ -19,9 +19,9 @@ type HandlerOptions struct {
 	// Concurrency int
 	// // Debug if is true debug mode is enabled: ???
 	// Debug bool
-	// // DryRun is true if the build should be a dry run: ???
-	// DryRun bool
 
+	// DryRun if is true, the build is executed in dry run mode
+	DryRun bool
 	// EnableSemanticVersionTags if is true semantic version tags are generated
 	EnableSemanticVersionTags bool
 	// ImageFromName is the name of the image to use as source

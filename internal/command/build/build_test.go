@@ -82,7 +82,6 @@ func TestNewCommand(t *testing.T) {
 					config,
 					&buildentrypoint.EntrypointOptions{
 						Concurrency: 5,
-						DryRun:      true,
 					},
 					&buildhandler.HandlerOptions{
 						AnsibleConnectionLocal:           true,
@@ -91,6 +90,7 @@ func TestNewCommand(t *testing.T) {
 						AnsibleLimit:                     "limit",
 						BuildOnCascade:                   true,
 						CascadeDepth:                     3,
+						DryRun:                           true,
 						EnableSemanticVersionTags:        true,
 						ImageFromName:                    "image-from-name",
 						ImageFromRegistryHost:            "image-from-registry",
@@ -194,7 +194,6 @@ func TestNewCommand(t *testing.T) {
 					config,
 					&buildentrypoint.EntrypointOptions{
 						Concurrency: 5,
-						DryRun:      true,
 					},
 					&buildhandler.HandlerOptions{
 						AnsibleConnectionLocal:           true,
@@ -203,6 +202,7 @@ func TestNewCommand(t *testing.T) {
 						AnsibleLimit:                     "limit",
 						BuildOnCascade:                   true,
 						CascadeDepth:                     3,
+						DryRun:                           true,
 						EnableSemanticVersionTags:        true,
 						ImageFromName:                    "image-from-name",
 						ImageFromRegistryHost:            "image-from-registry",

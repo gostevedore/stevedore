@@ -303,7 +303,7 @@ func (s *Service) build(ctx context.Context, image *image.Image, options *Servic
 	// TODO is it populated by default?
 	buildOptions.BuilderVarMappings = imageBuilder.VarMapping
 
-	driver, err := s.driverFactory.Get(imageBuilder.Driver)
+	driver, err := s.getDriver(imageBuilder, options)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
@@ -349,6 +349,22 @@ func (s *Service) getCredentials(registry string) *credentials.RegistryUserPassA
 	auth, _ := s.credentials.GetCredentials(registry)
 
 	return auth
+}
+
+func (s *Service) getDriver(builder *builder.Builder, options *ServiceOptions) (driver.BuildDriverer, error) {
+	errContext := "(build::getDriver)"
+
+	driverName := builder.Driver
+	if options.DryRun {
+		driverName = "dry-run"
+	}
+
+	driver, err := s.driverFactory.Get(driverName)
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+
+	return driver, nil
 }
 
 func (s *Service) job(ctx context.Context, cmd job.Commander) (schedule.Jobber, error) {

@@ -48,7 +48,8 @@ func (h *Handler) Handler(ctx context.Context, imageName string, options *Handle
 	buildServiceOptions.AnsibleInventoryPath = options.AnsibleInventoryPath
 	buildServiceOptions.AnsibleLimit = options.AnsibleLimit
 
-	// debug
+	buildServiceOptions.DryRun = options.DryRun
+
 	buildServiceOptions.EnableSemanticVersionTags = options.EnableSemanticVersionTags
 
 	buildServiceOptions.ImageFromName = options.ImageFromName

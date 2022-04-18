@@ -113,7 +113,7 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 			handlerOptions.CascadeDepth = buildFlagOptions.CascadeDepth
 			entrypointOptions.Concurrency = buildFlagOptions.Concurrency
 			entrypointOptions.Debug = buildFlagOptions.Debug
-			entrypointOptions.DryRun = buildFlagOptions.DryRun
+			handlerOptions.DryRun = buildFlagOptions.DryRun
 			handlerOptions.EnableSemanticVersionTags = buildFlagOptions.EnableSemanticVersionTags
 			handlerOptions.ImageFromName = buildFlagOptions.ImageFromName
 			handlerOptions.ImageFromRegistryHost = buildFlagOptions.ImageFromRegistryHost

@@ -6,6 +6,6 @@ type EntrypointOptions struct {
 	Concurrency int
 	// Debug if is true debug mode is enabled: ???
 	Debug bool
-	// DryRun is true if the build should be a dry run: ???
-	DryRun bool
+	// // DryRun is true if the build should be a dry run: ???
+	// DryRun bool
 }
