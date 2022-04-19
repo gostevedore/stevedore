@@ -1,4 +1,4 @@
-package promote
+package handler
 
 import (
 	"context"
@@ -14,7 +14,7 @@ func NewHandlerMock() *HandlerMock {
 	return &HandlerMock{}
 }
 
-func (h *HandlerMock) Handler(ctx context.Context, options *HandlerOptions) error {
+func (h *HandlerMock) Handler(ctx context.Context, options *Options) error {
 	args := h.Called(ctx, options)
 
 	return args.Error(0)

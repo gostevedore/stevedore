@@ -1,10 +1,10 @@
-package promote
+package handler
 
 import (
 	"context"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/engine/promote"
+	"github.com/gostevedore/stevedore/internal/service/promote"
 )
 
 type Handler struct {
@@ -17,7 +17,7 @@ func NewHandler(p ServicePromoter) *Handler {
 	}
 }
 
-func (h *Handler) Handler(ctx context.Context, options *HandlerOptions) error {
+func (h *Handler) Handler(ctx context.Context, options *Options) error {
 
 	errContext := "(promote::Handler)"
 
@@ -46,18 +46,14 @@ func (h *Handler) Handler(ctx context.Context, options *HandlerOptions) error {
 		serviceOptions.TargetImageTags = options.TargetImageTags
 	}
 
+	serviceOptions.DryRun = options.DryRun
 	serviceOptions.PromoteSourceImageTag = options.PromoteSourceImageTag
 	serviceOptions.EnableSemanticVersionTags = options.EnableSemanticVersionTags
 	serviceOptions.RemoveTargetImageTags = options.RemoveTargetImageTags
 	serviceOptions.RemoteSourceImage = options.RemoteSourceImage
 	serviceOptions.SemanticVersionTagsTemplates = options.SemanticVersionTagsTemplates
 
-	promoteType := "docker"
-	if options.DryRun {
-		promoteType = "dry-run"
-	}
-
-	err := h.service.Promote(ctx, serviceOptions, promoteType)
+	err := h.service.Promote(ctx, serviceOptions)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}

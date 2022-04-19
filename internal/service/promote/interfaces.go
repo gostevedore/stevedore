@@ -19,7 +19,7 @@ type Outputter interface {
 
 // PromoteFactorier
 type PromoteFactorier interface {
-	GetPromoter(string) (promote.Promoter, error)
+	Get(string) (promote.Promoter, error)
 }
 
 // Semverser

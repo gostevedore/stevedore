@@ -1,6 +1,6 @@
-package promote
+package handler
 
-type HandlerOptions struct {
+type Options struct {
 	// DryRun is a flag to indicate if the promote should be a dry run
 	DryRun bool
 	// EnableSemanticVersionTags is a flag to indicate whether to generate semantic version tags

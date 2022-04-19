@@ -1,6 +1,8 @@
 package promote
 
 type ServiceOptions struct {
+	// DryRun is a flag to indicate if the promote should be a dry run
+	DryRun bool
 	// EnableSemanticVersionTags flag generate semantic versioning tags when is true
 	EnableSemanticVersionTags bool
 	// TargetImageName is the target image name

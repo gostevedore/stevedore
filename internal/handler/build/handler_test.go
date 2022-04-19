@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/engine/build"
-	"github.com/gostevedore/stevedore/internal/engine/build/plan"
+	"github.com/gostevedore/stevedore/internal/service/build"
+	"github.com/gostevedore/stevedore/internal/service/build/plan"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

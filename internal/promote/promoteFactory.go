@@ -18,7 +18,7 @@ func NewPromoteFactory() PromoteFactory {
 	return make(PromoteFactory)
 }
 
-func (f PromoteFactory) GetPromoter(id string) (Promoter, error) {
+func (f PromoteFactory) Get(id string) (Promoter, error) {
 	errContext := "(PromoteFactory::GetPromoter)"
 
 	promoter, exist := f[id]

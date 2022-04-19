@@ -1,11 +1,11 @@
-package promote
+package handler
 
 import (
 	"context"
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/engine/promote"
+	"github.com/gostevedore/stevedore/internal/service/promote"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,7 +17,7 @@ func TestHandler(t *testing.T) {
 	tests := []struct {
 		desc            string
 		handler         *Handler
-		options         *HandlerOptions
+		options         *Options
 		cmd             *cobra.Command
 		cmdArgs         []string
 		prepareMockFunc func(*Handler)
@@ -31,7 +31,7 @@ func TestHandler(t *testing.T) {
 			cmd:     &cobra.Command{},
 			cmdArgs: []string{},
 			err:     errors.New(errContext, "Source images name must be provided"),
-			options: &HandlerOptions{
+			options: &Options{
 
 				SourceImageName:              "",
 				TargetImageName:              "target_name",
@@ -49,7 +49,7 @@ func TestHandler(t *testing.T) {
 				"source_name",
 			},
 			err: &errors.Error{},
-			options: &HandlerOptions{
+			options: &Options{
 				DryRun:                       true,
 				EnableSemanticVersionTags:    true,
 				SourceImageName:              "source_name",

@@ -20,9 +20,6 @@ import (
 	dockerdrivercontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context"
 	gitauth "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/git/auth"
 	dryrundriver "github.com/gostevedore/stevedore/internal/driver/dryrun"
-	buildservice "github.com/gostevedore/stevedore/internal/engine/build"
-	"github.com/gostevedore/stevedore/internal/engine/build/command"
-	"github.com/gostevedore/stevedore/internal/engine/build/plan"
 	build "github.com/gostevedore/stevedore/internal/handler/build"
 	buildhandler "github.com/gostevedore/stevedore/internal/handler/build"
 	"github.com/gostevedore/stevedore/internal/images/image/render"
@@ -32,6 +29,9 @@ import (
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 	"github.com/gostevedore/stevedore/internal/schedule/worker"
 	"github.com/gostevedore/stevedore/internal/semver"
+	buildservice "github.com/gostevedore/stevedore/internal/service/build"
+	"github.com/gostevedore/stevedore/internal/service/build/command"
+	"github.com/gostevedore/stevedore/internal/service/build/plan"
 )
 
 // OptionsFunc defines the signature for an option function to set entrypoint attributes

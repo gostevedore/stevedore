@@ -338,11 +338,11 @@ func TestPromote(t *testing.T) {
 				test.prepareMockFunc(test.service)
 			}
 
-			err := test.service.Promote(test.context, test.options, promoteMockID)
+			err := test.service.Promote(test.context, test.options)
 			if err != nil && assert.Error(t, err) {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				promote, _ := test.service.factory.GetPromoter(promoteMockID)
+				promote, _ := test.service.factory.Get(promoteMockID)
 				promote.(*mockpromote.MockPromote).AssertExpectations(t)
 			}
 
@@ -357,6 +357,7 @@ func TestGetCredentials(t *testing.T) {
 		registry        string
 		prepareMockFunc func(*Service)
 		res             *credentials.RegistryUserPassAuth
+		err             error
 	}{
 		{
 			desc: "Testing get credentials",
@@ -386,8 +387,12 @@ func TestGetCredentials(t *testing.T) {
 				test.prepareMockFunc(test.service)
 			}
 
-			res := test.service.getCredentials(test.registry)
-			assert.Equal(t, test.res, res)
+			res, err := test.service.getCredentials(test.registry)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				assert.Equal(t, test.res, res)
+			}
 		})
 	}
 }

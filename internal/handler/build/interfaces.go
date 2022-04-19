@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"github.com/gostevedore/stevedore/internal/driver"
-	"github.com/gostevedore/stevedore/internal/engine/build"
-	"github.com/gostevedore/stevedore/internal/engine/build/plan"
 	"github.com/gostevedore/stevedore/internal/schedule"
 	"github.com/gostevedore/stevedore/internal/schedule/dispatch"
+	"github.com/gostevedore/stevedore/internal/service/build"
+	"github.com/gostevedore/stevedore/internal/service/build/plan"
 )
 
 // PlanFactorier interface defines the execution plan

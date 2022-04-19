@@ -2,6 +2,7 @@ package build
 
 import (
 	"context"
+	"io/ioutil"
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
@@ -10,14 +11,16 @@ import (
 	"github.com/gostevedore/stevedore/internal/builders/varsmap"
 	"github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/driver"
+	dockerdriver "github.com/gostevedore/stevedore/internal/driver/docker"
+	dryrundriver "github.com/gostevedore/stevedore/internal/driver/dryrun"
 	mockdriver "github.com/gostevedore/stevedore/internal/driver/mock"
-	"github.com/gostevedore/stevedore/internal/engine/build/command"
-	"github.com/gostevedore/stevedore/internal/engine/build/plan"
 	"github.com/gostevedore/stevedore/internal/images/image"
 	"github.com/gostevedore/stevedore/internal/schedule/dispatch"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 	"github.com/gostevedore/stevedore/internal/schedule/worker"
 	"github.com/gostevedore/stevedore/internal/semver"
+	"github.com/gostevedore/stevedore/internal/service/build/command"
+	"github.com/gostevedore/stevedore/internal/service/build/plan"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -486,7 +489,7 @@ func TestCommand(t *testing.T) {
 	}
 }
 
-func TestBuilder(t *testing.T) {
+func TestGetBuilder(t *testing.T) {
 	errContext := "(build::builder)"
 
 	tests := []struct {
@@ -581,7 +584,7 @@ func TestBuilder(t *testing.T) {
 				test.prepareAssertFunc(test.service)
 			}
 
-			res, err := test.service.builder(test.builderDefinition)
+			res, err := test.service.getBuilder(test.builderDefinition)
 			_ = res
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
@@ -589,6 +592,151 @@ func TestBuilder(t *testing.T) {
 				if test.assertFunc != nil {
 					assert.True(t, test.assertFunc(test.res, res))
 				}
+			}
+		})
+	}
+}
+
+func TestGetCredentials(t *testing.T) {
+
+	errContext := "(build::getCredentials)"
+
+	tests := []struct {
+		desc              string
+		service           *Service
+		registry          string
+		res               *credentials.RegistryUserPassAuth
+		err               error
+		prepareAssertFunc func(*Service)
+	}{
+		{
+			desc:    "Testing error when credentials store is nil",
+			service: NewService(),
+			err:     errors.New(errContext, "To get credentials, is required a credentials store"),
+		},
+		{
+			desc: "Testing get credentials",
+			service: NewService(
+				WithCredentials(
+					credentials.NewCredentialsStoreMock(),
+				),
+			),
+			registry: "registry.test",
+			res: &credentials.RegistryUserPassAuth{
+				Username: "user",
+				Password: "pass",
+			},
+			prepareAssertFunc: func(service *Service) {
+				service.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry.test").Return(&credentials.RegistryUserPassAuth{
+					Username: "user",
+					Password: "pass",
+				}, nil)
+			},
+			err: &errors.Error{},
+		},
+		{
+			desc: "Testing get unexisting credentials",
+			service: NewService(
+				WithCredentials(
+					credentials.NewCredentialsStoreMock(),
+				),
+			),
+			registry: "registry.test",
+			res:      nil,
+			prepareAssertFunc: func(service *Service) {
+				service.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry.test").Return(nil, nil)
+			},
+			err: &errors.Error{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.service)
+			}
+
+			cred, err := test.service.getCredentials(test.registry)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				assert.Equal(t, test.res, cred)
+			}
+		})
+	}
+}
+
+func TestGetDriver(t *testing.T) {
+	errContext := "(build::getDriver)"
+
+	tests := []struct {
+		desc    string
+		service *Service
+		builder *builder.Builder
+		options *ServiceOptions
+		res     driver.BuildDriverer
+		err     error
+	}{
+		{
+			desc:    "Testing error when driver factory is not defined",
+			service: NewService(),
+			builder: &builder.Builder{
+				Driver: "docker",
+			},
+			options: &ServiceOptions{},
+			res:     &dockerdriver.DockerDriver{},
+			err:     errors.New(errContext, "To create a build driver, is required a driver factory"),
+		},
+		{
+			desc: "Testing get driver",
+			service: NewService(
+				WithDriverFactory(
+					&driver.BuildDriverFactory{
+						"docker": mockdriver.NewMockDriver(),
+					},
+				),
+			),
+			builder: &builder.Builder{
+				Driver: "docker",
+			},
+			options: &ServiceOptions{},
+			res:     &mockdriver.MockDriver{},
+			err:     &errors.Error{},
+		},
+		{
+			desc: "Testing get driver with dry-run",
+			service: NewService(
+				WithDriverFactory(
+					&driver.BuildDriverFactory{
+						"docker":  mockdriver.NewMockDriver(),
+						"dry-run": dryrundriver.NewDryRunDriver(ioutil.Discard),
+					},
+				),
+			),
+			builder: &builder.Builder{
+				Driver: "docker",
+			},
+			options: &ServiceOptions{
+				DryRun: true,
+			},
+			res: &dryrundriver.DryRunDriver{},
+			err: &errors.Error{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			driver, err := test.service.getDriver(test.builder, test.options)
+
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				assert.NotNil(t, driver)
+				assert.IsType(t, test.res, driver)
 			}
 		})
 	}

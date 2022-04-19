@@ -13,9 +13,9 @@ import (
 	defaultdriver "github.com/gostevedore/stevedore/internal/driver/default"
 	dockerdriver "github.com/gostevedore/stevedore/internal/driver/docker"
 	dryrundriver "github.com/gostevedore/stevedore/internal/driver/dryrun"
-	"github.com/gostevedore/stevedore/internal/engine/build/plan"
 	build "github.com/gostevedore/stevedore/internal/handler/build"
 	"github.com/gostevedore/stevedore/internal/images/store"
+	"github.com/gostevedore/stevedore/internal/service/build/plan"
 	"github.com/stretchr/testify/assert"
 )
 

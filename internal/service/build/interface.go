@@ -4,11 +4,11 @@ import (
 	"github.com/gostevedore/stevedore/internal/builders/builder"
 	"github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/driver"
-	"github.com/gostevedore/stevedore/internal/engine/build/command"
-	"github.com/gostevedore/stevedore/internal/engine/build/plan"
 	"github.com/gostevedore/stevedore/internal/images/image"
 	"github.com/gostevedore/stevedore/internal/schedule"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
+	"github.com/gostevedore/stevedore/internal/service/build/command"
+	"github.com/gostevedore/stevedore/internal/service/build/plan"
 )
 
 // Planner interfaces defines the storage of images

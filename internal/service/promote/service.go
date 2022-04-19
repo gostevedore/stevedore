@@ -27,7 +27,7 @@ func NewService(f PromoteFactorier, conf *configuration.Configuration, c Credent
 }
 
 // Promote an image
-func (e *Service) Promote(ctx context.Context, options *ServiceOptions, promoteType string) error {
+func (e *Service) Promote(ctx context.Context, options *ServiceOptions) error {
 
 	var err error
 	var sourceImage, targetImage *image.Image
@@ -69,7 +69,10 @@ func (e *Service) Promote(ctx context.Context, options *ServiceOptions, promoteT
 		return errors.New(errContext, err.Error())
 	}
 
-	pullAuth := e.getCredentials(sourceImage.RegistryHost)
+	pullAuth, err := e.getCredentials(sourceImage.RegistryHost)
+	if err != nil {
+		return errors.New(errContext, err.Error())
+	}
 	if pullAuth != nil {
 		promoteOptions.PullAuthUsername = pullAuth.Username
 		promoteOptions.PullAuthPassword = pullAuth.Password
@@ -116,7 +119,10 @@ func (e *Service) Promote(ctx context.Context, options *ServiceOptions, promoteT
 		return errors.New(errContext, err.Error())
 	}
 
-	pushAuth := e.getCredentials(targetImage.RegistryHost)
+	pushAuth, err := e.getCredentials(targetImage.RegistryHost)
+	if err != nil {
+		return errors.New(errContext, err.Error())
+	}
 	if pushAuth != nil {
 		promoteOptions.PushAuthUsername = pushAuth.Username
 		promoteOptions.PushAuthPassword = pushAuth.Password
@@ -125,7 +131,7 @@ func (e *Service) Promote(ctx context.Context, options *ServiceOptions, promoteT
 	promoteOptions.RemoteSourceImage = options.RemoteSourceImage
 	promoteOptions.RemoveTargetImageTags = options.RemoveTargetImageTags
 
-	promoter, err := e.factory.GetPromoter(promoteType)
+	promoter, err := e.getPromoter(options)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
@@ -138,8 +144,34 @@ func (e *Service) Promote(ctx context.Context, options *ServiceOptions, promoteT
 	return nil
 }
 
-func (e *Service) getCredentials(registry string) *credentials.RegistryUserPassAuth {
+func (e *Service) getCredentials(registry string) (*credentials.RegistryUserPassAuth, error) {
+	errContext := "(Service::getCredentials)"
+
+	if e.credentials == nil {
+		return nil, errors.New(errContext, "Credentials has not been initialized")
+	}
+
 	auth, _ := e.credentials.GetCredentials(registry)
 
-	return auth
+	return auth, nil
+}
+
+func (e *Service) getPromoter(options *ServiceOptions) (promote.Promoter, error) {
+
+	errContext := "(Handler::getPromoter)"
+
+	if e.factory == nil {
+		return nil, errors.New(errContext, "Promote factory has not been initialized")
+	}
+
+	promoteDriver := "docker"
+	if options.DryRun {
+		promoteDriver = "dry-run"
+	}
+	promoter, err := e.factory.Get(promoteDriver)
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+
+	return promoter, nil
 }

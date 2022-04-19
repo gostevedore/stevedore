@@ -11,10 +11,10 @@ import (
 	"github.com/gostevedore/stevedore/internal/builders/builder"
 	"github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/driver"
-	"github.com/gostevedore/stevedore/internal/engine/build/plan"
 	"github.com/gostevedore/stevedore/internal/images/image"
 	"github.com/gostevedore/stevedore/internal/schedule"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
+	"github.com/gostevedore/stevedore/internal/service/build/plan"
 )
 
 // OptionsFunc is a function used to configure the service
@@ -280,7 +280,11 @@ func (s *Service) build(ctx context.Context, image *image.Image, options *Servic
 	}
 
 	if image.Parent != nil {
-		pullAuth := s.getCredentials(image.Parent.RegistryHost)
+		pullAuth, err := s.getCredentials(image.Parent.RegistryHost)
+		if err != nil {
+			return errors.New(errContext, err.Error())
+		}
+
 		if pullAuth != nil {
 			// TODO allow other auth methods than user-pass
 			buildOptions.PullAuthUsername = pullAuth.Username
@@ -288,13 +292,16 @@ func (s *Service) build(ctx context.Context, image *image.Image, options *Servic
 		}
 	}
 
-	pushAuth := s.getCredentials(image.RegistryHost)
+	pushAuth, err := s.getCredentials(image.RegistryHost)
+	if err != nil {
+		return errors.New(errContext, err.Error())
+	}
 	if pushAuth != nil {
 		buildOptions.PushAuthUsername = pushAuth.Username
 		buildOptions.PushAuthPassword = pushAuth.Password
 	}
 
-	imageBuilder, err := s.builder(image.Builder)
+	imageBuilder, err := s.getBuilder(image.Builder)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
@@ -345,28 +352,6 @@ func (s *Service) build(ctx context.Context, image *image.Image, options *Servic
 	return nil
 }
 
-func (s *Service) getCredentials(registry string) *credentials.RegistryUserPassAuth {
-	auth, _ := s.credentials.GetCredentials(registry)
-
-	return auth
-}
-
-func (s *Service) getDriver(builder *builder.Builder, options *ServiceOptions) (driver.BuildDriverer, error) {
-	errContext := "(build::getDriver)"
-
-	driverName := builder.Driver
-	if options.DryRun {
-		driverName = "dry-run"
-	}
-
-	driver, err := s.driverFactory.Get(driverName)
-	if err != nil {
-		return nil, errors.New(errContext, err.Error())
-	}
-
-	return driver, nil
-}
-
 func (s *Service) job(ctx context.Context, cmd job.Commander) (schedule.Jobber, error) {
 	errContext := "(build::job)"
 
@@ -399,7 +384,40 @@ func (s *Service) command(driver driver.BuildDriverer, image *image.Image, optio
 	return s.commandFactory.New(driver, image, options), nil
 }
 
-func (s *Service) builder(builderDefinition interface{}) (*builder.Builder, error) {
+func (s *Service) getCredentials(registry string) (*credentials.RegistryUserPassAuth, error) {
+
+	errContext := "(build::getCredentials)"
+
+	if s.credentials == nil {
+		return nil, errors.New(errContext, "To get credentials, is required a credentials store")
+	}
+
+	auth, _ := s.credentials.GetCredentials(registry)
+
+	return auth, nil
+}
+
+func (s *Service) getDriver(builder *builder.Builder, options *ServiceOptions) (driver.BuildDriverer, error) {
+	errContext := "(build::getDriver)"
+
+	if s.driverFactory == nil {
+		return nil, errors.New(errContext, "To create a build driver, is required a driver factory")
+	}
+
+	driverName := builder.Driver
+	if options.DryRun {
+		driverName = "dry-run"
+	}
+
+	driver, err := s.driverFactory.Get(driverName)
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+
+	return driver, nil
+}
+
+func (s *Service) getBuilder(builderDefinition interface{}) (*builder.Builder, error) {
 
 	errContext := "(build::builder)"
 
