@@ -384,7 +384,7 @@ func (s *Service) command(driver driver.BuildDriverer, image *image.Image, optio
 	return s.commandFactory.New(driver, image, options), nil
 }
 
-func (s *Service) getCredentials(registry string) (*credentials.RegistryUserPassAuth, error) {
+func (s *Service) getCredentials(registry string) (*credentials.UserPasswordAuth, error) {
 
 	errContext := "(build::getCredentials)"
 
@@ -392,7 +392,7 @@ func (s *Service) getCredentials(registry string) (*credentials.RegistryUserPass
 		return nil, errors.New(errContext, "To get credentials, is required a credentials store")
 	}
 
-	auth, _ := s.credentials.GetCredentials(registry)
+	auth, _ := s.credentials.Get(registry)
 
 	return auth, nil
 }

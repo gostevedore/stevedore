@@ -7,7 +7,7 @@ import (
 
 // CredentialsStorer
 type CredentialsStorer interface {
-	GetCredentials(registy string) (*credentials.RegistryUserPassAuth, error)
+	Get(id string) (*credentials.UserPasswordAuth, error)
 }
 
 // Outputter
@@ -20,6 +20,7 @@ type Outputter interface {
 // PromoteFactorier
 type PromoteFactorier interface {
 	Get(string) (promote.Promoter, error)
+	Register(id string, promoter promote.Promoter) error
 }
 
 // Semverser

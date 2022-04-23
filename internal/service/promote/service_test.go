@@ -5,17 +5,17 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/configuration"
 	"github.com/gostevedore/stevedore/internal/credentials"
+	"github.com/gostevedore/stevedore/internal/promote"
 	promoterepository "github.com/gostevedore/stevedore/internal/promote"
+	dockerpromote "github.com/gostevedore/stevedore/internal/promote/docker"
+	dryrunpromote "github.com/gostevedore/stevedore/internal/promote/dryrun"
 	mockpromote "github.com/gostevedore/stevedore/internal/promote/mock"
 	"github.com/gostevedore/stevedore/internal/semver"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPromote(t *testing.T) {
-
-	promoteMockID := "mock"
 
 	tests := []struct {
 		desc            string
@@ -27,11 +27,11 @@ func TestPromote(t *testing.T) {
 	}{
 		{
 			desc: "Testing promote source image from local",
-			service: &Service{
-				credentials:   credentials.NewCredentialsStoreMock(),
-				semver:        semver.NewSemVerGenerator(),
-				configuration: &configuration.Configuration{},
-			},
+			service: NewService(
+				WithCredentials(credentials.NewCredentialsStoreMock()),
+				WithSemver(semver.NewSemVerGenerator()),
+				WithPromoteFactory(promoterepository.NewPromoteFactory()),
+			),
 			context: context.TODO(),
 			options: &ServiceOptions{
 				SourceImageName:              "registry.test/namespace/image:tag",
@@ -59,27 +59,24 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "pass",
 				}
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry.test").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
 					Username: "name",
 					Password: "pass",
 				}, nil)
 
 				mock := mockpromote.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
-
-				factory := promoterepository.NewPromoteFactory()
-				factory.Register(promoteMockID, mock)
-				p.factory = factory
+				p.factory.Register(promote.DockerPromoterName, mock)
 			},
 			err: &errors.Error{},
 		},
 		{
 			desc: "Testing promote source image from remote",
-			service: &Service{
-				credentials:   credentials.NewCredentialsStoreMock(),
-				semver:        semver.NewSemVerGenerator(),
-				configuration: &configuration.Configuration{},
-			},
+			service: NewService(
+				WithCredentials(credentials.NewCredentialsStoreMock()),
+				WithSemver(semver.NewSemVerGenerator()),
+				WithPromoteFactory(promoterepository.NewPromoteFactory()),
+			),
 			context: context.TODO(),
 			options: &ServiceOptions{
 				SourceImageName:              "registry.test/namespace/image:tag",
@@ -110,10 +107,10 @@ func TestPromote(t *testing.T) {
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
 				factory := promoterepository.NewPromoteFactory()
-				factory.Register(promoteMockID, mock)
+				factory.Register(promote.DockerPromoterName, mock)
 				p.factory = factory
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry.test").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
 					Username: "name",
 					Password: "pass",
 				}, nil)
@@ -122,11 +119,11 @@ func TestPromote(t *testing.T) {
 		},
 		{
 			desc: "Testing promote source image with all options",
-			service: &Service{
-				credentials:   credentials.NewCredentialsStoreMock(),
-				semver:        semver.NewSemVerGenerator(),
-				configuration: &configuration.Configuration{},
-			},
+			service: NewService(
+				WithCredentials(credentials.NewCredentialsStoreMock()),
+				WithSemver(semver.NewSemVerGenerator()),
+				WithPromoteFactory(promoterepository.NewPromoteFactory()),
+			),
 			context: context.TODO(),
 			options: &ServiceOptions{
 				SourceImageName:              "registry.test/namespace/image:tag",
@@ -153,12 +150,12 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "pushpass",
 				}
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry.test").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
 					Username: "pullname",
 					Password: "pullpass",
 				}, nil)
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "targetregistry.test").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{
 					Username: "pushname",
 					Password: "pushpass",
 				}, nil)
@@ -167,18 +164,18 @@ func TestPromote(t *testing.T) {
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
 				factory := promoterepository.NewPromoteFactory()
-				factory.Register(promoteMockID, mock)
+				factory.Register(promote.DockerPromoterName, mock)
 				p.factory = factory
 			},
 			err: &errors.Error{},
 		},
 		{
 			desc: "Testing promote source image with no credentials",
-			service: &Service{
-				credentials:   credentials.NewCredentialsStoreMock(),
-				semver:        semver.NewSemVerGenerator(),
-				configuration: &configuration.Configuration{},
-			},
+			service: NewService(
+				WithCredentials(credentials.NewCredentialsStoreMock()),
+				WithSemver(semver.NewSemVerGenerator()),
+				WithPromoteFactory(promoterepository.NewPromoteFactory()),
+			),
 			context: context.TODO(),
 			options: &ServiceOptions{
 				SourceImageName:              "registry.test/namespace/image:tag",
@@ -205,32 +202,29 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "",
 				}
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry.test").Return(nil, nil)
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "targetregistry.test").Return(nil, nil)
+				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{}, nil)
+				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{}, nil)
 
 				mock := mockpromote.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
 				factory := promoterepository.NewPromoteFactory()
-				factory.Register(promoteMockID, mock)
+				factory.Register(promote.DockerPromoterName, mock)
 				p.factory = factory
 			},
 			err: &errors.Error{},
 		},
 		{
 			desc: "Testing promote source image with all options and using semver configuration parameters",
-			service: &Service{
-				credentials: credentials.NewCredentialsStoreMock(),
-				semver:      semver.NewSemVerGenerator(),
-				configuration: &configuration.Configuration{
-					EnableSemanticVersionTags:    true,
-					SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
-				},
-			},
+			service: NewService(
+				WithCredentials(credentials.NewCredentialsStoreMock()),
+				WithSemver(semver.NewSemVerGenerator()),
+				WithPromoteFactory(promoterepository.NewPromoteFactory()),
+			),
 			context: context.TODO(),
 			options: &ServiceOptions{
 				SourceImageName:              "registry.test/namespace/image:tag",
-				EnableSemanticVersionTags:    false,
+				EnableSemanticVersionTags:    true,
 				TargetImageName:              "targetimage",
 				TargetImageRegistryNamespace: "targetnamespace",
 				TargetImageRegistryHost:      "targetregistry.test",
@@ -238,7 +232,7 @@ func TestPromote(t *testing.T) {
 				PromoteSourceImageTag:        true,
 				RemoveTargetImageTags:        true,
 				RemoteSourceImage:            true,
-				SemanticVersionTagsTemplates: nil,
+				SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
 			},
 			prepareMockFunc: func(p *Service) {
 				options := &promoterepository.PromoteOptions{
@@ -253,12 +247,12 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "pushpass",
 				}
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry.test").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
 					Username: "pullname",
 					Password: "pullpass",
 				}, nil)
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "targetregistry.test").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{
 					Username: "pushname",
 					Password: "pushpass",
 				}, nil)
@@ -267,21 +261,16 @@ func TestPromote(t *testing.T) {
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
 				factory := promoterepository.NewPromoteFactory()
-				factory.Register(promoteMockID, mock)
+				factory.Register(promote.DockerPromoterName, mock)
 				p.factory = factory
 			},
 			err: &errors.Error{},
 		},
-
 		{
 			desc: "Testing promote source image with all options, using semver configuration parameters overridden by service options",
 			service: &Service{
 				credentials: credentials.NewCredentialsStoreMock(),
 				semver:      semver.NewSemVerGenerator(),
-				configuration: &configuration.Configuration{
-					EnableSemanticVersionTags:    true,
-					SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
-				},
 			},
 			context: context.TODO(),
 			options: &ServiceOptions{
@@ -309,12 +298,12 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "pushpass",
 				}
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry.test").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
 					Username: "pullname",
 					Password: "pullpass",
 				}, nil)
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "targetregistry.test").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{
 					Username: "pushname",
 					Password: "pushpass",
 				}, nil)
@@ -323,7 +312,7 @@ func TestPromote(t *testing.T) {
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
 				factory := promoterepository.NewPromoteFactory()
-				factory.Register(promoteMockID, mock)
+				factory.Register(promote.DockerPromoterName, mock)
 				p.factory = factory
 			},
 			err: &errors.Error{},
@@ -342,23 +331,29 @@ func TestPromote(t *testing.T) {
 			if err != nil && assert.Error(t, err) {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				promote, _ := test.service.factory.Get(promoteMockID)
+				promote, _ := test.service.factory.Get(promote.DockerPromoterName)
 				promote.(*mockpromote.MockPromote).AssertExpectations(t)
 			}
-
 		})
 	}
 }
 
 func TestGetCredentials(t *testing.T) {
+	errContext := "(Service::getCredentials)"
+
 	tests := []struct {
 		desc            string
 		service         *Service
 		registry        string
 		prepareMockFunc func(*Service)
-		res             *credentials.RegistryUserPassAuth
+		res             *credentials.UserPasswordAuth
 		err             error
 	}{
+		{
+			desc:    "Testing error when credentials store is not initialized",
+			service: &Service{},
+			err:     errors.New(errContext, "Credentials has not been initialized"),
+		},
 		{
 			desc: "Testing get credentials",
 			service: &Service{
@@ -366,13 +361,13 @@ func TestGetCredentials(t *testing.T) {
 			},
 			registry: "myregistry",
 			prepareMockFunc: func(p *Service) {
-				p.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "myregistry").Return(&credentials.RegistryUserPassAuth{
+				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "myregistry").Return(&credentials.UserPasswordAuth{
 					Username: "name",
 					Password: "pass",
 				}, nil)
 
 			},
-			res: &credentials.RegistryUserPassAuth{
+			res: &credentials.UserPasswordAuth{
 				Username: "name",
 				Password: "pass",
 			},
@@ -393,6 +388,71 @@ func TestGetCredentials(t *testing.T) {
 			} else {
 				assert.Equal(t, test.res, res)
 			}
+		})
+	}
+}
+
+func TestGetPromoter(t *testing.T) {
+
+	errContext := "(Handler::getPromoter)"
+
+	tests := []struct {
+		desc              string
+		service           *Service
+		options           *ServiceOptions
+		prepareAssertFunc func(*Service)
+		res               promote.Promoter
+		err               error
+	}{
+		{
+			desc:    "Testing error when promote factory is nil",
+			service: &Service{},
+			err:     errors.New(errContext, "Promote factory has not been initialized"),
+		},
+		{
+			desc: "Testing get promoter",
+			service: &Service{
+				factory: promoterepository.NewPromoteFactory(),
+			},
+			options: &ServiceOptions{},
+			prepareAssertFunc: func(p *Service) {
+				p.factory.Register(promote.DockerPromoterName, &dockerpromote.DockerPromete{})
+			},
+			res: &dockerpromote.DockerPromete{},
+			err: &errors.Error{},
+		},
+		{
+			desc: "Testing get promoter with dry-run",
+			service: &Service{
+				factory: promoterepository.NewPromoteFactory(),
+			},
+			options: &ServiceOptions{
+				DryRun: true,
+			},
+			prepareAssertFunc: func(p *Service) {
+				p.factory.Register(promote.DockerPromoterName, &dockerpromote.DockerPromete{})
+				p.factory.Register(promote.DryRunPromoterName, &dryrunpromote.DryRunPromote{})
+			},
+			res: &dryrunpromote.DryRunPromote{},
+			err: &errors.Error{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.service)
+			}
+
+			res, err := test.service.getPromoter(test.options)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				assert.IsType(t, test.res, res)
+			}
+
 		})
 	}
 }

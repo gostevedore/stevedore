@@ -64,8 +64,6 @@ func TestCheckCompatibility(t *testing.T) {
 func TestLoadImagesToStore(t *testing.T) {
 
 	var err error
-	errContext := "(images::LoadImagesToStore)"
-	_ = errContext
 
 	baseDir := "/imagestree"
 	baseErrorDir := "/imagestree_error"

@@ -16,6 +16,7 @@ import (
 	build "github.com/gostevedore/stevedore/internal/handler/build"
 	"github.com/gostevedore/stevedore/internal/images/store"
 	"github.com/gostevedore/stevedore/internal/service/build/plan"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -136,21 +137,21 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 		{
 			desc:        "Testing create build driver factory with empty options",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentials.NewCredentialsStore(),
+			credentials: credentials.NewCredentialsStore(afero.NewMemMapFs()),
 			options:     nil,
 			err:         errors.New(errContext, "Register drivers requires options"),
 		},
 		{
 			desc:        "Testing create build driver factory with nil writer",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentials.NewCredentialsStore(),
+			credentials: credentials.NewCredentialsStore(afero.NewMemMapFs()),
 			options:     &EntrypointOptions{},
 			err:         errors.New(errContext, "Register drivers requires a writer"),
 		},
 		{
 			desc:        "Testing create build driver factory",
 			entrypoint:  NewEntrypoint(WithWriter(ioutil.Discard)),
-			credentials: credentials.NewCredentialsStore(),
+			credentials: credentials.NewCredentialsStore(afero.NewMemMapFs()),
 			options:     &EntrypointOptions{},
 			err:         &errors.Error{},
 			assertions: func(t *testing.T, f driver.BuildDriverFactory) {
@@ -309,14 +310,14 @@ func TestCreateDockerDriver(t *testing.T) {
 		{
 			desc:        "Testing error when creating docker driver with empty options",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentials.NewCredentialsStore(),
+			credentials: credentials.NewCredentialsStore(afero.NewMemMapFs()),
 			options:     nil,
 			err:         errors.New(errContext, "Entrypoint options are required to create docker driver"),
 		},
 		{
 			desc:        "Testing create docker driver",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentials.NewCredentialsStore(),
+			credentials: credentials.NewCredentialsStore(afero.NewMemMapFs()),
 			options:     &EntrypointOptions{},
 			res:         &dockerdriver.DockerDriver{},
 			err:         &errors.Error{},

@@ -6,7 +6,6 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/service/promote"
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,21 +14,16 @@ func TestHandler(t *testing.T) {
 	errContext := "(promote::Handler)"
 
 	tests := []struct {
-		desc            string
-		handler         *Handler
-		options         *Options
-		cmd             *cobra.Command
-		cmdArgs         []string
-		prepareMockFunc func(*Handler)
-		err             error
+		desc    string
+		handler *Handler
+		options *Options
+
+		prepareAssertFunc func(*Handler)
+		err               error
 	}{
 		{
-			desc: "Testing promote handler error when no source image is provided",
-			handler: &Handler{
-				service: promote.NewMockService(),
-			},
-			cmd:     &cobra.Command{},
-			cmdArgs: []string{},
+			desc:    "Testing promote handler error when no source image is provided",
+			handler: NewHandler(promote.NewMockService()),
 			err:     errors.New(errContext, "Source images name must be provided"),
 			options: &Options{
 
@@ -40,44 +34,39 @@ func TestHandler(t *testing.T) {
 			},
 		},
 		{
-			desc: "Testing promote handler passing all options",
-			handler: &Handler{
-				service: promote.NewMockService(),
-			},
-			cmd: &cobra.Command{},
-			cmdArgs: []string{
-				"source_name",
-			},
-			err: &errors.Error{},
+			desc:    "Testing promote handler passing all options",
+			handler: NewHandler(promote.NewMockService()),
+			err:     &errors.Error{},
 			options: &Options{
 				DryRun:                       true,
 				EnableSemanticVersionTags:    true,
-				SourceImageName:              "source_name",
-				TargetImageName:              "target_name",
-				TargetImageRegistryNamespace: "target_registry_namespace",
-				TargetImageRegistryHost:      "target_registry_host",
-				TargetImageTags:              []string{"tag"},
-				RemoveTargetImageTags:        true,
-				SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
 				PromoteSourceImageTag:        true,
 				RemoteSourceImage:            true,
+				RemoveTargetImageTags:        true,
+				SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
+				SourceImageName:              "source_name",
+				TargetImageName:              "target_name",
+				TargetImageRegistryHost:      "target_registry_host",
+				TargetImageRegistryNamespace: "target_registry_namespace",
+				TargetImageTags:              []string{"tag"},
 			},
-			prepareMockFunc: func(h *Handler) {
+			prepareAssertFunc: func(h *Handler) {
 
 				options := &promote.ServiceOptions{
+					DryRun:                       true,
 					EnableSemanticVersionTags:    true,
-					TargetImageName:              "target_name",
-					TargetImageRegistryNamespace: "target_registry_namespace",
-					TargetImageRegistryHost:      "target_registry_host",
-					TargetImageTags:              []string{"tag"},
 					PromoteSourceImageTag:        true,
-					RemoveTargetImageTags:        true,
 					RemoteSourceImage:            true,
-					SourceImageName:              "source_name",
+					RemoveTargetImageTags:        true,
 					SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
+					SourceImageName:              "source_name",
+					TargetImageName:              "target_name",
+					TargetImageRegistryHost:      "target_registry_host",
+					TargetImageRegistryNamespace: "target_registry_namespace",
+					TargetImageTags:              []string{"tag"},
 				}
 
-				h.service.(*promote.MockService).On("Promote", context.TODO(), options, "dry-run").Return(nil)
+				h.service.(*promote.MockService).On("Promote", context.TODO(), options).Return(nil)
 			},
 		},
 	}
@@ -85,8 +74,8 @@ func TestHandler(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 
-			if test.prepareMockFunc != nil {
-				test.prepareMockFunc(test.handler)
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.handler)
 			}
 
 			err := test.handler.Handler(context.TODO(), test.options)

@@ -1,16 +1,10 @@
 package promote
 
 import (
-	"context"
 	"fmt"
 
 	errors "github.com/apenella/go-common-utils/error"
 )
-
-// Promoter
-type Promoter interface {
-	Promote(context.Context, *PromoteOptions) error
-}
 
 type PromoteFactory map[string]Promoter
 

@@ -12,5 +12,5 @@ type GitAuther interface {
 
 // CredentialsStorer
 type CredentialsStorer interface {
-	GetCredentials(registy string) (*credentials.RegistryUserPassAuth, error)
+	Get(id string) (*credentials.UserPasswordAuth, error)
 }

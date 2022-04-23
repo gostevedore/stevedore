@@ -216,6 +216,7 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 
 	errContext := "(images::LoadImagesConfigurationFromFile)"
 
+	// TODO check if it is required
 	if t == nil {
 		return errors.New(errContext, "Builders is nil")
 	}

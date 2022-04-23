@@ -12,13 +12,13 @@ func TestAddCredential(t *testing.T) {
 
 	type args struct {
 		id   string
-		auth *RegistryUserPassAuth
+		auth *UserPasswordAuth
 	}
 	tests := []struct {
 		desc        string
-		credentials map[string]*RegistryUserPassAuth
+		credentials map[string]*UserPasswordAuth
 		args        *args
-		res         map[string]*RegistryUserPassAuth
+		res         map[string]*UserPasswordAuth
 		err         error
 	}{
 		{
@@ -26,12 +26,12 @@ func TestAddCredential(t *testing.T) {
 			credentials: nil,
 			args: &args{
 				id: "123",
-				auth: &RegistryUserPassAuth{
+				auth: &UserPasswordAuth{
 					Username: "username",
 					Password: "password",
 				},
 			},
-			res: map[string]*RegistryUserPassAuth{
+			res: map[string]*UserPasswordAuth{
 				"123": {
 					Username: "username",
 					Password: "password",
@@ -40,7 +40,7 @@ func TestAddCredential(t *testing.T) {
 		},
 		{
 			desc: "Test add credential",
-			credentials: map[string]*RegistryUserPassAuth{
+			credentials: map[string]*UserPasswordAuth{
 				"123": {
 					Username: "username",
 					Password: "password",
@@ -48,12 +48,12 @@ func TestAddCredential(t *testing.T) {
 			},
 			args: &args{
 				id: "456",
-				auth: &RegistryUserPassAuth{
+				auth: &UserPasswordAuth{
 					Username: "username",
 					Password: "password",
 				},
 			},
-			res: map[string]*RegistryUserPassAuth{
+			res: map[string]*UserPasswordAuth{
 				"123": {
 					Username: "username",
 					Password: "password",
@@ -66,7 +66,7 @@ func TestAddCredential(t *testing.T) {
 		},
 		{
 			desc: "Test add existing credential",
-			credentials: map[string]*RegistryUserPassAuth{
+			credentials: map[string]*UserPasswordAuth{
 				"123": {
 					Username: "username",
 					Password: "password",
@@ -74,7 +74,7 @@ func TestAddCredential(t *testing.T) {
 			},
 			args: &args{
 				id: "123",
-				auth: &RegistryUserPassAuth{
+				auth: &UserPasswordAuth{
 					Username: "username",
 					Password: "password",
 				},
@@ -111,9 +111,9 @@ func TestAchieveCredential(t *testing.T) {
 	}
 	tests := []struct {
 		desc        string
-		credentials map[string]*RegistryUserPassAuth
+		credentials map[string]*UserPasswordAuth
 		args        *args
-		res         *RegistryUserPassAuth
+		res         *UserPasswordAuth
 		err         error
 	}{
 		{
@@ -127,7 +127,7 @@ func TestAchieveCredential(t *testing.T) {
 		},
 		{
 			desc: "Test achieve credentials",
-			credentials: map[string]*RegistryUserPassAuth{
+			credentials: map[string]*UserPasswordAuth{
 				"a9205dcfd4a6f7c2cbe8be01566ff84a": {
 					Username: "username",
 					Password: "password",
@@ -136,14 +136,14 @@ func TestAchieveCredential(t *testing.T) {
 			args: &args{
 				registry: "registry",
 			},
-			res: &RegistryUserPassAuth{
+			res: &UserPasswordAuth{
 				Username: "username",
 				Password: "password",
 			},
 		},
 		{
 			desc:        "Test achieve unexisting credential",
-			credentials: map[string]*RegistryUserPassAuth{},
+			credentials: map[string]*UserPasswordAuth{},
 			args: &args{
 				registry: "registry",
 			},
@@ -176,7 +176,7 @@ func TestListRegistryCredentials(t *testing.T) {
 	}
 	tests := []struct {
 		desc        string
-		credentials map[string]*RegistryUserPassAuth
+		credentials map[string]*UserPasswordAuth
 		args        *args
 		res         [][]string
 		err         error
@@ -192,7 +192,7 @@ func TestListRegistryCredentials(t *testing.T) {
 		},
 		{
 			desc: "Test list credentials",
-			credentials: map[string]*RegistryUserPassAuth{
+			credentials: map[string]*UserPasswordAuth{
 				"a9205dcfd4a6f7c2cbe8be01566ff84a": {
 					Username: "username",
 					Password: "password",
@@ -208,7 +208,7 @@ func TestListRegistryCredentials(t *testing.T) {
 		},
 		{
 			desc: "Test list credentials returning a wide output",
-			credentials: map[string]*RegistryUserPassAuth{
+			credentials: map[string]*UserPasswordAuth{
 				"a9205dcfd4a6f7c2cbe8be01566ff84a": {
 					Username: "username",
 					Password: "password",

@@ -34,7 +34,7 @@ func (f *GitAuthFactory) GenerateAuthMethod(options *builder.DockerDriverGitCont
 			return nil, errors.New(errContext, "Credentials store is expected when a credentials id is configured")
 		}
 
-		cred, err := f.Credentials.GetCredentials(options.CredentialsID)
+		cred, err := f.Credentials.Get(options.CredentialsID)
 		if err != nil {
 			return nil, errors.New(errContext, err.Error())
 		}

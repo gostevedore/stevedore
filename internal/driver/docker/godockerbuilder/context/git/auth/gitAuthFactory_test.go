@@ -74,7 +74,7 @@ func TestGenerateAuthMethod(t *testing.T) {
 			},
 			factory: &GitAuthFactory{
 				Credentials: &credentialsstore.CredentialsStore{
-					Store: map[string]*credentialsstore.RegistryUserPassAuth{
+					Store: map[string]*credentialsstore.UserPasswordAuth{
 						"1c88d75d861f84fd80b43bb117b2fcde": {
 							Username: "user",
 							Password: "pass",

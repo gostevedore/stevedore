@@ -4,30 +4,59 @@ import (
 	"context"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/configuration"
 	"github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/images/image"
 	"github.com/gostevedore/stevedore/internal/promote"
 )
 
+// OptionsFunc is a function used to configure the service
+type OptionsFunc func(*Service)
+
+// Service is the service used to promote images
 type Service struct {
-	credentials   CredentialsStorer
-	factory       PromoteFactorier
-	semver        Semverser
-	configuration *configuration.Configuration
+	credentials CredentialsStorer
+	factory     PromoteFactorier
+	semver      Semverser
 }
 
-func NewService(f PromoteFactorier, conf *configuration.Configuration, c CredentialsStorer, s Semverser) *Service {
-	return &Service{
-		credentials:   c,
-		factory:       f,
-		semver:        s,
-		configuration: conf,
+// NewService creates a new service
+func NewService(options ...OptionsFunc) *Service {
+	service := &Service{}
+	service.Options(options...)
+
+	return service
+}
+
+// WitCredentials sets credentials for the service
+func WithCredentials(c CredentialsStorer) OptionsFunc {
+	return func(s *Service) {
+		s.credentials = c
+	}
+}
+
+// WithPromoteFactory sets the factory used to create the promoter
+func WithPromoteFactory(f PromoteFactorier) OptionsFunc {
+	return func(s *Service) {
+		s.factory = f
+	}
+}
+
+// WithSemver sets the semver component for the service
+func WithSemver(sv Semverser) OptionsFunc {
+	return func(s *Service) {
+		s.semver = sv
+	}
+}
+
+// Options configure the service
+func (s *Service) Options(opts ...OptionsFunc) {
+	for _, opt := range opts {
+		opt(s)
 	}
 }
 
 // Promote an image
-func (e *Service) Promote(ctx context.Context, options *ServiceOptions) error {
+func (s *Service) Promote(ctx context.Context, options *ServiceOptions) error {
 
 	var err error
 	var sourceImage, targetImage *image.Image
@@ -35,19 +64,15 @@ func (e *Service) Promote(ctx context.Context, options *ServiceOptions) error {
 	promoteOptions := &promote.PromoteOptions{}
 	errContext := "(Service::Promote)"
 
-	if e.factory == nil {
+	if s.factory == nil {
 		return errors.New(errContext, "Promote factory has not been initialized")
 	}
 
-	if e.configuration == nil {
-		return errors.New(errContext, "Configuration has not been initialized")
-	}
-
-	if e.semver == nil {
+	if s.semver == nil {
 		return errors.New(errContext, "Semver has not been initialized")
 	}
 
-	if e.credentials == nil {
+	if s.credentials == nil {
 		return errors.New(errContext, "Credentials has not been initialized")
 	}
 
@@ -69,7 +94,7 @@ func (e *Service) Promote(ctx context.Context, options *ServiceOptions) error {
 		return errors.New(errContext, err.Error())
 	}
 
-	pullAuth, err := e.getCredentials(sourceImage.RegistryHost)
+	pullAuth, err := s.getCredentials(sourceImage.RegistryHost)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
@@ -99,16 +124,8 @@ func (e *Service) Promote(ctx context.Context, options *ServiceOptions) error {
 		promoteOptions.TargetImageTags = append(promoteOptions.TargetImageTags, options.TargetImageTags[1:]...)
 	}
 
-	if !options.EnableSemanticVersionTags {
-		options.EnableSemanticVersionTags = e.configuration.EnableSemanticVersionTags
-	}
-
-	if len(options.SemanticVersionTagsTemplates) == 0 {
-		options.SemanticVersionTagsTemplates = e.configuration.SemanticVersionTagsTemplates
-	}
-
 	if options.EnableSemanticVersionTags {
-		semVerTags, _ := e.semver.GenerateSemverList(options.TargetImageTags, options.SemanticVersionTagsTemplates)
+		semVerTags, _ := s.semver.GenerateSemverList(options.TargetImageTags, options.SemanticVersionTagsTemplates)
 		if len(semVerTags) > 0 {
 			promoteOptions.TargetImageTags = append(promoteOptions.TargetImageTags, semVerTags...)
 		}
@@ -119,7 +136,7 @@ func (e *Service) Promote(ctx context.Context, options *ServiceOptions) error {
 		return errors.New(errContext, err.Error())
 	}
 
-	pushAuth, err := e.getCredentials(targetImage.RegistryHost)
+	pushAuth, err := s.getCredentials(targetImage.RegistryHost)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
@@ -131,7 +148,7 @@ func (e *Service) Promote(ctx context.Context, options *ServiceOptions) error {
 	promoteOptions.RemoteSourceImage = options.RemoteSourceImage
 	promoteOptions.RemoveTargetImageTags = options.RemoveTargetImageTags
 
-	promoter, err := e.getPromoter(options)
+	promoter, err := s.getPromoter(options)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
@@ -144,14 +161,14 @@ func (e *Service) Promote(ctx context.Context, options *ServiceOptions) error {
 	return nil
 }
 
-func (e *Service) getCredentials(registry string) (*credentials.RegistryUserPassAuth, error) {
+func (e *Service) getCredentials(registry string) (*credentials.UserPasswordAuth, error) {
 	errContext := "(Service::getCredentials)"
 
 	if e.credentials == nil {
 		return nil, errors.New(errContext, "Credentials has not been initialized")
 	}
 
-	auth, _ := e.credentials.GetCredentials(registry)
+	auth, _ := e.credentials.Get(registry)
 
 	return auth, nil
 }

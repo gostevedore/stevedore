@@ -123,7 +123,7 @@ func TestBuild(t *testing.T) {
 					stepChild,
 				}, nil)
 
-				service.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry").Return(&credentials.RegistryUserPassAuth{
+				service.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry").Return(&credentials.UserPasswordAuth{
 					Username: "user",
 					Password: "pass",
 				}, nil)
@@ -310,12 +310,12 @@ func TestBuildWorker(t *testing.T) {
 				mockJob := job.NewMockJob()
 				mockJob.On("Wait").Return(nil)
 
-				service.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry").Return(&credentials.RegistryUserPassAuth{
+				service.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry").Return(&credentials.UserPasswordAuth{
 					Username: "user",
 					Password: "pass",
 				}, nil)
 
-				service.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "parent_registry").Return(&credentials.RegistryUserPassAuth{
+				service.credentials.(*credentials.CredentialsStoreMock).On("Get", "parent_registry").Return(&credentials.UserPasswordAuth{
 					Username: "parent_user",
 					Password: "parent_pass",
 				}, nil)
@@ -605,7 +605,7 @@ func TestGetCredentials(t *testing.T) {
 		desc              string
 		service           *Service
 		registry          string
-		res               *credentials.RegistryUserPassAuth
+		res               *credentials.UserPasswordAuth
 		err               error
 		prepareAssertFunc func(*Service)
 	}{
@@ -622,12 +622,12 @@ func TestGetCredentials(t *testing.T) {
 				),
 			),
 			registry: "registry.test",
-			res: &credentials.RegistryUserPassAuth{
+			res: &credentials.UserPasswordAuth{
 				Username: "user",
 				Password: "pass",
 			},
 			prepareAssertFunc: func(service *Service) {
-				service.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry.test").Return(&credentials.RegistryUserPassAuth{
+				service.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
 					Username: "user",
 					Password: "pass",
 				}, nil)
@@ -644,9 +644,9 @@ func TestGetCredentials(t *testing.T) {
 			registry: "registry.test",
 			res:      nil,
 			prepareAssertFunc: func(service *Service) {
-				service.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "registry.test").Return(nil, nil)
+				service.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry.test").Return(nil, errors.New(errContext, "Credentials not found"))
 			},
-			err: &errors.Error{},
+			err: errors.New(errContext, "Credentials not found"),
 		},
 	}
 

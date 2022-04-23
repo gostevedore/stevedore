@@ -32,6 +32,7 @@ import (
 	buildservice "github.com/gostevedore/stevedore/internal/service/build"
 	"github.com/gostevedore/stevedore/internal/service/build/command"
 	"github.com/gostevedore/stevedore/internal/service/build/plan"
+	"github.com/spf13/afero"
 )
 
 // OptionsFunc defines the signature for an option function to set entrypoint attributes
@@ -105,7 +106,8 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 		handlerOptions.SemanticVersionTagsTemplates = append([]string{}, conf.SemanticVersionTagsTemplates...)
 	}
 
-	credentialsStore := credentials.NewCredentialsStore()
+	// not loaded credentials
+	credentialsStore := credentials.NewCredentialsStore(afero.NewOsFs())
 	buildersStore := buildersstore.NewBuildersStore()
 	commandFactory := command.NewBuildCommandFactory()
 	jobFactory := job.NewJobFactory()
