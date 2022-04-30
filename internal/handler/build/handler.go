@@ -1,4 +1,4 @@
-package build
+package handler
 
 import (
 	"context"
@@ -27,7 +27,7 @@ func NewHandler(p PlanFactorier, s ServiceBuilder) *Handler {
 }
 
 // Handler handles build commands
-func (h *Handler) Handler(ctx context.Context, imageName string, options *HandlerOptions) error {
+func (h *Handler) Handler(ctx context.Context, imageName string, options *Options) error {
 
 	errContext := "(build::Handler)"
 	var err error
@@ -109,7 +109,7 @@ func (h *Handler) Handler(ctx context.Context, imageName string, options *Handle
 	return nil
 }
 
-func (h *Handler) createBuildPlan(options *HandlerOptions) (plan.Planner, error) {
+func (h *Handler) createBuildPlan(options *Options) (plan.Planner, error) {
 	errContext := "(build::createBuildPlan)"
 
 	var err error
@@ -146,7 +146,7 @@ func (h *Handler) createBuildPlan(options *HandlerOptions) (plan.Planner, error)
 }
 
 // validateCascadePlanOptions returns an error if the options are not valid for cascade plan
-func validateCascadePlanOptions(options *HandlerOptions) error {
+func validateCascadePlanOptions(options *Options) error {
 	errContext := "(build::validateCascadePlanOptions)"
 
 	if options == nil {

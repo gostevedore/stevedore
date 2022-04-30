@@ -24,10 +24,5 @@ func (f *GraphTemplateFactory) NewGraphTemplate() GraphTemplater {
 
 // NewGraphTemplateNode creates a new graph template node
 func (f *GraphTemplateFactory) NewGraphTemplateNode(name string) GraphTemplateNoder {
-
-	// if f.isMock {
-	// 	return NewMockGraphTemplateNode()
-	// }
-
 	return NewGraphTemplateNode(name)
 }

@@ -140,7 +140,7 @@ image:
 			images: NewImagesConfiguration(
 				testFs,
 				graph.NewImagesGraphTemplate(
-					*imagesgraph.NewGraphTemplateFactory(false),
+					imagesgraph.NewGraphTemplateFactory(false),
 				),
 				store.NewMockImageStore(),
 				compatibility.NewMockCompatibility(),

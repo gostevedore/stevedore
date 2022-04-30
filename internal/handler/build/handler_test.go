@@ -1,4 +1,4 @@
-package build
+package handler
 
 import (
 	"context"
@@ -19,7 +19,7 @@ func TestHandler(t *testing.T) {
 		desc              string
 		handler           *Handler
 		imageName         string
-		options           *HandlerOptions
+		options           *Options
 		err               error
 		prepareAssertFunc func(string, PlanFactorier, ServiceBuilder)
 		assertFunc        func(PlanFactorier, ServiceBuilder)
@@ -45,7 +45,7 @@ func TestHandler(t *testing.T) {
 				planFactory: plan.NewMockPlanFactory(),
 				service:     build.NewMockService(),
 			},
-			options: &HandlerOptions{
+			options: &Options{
 				Labels: []string{"invalid_label"},
 			},
 			err: errors.New(errContext, "Invalid label format 'invalid_label'"),
@@ -56,7 +56,7 @@ func TestHandler(t *testing.T) {
 				planFactory: plan.NewMockPlanFactory(),
 				service:     build.NewMockService(),
 			},
-			options: &HandlerOptions{
+			options: &Options{
 				PersistentVars: []string{"invalid_persistent_var"},
 			},
 			err: errors.New(errContext, "Invalid persistent variable format 'invalid_persistent_var'"),
@@ -67,7 +67,7 @@ func TestHandler(t *testing.T) {
 				planFactory: plan.NewMockPlanFactory(),
 				service:     build.NewMockService(),
 			},
-			options: &HandlerOptions{
+			options: &Options{
 				AnsibleConnectionLocal:           true,
 				AnsibleIntermediateContainerName: "ansible-intermediate-container",
 				AnsibleInventoryPath:             "ansible-inventory",
@@ -159,7 +159,7 @@ func TestCreateBuildPlan(t *testing.T) {
 	tests := []struct {
 		desc              string
 		handler           *Handler
-		options           *HandlerOptions
+		options           *Options
 		res               plan.Planner
 		err               error
 		prepareAssertFunc func(PlanFactorier)
@@ -183,7 +183,7 @@ func TestCreateBuildPlan(t *testing.T) {
 		{
 			desc:    "Testing get cascade plan",
 			handler: NewHandler(plan.NewMockPlanFactory(), build.NewMockService()),
-			options: &HandlerOptions{
+			options: &Options{
 				BuildOnCascade: true,
 				CascadeDepth:   5,
 			},
@@ -201,7 +201,7 @@ func TestCreateBuildPlan(t *testing.T) {
 		{
 			desc:    "Testing get default (single) plan",
 			handler: NewHandler(plan.NewMockPlanFactory(), build.NewMockService()),
-			options: &HandlerOptions{},
+			options: &Options{},
 			res:     nil,
 			err:     &errors.Error{},
 			prepareAssertFunc: func(p PlanFactorier) {
@@ -235,26 +235,26 @@ func TestValidateCascadePlanOptions(t *testing.T) {
 
 	tests := []struct {
 		desc    string
-		options *HandlerOptions
+		options *Options
 		err     error
 	}{
 		{
 			desc: "Testing not valid cascade plan options when ansible intermediate container name is defined",
-			options: &HandlerOptions{
+			options: &Options{
 				AnsibleIntermediateContainerName: "name",
 			},
 			err: errors.New(errContext, "Cascade plan does not support intermediate containers name, it could cause an unpredictable result"),
 		},
 		{
 			desc: "Testing not valid cascade plan options when ansible inventory path is defined",
-			options: &HandlerOptions{
+			options: &Options{
 				AnsibleInventoryPath: "path",
 			},
 			err: errors.New(errContext, "Cascade plan does not support ansible inventory path, it could cause an unpredictable result"),
 		},
 		{
 			desc: "Testing not valid cascade plan options when ansible limit is defined",
-			options: &HandlerOptions{
+			options: &Options{
 				AnsibleLimit: "limit",
 			},
 			err: errors.New(errContext, "Cascade plan does not support ansible limit, it could cause an unpredictable result"),
@@ -265,21 +265,21 @@ func TestValidateCascadePlanOptions(t *testing.T) {
 		},
 		{
 			desc: "Testing not valid cascade plan options when image name is defined",
-			options: &HandlerOptions{
+			options: &Options{
 				ImageName: "name",
 			},
 			err: errors.New(errContext, "Cascade plan does not support image name, it could cause an unpredictable result"),
 		},
 		{
 			desc: "Testing not valid cascade plan options when image from name is defined",
-			options: &HandlerOptions{
+			options: &Options{
 				ImageFromName: "name",
 			},
 			err: errors.New(errContext, "Cascade plan does not support image from name, it could cause an unpredictable result"),
 		},
 		{
 			desc:    "Testing valid options for cascade plan",
-			options: &HandlerOptions{},
+			options: &Options{},
 			err:     &errors.Error{},
 		},
 	}

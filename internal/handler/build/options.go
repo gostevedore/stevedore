@@ -1,7 +1,7 @@
-package build
+package handler
 
-// HandlerOptions is the options for the build command
-type HandlerOptions struct {
+// Options is the options for the build command
+type Options struct {
 	// AnsibleConnectionLocal if is true ansible driver uses local connection
 	AnsibleConnectionLocal bool
 	// AnsibleIntermediateContainerName is the name of an intermediate container that can be used during ansible build process
@@ -14,12 +14,6 @@ type HandlerOptions struct {
 	BuildOnCascade bool
 	// CascadeDepth is the number of levels to build when build on cascade is executed: ???
 	CascadeDepth int
-
-	// // Concurrency is the number of images builds that can be excuted at the same time
-	// Concurrency int
-	// // Debug if is true debug mode is enabled: ???
-	// Debug bool
-
 	// DryRun if is true, the build is executed in dry run mode
 	DryRun bool
 	// EnableSemanticVersionTags if is true semantic version tags are generated

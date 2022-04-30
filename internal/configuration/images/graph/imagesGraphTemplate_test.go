@@ -63,7 +63,7 @@ func TestAddImage(t *testing.T) {
 					},
 				},
 			},
-			graph: NewImagesGraphTemplate(*graph.NewGraphTemplateFactory(true)),
+			graph: NewImagesGraphTemplate(graph.NewGraphTemplateFactory(true)),
 			prepareAssertFunc: func(g *ImagesGraphTemplate, i *image.Image) {
 				// node
 				g.graph.(*graph.MockGraphTemplate).On("GetNode", generateNodeName("image_name", "image_version")).Return(nil)
@@ -107,7 +107,7 @@ func TestAddImage(t *testing.T) {
 					},
 				},
 			},
-			graph: NewImagesGraphTemplate(*graph.NewGraphTemplateFactory(true)),
+			graph: NewImagesGraphTemplate(graph.NewGraphTemplateFactory(true)),
 			prepareAssertFunc: func(g *ImagesGraphTemplate, i *image.Image) {
 				// node
 				g.graph.(*graph.MockGraphTemplate).On("GetNode", generateNodeName("image_name", "image_version")).Return(nil)
@@ -140,7 +140,7 @@ func TestAddImage(t *testing.T) {
 				Name:    "image_name",
 				Version: "image_version",
 			},
-			graph: NewImagesGraphTemplate(*graph.NewGraphTemplateFactory(true)),
+			graph: NewImagesGraphTemplate(graph.NewGraphTemplateFactory(true)),
 			prepareAssertFunc: func(g *ImagesGraphTemplate, i *image.Image) {
 				// node
 				g.graph.(*graph.MockGraphTemplate).On("GetNode", generateNodeName("image_name", "image_version")).Return(nil)
@@ -189,7 +189,7 @@ func TestIterate(t *testing.T) {
 	i0212 := &image.Image{}
 	i022 := &image.Image{}
 
-	graph := NewImagesGraphTemplate(*graph.NewGraphTemplateFactory(false))
+	graph := NewImagesGraphTemplate(graph.NewGraphTemplateFactory(false))
 	graph.AddImage("i01", "1.0.0", i01)
 	graph.AddImage("i011", "1.0.1", i011)
 	graph.AddImage("i0111", "1.0.11", i0111)

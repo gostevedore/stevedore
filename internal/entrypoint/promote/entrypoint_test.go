@@ -1,7 +1,6 @@
 package entrypoint
 
 import (
-	"context"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
@@ -24,74 +23,102 @@ func TestNewEntrypoint(t *testing.T) {
 
 	assert.NotNil(t, entrypoint.writer)
 }
-func TestExecute(t *testing.T) {
-	errContext := "(Entrypoint::Execute)"
-	var err error
 
-	baseDir := "/credentials"
-	testFs := afero.NewMemMapFs()
-	testFs.MkdirAll(baseDir, 0755)
+// func TestExecuteDryRun(t *testing.T) {
+// 	t.Run("Testing promote execute on dry-run mode", func(t *testing.T) {
 
-	err = afero.WriteFile(testFs, filepath.Join(baseDir, "30a88abceb172130caa0a565ea982653"), []byte(`
-{
-	"docker_login_username": "username",
-	"docker_login_password": "password"
-}
-`), 0644)
-	if err != nil {
-		t.Log(err)
-	}
+// 		e := NewEntrypoint(
+// 			WithWriter(ioutil.Discard),
+// 		)
+
+// 		args := []string{"image"}
+// 		configuration := &configuration.Configuration{
+// 			SemanticVersionTagsTemplates: []string{"template"},
+// 		}
+// 		handlerOptions := &handler.Options{
+// 			DryRun:                       true,
+// 			EnableSemanticVersionTags:    true,
+// 			TargetImageName:              "target_image_name",
+// 			TargetImageRegistryNamespace: "target_image_regsitry_namespace",
+// 			TargetImageRegistryHost:      "target_image_registry_host",
+// 			TargetImageTags:              []string{"target_image_tag"},
+// 			RemoveTargetImageTags:        true,
+// 			PromoteSourceImageTag:        true,
+// 			RemoteSourceImage:            true,
+// 		}
+
+// 		err := e.Execute(context.TODO(), args, configuration, handlerOptions)
+// 		assert.Nil(t, err)
+// 	})
+// }
+
+func TestPrepareHandlerOptions(t *testing.T) {
+	errContext := "(Entrypoint::prepareHandlerOptions)"
 
 	tests := []struct {
-		desc              string
-		entrypoint        *Entrypoint
-		args              []string
-		configuration     *configuration.Configuration
-		entrypointOptions *Options
-		handlerOptions    *handler.Options
-		err               error
-		assertions        func(*testing.T, *Entrypoint, []string, *Options, *handler.Options)
+		desc           string
+		entrypoint     *Entrypoint
+		args           []string
+		configuration  *configuration.Configuration
+		handlerOptions *handler.Options
+		res            *handler.Options
+		err            error
 	}{
 		{
-			desc:       "Testing error when configuration is not provided",
+			desc: "Testing error when args are nil",
+			args: nil,
+			err:  errors.New(errContext, "To execute the promote entrypoint, promote image argument is required"),
+		},
+		{
+			desc: "Testing error when promote image is not provided",
+			args: []string{},
+			err:  errors.New(errContext, "To execute the promote entrypoint, promote image argument is required"),
+		},
+		{
+			desc:       "Testing error when handler options are not provided",
 			entrypoint: &Entrypoint{},
-			err:        errors.New(errContext, "To execute the promote entrypoint, configuration is required"),
+			args:       []string{"image"},
+			err:        errors.New(errContext, "To execute the promote entrypoint, handler options are required"),
 		},
 		{
-			desc:          "Testing error when arguments are not provided",
-			entrypoint:    &Entrypoint{},
-			configuration: &configuration.Configuration{},
-			err:           errors.New(errContext, "To execute the promote entrypoint, arguments are required"),
+			desc:           "Testing error when configuration is not provided",
+			args:           []string{"image"},
+			entrypoint:     &Entrypoint{},
+			handlerOptions: &handler.Options{},
+			configuration:  nil,
+			err:            errors.New(errContext, "To execute the promote entrypoint, configuration is required"),
 		},
 		{
-			desc:          "Testing error when handler options are not provided",
-			entrypoint:    &Entrypoint{},
-			configuration: &configuration.Configuration{},
-			args:          []string{"image"},
-			err:           errors.New(errContext, "To execute the promote entrypoint, handler options are required"),
-		},
-		{
-			desc: "Testing execute entrypoint",
-			entrypoint: NewEntrypoint(
-				WithWriter(ioutil.Discard),
-				WithFileSystem(testFs),
-			),
+			desc:       "Testing prepare handler options",
+			entrypoint: &Entrypoint{},
+			args:       []string{"image"},
+			err:        &errors.Error{},
 			configuration: &configuration.Configuration{
-				DockerCredentialsDir:      baseDir,
-				EnableSemanticVersionTags: true,
-				SemanticVersionTagsTemplates: []string{
-					"template",
-				},
+				SemanticVersionTagsTemplates: []string{"template"},
 			},
-			args: []string{"image"},
 			handlerOptions: &handler.Options{
-				DryRun: true,
+				DryRun:                       true,
+				EnableSemanticVersionTags:    true,
+				TargetImageName:              "target_image_name",
+				TargetImageRegistryNamespace: "target_image_regsitry_namespace",
+				TargetImageRegistryHost:      "target_image_registry_host",
+				TargetImageTags:              []string{"target_image_tag"},
+				RemoveTargetImageTags:        true,
+				PromoteSourceImageTag:        true,
+				RemoteSourceImage:            true,
 			},
-			//			err:            errors.New(errContext, "Image 'image' could not be promoted\n\tError tagging image 'image' to 'docker.io/library/image:latest'\n\tError response from daemon: No such image: image:latest"),
-			err: &errors.Error{},
-			assertions: func(t *testing.T, e *Entrypoint, args []string, entrypointOptions *Options, handlerOptions *handler.Options) {
-				assert.True(t, handlerOptions.EnableSemanticVersionTags, "Enable semantic version tags should be true")
-				assert.Equal(t, []string{"template"}, handlerOptions.SemanticVersionTagsTemplates, "Semantic version tags templates is not as expected")
+			res: &handler.Options{
+				DryRun:                       true,
+				EnableSemanticVersionTags:    true,
+				SourceImageName:              "image",
+				TargetImageName:              "target_image_name",
+				TargetImageRegistryNamespace: "target_image_regsitry_namespace",
+				TargetImageRegistryHost:      "target_image_registry_host",
+				TargetImageTags:              []string{"target_image_tag"},
+				RemoveTargetImageTags:        true,
+				SemanticVersionTagsTemplates: []string{"template"},
+				PromoteSourceImageTag:        true,
+				RemoteSourceImage:            true,
 			},
 		},
 	}
@@ -100,11 +127,11 @@ func TestExecute(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			err := test.entrypoint.Execute(context.TODO(), test.args, test.configuration, test.handlerOptions)
+			options, err := test.entrypoint.prepareHandlerOptions(test.args, test.configuration, test.handlerOptions)
 			if err != nil {
 				assert.Equal(t, err.Error(), test.err.Error())
 			} else {
-				test.assertions(t, test.entrypoint, test.args, test.entrypointOptions, test.handlerOptions)
+				assert.Equal(t, test.res, options)
 			}
 		})
 	}
@@ -112,6 +139,8 @@ func TestExecute(t *testing.T) {
 
 func TestCreateCredentialsStore(t *testing.T) {
 	var err error
+
+	errContext := "(Entrypoint::createPromoteRepoFactory)"
 
 	baseDir := "/credentials"
 	testFs := afero.NewMemMapFs()
@@ -131,17 +160,37 @@ func TestCreateCredentialsStore(t *testing.T) {
 		desc       string
 		entrypoint *Entrypoint
 		fs         afero.Fs
-		path       string
+		conf       *configuration.Configuration
 		err        error
 	}{
 		{
-			desc: "Testing create credentials store",
-			entrypoint: NewEntrypoint(
-				WithFileSystem(testFs),
-			),
-			fs:   testFs,
-			path: baseDir,
-			err:  &errors.Error{},
+			desc:       "Testing error when fs is not provided",
+			entrypoint: &Entrypoint{},
+			fs:         nil,
+			err:        errors.New(errContext, "To create the credentials store, a file system is required"),
+		},
+		{
+			desc:       "Testing error when conf is not provided",
+			entrypoint: &Entrypoint{},
+			fs:         afero.NewOsFs(),
+			conf:       nil,
+			err:        errors.New(errContext, "To execute the promote entrypoint, configuration is required"),
+		},
+		{
+			desc:       "Testing error when credentials dir is not provided",
+			entrypoint: &Entrypoint{},
+			fs:         afero.NewOsFs(),
+			conf:       &configuration.Configuration{},
+			err:        errors.New(errContext, "Docker credentials path must be provided in the configuration"),
+		},
+		{
+			desc:       "Testing create credentials store",
+			entrypoint: NewEntrypoint(),
+			fs:         testFs,
+			conf: &configuration.Configuration{
+				DockerCredentialsDir: baseDir,
+			},
+			err: &errors.Error{},
 		},
 	}
 
@@ -149,7 +198,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			store, err := test.entrypoint.createCredentialsStore(test.path)
+			store, err := test.entrypoint.createCredentialsStore(test.fs, test.conf)
 			if err != nil {
 				assert.Equal(t, err.Error(), test.err.Error())
 			} else {
@@ -157,7 +206,6 @@ func TestCreateCredentialsStore(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestCreatePromoteFactory(t *testing.T) {

@@ -1,10 +1,10 @@
-package build
+package entrypoint
 
 import (
 	"context"
 
 	"github.com/gostevedore/stevedore/internal/configuration"
-	build "github.com/gostevedore/stevedore/internal/handler/build"
+	handler "github.com/gostevedore/stevedore/internal/handler/build"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -19,7 +19,7 @@ func NewMockEntrypoint() *MockEntrypoint {
 }
 
 // Execute provides a mock function
-func (e *MockEntrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, entrypointOptions *EntrypointOptions, handlerOptions *build.HandlerOptions) error {
+func (e *MockEntrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, entrypointOptions *Options, handlerOptions *handler.Options) error {
 	res := e.Called(ctx, args, conf, entrypointOptions, handlerOptions)
 	return res.Error(0)
 }

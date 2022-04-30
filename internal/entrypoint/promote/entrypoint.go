@@ -27,7 +27,6 @@ type OptionsFunc func(opts *Entrypoint)
 // Entrypoint defines the entrypoint for the build application
 type Entrypoint struct {
 	writer io.Writer
-	fs     afero.Fs
 }
 
 // NewEntrypoint returns a new entrypoint
@@ -45,13 +44,6 @@ func WithWriter(w io.Writer) OptionsFunc {
 	}
 }
 
-// WitFileSystem creates a new file system
-func WithFileSystem(fs afero.Fs) OptionsFunc {
-	return func(e *Entrypoint) {
-		e.fs = fs
-	}
-}
-
 // Options provides the options for the entrypoint
 func (e *Entrypoint) Options(opts ...OptionsFunc) {
 	for _, opt := range opts {
@@ -60,34 +52,18 @@ func (e *Entrypoint) Options(opts ...OptionsFunc) {
 }
 
 // Execute executes the entrypoint
-func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, options *handler.Options) error {
+func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, handlerOptions *handler.Options) error {
 	var err error
 	var promoteRepoFactory promote.PromoteFactory
 	var credentialsStore *credentials.CredentialsStore
 	var semverGenerator *semver.SemVerGenerator
+	var options *handler.Options
 
 	errContext := "(Entrypoint::Execute)"
 
-	if conf == nil {
-		return errors.New(errContext, "To execute the promote entrypoint, configuration is required")
-	}
-
-	if len(args) < 1 {
-		return errors.New(errContext, "To execute the promote entrypoint, arguments are required")
-	}
-
-	if options == nil {
-		return errors.New(errContext, "To execute the promote entrypoint, handler options are required")
-	}
-
-	options.SourceImageName = args[0]
-	if len(args) > 1 {
-		fmt.Fprintf(e.writer, "Ignoring extra arguments: %v\n", args[1:])
-	}
-
-	options.EnableSemanticVersionTags = conf.EnableSemanticVersionTags || options.EnableSemanticVersionTags
-	if options.EnableSemanticVersionTags && len(conf.SemanticVersionTagsTemplates) > 0 && len(options.SemanticVersionTagsTemplates) == 0 {
-		options.SemanticVersionTagsTemplates = append([]string{}, conf.SemanticVersionTagsTemplates...)
+	options, err = e.prepareHandlerOptions(args, conf, handlerOptions)
+	if err != nil {
+		return errors.New(errContext, err.Error())
 	}
 
 	promoteRepoFactory, err = e.createPromoteFactory()
@@ -95,11 +71,7 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 		return errors.New(errContext, err.Error())
 	}
 
-	if conf.DockerCredentialsDir == "" {
-		return errors.New(errContext, "Docker credentials path must be provided in the configuration")
-	}
-
-	credentialsStore, err = e.createCredentialsStore(conf.DockerCredentialsDir)
+	credentialsStore, err = e.createCredentialsStore(afero.NewOsFs(), conf)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
@@ -124,15 +96,62 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 	return nil
 }
 
-func (e *Entrypoint) createCredentialsStore(path string) (*credentials.CredentialsStore, error) {
-	errContext := "(Entrypoint::createPromoteRepoFactory)"
+func (e *Entrypoint) prepareHandlerOptions(args []string, conf *configuration.Configuration, inputOptions *handler.Options) (*handler.Options, error) {
+	errContext := "(Entrypoint::prepareHandlerOptions)"
 
-	if e.fs == nil {
+	if len(args) < 1 || args == nil {
+		return nil, errors.New(errContext, "To execute the promote entrypoint, promote image argument is required")
+	}
+
+	if inputOptions == nil {
+		return nil, errors.New(errContext, "To execute the promote entrypoint, handler options are required")
+	}
+
+	if conf == nil {
+		return nil, errors.New(errContext, "To execute the promote entrypoint, configuration is required")
+	}
+
+	if len(args) > 1 {
+		fmt.Fprintf(e.writer, "Ignoring extra arguments: %v\n", args[1:])
+	}
+
+	options := &handler.Options{}
+
+	options.DryRun = inputOptions.DryRun
+	options.EnableSemanticVersionTags = conf.EnableSemanticVersionTags || inputOptions.EnableSemanticVersionTags
+	options.TargetImageName = inputOptions.TargetImageName
+	options.TargetImageRegistryNamespace = inputOptions.TargetImageRegistryNamespace
+	options.TargetImageRegistryHost = inputOptions.TargetImageRegistryHost
+	options.TargetImageTags = append([]string{}, inputOptions.TargetImageTags...)
+	options.RemoveTargetImageTags = inputOptions.RemoveTargetImageTags
+	options.SemanticVersionTagsTemplates = append([]string{}, inputOptions.SemanticVersionTagsTemplates...)
+	if inputOptions.EnableSemanticVersionTags && len(conf.SemanticVersionTagsTemplates) > 0 && len(inputOptions.SemanticVersionTagsTemplates) == 0 {
+		options.SemanticVersionTagsTemplates = append([]string{}, conf.SemanticVersionTagsTemplates...)
+	}
+	options.SourceImageName = args[0]
+	options.PromoteSourceImageTag = inputOptions.PromoteSourceImageTag
+	options.RemoteSourceImage = inputOptions.RemoteSourceImage
+
+	return options, nil
+}
+
+func (e *Entrypoint) createCredentialsStore(fs afero.Fs, conf *configuration.Configuration) (*credentials.CredentialsStore, error) {
+	errContext := "(Entrypoint::createCredentialsStore)"
+
+	if fs == nil {
 		return nil, errors.New(errContext, "To create the credentials store, a file system is required")
 	}
 
-	credentialsStore := credentials.NewCredentialsStore(e.fs)
-	err := credentialsStore.LoadCredentials(path)
+	if conf == nil {
+		return nil, errors.New(errContext, "To execute the promote entrypoint, configuration is required")
+	}
+
+	if conf.DockerCredentialsDir == "" {
+		return nil, errors.New(errContext, "Docker credentials path must be provided in the configuration")
+	}
+
+	credentialsStore := credentials.NewCredentialsStore(fs)
+	err := credentialsStore.LoadCredentials(conf.DockerCredentialsDir)
 	if err != nil {
 		return nil, errors.New(errContext, err.Error())
 	}

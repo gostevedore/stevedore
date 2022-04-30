@@ -48,47 +48,6 @@ func (b *Builders) LoadBuilders(path string) error {
 
 }
 
-// // AddBuilder include a new builder to builders
-// func (b *Builders) AddBuilder(builder *builder.Builder) error {
-
-// 	errContext := "(builders::AddBuilder)"
-
-// 	if b == nil {
-// 		return errors.New(errContext, "Builders is nil")
-// 	}
-
-// 	b.mutex.Lock()
-// 	defer b.mutex.Unlock()
-
-// 	_, exist := b.Builders[builder.Name]
-// 	if exist {
-// 		return errors.New(errContext, fmt.Sprintf("Builder '%s' already exist", builder.Name))
-// 	}
-
-// 	b.Builders[builder.Name] = builder
-
-// 	return nil
-// }
-
-// // Find returns the builder registered with input name
-// func (b *Builders) Find(name string) (*builder.Builder, error) {
-
-// 	errContext := "(builders::GetBuilder)"
-
-// 	if b == nil {
-// 		return nil, errors.New(errContext, "Builders is nil")
-// 	}
-
-// 	b.mutex.RLock()
-// 	builder, exists := b.Builders[name]
-// 	if !exists {
-// 		return nil, errors.New(errContext, fmt.Sprintf("Builder '%s' does not exists", name))
-// 	}
-// 	b.mutex.RUnlock()
-
-// 	return builder, nil
-// }
-
 // LoadBuildersFromFile loads builders from file
 func (b *Builders) LoadBuildersFromFile(path string) error {
 

@@ -13,14 +13,14 @@ import (
 // ImageGraphTemplate is a graph template for images
 type ImagesGraphTemplate struct {
 	graph        Grapher
-	graphFactory graph.GraphTemplateFactory
+	graphFactory *graph.GraphTemplateFactory
 
 	mutex sync.RWMutex
 	// pendingNodes map[string]map[string]GraphNoder
 }
 
 // NewImagesGraphTemplate creates a new graph template for images
-func NewImagesGraphTemplate(factory graph.GraphTemplateFactory) *ImagesGraphTemplate {
+func NewImagesGraphTemplate(factory *graph.GraphTemplateFactory) *ImagesGraphTemplate {
 	return &ImagesGraphTemplate{
 		graph:        factory.NewGraphTemplate(),
 		graphFactory: factory,
