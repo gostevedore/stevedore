@@ -394,6 +394,11 @@ func (e *Entrypoint) createImagesStore(fs afero.Fs, conf *configuration.Configur
 }
 
 func (e *Entrypoint) createImagesGraphTemplatesStorer(factory *graph.GraphTemplateFactory) (*imagesgraphtemplate.ImagesGraphTemplate, error) {
+	errContext := "(Entrypoint::createImagesGraphTemplatesStorer)"
+
+	if factory == nil {
+		return nil, errors.New(errContext, "To create an images graph templates storer, a graph template factory is required")
+	}
 
 	graphtemplate := imagesgraphtemplate.NewImagesGraphTemplate(factory)
 

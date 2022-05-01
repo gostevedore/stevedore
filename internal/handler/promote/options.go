@@ -17,8 +17,8 @@ type Options struct {
 	TargetImageTags []string
 	// RemoveTargerImageTags is a flag to indicate whether to remove from local generated image tags
 	RemoveTargetImageTags bool
-	// DEPRECATED_RemoveTargetImageTags is a flag to indicate whether to remove from local generated image tags
-	DEPRECATED_RemoveTargetImageTags bool
+	// DEPRECATEDRemoveTargetImageTags is a flag to indicate whether to remove from local generated image tags
+	DEPRECATEDRemoveTargetImageTags bool
 	// SemanticVersionTagsTemplates is the list of semantic version tags templates
 	SemanticVersionTagsTemplates []string
 	// PromoteSourceImageTag is the tag to promote

@@ -18,6 +18,7 @@ import (
 	dockerdriver "github.com/gostevedore/stevedore/internal/driver/docker"
 	dryrundriver "github.com/gostevedore/stevedore/internal/driver/dryrun"
 	handler "github.com/gostevedore/stevedore/internal/handler/build"
+	"github.com/gostevedore/stevedore/internal/images/graph"
 	"github.com/gostevedore/stevedore/internal/images/image/render"
 	"github.com/gostevedore/stevedore/internal/images/image/render/now"
 	"github.com/gostevedore/stevedore/internal/images/store"
@@ -436,7 +437,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 			entrypoint: NewEntrypoint(),
 			fs:         afero.NewMemMapFs(),
 			conf:       &configuration.Configuration{},
-			err:        errors.New(errContext, "To create the credentials store, credentials path must be provided in the configuration"),
+			err:        errors.New(errContext, "To create the credentials store, credentials path must be provided in configuration"),
 		},
 		{
 			desc: "Testing create credentials store",
@@ -717,8 +718,10 @@ func TestCreateImagesStore(t *testing.T) {
 			conf: &configuration.Configuration{
 				ImagesPath: baseDir,
 			},
-			render:        &render.ImageRender{},
-			graph:         &imagesgraphtemplate.ImagesGraphTemplate{},
+			render: &render.ImageRender{},
+			graph: imagesgraphtemplate.NewImagesGraphTemplate(
+				graph.NewGraphTemplateFactory(false),
+			),
 			compatibility: &compatibility.Compatibility{},
 			res:           &imagesstore.ImageStore{},
 			err:           &errors.Error{},
@@ -741,34 +744,71 @@ func TestCreateImagesStore(t *testing.T) {
 	}
 }
 
-func CreateImagesGraphTemplatesStorer(t *testing.T) {
+func TestCreateImagesGraphTemplatesStorer(t *testing.T) {
+	errContext := "(Entrypoint::createImagesGraphTemplatesStorer)"
+
 	tests := []struct {
 		desc       string
 		entrypoint *Entrypoint
+		factory    *graph.GraphTemplateFactory
+		res        *imagesgraphtemplate.ImagesGraphTemplate
 		err        error
-	}{}
+	}{
+		{
+			desc:       "Testing error when factory is not defined",
+			entrypoint: NewEntrypoint(),
+			err:        errors.New(errContext, "To create an images graph templates storer, a graph template factory is required"),
+		},
+		{
+			desc:       "Testing create images graph templates storer",
+			entrypoint: NewEntrypoint(),
+			factory:    graph.NewGraphTemplateFactory(false),
+			res:        &imagesgraphtemplate.ImagesGraphTemplate{},
+			err:        &errors.Error{},
+		},
+	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			assert.True(t, false)
+			store, err := test.entrypoint.createImagesGraphTemplatesStorer(test.factory)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				assert.NotNil(t, store)
+				assert.IsType(t, test.res, store)
+			}
 		})
 	}
 }
 
-func CreateGraphTemplateFactory(t *testing.T) {
+func TestCreateGraphTemplateFactory(t *testing.T) {
 	tests := []struct {
 		desc       string
 		entrypoint *Entrypoint
+		res        *graph.GraphTemplateFactory
 		err        error
-	}{}
+	}{
+		{
+			desc:       "Testing create graph template factory",
+			entrypoint: NewEntrypoint(),
+			res:        &graph.GraphTemplateFactory{},
+			err:        &errors.Error{},
+		},
+	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			assert.True(t, false)
+			factory, err := test.entrypoint.createGraphTemplateFactory()
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				assert.NotNil(t, factory)
+				assert.IsType(t, test.res, factory)
+			}
 		})
 	}
 }

@@ -6,7 +6,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/command"
 	"github.com/gostevedore/stevedore/internal/configuration"
-	"github.com/gostevedore/stevedore/internal/entrypoint/build"
+	entrypoint "github.com/gostevedore/stevedore/internal/entrypoint/build"
 	handler "github.com/gostevedore/stevedore/internal/handler/build"
 	"github.com/spf13/cobra"
 )
@@ -27,11 +27,9 @@ const (
 )
 
 // NewCommand returns a new command to build images
-func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *configuration.Configuration, entrypoint Entrypointer) *command.StevedoreCommand {
+func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *configuration.Configuration, build Entrypointer) *command.StevedoreCommand {
 
 	buildFlagOptions := &buildFlagOptions{}
-	handlerOptions := &handler.HandlerOptions{}
-	entrypointOptions := &build.EntrypointOptions{}
 
 	buildCmd := &cobra.Command{
 		Use:     "build <image>",
@@ -46,6 +44,8 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 			var err error
 
 			errContext := "(build::RunE)"
+			handlerOptions := &handler.Options{}
+			entrypointOptions := &entrypoint.Options{}
 
 			if buildFlagOptions.DEPRECATEDConnectionLocal {
 				compatibility.AddDeprecated(DeprecatedFlagMessageConnectionLocal)
@@ -132,7 +132,7 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 			handlerOptions.Tags = append([]string{}, buildFlagOptions.Tags...)
 			handlerOptions.Vars = append([]string{}, buildFlagOptions.Vars...)
 
-			err = entrypoint.Execute(ctx, cmd.Flags().Args(), conf, entrypointOptions, handlerOptions)
+			err = build.Execute(ctx, cmd.Flags().Args(), conf, entrypointOptions, handlerOptions)
 			if err != nil {
 				return errors.New(errContext, err.Error())
 			}

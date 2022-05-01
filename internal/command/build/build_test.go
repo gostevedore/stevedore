@@ -7,8 +7,8 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/compatibility"
 	"github.com/gostevedore/stevedore/internal/configuration"
-	buildentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/build"
-	buildhandler "github.com/gostevedore/stevedore/internal/handler/build"
+	entrypoint "github.com/gostevedore/stevedore/internal/entrypoint/build"
+	handler "github.com/gostevedore/stevedore/internal/handler/build"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,7 +27,7 @@ func TestNewCommand(t *testing.T) {
 			desc:          "Testing run build command",
 			config:        &configuration.Configuration{},
 			compatibility: compatibility.NewMockCompatibility(),
-			entrypoint:    buildentrypoint.NewMockEntrypoint(),
+			entrypoint:    entrypoint.NewMockEntrypoint(),
 			args: []string{
 				"my-image",
 				"--ansible-connection-local",
@@ -74,16 +74,16 @@ func TestNewCommand(t *testing.T) {
 				"--push-after-build",
 				"--remove-local-images-after-push",
 			},
-			prepareAssertFunc: func(compatibility Compatibilitier, entrypoint Entrypointer, config *configuration.Configuration) {
-				entrypoint.(*buildentrypoint.MockEntrypoint).On(
+			prepareAssertFunc: func(compatibility Compatibilitier, build Entrypointer, config *configuration.Configuration) {
+				build.(*entrypoint.MockEntrypoint).On(
 					"Execute",
 					context.TODO(),
 					[]string{"my-image"},
 					config,
-					&buildentrypoint.EntrypointOptions{
+					&entrypoint.Options{
 						Concurrency: 5,
 					},
-					&buildhandler.HandlerOptions{
+					&handler.Options{
 						AnsibleConnectionLocal:           true,
 						AnsibleIntermediateContainerName: "container",
 						AnsibleInventoryPath:             "inventory",
@@ -119,12 +119,11 @@ func TestNewCommand(t *testing.T) {
 			},
 			err: &errors.Error{},
 		},
-
 		{
 			desc:          "Testing run build command with deprecated commands",
 			config:        &configuration.Configuration{},
 			compatibility: compatibility.NewMockCompatibility(),
-			entrypoint:    buildentrypoint.NewMockEntrypoint(),
+			entrypoint:    entrypoint.NewMockEntrypoint(),
 			args: []string{
 				"my-image",
 				"--connection-local",
@@ -172,7 +171,7 @@ func TestNewCommand(t *testing.T) {
 				"--remove-local-images-after-push",
 				"--no-push",
 			},
-			prepareAssertFunc: func(comp Compatibilitier, entrypoint Entrypointer, config *configuration.Configuration) {
+			prepareAssertFunc: func(comp Compatibilitier, build Entrypointer, config *configuration.Configuration) {
 
 				comp.(*compatibility.MockCompatibility).On("AddDeprecated", []string{DeprecatedFlagMessageConnectionLocal}).Return(nil)
 				comp.(*compatibility.MockCompatibility).On("AddDeprecated", []string{DeprecatedFlagMessageBuildBuilderName}).Return(nil)
@@ -187,15 +186,15 @@ func TestNewCommand(t *testing.T) {
 				comp.(*compatibility.MockCompatibility).On("AddDeprecated", []string{DeprecatedFlagMessageNumWorkers}).Return(nil)
 				comp.(*compatibility.MockCompatibility).On("AddDeprecated", []string{DeprecatedFlagMessagePushImages}).Return(nil)
 
-				entrypoint.(*buildentrypoint.MockEntrypoint).On(
+				build.(*entrypoint.MockEntrypoint).On(
 					"Execute",
 					context.TODO(),
 					[]string{"my-image"},
 					config,
-					&buildentrypoint.EntrypointOptions{
+					&entrypoint.Options{
 						Concurrency: 5,
 					},
-					&buildhandler.HandlerOptions{
+					&handler.Options{
 						AnsibleConnectionLocal:           true,
 						AnsibleIntermediateContainerName: "container",
 						AnsibleInventoryPath:             "inventory",
@@ -243,7 +242,6 @@ func TestNewCommand(t *testing.T) {
 
 			cmd := NewCommand(context.TODO(), test.compatibility, test.config, test.entrypoint)
 			cmd.Command.ParseFlags(test.args)
-			cmd.Command.PreRunE(cmd.Command, test.args)
 			err := cmd.Command.RunE(cmd.Command, test.args)
 			if err != nil && assert.Error(t, err) {
 				assert.Equal(t, test.err.Error(), err.Error())
