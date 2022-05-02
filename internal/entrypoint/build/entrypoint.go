@@ -1,4 +1,4 @@
-package entrypoint
+package build
 
 import (
 	"context"

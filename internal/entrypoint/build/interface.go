@@ -1,4 +1,4 @@
-package entrypoint
+package build
 
 // Compatibilitier is the interface for the compatibility checker
 type Compatibilitier interface {

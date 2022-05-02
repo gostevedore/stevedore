@@ -1,4 +1,4 @@
-package handler
+package build
 
 // Options is the options for the build command
 type Options struct {

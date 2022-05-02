@@ -1,4 +1,4 @@
-package handler
+package promote
 
 type Options struct {
 	// DryRun is a flag to indicate if the promote should be a dry run

@@ -1,4 +1,4 @@
-package entrypoint
+package build
 
 import (
 	"io/ioutil"
@@ -34,97 +34,6 @@ import (
 func TestOptions(t *testing.T) {
 
 }
-
-// func TestExecute(t *testing.T) {
-
-// 	errContext := "(Entrypoint::Execute)"
-
-// 	tests := []struct {
-// 		desc              string
-// 		entrypoint        *Entrypoint
-// 		args              []string
-// 		configuration     *configuration.Configuration
-// 		entrypointOptions *Options
-// 		handlerOptions    *handler.Options
-// 		err               error
-// 		assertions        func(*testing.T, *Entrypoint, []string, *Options, *handler.Options)
-// 	}{
-// 		{
-// 			desc:       "Testing error when configuration is not provided",
-// 			entrypoint: &Entrypoint{},
-// 			err:        errors.New(errContext, "To execute the build entrypoint, configuration is required"),
-// 		},
-// 		{
-// 			desc:          "Testing error when arguments are not provided",
-// 			entrypoint:    &Entrypoint{},
-// 			configuration: &configuration.Configuration{},
-// 			err:           errors.New(errContext, "To execute the build entrypoint, arguments are required"),
-// 		},
-// 		{
-// 			desc:          "Testing error when entrypoint options are not provided",
-// 			entrypoint:    &Entrypoint{},
-// 			configuration: &configuration.Configuration{},
-// 			args:          []string{"image"},
-// 			err:           errors.New(errContext, "To execute the build entrypoint, entrypoint options are required"),
-// 		},
-// 		{
-// 			desc:              "Testing error when handler options are not provided",
-// 			entrypoint:        &Entrypoint{},
-// 			configuration:     &configuration.Configuration{},
-// 			args:              []string{"image"},
-// 			entrypointOptions: &Options{},
-// 			err:               errors.New(errContext, "To execute the build entrypoint, handler options are required"),
-// 		},
-// 		{
-// 			desc: "Testing execute entrypoint",
-// 			entrypoint: &Entrypoint{
-// 				writer: ioutil.Discard,
-// 			},
-// 			configuration:     &configuration.Configuration{},
-// 			args:              []string{"image"},
-// 			entrypointOptions: &Options{},
-// 			handlerOptions:    &handler.Options{},
-// 			err:               &errors.Error{},
-// 			assertions:        func(*testing.T, *Entrypoint, []string, *Options, *handler.Options) {},
-// 		},
-// 		{
-// 			desc: "Testing execute entrypoint overriding handler options with config",
-// 			entrypoint: &Entrypoint{
-// 				writer: ioutil.Discard,
-// 			},
-// 			args: []string{"image"},
-// 			configuration: &configuration.Configuration{
-// 				Concurrency:               5,
-// 				PushImages:                true,
-// 				EnableSemanticVersionTags: true,
-// 				SemanticVersionTagsTemplates: []string{
-// 					"template",
-// 				},
-// 			},
-// 			entrypointOptions: &Options{},
-// 			handlerOptions:    &handler.Options{},
-// 			err:               &errors.Error{},
-// 			assertions: func(t *testing.T, e *Entrypoint, args []string, entrypointOptions *Options, handlerOptions *handler.Options) {
-// 				assert.Equal(t, 5, entrypointOptions.Concurrency, "Concurrency should be 5")
-// 				assert.True(t, handlerOptions.PushImagesAfterBuild, "Push images after build should be true")
-// 				assert.True(t, handlerOptions.EnableSemanticVersionTags, "Enable semantic version tags should be true")
-// 				assert.Equal(t, []string{"template"}, handlerOptions.SemanticVersionTagsTemplates, "Semantic version tags templates is not as expected")
-// 			},
-// 		},
-// 	}
-
-// 	for _, test := range tests {
-// 		t.Run(test.desc, func(t *testing.T) {
-// 			t.Log(test.desc)
-// 			err := test.entrypoint.Execute(context.TODO(), test.args, test.configuration, test.entrypointOptions, test.handlerOptions)
-// 			if err != nil {
-// 				assert.Equal(t, test.err.Error(), err.Error())
-// 			} else {
-// 				test.assertions(t, test.entrypoint, test.args, test.entrypointOptions, test.handlerOptions)
-// 			}
-// 		})
-// 	}
-// }
 
 func TestPrepareEntrypointOptions(t *testing.T) {
 	errContext := "(Entrypoint::prepareEntrypointOptions)"

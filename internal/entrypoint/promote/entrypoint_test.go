@@ -1,4 +1,4 @@
-package entrypoint
+package promote
 
 import (
 	"io/ioutil"
@@ -23,34 +23,6 @@ func TestNewEntrypoint(t *testing.T) {
 
 	assert.NotNil(t, entrypoint.writer)
 }
-
-// func TestExecuteDryRun(t *testing.T) {
-// 	t.Run("Testing promote execute on dry-run mode", func(t *testing.T) {
-
-// 		e := NewEntrypoint(
-// 			WithWriter(ioutil.Discard),
-// 		)
-
-// 		args := []string{"image"}
-// 		configuration := &configuration.Configuration{
-// 			SemanticVersionTagsTemplates: []string{"template"},
-// 		}
-// 		handlerOptions := &handler.Options{
-// 			DryRun:                       true,
-// 			EnableSemanticVersionTags:    true,
-// 			TargetImageName:              "target_image_name",
-// 			TargetImageRegistryNamespace: "target_image_regsitry_namespace",
-// 			TargetImageRegistryHost:      "target_image_registry_host",
-// 			TargetImageTags:              []string{"target_image_tag"},
-// 			RemoveTargetImageTags:        true,
-// 			PromoteSourceImageTag:        true,
-// 			RemoteSourceImage:            true,
-// 		}
-
-// 		err := e.Execute(context.TODO(), args, configuration, handlerOptions)
-// 		assert.Nil(t, err)
-// 	})
-// }
 
 func TestPrepareHandlerOptions(t *testing.T) {
 	errContext := "(Entrypoint::prepareHandlerOptions)"
