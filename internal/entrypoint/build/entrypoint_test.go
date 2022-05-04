@@ -325,7 +325,6 @@ func TestCreateCredentialsStore(t *testing.T) {
 	tests := []struct {
 		desc       string
 		entrypoint *Entrypoint
-		fs         afero.Fs
 		conf       *configuration.Configuration
 		res        *credentials.CredentialsStore
 		err        error
@@ -336,21 +335,25 @@ func TestCreateCredentialsStore(t *testing.T) {
 			err:        errors.New(errContext, "To create the credentials store, a file system is required"),
 		},
 		{
-			desc:       "Testing error when configuration is not defined",
-			entrypoint: NewEntrypoint(),
-			fs:         afero.NewMemMapFs(),
-			err:        errors.New(errContext, "To create the credentials store, configuration is required"),
+			desc: "Testing error when configuration is not defined",
+			entrypoint: NewEntrypoint(
+				WithFileSystem(testFs),
+			),
+			err: errors.New(errContext, "To create the credentials store, configuration is required"),
 		},
 		{
-			desc:       "Testing error when credentials path is not defined in configuration",
-			entrypoint: NewEntrypoint(),
-			fs:         afero.NewMemMapFs(),
-			conf:       &configuration.Configuration{},
-			err:        errors.New(errContext, "To create the credentials store, credentials path must be provided in configuration"),
+			desc: "Testing error when credentials path is not defined in configuration",
+			entrypoint: NewEntrypoint(
+				WithFileSystem(testFs),
+			),
+			conf: &configuration.Configuration{},
+			err:  errors.New(errContext, "To create the credentials store, credentials path must be provided in configuration"),
 		},
 		{
 			desc: "Testing create credentials store",
-			fs:   testFs,
+			entrypoint: NewEntrypoint(
+				WithFileSystem(testFs),
+			),
 			conf: &configuration.Configuration{
 				DockerCredentialsDir: baseDir,
 			},
@@ -363,7 +366,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			credentials, err := test.entrypoint.createCredentialsStore(test.fs, test.conf)
+			credentials, err := test.entrypoint.createCredentialsStore(test.conf)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
@@ -384,7 +387,6 @@ func TestCreateBuildersStore(t *testing.T) {
 	tests := []struct {
 		desc       string
 		entrypoint *Entrypoint
-		fs         afero.Fs
 		conf       *configuration.Configuration
 		res        *buildersstore.BuildersStore
 		err        error
@@ -395,20 +397,25 @@ func TestCreateBuildersStore(t *testing.T) {
 			err:        errors.New(errContext, "To create a builders store, a file system is required"),
 		},
 		{
-			desc:       "Testing error when configuration is not defined",
-			entrypoint: NewEntrypoint(),
-			fs:         afero.NewMemMapFs(),
-			err:        errors.New(errContext, "To create a builders store, configuration is required"),
+			desc: "Testing error when configuration is not defined",
+			entrypoint: NewEntrypoint(
+				WithFileSystem(testFs),
+			),
+			err: errors.New(errContext, "To create a builders store, configuration is required"),
 		},
 		{
 			desc: "Testing error when builders path is not defined in configuration",
-			fs:   afero.NewMemMapFs(),
+			entrypoint: NewEntrypoint(
+				WithFileSystem(testFs),
+			),
 			conf: &configuration.Configuration{},
 			err:  errors.New(errContext, "To create a builders store, builders path must be provided in configuration"),
 		},
 		{
 			desc: "Testing create builders store",
-			fs:   testFs,
+			entrypoint: NewEntrypoint(
+				WithFileSystem(testFs),
+			),
 			conf: &configuration.Configuration{
 				BuildersPath: baseDir,
 			},
@@ -421,7 +428,7 @@ func TestCreateBuildersStore(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			store, err := test.entrypoint.createBuildersStore(test.fs, test.conf)
+			store, err := test.entrypoint.createBuildersStore(test.conf)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
@@ -567,7 +574,6 @@ func TestCreateImagesStore(t *testing.T) {
 	tests := []struct {
 		desc          string
 		entrypoint    *Entrypoint
-		fs            afero.Fs
 		conf          *configuration.Configuration
 		render        imagesstore.ImageRenderer
 		graph         imagesconfiguration.ImagesGraphTemplatesStorer
@@ -581,39 +587,44 @@ func TestCreateImagesStore(t *testing.T) {
 			err:        errors.New(errContext, "To create an images store, a filesystem is required"),
 		},
 		{
-			desc:       "Testing error when configuration is not defined",
-			entrypoint: NewEntrypoint(),
-			fs:         afero.NewMemMapFs(),
-			err:        errors.New(errContext, "To create an images store, configuration is required"),
+			desc: "Testing error when configuration is not defined",
+			entrypoint: NewEntrypoint(
+				WithFileSystem(testFs),
+			),
+			err: errors.New(errContext, "To create an images store, configuration is required"),
 		},
 		{
-			desc:       "Testing error when render is not defined",
-			entrypoint: NewEntrypoint(),
-			fs:         afero.NewMemMapFs(),
-			conf:       &configuration.Configuration{},
-			err:        errors.New(errContext, "To create an images store, image render is required"),
+			desc: "Testing error when render is not defined",
+			entrypoint: NewEntrypoint(
+				WithFileSystem(testFs),
+			),
+			conf: &configuration.Configuration{},
+			err:  errors.New(errContext, "To create an images store, image render is required"),
 		},
 		{
-			desc:       "Testing error when graph is not defined",
-			entrypoint: NewEntrypoint(),
-			fs:         afero.NewMemMapFs(),
-			conf:       &configuration.Configuration{},
-			render:     &render.ImageRender{},
-			err:        errors.New(errContext, "To create an images store, images graph templates storer is required"),
+			desc: "Testing error when graph is not defined",
+			entrypoint: NewEntrypoint(
+				WithFileSystem(testFs),
+			),
+			conf:   &configuration.Configuration{},
+			render: &render.ImageRender{},
+			err:    errors.New(errContext, "To create an images store, images graph templates storer is required"),
 		},
 		{
-			desc:       "Testing error when compatibility is not defined",
-			entrypoint: NewEntrypoint(),
-			fs:         afero.NewMemMapFs(),
-			conf:       &configuration.Configuration{},
-			render:     &render.ImageRender{},
-			graph:      &imagesgraphtemplate.ImagesGraphTemplate{},
-			err:        errors.New(errContext, "To create an images store, compatibility is required"),
+			desc: "Testing error when compatibility is not defined",
+			entrypoint: NewEntrypoint(
+				WithFileSystem(testFs),
+			),
+			conf:   &configuration.Configuration{},
+			render: &render.ImageRender{},
+			graph:  &imagesgraphtemplate.ImagesGraphTemplate{},
+			err:    errors.New(errContext, "To create an images store, compatibility is required"),
 		},
 		{
-			desc:          "Testing error when images path is not defined in configuration",
-			entrypoint:    NewEntrypoint(),
-			fs:            afero.NewMemMapFs(),
+			desc: "Testing error when images path is not defined in configuration",
+			entrypoint: NewEntrypoint(
+				WithFileSystem(testFs),
+			),
 			conf:          &configuration.Configuration{},
 			render:        &render.ImageRender{},
 			graph:         &imagesgraphtemplate.ImagesGraphTemplate{},
@@ -621,9 +632,10 @@ func TestCreateImagesStore(t *testing.T) {
 			err:           errors.New(errContext, "To create an images store, images path must be provided in configuration"),
 		},
 		{
-			desc:       "Testing create images store",
-			entrypoint: NewEntrypoint(),
-			fs:         testFs,
+			desc: "Testing create images store",
+			entrypoint: NewEntrypoint(
+				WithFileSystem(testFs),
+			),
 			conf: &configuration.Configuration{
 				ImagesPath: baseDir,
 			},
@@ -641,7 +653,7 @@ func TestCreateImagesStore(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			store, err := test.entrypoint.createImagesStore(test.fs, test.conf, test.render, test.graph, test.compatibility)
+			store, err := test.entrypoint.createImagesStore(test.conf, test.render, test.graph, test.compatibility)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {

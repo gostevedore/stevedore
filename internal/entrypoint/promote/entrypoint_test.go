@@ -131,34 +131,38 @@ func TestCreateCredentialsStore(t *testing.T) {
 	tests := []struct {
 		desc       string
 		entrypoint *Entrypoint
-		fs         afero.Fs
 		conf       *configuration.Configuration
 		err        error
 	}{
 		{
 			desc:       "Testing error when fs is not provided",
 			entrypoint: &Entrypoint{},
-			fs:         nil,
 			err:        errors.New(errContext, "To create the credentials store, a file system is required"),
 		},
 		{
-			desc:       "Testing error when conf is not provided",
-			entrypoint: &Entrypoint{},
-			fs:         afero.NewOsFs(),
-			conf:       nil,
-			err:        errors.New(errContext, "To execute the promote entrypoint, configuration is required"),
+			desc: "Testing error when conf is not provided",
+			entrypoint: NewEntrypoint(
+				WithWriter(ioutil.Discard),
+				WithFileSystem(testFs),
+			),
+			conf: nil,
+			err:  errors.New(errContext, "To execute the promote entrypoint, configuration is required"),
 		},
 		{
-			desc:       "Testing error when credentials dir is not provided",
-			entrypoint: &Entrypoint{},
-			fs:         afero.NewOsFs(),
-			conf:       &configuration.Configuration{},
-			err:        errors.New(errContext, "Docker credentials path must be provided in the configuration"),
+			desc: "Testing error when credentials dir is not provided",
+			entrypoint: NewEntrypoint(
+				WithWriter(ioutil.Discard),
+				WithFileSystem(testFs),
+			),
+			conf: &configuration.Configuration{},
+			err:  errors.New(errContext, "Docker credentials path must be provided in the configuration"),
 		},
 		{
-			desc:       "Testing create credentials store",
-			entrypoint: NewEntrypoint(),
-			fs:         testFs,
+			desc: "Testing create credentials store",
+			entrypoint: NewEntrypoint(
+				WithWriter(ioutil.Discard),
+				WithFileSystem(testFs),
+			),
 			conf: &configuration.Configuration{
 				DockerCredentialsDir: baseDir,
 			},
@@ -170,7 +174,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			store, err := test.entrypoint.createCredentialsStore(test.fs, test.conf)
+			store, err := test.entrypoint.createCredentialsStore(test.conf)
 			if err != nil {
 				assert.Equal(t, err.Error(), test.err.Error())
 			} else {

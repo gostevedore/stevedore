@@ -2,10 +2,9 @@ package promote
 
 import (
 	"context"
-	"fmt"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/command"
+	"github.com/gostevedore/stevedore/internal/cli/command"
 	"github.com/gostevedore/stevedore/internal/configuration"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
 	"github.com/spf13/cobra"
@@ -31,8 +30,6 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 
 			errContext := "(promote::RunE)"
 			handlerOptions := &handler.Options{}
-
-			fmt.Println(">>>>", promoteFlagOptions.DEPRECATEDRemoveTargetImageTags)
 
 			// Transitorial flags
 			if promoteFlagOptions.DEPRECATEDRemoveTargetImageTags && !handlerOptions.RemoveTargetImageTags {

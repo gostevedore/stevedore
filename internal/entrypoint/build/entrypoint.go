@@ -45,6 +45,7 @@ type OptionsFunc func(opts *Entrypoint)
 
 // Entrypoint defines the entrypoint for the build application
 type Entrypoint struct {
+	fs     afero.Fs
 	writer io.Writer
 }
 
@@ -60,6 +61,13 @@ func NewEntrypoint(opts ...OptionsFunc) *Entrypoint {
 func WithWriter(w io.Writer) OptionsFunc {
 	return func(e *Entrypoint) {
 		e.writer = w
+	}
+}
+
+// WithFileSystem sets the writer for the entrypoint
+func WithFileSystem(fs afero.Fs) OptionsFunc {
+	return func(e *Entrypoint) {
+		e.fs = fs
 	}
 }
 
@@ -115,12 +123,12 @@ func (e *Entrypoint) Execute(
 		return errors.New(errContext, err.Error())
 	}
 
-	credentialsStore, err = e.createCredentialsStore(afero.NewOsFs(), conf)
+	credentialsStore, err = e.createCredentialsStore(conf)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
 
-	buildersStore, err = e.createBuildersStore(afero.NewOsFs(), conf)
+	buildersStore, err = e.createBuildersStore(conf)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
@@ -180,7 +188,7 @@ func (e *Entrypoint) Execute(
 		return errors.New(errContext, err.Error())
 	}
 
-	imagesStore, err = e.createImagesStore(afero.NewOsFs(), conf, imageRender, imagesGraphTemplatesStore, compatibility)
+	imagesStore, err = e.createImagesStore(conf, imageRender, imagesGraphTemplatesStore, compatibility)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
@@ -283,10 +291,10 @@ func (e *Entrypoint) prepareHandlerOptions(conf *configuration.Configuration, in
 	return options, nil
 }
 
-func (e *Entrypoint) createCredentialsStore(fs afero.Fs, conf *configuration.Configuration) (*credentials.CredentialsStore, error) {
+func (e *Entrypoint) createCredentialsStore(conf *configuration.Configuration) (*credentials.CredentialsStore, error) {
 	errContext := "(Entrypoint::createCredentialsStore)"
 
-	if fs == nil {
+	if e.fs == nil {
 		return nil, errors.New(errContext, "To create the credentials store, a file system is required")
 	}
 
@@ -298,7 +306,7 @@ func (e *Entrypoint) createCredentialsStore(fs afero.Fs, conf *configuration.Con
 		return nil, errors.New(errContext, "To create the credentials store, credentials path must be provided in configuration")
 	}
 
-	credentialsStore := credentials.NewCredentialsStore(fs)
+	credentialsStore := credentials.NewCredentialsStore(e.fs)
 	err := credentialsStore.LoadCredentials(conf.DockerCredentialsDir)
 	if err != nil {
 		return nil, errors.New(errContext, err.Error())
@@ -307,11 +315,11 @@ func (e *Entrypoint) createCredentialsStore(fs afero.Fs, conf *configuration.Con
 	return credentialsStore, nil
 }
 
-func (e *Entrypoint) createBuildersStore(fs afero.Fs, conf *configuration.Configuration) (*buildersstore.BuildersStore, error) {
+func (e *Entrypoint) createBuildersStore(conf *configuration.Configuration) (*buildersstore.BuildersStore, error) {
 
 	errContext := "(Entrypoint::createBuildersStore)"
 
-	if fs == nil {
+	if e.fs == nil {
 		return nil, errors.New(errContext, "To create a builders store, a file system is required")
 	}
 
@@ -324,7 +332,7 @@ func (e *Entrypoint) createBuildersStore(fs afero.Fs, conf *configuration.Config
 	}
 
 	buildersStore := buildersstore.NewBuildersStore()
-	buildersConfiguration := buildersconfiguration.NewBuilders(fs, buildersStore)
+	buildersConfiguration := buildersconfiguration.NewBuilders(e.fs, buildersStore)
 	err := buildersConfiguration.LoadBuilders(conf.BuildersPath)
 	if err != nil {
 		return nil, errors.New(errContext, err.Error())
@@ -355,11 +363,11 @@ func (e *Entrypoint) createImageRender(now render.Nower) (*render.ImageRender, e
 	return render.NewImageRender(now), nil
 }
 
-func (e *Entrypoint) createImagesStore(fs afero.Fs, conf *configuration.Configuration, render imagesstore.ImageRenderer, graph imagesconfiguration.ImagesGraphTemplatesStorer, compatibility Compatibilitier) (*imagesstore.ImageStore, error) {
+func (e *Entrypoint) createImagesStore(conf *configuration.Configuration, render imagesstore.ImageRenderer, graph imagesconfiguration.ImagesGraphTemplatesStorer, compatibility Compatibilitier) (*imagesstore.ImageStore, error) {
 
 	errContext := "(Entrypoint::createImagesStore)"
 
-	if fs == nil {
+	if e.fs == nil {
 		return nil, errors.New(errContext, "To create an images store, a filesystem is required")
 	}
 
@@ -384,7 +392,7 @@ func (e *Entrypoint) createImagesStore(fs afero.Fs, conf *configuration.Configur
 	}
 
 	store := imagesstore.NewImageStore(render)
-	imagesConfiguration := imagesconfiguration.NewImagesConfiguration(fs, graph, store, compatibility)
+	imagesConfiguration := imagesconfiguration.NewImagesConfiguration(e.fs, graph, store, compatibility)
 	err := imagesConfiguration.LoadImagesToStore(conf.ImagesPath)
 	if err != nil {
 		return nil, errors.New(errContext, err.Error())

@@ -1,7 +1,6 @@
 package command
 
 import (
-	"github.com/gostevedore/stevedore/internal/configuration"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +16,7 @@ type CommandOptionsFunc func(c *StevedoreCommand)
 type StevedoreCommand struct {
 	Command *cobra.Command
 	// TODO: remove configuration from stevedore command, must be injected to services
-	Configuration *configuration.Configuration
+	// Configuration *configuration.Configuration
 }
 
 // AddCommand method add a new subcommand to stevedore command

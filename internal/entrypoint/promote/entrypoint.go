@@ -26,6 +26,7 @@ type OptionsFunc func(opts *Entrypoint)
 
 // Entrypoint defines the entrypoint for the build application
 type Entrypoint struct {
+	fs     afero.Fs
 	writer io.Writer
 }
 
@@ -41,6 +42,13 @@ func NewEntrypoint(opts ...OptionsFunc) *Entrypoint {
 func WithWriter(w io.Writer) OptionsFunc {
 	return func(e *Entrypoint) {
 		e.writer = w
+	}
+}
+
+// WithFileSystem sets the writer for the entrypoint
+func WithFileSystem(fs afero.Fs) OptionsFunc {
+	return func(e *Entrypoint) {
+		e.fs = fs
 	}
 }
 
@@ -71,7 +79,7 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 		return errors.New(errContext, err.Error())
 	}
 
-	credentialsStore, err = e.createCredentialsStore(afero.NewOsFs(), conf)
+	credentialsStore, err = e.createCredentialsStore(conf)
 	if err != nil {
 		return errors.New(errContext, err.Error())
 	}
@@ -135,10 +143,10 @@ func (e *Entrypoint) prepareHandlerOptions(args []string, conf *configuration.Co
 	return options, nil
 }
 
-func (e *Entrypoint) createCredentialsStore(fs afero.Fs, conf *configuration.Configuration) (*credentials.CredentialsStore, error) {
+func (e *Entrypoint) createCredentialsStore(conf *configuration.Configuration) (*credentials.CredentialsStore, error) {
 	errContext := "(Entrypoint::createCredentialsStore)"
 
-	if fs == nil {
+	if e.fs == nil {
 		return nil, errors.New(errContext, "To create the credentials store, a file system is required")
 	}
 
@@ -150,7 +158,7 @@ func (e *Entrypoint) createCredentialsStore(fs afero.Fs, conf *configuration.Con
 		return nil, errors.New(errContext, "Docker credentials path must be provided in the configuration")
 	}
 
-	credentialsStore := credentials.NewCredentialsStore(fs)
+	credentialsStore := credentials.NewCredentialsStore(e.fs)
 	err := credentialsStore.LoadCredentials(conf.DockerCredentialsDir)
 	if err != nil {
 		return nil, errors.New(errContext, err.Error())
