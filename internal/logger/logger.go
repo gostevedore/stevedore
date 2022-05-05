@@ -120,32 +120,32 @@ func customTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString(t.Format("2006-01-02 15:04:05"))
 }
 
-// Info
-func Info(msg ...interface{}) {
-	sugarLogger.Info(msg)
-}
+// // Info
+// func Info(msg ...interface{}) {
+// 	sugarLogger.Info(msg)
+// }
 
-// Warn
-func Warn(msg ...interface{}) {
-	sugarLogger.Warn(msg)
-}
+// // Warn
+// func Warn(msg ...interface{}) {
+// 	sugarLogger.Warn(msg)
+// }
 
-// Error
-func Error(msg ...interface{}) {
-	sugarLogger.Error(msg)
-}
+// // Error
+// func Error(msg ...interface{}) {
+// 	sugarLogger.Error(msg)
+// }
 
-// Debug
-func Debug(msg ...interface{}) {
-	sugarLogger.Debug(msg)
-}
+// // Debug
+// func Debug(msg ...interface{}) {
+// 	sugarLogger.Debug(msg)
+// }
 
-// Fatal
-func Fatal(msg ...interface{}) {
-	sugarLogger.Fatal(msg)
-}
+// // Fatal
+// func Fatal(msg ...interface{}) {
+// 	sugarLogger.Fatal(msg)
+// }
 
-// Panic
-func Panic(msg ...interface{}) {
-	sugarLogger.Panic(msg)
-}
+// // Panic
+// func Panic(msg ...interface{}) {
+// 	sugarLogger.Panic(msg)
+// }

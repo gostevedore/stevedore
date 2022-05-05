@@ -13,17 +13,15 @@ const (
 	columnGlue      = " "
 	columnPrefix    = ""
 
-	resetColor = "\033[0m"
-	red        = "\033[31m"
-	green      = "\033[32m"
-	yellow     = "\033[33m"
-	blue       = "\033[34m"
-	purple     = "\033[35m"
-	cyan       = "\033[36m"
-	white      = "\033[37m"
+	resetColor  = "\033[0m"
+	redColor    = "\033[31m"
+	greenColor  = "\033[32m"
+	yellowColor = "\033[33m"
+	blueColor   = "\033[34m"
+	purpleColor = "\033[35m"
+	cyanColor   = "\033[36m"
+	whiteColor  = "\033[37m"
 )
-
-var ui *Console
 
 // Console
 type Console struct {
@@ -53,6 +51,15 @@ func (c *Console) Write(data []byte) (int, error) {
 	return size, nil
 }
 
+// Print
+func (c *Console) Print(msg ...interface{}) {
+	if c.write == nil {
+		c.write = os.Stdout
+	}
+
+	fmt.Fprintln(c.write, msg...)
+}
+
 // PrintTable prints a table
 func (c *Console) PrintTable(content [][]string) error {
 
@@ -77,105 +84,49 @@ func (c *Console) PrintTable(content [][]string) error {
 	return nil
 }
 
-// Init initialzes the ui console
-func Init(w io.Writer) {
-	if ui == nil {
-		ui = &Console{w}
-	}
+// message prints a message using the default color
+func (c *Console) message(msg ...interface{}) {
+	c.Print(resetColor, fmt.Sprint(msg...), resetColor)
 }
 
-// GetConsole
-func GetConsole() io.Writer {
-	if ui == nil {
-		ui = &Console{
-			write: os.Stdout,
-		}
-	}
-
-	return ui
+// blue prints a message in blue color
+func (c *Console) blue(msg ...interface{}) {
+	c.Print(blueColor, fmt.Sprint(msg...), resetColor)
 }
 
-// SetWriter defines a writer to ui console
-func SetWriter(w io.Writer) {
-	ui = &Console{w}
+// green prints a message in green color
+func (c *Console) green(msg ...interface{}) {
+	c.Print(greenColor, fmt.Sprint(msg...), resetColor)
 }
 
-// Print
-func Print(msg ...interface{}) {
-	if ui == nil {
-		Init(os.Stdout)
-	}
-
-	fmt.Fprintln(ui.write, msg...)
+// purple prints a message in purple color
+func (c *Console) purple(msg ...interface{}) {
+	c.Print(purpleColor, fmt.Sprint(msg...), resetColor)
 }
 
-// Blue prints a message in blue color
-func Blue(msg ...interface{}) {
-	Print(blue, msg, resetColor)
+// red prints a message in red color
+func (c *Console) red(msg ...interface{}) {
+	c.Print(redColor, fmt.Sprint(msg...), resetColor)
 }
 
-// Green prints a message in green color
-func Green(msg ...interface{}) {
-	Print(green, msg, resetColor)
+// Info prints a info message
+func (c *Console) Info(msg ...interface{}) {
+	c.message(msg...)
 }
 
-// Purple prints a message in purple color
-func Purple(msg ...interface{}) {
-	Print(purple, msg, resetColor)
+// Warn prints a warning message
+func (c *Console) Warn(msg ...interface{}) {
+	c.purple(msg...)
 }
 
-// Red prints a message in red color
-func Red(msg ...interface{}) {
-	Print(red, msg, resetColor)
+// Error prints an error message
+func (c *Console) Error(msg ...interface{}) {
+	c.red(msg...)
 }
 
-// ColorPrint prints a message on the specified color
-func ColorPrint(color string, msg interface{}) {
-	Print(color, msg, resetColor)
-}
-
-// Info
-func Info(msg ...interface{}) {
-	Print(msg...)
-}
-
-// Warn
-func Warn(msg ...interface{}) {
-	Purple(msg...)
-}
-
-// Error
-func Error(msg ...interface{}) {
-	Red(msg...)
-}
-
-// Debug
-func Debug(msg ...interface{}) {
-	Blue(msg...)
-}
-
-// PrintTable
-func PrintTable(content [][]string) error {
-
-	if ui == nil {
-		Init(os.Stdout)
-	}
-
-	table := []string{}
-	config := columnize.DefaultConfig()
-	config.Delim = columnSeparator
-	config.Glue = columnGlue
-	config.Prefix = columnPrefix
-
-	//	table = append(table, columnizeLine(header))
-
-	for _, row := range content {
-		table = append(table, columnizeLine(row))
-	}
-
-	fmt.Fprintf(ui.write, "%s\n", columnize.Format(table, config))
-
-	return nil
+// Debug prints a debug message
+func (c *Console) Debug(msg ...interface{}) {
+	c.blue(msg...)
 }
 
 func columnizeLine(items []string) string {

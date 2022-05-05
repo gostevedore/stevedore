@@ -3,6 +3,7 @@ package stevedore
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 
 	errors "github.com/apenella/go-common-utils/error"
@@ -11,7 +12,6 @@ import (
 	"github.com/gostevedore/stevedore/internal/cli/command/middleware"
 	"github.com/gostevedore/stevedore/internal/configuration"
 	"github.com/gostevedore/stevedore/internal/logger"
-	"github.com/gostevedore/stevedore/internal/ui/console"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
@@ -26,11 +26,11 @@ var cancelContext context.Context
 var conf *configuration.Configuration
 
 //  NewCommand return an stevedore command object
-func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore CompatibilityStorer, compatibilityReport CompatibilityReporter, log Logger, cons Consoler, config *configuration.Configuration) *command.StevedoreCommand {
+func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore CompatibilityStorer, compatibilityReport CompatibilityReporter, console Consoler, config *configuration.Configuration) *command.StevedoreCommand {
 	var err error
+	var log Logger
 
-	// do not use sigleton console
-	console.Init(os.Stdout)
+	errContext := "(stevedore::NewCommand)"
 
 	if config == nil {
 		config, err = configuration.New(fs, compatibilityStore)
@@ -48,21 +48,21 @@ func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore Compatibili
 		Long:  `Stevedore is a useful tool when you need to manage a bunch of Docker images in a standardized way, such on a microservices architecture. It lets you to define how to build your Docker images and their parent-child relationship. It builds automatically the children images when parent ones are done. And many other features which improve the Docker image's building process. Is not a Dockerfile's alternative, but how to use them to build your images`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			var err error
-
-			// logger should not be a sigleton
-			err = logger.Init(config.LogPathFile, logger.LogConsoleEncoderName)
-			if err != nil {
-				return errors.New("(stevedore::NewCommand)", "Error initializing logger", err)
-			}
+			var logWriter io.Writer
 
 			if len(stevedoreCmdFlagsVars.ConfigFile) > 0 {
 				err = config.ReloadConfigurationFromFile(fs, stevedoreCmdFlagsVars.ConfigFile, compatibilityStore)
 				if err != nil {
-					console.Print(err.Error())
-					return errors.New("(stevedore::NewCommand)", fmt.Sprintf("Error loading configuration from file '%s'", stevedoreCmdFlagsVars.ConfigFile), err)
+					console.Error(err.Error())
+					return errors.New(errContext, fmt.Sprintf("Error loading configuration from file '%s'", stevedoreCmdFlagsVars.ConfigFile), err)
 				}
-				logger.Info(fmt.Sprintf("Configuration reloaded from '%s'", stevedoreCmdFlagsVars.ConfigFile))
 			}
+
+			logWriter, err = generateLogWriter(fs, config.LogPathFile)
+			if err != nil {
+				return errors.New(errContext, err.Error())
+			}
+			log = logger.NewLogger(logWriter, logger.LogConsoleEncoderName)
 
 			return nil
 		},
@@ -72,12 +72,11 @@ func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore Compatibili
 	stevedoreCmd.PersistentFlags().StringVarP(&stevedoreCmdFlagsVars.ConfigFile, "config", "c", "", "Configuration file location path")
 
 	command := &command.StevedoreCommand{
-		//Configuration: config,
 		Command: stevedoreCmd,
 	}
 
 	// entrypoint is not created
-	command.AddCommand(middleware.Command(ctx, build.NewCommand(ctx, compatibilityStore, config, nil), compatibilityReport, log, cons))
+	command.AddCommand(middleware.Command(ctx, build.NewCommand(ctx, compatibilityStore, config, nil), compatibilityReport, log, console))
 
 	// command.AddCommand(middleware.Middleware(build.NewCommand(ctx, config)))
 	// command.AddCommand(middleware.Middleware(create.NewCommand(ctx, config)))
@@ -93,4 +92,16 @@ func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore Compatibili
 
 func stevedoreHandler(cmd *cobra.Command, args []string) {
 	cmd.HelpFunc()(cmd, args)
+}
+
+func generateLogWriter(fs afero.Fs, path string) (io.Writer, error) {
+
+	errContext := "(cli::stevedore)"
+
+	file, err := fs.Create(path)
+	if err != nil {
+		return nil, errors.New(errContext, err.Error())
+	}
+
+	return file, nil
 }
