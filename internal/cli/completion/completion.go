@@ -3,15 +3,14 @@ package completion
 import (
 	"context"
 
-	"github.com/gostevedore/stevedore/internal/command"
+	"github.com/gostevedore/stevedore/internal/cli/command"
 	"github.com/gostevedore/stevedore/internal/configuration"
-	"github.com/gostevedore/stevedore/internal/ui/console"
 
 	"github.com/spf13/cobra"
 )
 
 //  NewCommand return an stevedore command object for dev
-func NewCommand(ctx context.Context, config *configuration.Configuration, rootCmd *command.StevedoreCommand) *command.StevedoreCommand {
+func NewCommand(ctx context.Context, config *configuration.Configuration, rootCmd *command.StevedoreCommand, cons Consoler) *command.StevedoreCommand {
 
 	completionCmd := &cobra.Command{
 		Use:   "completion",
@@ -23,7 +22,9 @@ func NewCommand(ctx context.Context, config *configuration.Configuration, rootCm
 	# ~/.bashrc or ~/.profile
 	. <(stevedore completion)
 	`,
-		Run: completionHandler(ctx, rootCmd),
+		Run: func(cmd *cobra.Command, args []string) {
+			rootCmd.Command.GenBashCompletion(cons)
+		},
 	}
 
 	command := &command.StevedoreCommand{
@@ -31,10 +32,4 @@ func NewCommand(ctx context.Context, config *configuration.Configuration, rootCm
 	}
 
 	return command
-}
-
-func completionHandler(ctx context.Context, command *command.StevedoreCommand) command.CobraRunFunc {
-	return func(cmd *cobra.Command, args []string) {
-		command.Command.GenBashCompletion(console.GetConsole())
-	}
 }
