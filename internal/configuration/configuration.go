@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"math"
 	"os/user"
 	"path/filepath"
 	"runtime"
@@ -87,7 +88,7 @@ func New(fs afero.Fs, compatibility Compatibilitier) (*Configuration, error) {
 	viper.SetConfigType("yaml")
 
 	// dynamic default values
-	defaultConcurrency := runtime.NumCPU() / 4
+	defaultConcurrency := int(math.Round(float64(runtime.NumCPU()) / 4))
 
 	viper.SetDefault(BuildersPathKey, filepath.Join(DefaultConfigFolder, DefaultBuildersPath))
 	viper.SetDefault(ConcurrencyKey, defaultConcurrency)

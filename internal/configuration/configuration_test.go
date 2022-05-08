@@ -114,6 +114,7 @@ func TestNew(t *testing.T) {
 		res               *Configuration
 		compatibility     Compatibilitier
 		prepareAssertFunc func(c Compatibilitier)
+		err               error
 	}{
 		{
 			desc: "Testing all defaults",
@@ -133,23 +134,25 @@ func TestNew(t *testing.T) {
 			},
 			compatibility:     &compatibility.MockCompatibility{},
 			prepareAssertFunc: func(c Compatibilitier) {},
+			err:               &errors.Error{},
 		},
 		{
 			desc: "Testing set num_workers using environment variables",
 			preFunc: func() {
-				os.Setenv("STEVEDORE_NUM_WORKERS", "5")
-				os.Setenv("STEVEDORE_BUILD_ON_CASCADE", "true")
+				os.Setenv("STEVEDORE_CONCURRENCY", "5")
 				viper.Reset()
 			},
 			postFunc: func() {
-				os.Unsetenv("STEVEDORE_NUM_WORKERS")
-				os.Unsetenv("STEVEDORE_BUILD_ON_CASCADE")
+				os.Unsetenv("STEVEDORE_CONCURRENCY")
 			},
+			err:               &errors.Error{},
+			compatibility:     &compatibility.MockCompatibility{},
+			prepareAssertFunc: func(c Compatibilitier) {},
 			res: &Configuration{
 				ImagesPath:                   filepath.Join(DefaultConfigFolder, DefaultImagesPath),
 				BuildersPath:                 filepath.Join(DefaultConfigFolder, DefaultBuildersPath),
 				LogPathFile:                  DefaultLogPathFile,
-				Concurrency:                  4,
+				Concurrency:                  5,
 				PushImages:                   DefaultPushImages,
 				DockerCredentialsDir:         filepath.Join(user.HomeDir, ".config", "stevedore", DefaultDockerCredentialsDir),
 				EnableSemanticVersionTags:    DefaultEnableSemanticVersionTags,
@@ -159,36 +162,40 @@ func TestNew(t *testing.T) {
 	}
 
 	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
 
-		t.Log(test.desc)
-		if test.preFunc != nil {
-			test.preFunc()
-		}
+			t.Log(test.desc)
+			if test.preFunc != nil {
+				test.preFunc()
+			}
 
-		if test.prepareAssertFunc != nil {
-			test.prepareAssertFunc(test.compatibility)
-		}
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.compatibility)
+			}
 
-		c, err := New(afero.NewMemMapFs(), test.compatibility)
-		if err != nil {
-			t.Error(err.Error())
-		} else {
-			assert.Equal(t, test.res.DEPRECATEDTreePathFile, c.DEPRECATEDTreePathFile)
-			assert.Equal(t, test.res.DEPRECATEDBuilderPath, c.DEPRECATEDBuilderPath)
-			assert.Equal(t, test.res.ImagesPath, c.ImagesPath)
-			assert.Equal(t, test.res.BuildersPath, c.BuildersPath)
-			assert.Equal(t, test.res.LogPathFile, c.LogPathFile)
-			assert.Equal(t, test.res.DEPRECATEDNumWorkers, c.DEPRECATEDNumWorkers)
-			assert.Equal(t, test.res.Concurrency, c.Concurrency)
-			assert.Equal(t, test.res.PushImages, c.PushImages)
-			assert.Equal(t, test.res.DEPRECATEDBuildOnCascade, c.DEPRECATEDBuildOnCascade)
-			assert.Equal(t, test.res.DockerCredentialsDir, c.DockerCredentialsDir)
-			assert.Equal(t, test.res.EnableSemanticVersionTags, c.EnableSemanticVersionTags)
-			assert.Equal(t, test.res.SemanticVersionTagsTemplates, c.SemanticVersionTagsTemplates)
-		}
-		if test.postFunc != nil {
-			test.postFunc()
-		}
+			c, err := New(afero.NewMemMapFs(), test.compatibility)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				assert.Equal(t, test.res.DEPRECATEDTreePathFile, c.DEPRECATEDTreePathFile)
+				assert.Equal(t, test.res.DEPRECATEDBuilderPath, c.DEPRECATEDBuilderPath)
+				assert.Equal(t, test.res.ImagesPath, c.ImagesPath)
+				assert.Equal(t, test.res.BuildersPath, c.BuildersPath)
+				assert.Equal(t, test.res.LogPathFile, c.LogPathFile)
+				assert.Equal(t, test.res.DEPRECATEDNumWorkers, c.DEPRECATEDNumWorkers)
+				assert.Equal(t, test.res.Concurrency, c.Concurrency)
+				assert.Equal(t, test.res.PushImages, c.PushImages)
+				assert.Equal(t, test.res.DEPRECATEDBuildOnCascade, c.DEPRECATEDBuildOnCascade)
+				assert.Equal(t, test.res.DockerCredentialsDir, c.DockerCredentialsDir)
+				assert.Equal(t, test.res.EnableSemanticVersionTags, c.EnableSemanticVersionTags)
+				assert.Equal(t, test.res.SemanticVersionTagsTemplates, c.SemanticVersionTagsTemplates)
+			}
+			if test.postFunc != nil {
+				test.postFunc()
+			}
+
+		})
+
 	}
 }
 
@@ -330,8 +337,9 @@ semantic_version_tags_templates:
 		prepareAssertFunc func(c Compatibilitier)
 	}{
 		{
-			desc: "Testing error when reload configuration from file",
-			file: "unknown",
+			desc:          "Testing error when reload configuration from file",
+			file:          "unknown",
+			compatibility: compatibility.NewMockCompatibility(),
 			err: errors.New(errContext, "Configuration file could be loaded",
 				errors.New("", "open unknown: file does not exist")),
 			res: nil,
@@ -372,34 +380,36 @@ semantic_version_tags_templates:
 
 	for _, test := range tests {
 
-		t.Log(test.desc)
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
 
-		if test.prepareAssertFunc != nil {
-			test.prepareAssertFunc(test.compatibility)
-		}
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.compatibility)
+			}
 
-		config, err := New(testFs, test.compatibility)
-		if err != nil {
-			t.Error(err.Error())
-		}
-		err = config.ReloadConfigurationFromFile(testFs, test.file, test.compatibility)
+			config, err := New(testFs, test.compatibility)
+			if err != nil {
+				t.Error(err.Error())
+			}
+			err = config.ReloadConfigurationFromFile(testFs, test.file, test.compatibility)
 
-		if err != nil {
-			assert.Equal(t, test.err.Error(), err.Error())
-		} else {
-			assert.Equal(t, test.res.BuildersPath, config.BuildersPath)
-			assert.Equal(t, test.res.Concurrency, config.Concurrency)
-			assert.Equal(t, test.res.DEPRECATEDBuilderPath, config.DEPRECATEDBuilderPath)
-			assert.Equal(t, test.res.DEPRECATEDBuildOnCascade, config.DEPRECATEDBuildOnCascade)
-			assert.Equal(t, test.res.DEPRECATEDNumWorkers, config.DEPRECATEDNumWorkers)
-			assert.Equal(t, test.res.DEPRECATEDTreePathFile, config.DEPRECATEDTreePathFile)
-			assert.Equal(t, test.res.DockerCredentialsDir, config.DockerCredentialsDir)
-			assert.Equal(t, test.res.EnableSemanticVersionTags, config.EnableSemanticVersionTags)
-			assert.Equal(t, test.res.ImagesPath, config.ImagesPath)
-			assert.Equal(t, test.res.LogPathFile, config.LogPathFile)
-			assert.Equal(t, test.res.PushImages, config.PushImages)
-			assert.Equal(t, test.res.SemanticVersionTagsTemplates, config.SemanticVersionTagsTemplates)
-		}
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				assert.Equal(t, test.res.BuildersPath, config.BuildersPath)
+				assert.Equal(t, test.res.Concurrency, config.Concurrency)
+				assert.Equal(t, test.res.DEPRECATEDBuilderPath, config.DEPRECATEDBuilderPath)
+				assert.Equal(t, test.res.DEPRECATEDBuildOnCascade, config.DEPRECATEDBuildOnCascade)
+				assert.Equal(t, test.res.DEPRECATEDNumWorkers, config.DEPRECATEDNumWorkers)
+				assert.Equal(t, test.res.DEPRECATEDTreePathFile, config.DEPRECATEDTreePathFile)
+				assert.Equal(t, test.res.DockerCredentialsDir, config.DockerCredentialsDir)
+				assert.Equal(t, test.res.EnableSemanticVersionTags, config.EnableSemanticVersionTags)
+				assert.Equal(t, test.res.ImagesPath, config.ImagesPath)
+				assert.Equal(t, test.res.LogPathFile, config.LogPathFile)
+				assert.Equal(t, test.res.PushImages, config.PushImages)
+				assert.Equal(t, test.res.SemanticVersionTagsTemplates, config.SemanticVersionTagsTemplates)
+			}
+		})
 	}
 }
 
