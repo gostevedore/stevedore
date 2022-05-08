@@ -132,7 +132,7 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 			handlerOptions.Tags = append([]string{}, buildFlagOptions.Tags...)
 			handlerOptions.Vars = append([]string{}, buildFlagOptions.Vars...)
 
-			err = build.Execute(ctx, cmd.Flags().Args(), conf, entrypointOptions, handlerOptions)
+			err = build.Execute(ctx, cmd.Flags().Args(), conf, compatibility, entrypointOptions, handlerOptions)
 			if err != nil {
 				return errors.New(errContext, err.Error())
 			}

@@ -10,7 +10,11 @@ import (
 	"github.com/gostevedore/stevedore/internal/cli/build"
 	"github.com/gostevedore/stevedore/internal/cli/command"
 	"github.com/gostevedore/stevedore/internal/cli/command/middleware"
+	"github.com/gostevedore/stevedore/internal/cli/completion"
+	"github.com/gostevedore/stevedore/internal/cli/promote"
 	"github.com/gostevedore/stevedore/internal/configuration"
+	buildentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/build"
+	promoteentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/promote"
 	"github.com/gostevedore/stevedore/internal/logger"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -22,10 +26,10 @@ type stevedoreCmdFlags struct {
 }
 
 var stevedoreCmdFlagsVars *stevedoreCmdFlags
-var cancelContext context.Context
-var conf *configuration.Configuration
 
-//  NewCommand return an stevedore command object
+// var conf *configuration.Configuration
+
+//  NewCommand return an stevedore
 func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore CompatibilityStorer, compatibilityReport CompatibilityReporter, console Consoler, config *configuration.Configuration) *command.StevedoreCommand {
 	var err error
 	var log Logger
@@ -76,11 +80,21 @@ func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore Compatibili
 	}
 
 	// entrypoint is not created
-	command.AddCommand(middleware.Command(ctx, build.NewCommand(ctx, compatibilityStore, config, nil), compatibilityReport, log, console))
+	buildEntrypoint := buildentrypoint.NewEntrypoint(
+		buildentrypoint.WithWriter(console),
+		buildentrypoint.WithFileSystem(fs),
+	)
+	command.AddCommand(middleware.Command(ctx, build.NewCommand(ctx, compatibilityStore, config, buildEntrypoint), compatibilityReport, log, console))
 
-	// command.AddCommand(middleware.Middleware(build.NewCommand(ctx, config)))
+	promoteEntrypoint := promoteentrypoint.NewEntrypoint(
+		promoteentrypoint.WithWriter(console),
+		promoteentrypoint.WithFileSystem(fs),
+	)
+	command.AddCommand(middleware.Command(ctx, promote.NewCommand(ctx, compatibilityStore, config, promoteEntrypoint), compatibilityReport, log, console))
+
+	command.AddCommand(middleware.Command(ctx, completion.NewCommand(ctx, config, command, console), compatibilityReport, log, console))
+
 	// command.AddCommand(middleware.Middleware(create.NewCommand(ctx, config)))
-	// command.AddCommand(middleware.Middleware(completion.NewCommand(ctx, config, command)))
 	// command.AddCommand(middleware.Middleware(get.NewCommand(ctx, config)))
 	// command.AddCommand(middleware.Middleware(initialize.NewCommand(ctx, config)))
 	// command.AddCommand(middleware.Middleware(moo.NewCommand(ctx, config)))

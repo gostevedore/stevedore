@@ -24,3 +24,23 @@ func (c *MockConsole) PrintTable(table [][]string) error {
 	args := c.Mock.Called(table)
 	return args.Error(0)
 }
+
+// Info prints a info message
+func (c *MockConsole) Info(msg ...interface{}) {
+	c.Mock.Called(msg)
+}
+
+// Warn prints a warning message
+func (c *MockConsole) Warn(msg ...interface{}) {
+	c.Mock.Called(msg)
+}
+
+// Error prints an error message
+func (c *MockConsole) Error(msg ...interface{}) {
+	c.Mock.Called(msg)
+}
+
+// Debug prints a debug message
+func (c *MockConsole) Debug(msg ...interface{}) {
+	c.Mock.Called(msg)
+}

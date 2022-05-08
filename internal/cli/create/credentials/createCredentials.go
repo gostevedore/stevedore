@@ -1,57 +1,57 @@
 package credentials
 
-import (
-	"context"
-	"fmt"
+// import (
+// 	"context"
+// 	"fmt"
 
-	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/command"
-	"github.com/gostevedore/stevedore/internal/configuration"
-	"github.com/gostevedore/stevedore/internal/credentials"
-	"github.com/spf13/cobra"
-)
+// 	errors "github.com/apenella/go-common-utils/error"
+// 	"github.com/gostevedore/stevedore/internal/command"
+// 	"github.com/gostevedore/stevedore/internal/configuration"
+// 	"github.com/gostevedore/stevedore/internal/credentials"
+// 	"github.com/spf13/cobra"
+// )
 
-type createCredentialsCmdFlags struct {
-	DockerRegistryCredentialsDir string
-	RegistryHost                 string
-	Username                     string
-	Password                     string
-}
+// type createCredentialsCmdFlags struct {
+// 	DockerRegistryCredentialsDir string
+// 	RegistryHost                 string
+// 	Username                     string
+// 	Password                     string
+// }
 
-var createCredentialsCmdFlagsVar *createCredentialsCmdFlags
+// var createCredentialsCmdFlagsVar *createCredentialsCmdFlags
 
-//  NewCommand return an stevedore command object for get
-func NewCommand(ctx context.Context, config *configuration.Configuration) *command.StevedoreCommand {
+// //  NewCommand return an stevedore command object for get
+// func NewCommand(ctx context.Context, config *configuration.Configuration) *command.StevedoreCommand {
 
-	createCredentialsCmdFlagsVar = &createCredentialsCmdFlags{}
+// 	createCredentialsCmdFlagsVar = &createCredentialsCmdFlags{}
 
-	createCredentialsCmd := &cobra.Command{
-		Use:     "credentials",
-		Aliases: []string{"auth"},
-		Short:   "Create stevedore docker registry credentials",
-		Long:    "",
-		RunE:    createCredentialsHandler(ctx, config),
-	}
+// 	createCredentialsCmd := &cobra.Command{
+// 		Use:     "credentials",
+// 		Aliases: []string{"auth"},
+// 		Short:   "Create stevedore docker registry credentials",
+// 		Long:    "",
+// 		RunE:    createCredentialsHandler(ctx, config),
+// 	}
 
-	createCredentialsCmd.Flags().StringVarP(&createCredentialsCmdFlagsVar.RegistryHost, "registry-host", "r", "", "Docker registry host to register credentials")
-	createCredentialsCmd.Flags().StringVarP(&createCredentialsCmdFlagsVar.Username, "username", "u", "", "Docker registry username")
-	createCredentialsCmd.Flags().StringVarP(&createCredentialsCmdFlagsVar.Password, "password", "p", "", "Docker registry password")
-	createCredentialsCmd.Flags().StringVarP(&createCredentialsCmdFlagsVar.DockerRegistryCredentialsDir, "credentials-dir", "d", config.DockerCredentialsDir, "Location path to store docker registry credentials")
+// 	createCredentialsCmd.Flags().StringVarP(&createCredentialsCmdFlagsVar.RegistryHost, "registry-host", "r", "", "Docker registry host to register credentials")
+// 	createCredentialsCmd.Flags().StringVarP(&createCredentialsCmdFlagsVar.Username, "username", "u", "", "Docker registry username")
+// 	createCredentialsCmd.Flags().StringVarP(&createCredentialsCmdFlagsVar.Password, "password", "p", "", "Docker registry password")
+// 	createCredentialsCmd.Flags().StringVarP(&createCredentialsCmdFlagsVar.DockerRegistryCredentialsDir, "credentials-dir", "d", config.DockerCredentialsDir, "Location path to store docker registry credentials")
 
-	command := &command.StevedoreCommand{
-		Command: createCredentialsCmd,
-	}
+// 	command := &command.StevedoreCommand{
+// 		Command: createCredentialsCmd,
+// 	}
 
-	return command
-}
+// 	return command
+// }
 
-func createCredentialsHandler(ctx context.Context, config *configuration.Configuration) command.CobraRunEFunc {
-	return func(cmd *cobra.Command, args []string) error {
+// func createCredentialsHandler(ctx context.Context, config *configuration.Configuration) command.CobraRunEFunc {
+// 	return func(cmd *cobra.Command, args []string) error {
 
-		err := credentials.CreateCredential(createCredentialsCmdFlagsVar.DockerRegistryCredentialsDir, createCredentialsCmdFlagsVar.Username, createCredentialsCmdFlagsVar.Password, createCredentialsCmdFlagsVar.RegistryHost)
-		if err != nil {
-			return errors.New("(command::createCredentialsHandler)", fmt.Sprintf("Error creating credentials for '%s' on '%s'", createCredentialsCmdFlagsVar.RegistryHost, createCredentialsCmdFlagsVar.DockerRegistryCredentialsDir), err)
-		}
-		return nil
-	}
-}
+// 		err := credentials.CreateCredential(createCredentialsCmdFlagsVar.DockerRegistryCredentialsDir, createCredentialsCmdFlagsVar.Username, createCredentialsCmdFlagsVar.Password, createCredentialsCmdFlagsVar.RegistryHost)
+// 		if err != nil {
+// 			return errors.New("(command::createCredentialsHandler)", fmt.Sprintf("Error creating credentials for '%s' on '%s'", createCredentialsCmdFlagsVar.RegistryHost, createCredentialsCmdFlagsVar.DockerRegistryCredentialsDir), err)
+// 		}
+// 		return nil
+// 	}
+// }

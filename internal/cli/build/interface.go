@@ -10,7 +10,7 @@ import (
 
 // Entrypointer is the interface that wraps the main build function
 type Entrypointer interface {
-	Execute(ctx context.Context, args []string, conf *configuration.Configuration, entrypointOptions *entrypoint.Options, handlerOptions *handler.Options) error
+	Execute(ctx context.Context, args []string, conf *configuration.Configuration, compatibility entrypoint.Compatibilitier, inputEntrypointOptions *entrypoint.Options, inputHandlerOptions *handler.Options) error
 }
 
 // Compatibilitier is the interface for the compatibility checker
