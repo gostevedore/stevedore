@@ -132,9 +132,15 @@ func TestNew(t *testing.T) {
 				EnableSemanticVersionTags:    DefaultEnableSemanticVersionTags,
 				SemanticVersionTagsTemplates: []string{DefaultSemanticVersionTagsTemplates},
 			},
-			compatibility:     &compatibility.MockCompatibility{},
-			prepareAssertFunc: func(c Compatibilitier) {},
-			err:               &errors.Error{},
+			compatibility: &compatibility.MockCompatibility{},
+			prepareAssertFunc: func(c Compatibilitier) {
+
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'tree_path' is deprecated and will be removed on v0.12.0, please use 'images_path' instead"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' is deprecated and will be removed on v0.12.0, please use 'builders_path' instead"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' is deprecated and will be removed on v0.12.0, please use 'concurrency' instead"})
+
+			},
+			err: &errors.Error{},
 		},
 		{
 			desc: "Testing set num_workers using environment variables",
@@ -145,9 +151,13 @@ func TestNew(t *testing.T) {
 			postFunc: func() {
 				os.Unsetenv("STEVEDORE_CONCURRENCY")
 			},
-			err:               &errors.Error{},
-			compatibility:     &compatibility.MockCompatibility{},
-			prepareAssertFunc: func(c Compatibilitier) {},
+			err:           &errors.Error{},
+			compatibility: &compatibility.MockCompatibility{},
+			prepareAssertFunc: func(c Compatibilitier) {
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'tree_path' is deprecated and will be removed on v0.12.0, please use 'images_path' instead"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' is deprecated and will be removed on v0.12.0, please use 'builders_path' instead"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' is deprecated and will be removed on v0.12.0, please use 'concurrency' instead"})
+			},
 			res: &Configuration{
 				ImagesPath:                   filepath.Join(DefaultConfigFolder, DefaultImagesPath),
 				BuildersPath:                 filepath.Join(DefaultConfigFolder, DefaultBuildersPath),
@@ -177,18 +187,18 @@ func TestNew(t *testing.T) {
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				assert.Equal(t, test.res.DEPRECATEDTreePathFile, c.DEPRECATEDTreePathFile)
-				assert.Equal(t, test.res.DEPRECATEDBuilderPath, c.DEPRECATEDBuilderPath)
-				assert.Equal(t, test.res.ImagesPath, c.ImagesPath)
-				assert.Equal(t, test.res.BuildersPath, c.BuildersPath)
-				assert.Equal(t, test.res.LogPathFile, c.LogPathFile)
-				assert.Equal(t, test.res.DEPRECATEDNumWorkers, c.DEPRECATEDNumWorkers)
-				assert.Equal(t, test.res.Concurrency, c.Concurrency)
-				assert.Equal(t, test.res.PushImages, c.PushImages)
-				assert.Equal(t, test.res.DEPRECATEDBuildOnCascade, c.DEPRECATEDBuildOnCascade)
-				assert.Equal(t, test.res.DockerCredentialsDir, c.DockerCredentialsDir)
-				assert.Equal(t, test.res.EnableSemanticVersionTags, c.EnableSemanticVersionTags)
-				assert.Equal(t, test.res.SemanticVersionTagsTemplates, c.SemanticVersionTagsTemplates)
+				assert.Equal(t, test.res.DEPRECATEDTreePathFile, c.DEPRECATEDTreePathFile, "DEPRECATEDTreePathFile")
+				assert.Equal(t, test.res.DEPRECATEDBuilderPath, c.DEPRECATEDBuilderPath, "DEPRECATEDBuilderPath")
+				assert.Equal(t, test.res.ImagesPath, c.ImagesPath, "ImagesPath")
+				assert.Equal(t, test.res.BuildersPath, c.BuildersPath, "BuildersPath")
+				assert.Equal(t, test.res.LogPathFile, c.LogPathFile, "LogPathFile")
+				assert.Equal(t, test.res.DEPRECATEDNumWorkers, c.DEPRECATEDNumWorkers, "DEPRECATEDNumWorkers")
+				assert.Equal(t, test.res.Concurrency, c.Concurrency, "Concurrency")
+				assert.Equal(t, test.res.PushImages, c.PushImages, "PushImages")
+				assert.Equal(t, test.res.DEPRECATEDBuildOnCascade, c.DEPRECATEDBuildOnCascade, "DEPRECATEDBuildOnCascade")
+				assert.Equal(t, test.res.DockerCredentialsDir, c.DockerCredentialsDir, "DockerCredentialsDir")
+				assert.Equal(t, test.res.EnableSemanticVersionTags, c.EnableSemanticVersionTags, "EnableSemanticVersionTags")
+				assert.Equal(t, test.res.SemanticVersionTagsTemplates, c.SemanticVersionTagsTemplates, "SemanticVersionTagsTemplates")
 			}
 			if test.postFunc != nil {
 				test.postFunc()
@@ -245,14 +255,10 @@ semantic_version_tags_templates:
 			err:  &errors.Error{},
 			res: &Configuration{
 				ImagesPath:                "mystevedore.yaml",
-				DEPRECATEDTreePathFile:    "stevedore.yaml",
 				BuildersPath:              "mystevedore.yaml",
-				DEPRECATEDBuilderPath:     "stevedore.yaml",
 				LogPathFile:               "mystevedore.log",
-				DEPRECATEDNumWorkers:      4,
 				Concurrency:               10,
 				PushImages:                false,
-				DEPRECATEDBuildOnCascade:  false,
 				DockerCredentialsDir:      "mycredentials",
 				EnableSemanticVersionTags: true,
 				SemanticVersionTagsTemplates: []string{
@@ -263,11 +269,8 @@ semantic_version_tags_templates:
 			compatibility: compatibility.NewMockCompatibility(),
 			prepareAssertFunc: func(c Compatibilitier) {
 				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'tree_path' is deprecated and will be removed on v0.12.0, please use 'images_path' instead"})
-				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'tree_path' and 'images_path' are both defined, 'images_path' will be used"})
 				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' is deprecated and will be removed on v0.12.0, please use 'builders_path' instead"})
-				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' and 'builders_path' are both defined, 'builders_path' will be used"})
 				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' is deprecated and will be removed on v0.12.0, please use 'concurrency' instead"})
-				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' and 'concurrency' are both defined, 'concurrency' will be used"})
 				c.(*compatibility.MockCompatibility).On("AddChanged", []string{"'build_on_cascade' is not available anymore as a configuration parameter. Cascade execution plan is only enabled by '--cascade' flag on build command"})
 			},
 		},
@@ -343,21 +346,23 @@ semantic_version_tags_templates:
 			err: errors.New(errContext, "Configuration file could be loaded",
 				errors.New("", "open unknown: file does not exist")),
 			res: nil,
+			prepareAssertFunc: func(c Compatibilitier) {
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'tree_path' is deprecated and will be removed on v0.12.0, please use 'images_path' instead"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' is deprecated and will be removed on v0.12.0, please use 'builders_path' instead"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' is deprecated and will be removed on v0.12.0, please use 'concurrency' instead"})
+				c.(*compatibility.MockCompatibility).On("AddChanged", []string{"'build_on_cascade' is not available anymore as a configuration parameter. Cascade execution plan is only enabled by '--cascade' flag on build command"})
+			},
 		},
 		{
 			desc: "Testing reload configuration from file",
 			file: filepath.Join(baseDir, "stevedore.yaml"),
 			err:  &errors.Error{},
 			res: &Configuration{
-				DEPRECATEDTreePathFile:    "stevedore.yaml",
 				ImagesPath:                "mystevedore.yaml",
-				DEPRECATEDBuilderPath:     "stevedore.yaml",
 				BuildersPath:              "mystevedore.yaml",
 				LogPathFile:               "mystevedore.log",
-				DEPRECATEDNumWorkers:      4,
 				Concurrency:               10,
 				PushImages:                false,
-				DEPRECATEDBuildOnCascade:  false,
 				DockerCredentialsDir:      "mycredentials",
 				EnableSemanticVersionTags: true,
 				SemanticVersionTagsTemplates: []string{
@@ -368,11 +373,8 @@ semantic_version_tags_templates:
 			compatibility: compatibility.NewMockCompatibility(),
 			prepareAssertFunc: func(c Compatibilitier) {
 				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'tree_path' is deprecated and will be removed on v0.12.0, please use 'images_path' instead"})
-				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'tree_path' and 'images_path' are both defined, 'images_path' will be used"})
 				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' is deprecated and will be removed on v0.12.0, please use 'builders_path' instead"})
-				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' and 'builders_path' are both defined, 'builders_path' will be used"})
 				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' is deprecated and will be removed on v0.12.0, please use 'concurrency' instead"})
-				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' and 'concurrency' are both defined, 'concurrency' will be used"})
 				c.(*compatibility.MockCompatibility).On("AddChanged", []string{"'build_on_cascade' is not available anymore as a configuration parameter. Cascade execution plan is only enabled by '--cascade' flag on build command"})
 			},
 		},
@@ -396,18 +398,18 @@ semantic_version_tags_templates:
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				assert.Equal(t, test.res.BuildersPath, config.BuildersPath)
-				assert.Equal(t, test.res.Concurrency, config.Concurrency)
-				assert.Equal(t, test.res.DEPRECATEDBuilderPath, config.DEPRECATEDBuilderPath)
-				assert.Equal(t, test.res.DEPRECATEDBuildOnCascade, config.DEPRECATEDBuildOnCascade)
-				assert.Equal(t, test.res.DEPRECATEDNumWorkers, config.DEPRECATEDNumWorkers)
-				assert.Equal(t, test.res.DEPRECATEDTreePathFile, config.DEPRECATEDTreePathFile)
-				assert.Equal(t, test.res.DockerCredentialsDir, config.DockerCredentialsDir)
-				assert.Equal(t, test.res.EnableSemanticVersionTags, config.EnableSemanticVersionTags)
-				assert.Equal(t, test.res.ImagesPath, config.ImagesPath)
-				assert.Equal(t, test.res.LogPathFile, config.LogPathFile)
-				assert.Equal(t, test.res.PushImages, config.PushImages)
-				assert.Equal(t, test.res.SemanticVersionTagsTemplates, config.SemanticVersionTagsTemplates)
+				assert.Equal(t, test.res.BuildersPath, config.BuildersPath, "BuildersPath")
+				assert.Equal(t, test.res.Concurrency, config.Concurrency, "Concurrency")
+				assert.Equal(t, test.res.DEPRECATEDBuilderPath, config.DEPRECATEDBuilderPath, "DEPRECATEDBuilderPath")
+				assert.Equal(t, test.res.DEPRECATEDBuildOnCascade, config.DEPRECATEDBuildOnCascade, "DEPRECATEDBuildOnCascade")
+				assert.Equal(t, test.res.DEPRECATEDNumWorkers, config.DEPRECATEDNumWorkers, "DEPRECATEDNumWorkers")
+				assert.Equal(t, test.res.DEPRECATEDTreePathFile, config.DEPRECATEDTreePathFile, "DEPRECATEDTreePathFile")
+				assert.Equal(t, test.res.DockerCredentialsDir, config.DockerCredentialsDir, "DockerCredentialsDir")
+				assert.Equal(t, test.res.EnableSemanticVersionTags, config.EnableSemanticVersionTags, "EnableSemanticVersionTags")
+				assert.Equal(t, test.res.ImagesPath, config.ImagesPath, "ImagesPath")
+				assert.Equal(t, test.res.LogPathFile, config.LogPathFile, "LogPathFile")
+				assert.Equal(t, test.res.PushImages, config.PushImages, "PushImages")
+				assert.Equal(t, test.res.SemanticVersionTagsTemplates, config.SemanticVersionTagsTemplates, "SemanticVersionTagsTemplates")
 			}
 		})
 	}

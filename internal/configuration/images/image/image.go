@@ -12,20 +12,18 @@ const (
 
 // Image is the domain definition of a docker image
 type Image struct {
-	Builder  interface{}         `yaml:"builder"`
-	Children map[string][]string `yaml:"children"`
-	//	Childs            map[string][]string    `yaml:"childs"`
+	Builder           interface{}            `yaml:"builder"`
+	Children          map[string][]string    `yaml:"children"`
 	Labels            map[string]string      `yaml:"labels"`
 	Name              string                 `yaml:"name"`
+	Parents           map[string][]string    `yaml:"parents"`
 	PersistentLabels  map[string]string      `yaml:"persistent_labels"`
 	PersistentVars    map[string]interface{} `yaml:"persistent_vars"`
 	RegistryHost      string                 `yaml:"registry"`
 	RegistryNamespace string                 `yaml:"namespace"`
 	Tags              []string               `yaml:"tags"`
-	//	Type              string                 `yaml:"type"`
-	Vars    map[string]interface{} `yaml:"vars"`
-	Version string                 `yaml:"version"`
-	Parents map[string][]string    `yaml:"parents"`
+	Vars              map[string]interface{} `yaml:"vars"`
+	Version           string                 `yaml:"version"`
 }
 
 // Copy method return a copy of the instanced Image
@@ -79,13 +77,31 @@ func (i *Image) Copy() (*Image, error) {
 // CreateDomainImage creates a domain image from the image
 func (i *Image) CreateDomainImage() (*domainimage.Image, error) {
 
-	errContext := "(image::CreateDomainImage)"
+	//errContext := "(image::CreateDomainImage)"
 
-	image, err := domainimage.NewImage(
-		i.Name,
-		i.Version,
-		i.RegistryHost,
-		i.RegistryNamespace,
+	// image, err := domainimage.NewImage(
+	// 	i.Name,
+	// 	i.Version,
+	// 	i.RegistryHost,
+	// 	i.RegistryNamespace,
+	// 	domainimage.WithBuilder(i.Builder),
+	// 	domainimage.WithPersistentLabels(i.PersistentLabels),
+	// 	domainimage.WithPersistentVars(i.PersistentVars),
+	// 	domainimage.WithLabels(i.Labels),
+	// 	domainimage.WithTags(i.Tags...),
+	// 	domainimage.WithVars(i.Vars),
+	// )
+	// if err != nil {
+	// 	return nil, errors.New(errContext, "", err)
+	// }
+
+	image := &domainimage.Image{
+		Name:              i.Name,
+		Version:           i.Version,
+		RegistryHost:      i.RegistryHost,
+		RegistryNamespace: i.RegistryNamespace,
+	}
+	image.Options(
 		domainimage.WithBuilder(i.Builder),
 		domainimage.WithPersistentLabels(i.PersistentLabels),
 		domainimage.WithPersistentVars(i.PersistentVars),
@@ -93,9 +109,6 @@ func (i *Image) CreateDomainImage() (*domainimage.Image, error) {
 		domainimage.WithTags(i.Tags...),
 		domainimage.WithVars(i.Vars),
 	)
-	if err != nil {
-		return nil, errors.New(errContext, err.Error())
-	}
 
 	return image, nil
 }
@@ -130,7 +143,7 @@ func (i *Image) YAMLMarshal() ([]byte, error) {
 
 	marshaled, err := yaml.Marshal(i)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return marshaled, nil
@@ -142,7 +155,7 @@ func (i *Image) YAMLUnmarshal(in []byte) error {
 
 	err := yaml.Unmarshal(in, i)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	return nil

@@ -92,10 +92,10 @@ func New(fs afero.Fs, compatibility Compatibilitier) (*Configuration, error) {
 
 	viper.SetDefault(BuildersPathKey, filepath.Join(DefaultConfigFolder, DefaultBuildersPath))
 	viper.SetDefault(ConcurrencyKey, defaultConcurrency)
-	viper.SetDefault(DEPRECATEDBuilderPathKey, filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultBuilderPath))
-	viper.SetDefault(DEPRECATEDBuildOnCascadeKey, DEPRECATEDDefaultBuildOnCascade)
-	viper.SetDefault(DEPRECATEDNumWorkerKey, DEPRECATEDDefaultNumWorker)
-	viper.SetDefault(DEPRECATEDTreePathFileKey, filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultTreePathFile))
+	// viper.SetDefault(DEPRECATEDBuilderPathKey, filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultBuilderPath))
+	// viper.SetDefault(DEPRECATEDBuildOnCascadeKey, DEPRECATEDDefaultBuildOnCascade)
+	// viper.SetDefault(DEPRECATEDNumWorkerKey, DEPRECATEDDefaultNumWorker)
+	// viper.SetDefault(DEPRECATEDTreePathFileKey, filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultTreePathFile))
 	viper.SetDefault(DockerCredentialsDirKey, filepath.Join(user.HomeDir, ".config", "stevedore", DefaultDockerCredentialsDir))
 	viper.SetDefault(EnableSemanticVersionTagsKey, DefaultEnableSemanticVersionTags)
 	viper.SetDefault(ImagesPathKey, filepath.Join(DefaultConfigFolder, DefaultImagesPath))
@@ -115,6 +115,10 @@ func New(fs afero.Fs, compatibility Compatibilitier) (*Configuration, error) {
 	config := &Configuration{
 		BuildersPath:                 viper.GetString(BuildersPathKey),
 		Concurrency:                  viper.GetInt(ConcurrencyKey),
+		DEPRECATEDBuilderPath:        viper.GetString(DEPRECATEDBuilderPathKey),
+		DEPRECATEDBuildOnCascade:     viper.GetBool(DEPRECATEDBuildOnCascadeKey),
+		DEPRECATEDNumWorkers:         viper.GetInt(DEPRECATEDNumWorkerKey),
+		DEPRECATEDTreePathFile:       viper.GetString(DEPRECATEDTreePathFileKey),
 		DockerCredentialsDir:         viper.GetString(DockerCredentialsDirKey),
 		EnableSemanticVersionTags:    viper.GetBool(EnableSemanticVersionTagsKey),
 		ImagesPath:                   viper.GetString(ImagesPathKey),
@@ -179,6 +183,7 @@ func LoadFromFile(fs afero.Fs, file string, compatibility Compatibilitier) (*Con
 // ReloadConfigurationFromFile
 func (c *Configuration) ReloadConfigurationFromFile(fs afero.Fs, file string, compatibility Compatibilitier) error {
 	errContext := "(Configuration::ReloadConfigurationFromFile)"
+
 	newConfig, err := LoadFromFile(fs, file, compatibility)
 	if err != nil {
 		return errors.New(errContext, err.Error())
@@ -273,28 +278,27 @@ func (c *Configuration) CheckCompatibility() error {
 	if c.DEPRECATEDTreePathFile != "" {
 		c.compatibility.AddDeprecated(fmt.Sprintf("'%s' is deprecated and will be removed on v0.12.0, please use '%s' instead", DEPRECATEDTreePathFileKey, ImagesPathKey))
 
+		c.ImagesPath = c.DEPRECATEDTreePathFile
 		if c.ImagesPath == "" {
-			c.ImagesPath = c.DEPRECATEDTreePathFile
-		} else {
-			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and '%s' are both defined, '%s' will be used", DEPRECATEDTreePathFileKey, ImagesPathKey, ImagesPathKey))
+			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and '%s' are both defined, '%s' will be used", DEPRECATEDTreePathFileKey, ImagesPathKey, DEPRECATEDTreePathFileKey))
 		}
 	}
 	if c.DEPRECATEDBuilderPath != "" {
 		c.compatibility.AddDeprecated(fmt.Sprintf("'%s' is deprecated and will be removed on v0.12.0, please use '%s' instead", DEPRECATEDBuilderPathKey, BuildersPathKey))
 
+		c.BuildersPath = c.DEPRECATEDBuilderPath
+
 		if c.BuildersPath == "" {
-			c.BuildersPath = c.DEPRECATEDBuilderPath
-		} else {
-			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and '%s' are both defined, '%s' will be used", DEPRECATEDBuilderPathKey, BuildersPathKey, BuildersPathKey))
+			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and '%s' are both defined, '%s' will be used", DEPRECATEDBuilderPathKey, BuildersPathKey, DEPRECATEDBuilderPathKey))
 		}
 	}
 	if c.DEPRECATEDNumWorkers > 0 {
 		c.compatibility.AddDeprecated(fmt.Sprintf("'%s' is deprecated and will be removed on v0.12.0, please use '%s' instead", DEPRECATEDNumWorkerKey, ConcurrencyKey))
 
+		c.Concurrency = c.DEPRECATEDNumWorkers
+
 		if c.Concurrency <= 0 {
-			c.Concurrency = c.DEPRECATEDNumWorkers
-		} else {
-			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and '%s' are both defined, '%s' will be used", DEPRECATEDNumWorkerKey, ConcurrencyKey, ConcurrencyKey))
+			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and '%s' are both defined, '%s' will be used", DEPRECATEDNumWorkerKey, ConcurrencyKey, DEPRECATEDNumWorkerKey))
 		}
 	}
 	if c.DEPRECATEDBuildOnCascade == true {

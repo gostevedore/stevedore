@@ -76,8 +76,6 @@ images:
     parent1_version:
       registry: registry.test
       namespace: namespace
-      name: parent1
-      version: parent1_version
       builder: builder
       persistent_labels:
         plabel: plabelvalue
@@ -85,8 +83,6 @@ images:
     parent2_version:
       registry: registry.test
       namespace: namespace
-      name: parent2
-      version: parent2_version
       builder: builder
       children:
         other_child:
@@ -259,7 +255,7 @@ func TestLoadImagesConfigurationFromFile(t *testing.T) {
 	testFs := afero.NewMemMapFs()
 	testFs.MkdirAll(baseDir, 0755)
 
-	err = afero.WriteFile(testFs, filepath.Join(baseDir, "file1.yaml"), []byte(`
+	err = afero.WriteFile(testFs, filepath.Join(baseDir, "single_image.yaml"), []byte(`
 images:
   image:
     version:
@@ -328,13 +324,6 @@ image:
 
 	err = afero.WriteFile(testFs, filepath.Join(baseDir, "multiple_images.yaml"), []byte(`
 images:
-  parent1:
-    parent1_version:
-      registry: registry.test
-      namespace: namespace
-      name: parent1
-      version: parent1_version
-      builder: builder
   parent2:
     parent2_version:
       registry: registry.test
@@ -364,6 +353,47 @@ images:
       name: other_child
       version: other_child_version
       builder: builder
+  parent1:
+    parent1_version:
+      registry: registry.test
+      namespace: namespace
+      name: parent1
+      version: parent1_version
+      builder: builder
+`), 0644)
+	if err != nil {
+		t.Log(err)
+	}
+
+	err = afero.WriteFile(testFs, filepath.Join(baseDir, "multiple_parents.yaml"), []byte(`
+images:
+parent1:
+  parent1_version:
+    registry: registry.test
+    namespace: namespace
+    name: parent1
+    version: parent1_version
+    builder: builder
+    children:
+      child:
+        - child_version
+  parent2:
+    parent2_version:
+      registry: registry.test
+      namespace: namespace
+      name: parent2
+      version: parent2_version
+      builder: builder
+      children:
+        child:
+        - child_version
+  child:
+    child_version:
+      registry: registry.test
+      namespace: namespace
+      name: child
+      version: {{ .Parent.Version }}
+      builder: builder
 `), 0644)
 	if err != nil {
 		t.Log(err)
@@ -389,7 +419,7 @@ images:
 		},
 		{
 			desc: "Testing load images tree from file",
-			path: filepath.Join(baseDir, "file1.yaml"),
+			path: filepath.Join(baseDir, "single_image.yaml"),
 			tree: NewImagesConfiguration(
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
@@ -423,7 +453,6 @@ images:
 			},
 			err: &errors.Error{},
 		},
-
 		{
 			desc: "Testing load images tree from file with multiple images an relationships",
 			path: filepath.Join(baseDir, "multiple_images.yaml"),
@@ -472,6 +501,56 @@ images:
 			},
 			err: &errors.Error{},
 		},
+
+		{
+			desc: "Testing load images with one child and multiple parents",
+			path: filepath.Join(baseDir, "multiple_parents.yaml"),
+			tree: NewImagesConfiguration(
+				testFs,
+				graph.NewMockImagesGraphTemplate(),
+				store.NewMockImageStore(),
+				compatibility.NewMockCompatibility(),
+			),
+			prepareAssertFunc: func(tree *ImagesConfiguration) {
+				// tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "parent1", "parent1_version", &image.Image{
+				// 	Name:              "parent1",
+				// 	Version:           "parent1_version",
+				// 	RegistryHost:      "registry.test",
+				// 	RegistryNamespace: "namespace",
+				// 	Builder:           "builder",
+				// }).Return(nil)
+				// tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "parent2", "parent2_version", &image.Image{
+				// 	Name:              "parent2",
+				// 	Version:           "parent2_version",
+				// 	RegistryHost:      "registry.test",
+				// 	RegistryNamespace: "namespace",
+				// 	Builder:           "builder",
+				// 	Children: map[string][]string{
+				// 		"other_child": {"other_child_version"},
+				// 	},
+				// }).Return(nil)
+				// tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "child", "version", &image.Image{
+				// 	Name:              "child",
+				// 	Version:           "version",
+				// 	RegistryHost:      "registry.test",
+				// 	RegistryNamespace: "namespace",
+				// 	Builder:           "builder",
+				// 	Parents: map[string][]string{
+				// 		"parent1": {"parent1_version"},
+				// 		"parent2": {"parent2_version"},
+				// 	},
+				// }).Return(nil)
+				// tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "other_child", "other_child_version", &image.Image{
+				// 	Name:              "other_child",
+				// 	Version:           "other_child_version",
+				// 	RegistryHost:      "registry.test",
+				// 	RegistryNamespace: "namespace",
+				// 	Builder:           "builder",
+				// }).Return(nil)
+			},
+			err: &errors.Error{},
+		},
+
 		{
 			desc: "Testing load images tree from file with deprecated definition",
 			path: filepath.Join(baseDir, "deprecated_definition.yaml"),
@@ -511,7 +590,7 @@ images:
 		},
 		{
 			desc: "Testing error when adding image to images graph store",
-			path: filepath.Join(baseDir, "file1.yaml"),
+			path: filepath.Join(baseDir, "single_image.yaml"),
 			tree: NewImagesConfiguration(
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
@@ -545,7 +624,7 @@ images:
 					errors.New(errContext, "Error adding image to images graph store"),
 				)
 			},
-			err: errors.New(errContext, "Error adding image to images graph store"),
+			err: errors.New(errContext, "\n\tError adding image to images graph store"),
 		},
 	}
 
@@ -732,7 +811,7 @@ image:
 				)
 
 			},
-			err: errors.New(errContext, "Error adding image2\n"),
+			err: errors.New(errContext, "\n\tError adding image2\n"),
 		},
 	}
 

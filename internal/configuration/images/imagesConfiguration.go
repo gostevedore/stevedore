@@ -57,6 +57,8 @@ func (t *ImagesConfiguration) CheckCompatibility() error {
 
 	if t.DEPRECATEDImagesTree != nil && len(t.DEPRECATEDImagesTree) > 0 {
 		t.compatibility.AddDeprecated("'images_tree' is deprecated and will be removed on v0.12.0, please use 'images' instead")
+
+		//		t.Images = t.DEPRECATEDImagesTree
 	}
 
 	return nil
@@ -68,14 +70,15 @@ func (t *ImagesConfiguration) LoadImagesToStore(path string) error {
 	var err error
 	errContext := "(images::LoadImagesToStore)"
 	var nodeDomainImage, copyDomainImage *domainimage.Image
-	_ = copyDomainImage
 
 	err = t.LoadImagesConfiguration(path)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	storedNodes := map[string]struct{}{}
+	pendingNodes := map[string]map[string]struct{}{}
+
 	for node := range t.graph.Iterate() {
 
 		// skip node if already stored
@@ -86,19 +89,36 @@ func (t *ImagesConfiguration) LoadImagesToStore(path string) error {
 
 		name, version, err := graph.ParseNodeName(node)
 		if err != nil {
-			return errors.New(errContext, err.Error())
+			return errors.New(errContext, "", err)
+		}
+
+		pendingNodeName, exists := pendingNodes[name]
+		if exists {
+			_, exists := pendingNodeName[version]
+			if exists {
+				delete(pendingNodeName, version)
+			}
+			if len(pendingNodeName) == 0 {
+				delete(pendingNodes, name)
+			}
+		}
+
+		if node.Item() == nil {
+			return errors.New(errContext, fmt.Sprintf("Definition for the image '%s' has not been found", node.Name()))
 		}
 
 		nodeImage := node.Item().(*image.Image)
+
 		nodeDomainImage, err = nodeImage.CreateDomainImage()
 		if err != nil {
-			return errors.New(errContext, err.Error())
+			return errors.New(errContext, "", err)
 		}
 
 		if node.Parents() == nil || len(node.Parents()) <= 0 {
+
 			err = t.store.Store(name, version, nodeDomainImage)
 			if err != nil {
-				return errors.New(errContext, err.Error())
+				return errors.New(errContext, "", err)
 			}
 		} else {
 			for _, parent := range node.Parents() {
@@ -106,12 +126,17 @@ func (t *ImagesConfiguration) LoadImagesToStore(path string) error {
 				parentName, parentVersion, err := graph.ParseNodeName(parent.(graph.GraphNoder))
 				parentDomainImage, err := t.store.Find(parentName, parentVersion)
 				if err != nil {
-					return errors.New(errContext, err.Error())
+					return errors.New(errContext, "", err)
+				}
+
+				if parentDomainImage == nil {
+					pendingNodes[parentName] = map[string]struct{}{parentVersion: {}}
+					continue
 				}
 
 				copyDomainImage, err = nodeDomainImage.Copy()
 				if err != nil {
-					return errors.New(errContext, err.Error())
+					return errors.New(errContext, "", err)
 				}
 
 				copyDomainImage.Options(
@@ -122,12 +147,16 @@ func (t *ImagesConfiguration) LoadImagesToStore(path string) error {
 
 				err = t.store.Store(name, version, copyDomainImage)
 				if err != nil {
-					return errors.New(errContext, err.Error())
+					return errors.New(errContext, "", err)
 				}
 
 				storedNodes[node.Name()] = struct{}{}
 			}
 		}
+	}
+
+	if len(pendingNodes) != 0 {
+		return errors.New(errContext, fmt.Sprintf("There are orphan references to images that have not been defined\n%+v", pendingNodes))
 	}
 
 	return nil
@@ -143,7 +172,7 @@ func (t *ImagesConfiguration) LoadImagesConfiguration(path string) error {
 
 	isDir, err = afero.IsDir(t.fs, path)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	if isDir {
@@ -161,12 +190,12 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromDir(dir string) error {
 
 	yamlFiles, err := afero.Glob(t.fs, dir+"/*.yaml")
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	ymlFiles, err := afero.Glob(t.fs, dir+"/*.yml")
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 	files := append(yamlFiles, ymlFiles...)
 
@@ -225,8 +254,9 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 
 	fileData, err = afero.ReadFile(t.fs, path)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
+
 	err = yaml.Unmarshal(fileData, imageTreeAux)
 	if err != nil {
 		return errors.New(errContext, fmt.Sprintf("Error loading images tree from file '%s'\nfound:\n%s", path, string(fileData)), err)
@@ -234,10 +264,11 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 
 	err = imageTreeAux.CheckCompatibility()
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	for name, images := range imageTreeAux.Images {
+
 		if !isAValidName(name) {
 			return errors.New(errContext, fmt.Sprintf("Found an invalid image name '%s' defined in file '%s'", name, path))
 		}
@@ -247,16 +278,25 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 				return errors.New(errContext, fmt.Sprintf("Found an invalid image version '%s' defined in file '%s'", version, path))
 			}
 
+			if image.Name == "" {
+				image.Name = name
+			}
+
+			if image.Version == "" {
+				image.Version = version
+			}
+
 			err = t.graph.AddImage(name, version, image)
 			// err = t.AddImage(name, version, image)
 			if err != nil {
-				return errors.New(errContext, err.Error())
+				return errors.New(errContext, "", err)
 			}
 		}
 	}
 
 	// TO BE REMOVE on v0.12: is kept just for compatibility concerns
 	for name, images := range imageTreeAux.DEPRECATEDImagesTree {
+
 		if !isAValidName(name) {
 			return errors.New(errContext, fmt.Sprintf("Found an invalid image name '%s' defined in file '%s'", name, path))
 		}
@@ -266,9 +306,17 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 				return errors.New(errContext, fmt.Sprintf("Found an invalid image version '%s' defined in file '%s'", version, path))
 			}
 
-			err := t.graph.AddImage(name, version, image)
+			if image.Name == "" {
+				image.Name = name
+			}
+
+			if image.Version == "" {
+				image.Version = version
+			}
+
+			err = t.graph.AddImage(name, version, image)
 			if err != nil {
-				return errors.New(errContext, err.Error())
+				return errors.New(errContext, "", err)
 			}
 		}
 	}
@@ -278,6 +326,11 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 
 // isValidName method checks if a string is a valid image name
 func isAValidName(name string) bool {
+
+	if name == "" {
+		return false
+	}
+
 	if strings.IndexRune(name, ':') != -1 {
 		return false
 	}
@@ -285,8 +338,8 @@ func isAValidName(name string) bool {
 }
 
 // isValidVersion method checks if a string is a valid image version
-func isAValidVersion(name string) bool {
-	if strings.IndexRune(name, ':') != -1 {
+func isAValidVersion(version string) bool {
+	if strings.IndexRune(version, ':') != -1 {
 		return false
 	}
 	return true
