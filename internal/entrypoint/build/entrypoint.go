@@ -110,57 +110,57 @@ func (e *Entrypoint) Execute(
 
 	imageName, err = e.prepareImageName(args)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	entrypointOptions, err = e.prepareEntrypointOptions(conf, inputEntrypointOptions)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	handlerOptions, err = e.prepareHandlerOptions(conf, inputHandlerOptions)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	credentialsStore, err = e.createCredentialsStore(conf)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	buildersStore, err = e.createBuildersStore(conf)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	commandFactory, err = e.createCommandFactory()
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	jobFactory, err = e.createJobFactory()
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	semVerFactory, err = e.createSemVerFactory()
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	buildDriverFactory, err = e.createBuildDriverFactory(credentialsStore, entrypointOptions)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	dispatcher, err = e.createDispatcher(entrypointOptions)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	err = dispatcher.Start(ctx)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	buildService = buildservice.NewService(
@@ -175,33 +175,33 @@ func (e *Entrypoint) Execute(
 
 	imageRender, err = e.createImageRender(now.NewNow())
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	graphTemplateFactory, err = e.createGraphTemplateFactory()
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	imagesGraphTemplatesStore, err = e.createImagesGraphTemplatesStorer(graphTemplateFactory)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	imagesStore, err = e.createImagesStore(conf, imageRender, imagesGraphTemplatesStore, compatibility)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	planFactory, err = e.createPlanFactory(imagesStore, entrypointOptions)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	buildHandler = buildhandler.NewHandler(planFactory, buildService)
 	err = buildHandler.Handler(ctx, imageName, handlerOptions)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	return nil
@@ -309,7 +309,7 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.Configuration) (
 	credentialsStore := credentials.NewCredentialsStore(e.fs)
 	err := credentialsStore.LoadCredentials(conf.DockerCredentialsDir)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return credentialsStore, nil
@@ -335,7 +335,7 @@ func (e *Entrypoint) createBuildersStore(conf *configuration.Configuration) (*bu
 	buildersConfiguration := buildersconfiguration.NewBuilders(e.fs, buildersStore)
 	err := buildersConfiguration.LoadBuilders(conf.BuildersPath)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return buildersStore, nil
@@ -395,7 +395,7 @@ func (e *Entrypoint) createImagesStore(conf *configuration.Configuration, render
 	imagesConfiguration := imagesconfiguration.NewImagesConfiguration(e.fs, graph, store, compatibility)
 	err := imagesConfiguration.LoadImagesToStore(conf.ImagesPath)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return store, nil
@@ -443,20 +443,20 @@ func (e *Entrypoint) createBuildDriverFactory(credentialsStore *credentials.Cred
 
 	ansiblePlaybookDriver, err = e.createAnsibleDriver(options)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 	dockerDriver, err = e.createDockerDriver(credentialsStore, options)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 	defaultDriver, err = e.createDefaultDriver()
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	dryRunDriver, err = e.createDryRunDriver()
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	factory.Register("ansible-playbook", ansiblePlaybookDriver)
@@ -485,7 +485,7 @@ func (e *Entrypoint) createAnsibleDriver(options *Options) (driver.BuildDriverer
 
 	ansiblePlaybookDriver, err := ansibledriver.NewAnsiblePlaybookDriver(goansible.NewGoAnsibleDriver(), e.writer)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return ansiblePlaybookDriver, nil
@@ -511,7 +511,7 @@ func (e *Entrypoint) createDockerDriver(credentialsStore *credentials.Credential
 
 	dockerClient, err = dockerclient.NewClientWithOpts(dockerclient.FromEnv)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	goDockerBuild := godockerbuild.NewDockerBuildCmd(dockerClient)
@@ -520,7 +520,7 @@ func (e *Entrypoint) createDockerDriver(credentialsStore *credentials.Credential
 	goDockerBuildDriver = godockerbuilder.NewGoDockerBuildDriver(goDockerBuild, dockerDriverBuldContext)
 	dockerDriver, err = dockerdriver.NewDockerDriver(goDockerBuildDriver, e.writer)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return dockerDriver, nil
