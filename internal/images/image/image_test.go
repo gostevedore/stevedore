@@ -23,7 +23,7 @@ func TestNewImage(t *testing.T) {
 	}{
 		{
 			desc: "Testing error no name provides",
-			err:  errors.New(errContext, "Image could not be parsed\n\tinvalid reference format"),
+			err:  errors.New(errContext, "Image name is not provided"),
 		},
 		{
 			desc:         "Testing error when invalid registy host is provided",

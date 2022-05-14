@@ -55,6 +55,11 @@ func NewImage(name, version, registryHost, registryNamesapace string, opt ...Opt
 
 	// Image name normalization
 	imageName := name
+
+	if imageName == "" {
+		return nil, errors.New(errContext, "Image name is not provided")
+	}
+
 	if version != "" {
 		imageName = fmt.Sprintf("%s:%s", imageName, version)
 	}
@@ -74,7 +79,7 @@ func NewImage(name, version, registryHost, registryNamesapace string, opt ...Opt
 
 	image, err := Parse(imageName)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	image.Options(opt...)
@@ -143,7 +148,7 @@ func Parse(name string) (*Image, error) {
 
 	referenceName, err := reference.ParseNormalizedNamed(name)
 	if err != nil {
-		return nil, errors.New(errContext, "Image could not be parsed", err)
+		return nil, errors.New(errContext, fmt.Sprintf("Image '%s' could not be parsed", name), err)
 	}
 	// in case that no version is specified, it will be the tag it as 'latest'
 	referenceName = reference.TagNameOnly(referenceName)
@@ -250,7 +255,7 @@ func (i *Image) YAMLMarshal() ([]byte, error) {
 
 	marshaled, err := yaml.Marshal(i)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return marshaled, nil
@@ -262,7 +267,7 @@ func (i *Image) YAMLUnmarshal(in []byte) error {
 
 	err := yaml.Unmarshal(in, i)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	return nil

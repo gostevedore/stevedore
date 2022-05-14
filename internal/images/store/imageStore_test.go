@@ -123,6 +123,45 @@ func TestStore(t *testing.T) {
 			},
 			err: &errors.Error{},
 		},
+
+		// {
+		// 	desc:    "Testing add a image using variables on tags",
+		// 	store:   NewImageStore(render.NewMockImageRender()),
+		// 	name:    "image_name",
+		// 	version: "*",
+		// 	image: &image.Image{
+		// 		Name:              "{{.Name}}-{{.Parent.Name}}",
+		// 		Version:           "{{.Version}}-{{.Parent.Version}}",
+		// 		RegistryNamespace: "{{.Parent.RegistryNamespace}}",
+		// 		Parent: &image.Image{
+		// 			Name:              "parent_name",
+		// 			Version:           "parent_version",
+		// 			RegistryNamespace: "parent_registry_namespace",
+		// 		},
+		// 		Tags: []string{"tag1", "tag2"},
+		// 	},
+		// 	prepareAssertFunc: func(s *ImageStore, i *image.Image) {},
+		// 	assertFunc: func(t *testing.T, s *ImageStore) {
+
+		// 		image := &image.Image{
+		// 			Name:              "{{.Name}}-{{.Parent.Name}}",
+		// 			Version:           "{{.Version}}-{{.Parent.Version}}",
+		// 			RegistryNamespace: "{{.Parent.RegistryNamespace}}",
+		// 			Parent: &image.Image{
+		// 				Name:              "parent_name",
+		// 				Version:           "parent_version",
+		// 				RegistryNamespace: "parent_registry_namespace",
+		// 			},
+		// 			Tags: []string{"tag1", "tag2"},
+		// 		}
+
+		// 		storedImage, exist := s.imageWildcardIndex["image_name"]
+		// 		assert.True(t, exist, "Image is not on the wildcard index")
+		// 		assert.Equal(t, image, storedImage, "Unexpected image in the wildcard index")
+		// 	},
+		// 	err: &errors.Error{},
+		// },
+
 	}
 
 	for _, test := range tests {

@@ -2,6 +2,7 @@ package render
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"time"
 
@@ -43,7 +44,7 @@ func (r *ImageRender) Render(name, version string, i *image.Image) (*image.Image
 
 	renderedImage, err = i.Copy()
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	renderObj := struct {
@@ -64,22 +65,22 @@ func (r *ImageRender) Render(name, version string, i *image.Image) (*image.Image
 
 	serialized, err := renderObj.Image.YAMLMarshal()
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	tmpl, err := template.New(renderObj.Name + ":" + renderObj.Version).Parse(string(serialized))
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	err = tmpl.Execute(&renderBuffer, renderObj)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, fmt.Sprintf("Error rendering image %s:%s from the following image definition template:\n\n%s\nInput values:\n%+v", name, version, string(serialized), renderObj), err)
 	}
 
 	err = renderObj.Image.YAMLUnmarshal(renderBuffer.Bytes())
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return renderedImage, nil

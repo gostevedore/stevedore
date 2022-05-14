@@ -62,7 +62,7 @@ func (s *ImageStore) Store(name string, version string, i *image.Image) error {
 	if version == ImageWildcardVersionSymbol {
 		err = s.storeWildcardImage(name, i)
 		if err != nil {
-			return errors.New(errContext, err.Error())
+			return errors.New(errContext, "", err)
 		}
 
 		return nil
@@ -71,26 +71,29 @@ func (s *ImageStore) Store(name string, version string, i *image.Image) error {
 	// render the image
 	renderedImage, err = s.render.Render(name, version, i)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	// store the image
 	err = s.storeImage(name, version, renderedImage)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	if renderedImage.Version != version {
 		err = s.storeImage(name, renderedImage.Version, renderedImage)
 		if err != nil {
-			return errors.New(errContext, err.Error())
+			return errors.New(errContext, "", err)
 		}
 	}
 
-	for _, tag := range i.Tags {
-		err = s.storeImage(name, tag, renderedImage)
-		if err != nil {
-			return errors.New(errContext, err.Error())
+	for _, tag := range renderedImage.Tags {
+
+		if version != tag && renderedImage.Version != tag {
+			err = s.storeImage(name, tag, renderedImage)
+			if err != nil {
+				return errors.New(errContext, "", err)
+			}
 		}
 	}
 
@@ -217,7 +220,7 @@ func (s *ImageStore) FindGuaranteed(findName, findVersion, imageName, imageVersi
 
 	image, err = s.Find(findName, findVersion)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	if image != nil {
@@ -226,7 +229,7 @@ func (s *ImageStore) FindGuaranteed(findName, findVersion, imageName, imageVersi
 
 	imageWildcard, err = s.FindWildcardImage(findName)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	if imageWildcard == nil {
@@ -235,7 +238,7 @@ func (s *ImageStore) FindGuaranteed(findName, findVersion, imageName, imageVersi
 
 	image, err = s.GenerateImageFromWildcard(imageWildcard, imageName, imageVersion)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return image, nil
@@ -273,7 +276,7 @@ func (s *ImageStore) GenerateImageFromWildcard(i *image.Image, name string, vers
 
 	imageToRender, err = i.Copy()
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 	parent = i.Parent
 
@@ -281,12 +284,12 @@ func (s *ImageStore) GenerateImageFromWildcard(i *image.Image, name string, vers
 	if parent != nil {
 		parentWildcard, err = s.FindWildcardImage(parent.Name)
 		if err != nil {
-			return nil, errors.New(errContext, err.Error())
+			return nil, errors.New(errContext, "", err)
 		}
 		if parentWildcard != nil {
 			parent, err = s.GenerateImageFromWildcard(parentWildcard, parent.Name, version)
 			if err != nil {
-				return nil, errors.New(errContext, err.Error())
+				return nil, errors.New(errContext, "", err)
 			}
 		}
 		imageToRender.Options(image.WithParent(parent))
@@ -294,7 +297,7 @@ func (s *ImageStore) GenerateImageFromWildcard(i *image.Image, name string, vers
 
 	renderedImage, err = s.render.Render(name, version, imageToRender)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return renderedImage, nil
