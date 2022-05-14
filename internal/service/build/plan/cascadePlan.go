@@ -24,12 +24,11 @@ func NewCascadePlan(imagesStorer ImagesStorer, depth int) *CascadePlan {
 // Plan return a list of images to build
 func (p *CascadePlan) Plan(name string, versions []string) ([]*Step, error) {
 
-	var steps []*Step
 	var images []*image.Image
 	var err error
 
 	errContext := "(plan::Cascade::Plan)"
-	_ = errContext
+	steps := []*Step{}
 
 	images, err = p.findImages(name, versions)
 	if err != nil {

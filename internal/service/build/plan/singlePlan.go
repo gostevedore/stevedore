@@ -21,11 +21,11 @@ func NewSinglePlan(imagesStorer ImagesStorer) *SinglePlan {
 
 // Plan return a list of images to build
 func (p *SinglePlan) Plan(name string, versions []string) ([]*Step, error) {
-	var steps []*Step
 	var images []*image.Image
 	var err error
 
 	errContext := "(plan::Simple::Plan)"
+	steps := []*Step{}
 
 	images, err = p.findImages(name, versions)
 	if err != nil {

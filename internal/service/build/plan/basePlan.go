@@ -1,6 +1,8 @@
 package plan
 
 import (
+	"fmt"
+
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/images/image"
 )
@@ -34,6 +36,10 @@ func (p *BasePlan) findImages(name string, versions []string) ([]*image.Image, e
 			}
 			images = append(images, imageAux)
 		}
+	}
+
+	if len(images) < 1 {
+		return nil, errors.New(errContext, fmt.Sprintf("No images found for name '%s' and version(s) %v", name, versions))
 	}
 
 	return images, nil
