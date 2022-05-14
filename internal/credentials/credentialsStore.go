@@ -3,6 +3,7 @@ package credentials
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 
 	errors "github.com/apenella/go-common-utils/error"
@@ -41,7 +42,7 @@ func (s *CredentialsStore) LoadCredentials(path string) error {
 
 	isDir, err = afero.IsDir(s.fs, path)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	if isDir {
@@ -78,9 +79,9 @@ func (s *CredentialsStore) LoadCredentialsFromDir(path string) error {
 	errFuncs := []func() error{}
 	errContext := "(credentials::LoadCredentialsFromDir)"
 
-	credFiles, err := afero.Glob(s.fs, path)
+	credFiles, err := afero.Glob(s.fs, filepath.Join(path, "*"))
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	loadCredentialsFromFile := func(path string) func() error {
@@ -131,7 +132,7 @@ func (s *CredentialsStore) LoadCredentialsFromFile(path string) error {
 
 	fileData, err = afero.ReadFile(s.fs, path)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 	userpass := &UserPasswordAuth{}
 	err = yaml.Unmarshal(fileData, userpass)
@@ -141,12 +142,12 @@ func (s *CredentialsStore) LoadCredentialsFromFile(path string) error {
 
 	fileInfo, err = s.fs.Stat(path)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	err = s.AddCredentials(fileInfo.Name(), userpass)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	return nil
