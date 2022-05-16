@@ -959,13 +959,12 @@ func TestFindWildcardImage(t *testing.T) {
 	}{
 
 		{
-			desc:  "Testing find the wildcard image",
+			desc:  "Testing find wildcard image error when store has not been initialized",
 			store: &ImageStore{},
-
-			err: errors.New(errContext, "Store has not been initialized"),
+			err:   errors.New(errContext, "Store has not been initialized"),
 		},
 		{
-			desc: "Testing find the wildcard image",
+			desc: "Testing find wild card image error when wildcard index has not been initialized",
 			store: &ImageStore{
 				store: []*image.Image{},
 			},
@@ -1029,7 +1028,7 @@ func TestGenerateImageFromWildcard(t *testing.T) {
 			image: &image.Image{
 				Parent: &image.Image{},
 			},
-			err: errors.New(errContext, "Store has not been initialized"),
+			err: errors.New(errContext, "\n\tStore has not been initialized"),
 		},
 		{
 			desc:    "Testing when generating an image from wildcard image",
