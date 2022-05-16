@@ -7,11 +7,15 @@ import (
 	"github.com/gostevedore/stevedore/internal/cli/stevedore"
 	"github.com/gostevedore/stevedore/internal/compatibility"
 	"github.com/gostevedore/stevedore/internal/configuration"
+	"github.com/gostevedore/stevedore/internal/logger"
 	"github.com/gostevedore/stevedore/internal/ui/console"
 	"github.com/spf13/afero"
 )
 
 func main() {
+
+	log := logger.New()
+	defer log.Sync()
 
 	fs := afero.NewOsFs()
 	cons := console.NewConsole(os.Stdout)
@@ -22,7 +26,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	stevedore := stevedore.NewCommand(context.Background(), fs, compatibility, compatibility, cons, conf)
+	stevedore := stevedore.NewCommand(context.Background(), fs, compatibility, compatibility, cons, log, conf)
 	err = stevedore.Execute()
 	if err != nil {
 		os.Exit(1)
