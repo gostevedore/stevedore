@@ -3,6 +3,7 @@ package error
 import (
 	"os"
 
+	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/cli/command"
 	"github.com/spf13/cobra"
 )
@@ -43,8 +44,9 @@ func errorManagement(l Logger, c Consoler, f func(cmd *cobra.Command, args []str
 	return func(cmd *cobra.Command, args []string) error {
 		err := f(cmd, args)
 		if err != nil {
-			l.Error(err.Error())
-			c.Error(err.Error())
+			l.Error(err.(*errors.Error).ErrorWithContext())
+			//c.Error(err.Error())
+			c.Error(err.(*errors.Error).ErrorWithContext())
 			os.Exit(1)
 		}
 
