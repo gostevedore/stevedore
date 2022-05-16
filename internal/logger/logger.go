@@ -1,12 +1,9 @@
 package logger
 
 import (
-	"fmt"
 	"io"
-	"os"
 	"time"
 
-	errors "github.com/apenella/go-common-utils/error"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -22,19 +19,31 @@ type Logger struct {
 	logger *zap.SugaredLogger
 }
 
-func NewLogger(w io.Writer, encoderType string) *Logger {
+// New creates a new logger
+func New() *Logger {
 
-	encoder := generateEncoderEncoder(encoderType)
+	l, _ := zap.NewProduction()
+	return &Logger{
+		logger: l.Sugar(),
+	}
+}
+
+// ReloadWithWriter recreates the logger with a new writer
+func (l *Logger) ReloadWithWriter(w io.Writer) {
+	encoder := generateEncoderEncoder(LogConsoleEncoderName)
 
 	core := zapcore.NewCore(
 		encoder,
 		zapcore.AddSync(w),
-		zapcore.DebugLevel)
-	logger := zap.New(core)
+		zapcore.DebugLevel,
+	)
 
-	return &Logger{
-		logger: logger.Sugar(),
-	}
+	logger := zap.New(core)
+	l.logger = logger.Sugar()
+}
+
+func (l *Logger) Sync() {
+	l.logger.Sync()
 }
 
 func generateEncoderEncoder(encoderType string) zapcore.Encoder {
@@ -54,68 +63,35 @@ func generateEncoderEncoder(encoderType string) zapcore.Encoder {
 
 // Info
 func (l *Logger) Info(msg ...interface{}) {
-	l.logger.Info(msg)
+	l.logger.Info(msg...)
 }
 
 // Warn
 func (l *Logger) Warn(msg ...interface{}) {
-	l.logger.Warn(msg)
+	l.logger.Warn(msg...)
 }
 
 // Error
 func (l *Logger) Error(msg ...interface{}) {
-	l.logger.Error(msg)
+	l.logger.Error(msg...)
 }
 
 // Debug
 func (l *Logger) Debug(msg ...interface{}) {
-	l.logger.Debug(msg)
+	l.logger.Debug(msg...)
 }
 
 // Fatal
 func (l *Logger) Fatal(msg ...interface{}) {
-	l.logger.Fatal(msg)
+	l.logger.Fatal(msg...)
 }
 
 // Panic
 func (l *Logger) Panic(msg ...interface{}) {
-	l.logger.Panic(msg)
+	l.logger.Panic(msg...)
 }
 
-//Init initializes suggarlogger
-func Init(logfile, encoderType string) error {
-	var encoder zapcore.Encoder
-
-	if sugarLogger == nil {
-		writer, err := os.OpenFile(logfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			return errors.New("(logger::Init)", fmt.Sprintf("Error opening log file '%s'", logfile), err)
-		}
-
-		encoderConfig := zap.NewProductionEncoderConfig()
-		encoderConfig.EncodeTime = customTimeEncoder
-		encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
-
-		switch encoderType {
-		case LogConsoleEncoderName:
-			encoder = zapcore.NewConsoleEncoder(encoderConfig)
-		case LogJSONEncoderName:
-			encoder = zapcore.NewJSONEncoder(encoderConfig)
-		default:
-			return errors.New("(logger::Init)", fmt.Sprintf("Unknown encoder '%s'", encoder), err)
-		}
-
-		core := zapcore.NewCore(
-			encoder,
-			zapcore.AddSync(writer),
-			zapcore.DebugLevel)
-		logger := zap.New(core)
-		sugarLogger = logger.Sugar()
-	}
-
-	return nil
-}
-
+// customTimeEncoder is a custom time encoder for logger
 func customTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString(t.Format("2006-01-02 15:04:05"))
 }
