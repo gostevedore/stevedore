@@ -1,5 +1,7 @@
 package stevedore
 
+import "io"
+
 // CompatibilityStorer is the interface for the compatibility checker
 type CompatibilityStorer interface {
 	AddDeprecated(deprecated ...string)
@@ -14,6 +16,8 @@ type CompatibilityReporter interface {
 
 // Logger interface to log errors
 type Logger interface {
+	ReloadWithWriter(w io.Writer)
+	Sync()
 	Info(msg ...interface{})
 	Warn(msg ...interface{})
 	Error(msg ...interface{})
