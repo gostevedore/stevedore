@@ -29,12 +29,12 @@ builders_path: {{ . }}
 #
 # Log file location path
 #  default value: 
-#    log_path: /dev/null
+#    log_path: /var/log/stevedore.log
 {{ with .LogPathFile -}}
 log_path: {{ . }}
 {{ else -}}
 #
-# log_path: /dev/null
+# log_path: /var/log/stevedore.log
 {{ end }}
 #
 # It defines the number of workers to build images which corresponds to the number of images that can be build concurrently

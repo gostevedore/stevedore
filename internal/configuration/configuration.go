@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/ioutil"
 	"math"
+	"os"
 	"os/user"
 	"path/filepath"
 	"runtime"
@@ -27,6 +29,7 @@ type Configuration struct {
 	EnableSemanticVersionTags    bool
 	ImagesPath                   string
 	LogPathFile                  string
+	LogWriter                    io.Writer
 	PushImages                   bool
 	SemanticVersionTagsTemplates []string
 
@@ -66,6 +69,8 @@ const (
 
 // New method create a new configuration object
 func New(fs afero.Fs, compatibility Compatibilitier) (*Configuration, error) {
+
+	var logWriter io.Writer
 
 	errContext := "(Configuration::New)"
 
@@ -112,17 +117,23 @@ func New(fs afero.Fs, compatibility Compatibilitier) (*Configuration, error) {
 	// when configuration is created no error is shown if readinconfig files. It will use the defaults
 	viper.ReadInConfig()
 
+	logWriter, err = createLogWriter(fs, viper.GetString(LogPathFileKey))
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
 	config := &Configuration{
-		BuildersPath:                 viper.GetString(BuildersPathKey),
-		Concurrency:                  viper.GetInt(ConcurrencyKey),
-		DEPRECATEDBuilderPath:        viper.GetString(DEPRECATEDBuilderPathKey),
-		DEPRECATEDBuildOnCascade:     viper.GetBool(DEPRECATEDBuildOnCascadeKey),
-		DEPRECATEDNumWorkers:         viper.GetInt(DEPRECATEDNumWorkerKey),
-		DEPRECATEDTreePathFile:       viper.GetString(DEPRECATEDTreePathFileKey),
-		DockerCredentialsDir:         viper.GetString(DockerCredentialsDirKey),
-		EnableSemanticVersionTags:    viper.GetBool(EnableSemanticVersionTagsKey),
-		ImagesPath:                   viper.GetString(ImagesPathKey),
-		LogPathFile:                  viper.GetString(LogPathFileKey),
+		BuildersPath:              viper.GetString(BuildersPathKey),
+		Concurrency:               viper.GetInt(ConcurrencyKey),
+		DEPRECATEDBuilderPath:     viper.GetString(DEPRECATEDBuilderPathKey),
+		DEPRECATEDBuildOnCascade:  viper.GetBool(DEPRECATEDBuildOnCascadeKey),
+		DEPRECATEDNumWorkers:      viper.GetInt(DEPRECATEDNumWorkerKey),
+		DEPRECATEDTreePathFile:    viper.GetString(DEPRECATEDTreePathFileKey),
+		DockerCredentialsDir:      viper.GetString(DockerCredentialsDirKey),
+		EnableSemanticVersionTags: viper.GetBool(EnableSemanticVersionTagsKey),
+		ImagesPath:                viper.GetString(ImagesPathKey),
+		// LogPathFile:                  viper.GetString(LogPathFileKey),
+		LogWriter:                    logWriter,
 		PushImages:                   viper.GetBool(PushImagesKey),
 		SemanticVersionTagsTemplates: viper.GetStringSlice(SemanticVersionTagsTemplatesKey),
 
@@ -145,13 +156,21 @@ func ConfigFileUsed() string {
 // LoadFromFile method returns a configuration object loaded from a file
 func LoadFromFile(fs afero.Fs, file string, compatibility Compatibilitier) (*Configuration, error) {
 
+	var err error
+	var logWriter io.Writer
+
 	errContext := "(configuration::LoadFromFile)"
 
 	viper.SetFs(fs)
 	viper.SetConfigFile(file)
-	err := viper.ReadInConfig()
+	err = viper.ReadInConfig()
 	if err != nil {
 		return nil, errors.New(errContext, "Configuration file could be loaded", err)
+	}
+
+	logWriter, err = createLogWriter(fs, viper.GetString(LogPathFileKey))
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
 	}
 
 	config := &Configuration{
@@ -165,6 +184,7 @@ func LoadFromFile(fs afero.Fs, file string, compatibility Compatibilitier) (*Con
 		EnableSemanticVersionTags:    viper.GetBool(EnableSemanticVersionTagsKey),
 		ImagesPath:                   viper.GetString(ImagesPathKey),
 		LogPathFile:                  viper.GetString(LogPathFileKey),
+		LogWriter:                    logWriter,
 		PushImages:                   viper.GetBool(PushImagesKey),
 		SemanticVersionTagsTemplates: viper.GetStringSlice(SemanticVersionTagsTemplatesKey),
 
@@ -307,4 +327,20 @@ func (c *Configuration) CheckCompatibility() error {
 	}
 
 	return nil
+}
+
+func createLogWriter(fs afero.Fs, path string) (io.Writer, error) {
+
+	var err error
+	errContext := "(cli::stevedore)"
+	writer := ioutil.Discard
+
+	if path != "" {
+		writer, err = fs.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			return nil, errors.New(errContext, "Log file can not be created", err)
+		}
+	}
+
+	return writer, nil
 }

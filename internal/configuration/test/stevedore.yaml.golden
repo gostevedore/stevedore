@@ -18,7 +18,7 @@
 #
 # Log file location path
 #  default value: 
-#    log_path: /dev/null
+#    log_path: /var/log/stevedore.log
 log_path: test_stevedore.log
 
 #
