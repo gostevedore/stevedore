@@ -28,6 +28,7 @@ func (j *Job) Run(ctx context.Context) {
 	err := j.command.Execute(ctx)
 	if err != nil {
 		j.err <- err
+		return
 	}
 
 	j.done <- struct{}{}
