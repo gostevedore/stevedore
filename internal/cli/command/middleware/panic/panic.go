@@ -5,7 +5,6 @@ import (
 	"os"
 	"runtime/debug"
 
-	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/cli/command"
 	"github.com/spf13/cobra"
 )
@@ -14,100 +13,121 @@ import (
 func NewCommand(c *command.StevedoreCommand, p Consoler, l Logger) *command.StevedoreCommand {
 
 	if c.Command.PersistentPreRun != nil {
-		persistentPreRunFunc := func(cmd *cobra.Command, args []string) {
-			defer panicRecover(l, p)
-			c.Command.PersistentPreRun(cmd, args)
+		persistentPreRunFunc := func(f func(cmd *cobra.Command, args []string)) func(cmd *cobra.Command, args []string) {
+			return func(cmd *cobra.Command, args []string) {
+				defer panicRecover(l, p)
+				f(cmd, args)
+			}
 		}
-		c.Command.PersistentPreRun = persistentPreRunFunc
+		c.Command.PersistentPreRun = persistentPreRunFunc(c.Command.PersistentPreRun)
 	}
 
 	if c.Command.PersistentPreRunE != nil {
-		persistentPreRunEFunc := func(cmd *cobra.Command, args []string) error {
-			defer panicRecover(l, p)
-			return c.Command.PersistentPreRunE(cmd, args)
+		persistentPreRunEFunc := func(f func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
+			return func(cmd *cobra.Command, args []string) error {
+				defer panicRecover(l, p)
+				return f(cmd, args)
+			}
 		}
-		c.Command.PersistentPreRunE = persistentPreRunEFunc
+		c.Command.PersistentPreRunE = persistentPreRunEFunc(c.Command.PersistentPreRunE)
 	}
 
 	if c.Command.PreRun != nil {
-		preRunFunc := func(cmd *cobra.Command, args []string) {
-			defer panicRecover(l, p)
-			c.Command.PreRun(cmd, args)
+		preRunFunc := func(f func(cmd *cobra.Command, args []string)) func(cmd *cobra.Command, args []string) {
+			return func(cmd *cobra.Command, args []string) {
+				defer panicRecover(l, p)
+				f(cmd, args)
+			}
 		}
-		c.Command.PreRun = preRunFunc
+		c.Command.PreRun = preRunFunc(c.Command.PreRun)
 	}
 
 	if c.Command.PreRunE != nil {
-		preRunEFunc := func(cmd *cobra.Command, args []string) error {
-			defer panicRecover(l, p)
-			return c.Command.PreRunE(cmd, args)
+		preRunEFunc := func(f func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
+			return func(cmd *cobra.Command, args []string) error {
+				defer panicRecover(l, p)
+				return f(cmd, args)
+			}
 		}
-		c.Command.PreRunE = preRunEFunc
+		c.Command.PreRunE = preRunEFunc(c.Command.PreRunE)
 	}
 
 	if c.Command.Run != nil {
-		runFunc := func(cmd *cobra.Command, args []string) {
-			defer panicRecover(l, p)
-			c.Command.Run(cmd, args)
+		runFunc := func(f func(cmd *cobra.Command, args []string)) func(cmd *cobra.Command, args []string) {
+			return func(cmd *cobra.Command, args []string) {
+				defer panicRecover(l, p)
+				f(cmd, args)
+			}
 		}
-		c.Command.Run = runFunc
+		c.Command.Run = runFunc(c.Command.Run)
 	}
 
 	if c.Command.RunE != nil {
-		runEFunc := func(cmd *cobra.Command, args []string) error {
-			defer panicRecover(l, p)
-			return c.Command.RunE(cmd, args)
+		runEFunc := func(f func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
+			return func(cmd *cobra.Command, args []string) error {
+				defer panicRecover(l, p)
+				return f(cmd, args)
+			}
 		}
-		c.Command.RunE = runEFunc
+		c.Command.RunE = runEFunc(c.Command.RunE)
 	}
 
 	if c.Command.PostRun != nil {
-		postRunFunc := func(cmd *cobra.Command, args []string) {
-			defer panicRecover(l, p)
-			c.Command.PostRun(cmd, args)
+		postRunFunc := func(f func(cmd *cobra.Command, args []string)) func(cmd *cobra.Command, args []string) {
+			return func(cmd *cobra.Command, args []string) {
+				defer panicRecover(l, p)
+				f(cmd, args)
+			}
 		}
-		c.Command.PostRun = postRunFunc
+		c.Command.PostRun = postRunFunc(c.Command.PostRun)
 	}
 
 	if c.Command.PostRunE != nil {
-		postRunEFunc := func(cmd *cobra.Command, args []string) error {
-			defer panicRecover(l, p)
-			return c.Command.PostRunE(cmd, args)
+		postRunEFunc := func(f func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
+			return func(cmd *cobra.Command, args []string) error {
+				defer panicRecover(l, p)
+				return f(cmd, args)
+			}
 		}
-		c.Command.PostRunE = postRunEFunc
+		c.Command.PostRunE = postRunEFunc(c.Command.PostRunE)
 	}
 
 	if c.Command.PostRun != nil {
-		postRunFunc := func(cmd *cobra.Command, args []string) {
-			defer panicRecover(l, p)
-			c.Command.PostRun(cmd, args)
+		postRunFunc := func(f func(cmd *cobra.Command, args []string)) func(cmd *cobra.Command, args []string) {
+			return func(cmd *cobra.Command, args []string) {
+				defer panicRecover(l, p)
+				f(cmd, args)
+			}
 		}
-		c.Command.PostRun = postRunFunc
+		c.Command.PostRun = postRunFunc(c.Command.PostRun)
 	}
 
 	if c.Command.PersistentPostRunE != nil {
-		persistentPostRunEFunc := func(cmd *cobra.Command, args []string) error {
-			defer panicRecover(l, p)
-			return c.Command.PersistentPostRunE(cmd, args)
+		persistentPostRunEFunc := func(f func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
+			return func(cmd *cobra.Command, args []string) error {
+				defer panicRecover(l, p)
+				return f(cmd, args)
+			}
 		}
-		c.Command.PersistentPostRunE = persistentPostRunEFunc
+		c.Command.PersistentPostRunE = persistentPostRunEFunc(c.Command.PersistentPostRunE)
 	}
 
 	return c
 }
 
 func panicRecover(l Logger, p Consoler) {
-	var errMessage string
+	//var errMessage string
+
 	if err := recover(); err != nil {
 
-		recoveredErr, isGoCommonUtilsError := err.(*errors.Error)
-		if isGoCommonUtilsError {
-			errMessage = recoveredErr.ErrorWithContext()
-		} else {
-			errMessage = recoveredErr.Error()
-		}
+		// recoveredErr, isGoCommonUtilsError := err.(*errors.Error)
+		// if isGoCommonUtilsError {
+		// 	errMessage = recoveredErr.ErrorWithContext()
+		// } else {
+		// 	errMessage = recoveredErr.Error()
+		// }
 
-		msg := fmt.Sprintf("Unexpected panic: %s", errMessage)
+		msg := fmt.Sprintf("Unexpected panic: %s", err)
 		l.Error(msg)
 		l.Error(string(debug.Stack()))
 		p.Error(msg)

@@ -13,7 +13,6 @@ import (
 )
 
 func main() {
-
 	log := logger.New()
 	defer log.Sync()
 
