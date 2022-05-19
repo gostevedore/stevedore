@@ -12,15 +12,15 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 )
 
-var credentials map[string]*RegistryUserPassAuth
+var credentials map[string]*UserPasswordAuth
 
 // RegistryCredentials
-type RegistryCredentials map[string]*RegistryUserPassAuth
+type RegistryCredentials map[string]*UserPasswordAuth
 
 // Init initializes the credentials store
 func Init() {
 	if credentials == nil {
-		credentials = make(map[string]*RegistryUserPassAuth)
+		credentials = make(map[string]*UserPasswordAuth)
 	}
 }
 
@@ -30,7 +30,7 @@ func LoadCredentials(dir string) error {
 	var err error
 
 	if credentials == nil {
-		credentials = make(map[string]*RegistryUserPassAuth)
+		credentials = make(map[string]*UserPasswordAuth)
 	}
 
 	_, err = os.Stat(dir)
@@ -42,7 +42,7 @@ func LoadCredentials(dir string) error {
 		}
 
 		for _, file := range files {
-			userpass := &RegistryUserPassAuth{}
+			userpass := &UserPasswordAuth{}
 			if file.Mode().IsRegular() {
 				filename := file.Name()
 				err := data.LoadJSONFile(strings.Join([]string{dir, filename}, string(os.PathSeparator)), userpass)
@@ -58,14 +58,14 @@ func LoadCredentials(dir string) error {
 
 // ClearCredentials
 func ClearCredentials() {
-	credentials = make(map[string]*RegistryUserPassAuth)
+	credentials = make(map[string]*UserPasswordAuth)
 }
 
 // AddCredential
-func AddCredential(id string, auth *RegistryUserPassAuth) error {
+func AddCredential(id string, auth *UserPasswordAuth) error {
 
 	if credentials == nil {
-		credentials = make(map[string]*RegistryUserPassAuth)
+		credentials = make(map[string]*UserPasswordAuth)
 	}
 
 	_, exists := credentials[id]
@@ -79,7 +79,7 @@ func AddCredential(id string, auth *RegistryUserPassAuth) error {
 }
 
 // AchieveCredential
-func AchieveCredential(registry string) (*RegistryUserPassAuth, error) {
+func AchieveCredential(registry string) (*UserPasswordAuth, error) {
 
 	if credentials == nil {
 		return nil, errors.New("(credentials::AchieveCredential)", "Credentials has not been initialized")
@@ -150,7 +150,7 @@ func CreateCredential(dir, username, password, registry string) error {
 	}
 	defer credentialFile.Close()
 
-	userPass := &RegistryUserPassAuth{
+	userPass := &UserPasswordAuth{
 		Username: username,
 		Password: password,
 	}

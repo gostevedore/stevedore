@@ -1,212 +1,190 @@
-package dockerdriver
+package driver
 
 import (
 	"context"
-	"strings"
+	"io"
+	"os"
 
 	errors "github.com/apenella/go-common-utils/error"
-	transformer "github.com/apenella/go-common-utils/transformer/string"
-	"github.com/apenella/go-docker-builder/pkg/build"
-	dockercontext "github.com/apenella/go-docker-builder/pkg/build/context"
-	"github.com/apenella/go-docker-builder/pkg/response"
-	"github.com/docker/docker/client"
-	"github.com/gostevedore/stevedore/internal/build/varsmap"
-	"github.com/gostevedore/stevedore/internal/credentials"
-	drivercommon "github.com/gostevedore/stevedore/internal/driver/common"
-	builddockercontext "github.com/gostevedore/stevedore/internal/driver/docker/context"
-	"github.com/gostevedore/stevedore/internal/image"
-	"github.com/gostevedore/stevedore/internal/types"
-	"github.com/gostevedore/stevedore/internal/ui/console"
+	"github.com/gostevedore/stevedore/internal/builders/varsmap"
+	"github.com/gostevedore/stevedore/internal/driver"
+	"github.com/gostevedore/stevedore/internal/images/image"
 )
 
 const (
+	// DriverName is the name for the driver
 	DriverName = "docker"
-
-	ImageTagVersionSeparator   = ":"
-	ImageTagNamespaceSeparator = "/"
-	ImageTagRegistrySeparator  = "/"
-
-	builderConfOptionsContextKey = "context"
 )
 
-func NewDockerDriver(ctx context.Context, o *types.BuildOptions) (types.Driverer, error) {
+// DockerDriver is a driver for Docker
+type DockerDriver struct {
+	driver DockerDriverer
+	writer io.Writer
+}
+
+// NewDockerDriver creates a new DockerDriver
+func NewDockerDriver(driver DockerDriverer, writer io.Writer) (*DockerDriver, error) {
+
+	errContext := "(dockerdriver::NewDockerDriver)"
+
+	if driver == nil {
+		return nil, errors.New(errContext, "To create a DockerDriver is expected a driver")
+	}
+
+	if writer == nil {
+		writer = os.Stdout
+	}
+
+	return &DockerDriver{
+		driver: driver,
+		writer: writer,
+	}, nil
+}
+
+// Build performs the build. In case the build could not performed it returns an error
+func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *driver.BuildDriverOptions) error {
 
 	var err error
+	//var dockerBuildContext dockercontext.DockerBuildContexter
 	var imageName string
-	var dockerCli *client.Client
-	var dockerBuildContext dockercontext.DockerBuildContexter
-	var auth *credentials.RegistryUserPassAuth
 
-	if o == nil {
-		return nil, errors.New("(build::NewDockerDriver)", "Build options are nil")
+	errContext := "(dockerdriver::Build)"
+
+	if d.driver == nil {
+		return errors.New(errContext, "To build an image is required a driver")
+	}
+
+	if i == nil {
+		return errors.New(errContext, "To build an image is required a image")
+	}
+
+	if options == nil {
+		return errors.New(errContext, "To build an image is required a build options")
 	}
 
 	if ctx == nil {
-		return nil, errors.New("(build::NewDockerDriver)", "Context is nil")
+		return errors.New(errContext, "To build an image is required a golang context")
 	}
 
-	if o.ImageName == "" {
-		return nil, errors.New("(build::NewDockerDriver)", "Image name is not set")
+	if i.Name == "" {
+		return errors.New(errContext, "To build an image is required an image name")
 	}
 
-	// gave a name to image
-	imageNameURL := &image.ImageURL{
-		Name: o.ImageName,
-	}
-
-	if o.ImageVersion != "" {
-		imageNameURL.Tag = drivercommon.SanitizeTag(o.ImageVersion)
-	}
-
-	if o.RegistryNamespace != "" {
-		imageNameURL.Namespace = o.RegistryNamespace
-	}
-
-	if o.RegistryHost != "" {
-		imageNameURL.Registry = o.RegistryHost
-	}
-
-	imageName, err = imageNameURL.URL()
+	imageName, err = i.DockerNormalizedNamed()
 	if err != nil {
-		return nil, errors.New("(build::NewDockerDriver)", "Image url for image '"+o.ImageName+"' could not be created", err)
+		return errors.New(errContext, "", err)
 	}
 
-	// create docker sdk client
-	dockerCli, err = client.NewClientWithOpts(client.FromEnv)
-	if err != nil {
-		return nil, errors.New("(images::NewDockerDriver)", "Docker client could not be created", err)
-	}
-	dockerCli.NegotiateAPIVersion(ctx)
+	d.driver.WithImageName(imageName)
 
-	// generate output prefix to include into response
-	if o.OutputPrefix == "" {
-		o.OutputPrefix = imageNameURL.Name
-		if o.ImageVersion != "" {
-			o.OutputPrefix = strings.Join([]string{o.OutputPrefix, imageNameURL.Tag}, ":")
-		}
-	}
-
-	// create docker build cmd instance
-	dockerBuilder := &build.DockerBuildCmd{
-		Cli:       dockerCli,
-		ImageName: imageName,
-		Response: response.NewDefaultResponse(
-			response.WithTransformers(
-				transformer.Prepend(o.OutputPrefix),
-			),
-			response.WithWriter(console.GetConsole()),
-		),
-	}
-
+	// TO REMOVE
 	// add docker build context to cmd instance
-	builderConfOptions := o.BuilderOptions
+	// builderConfOptions := options.BuilderOptions
 
-	context, exists := builderConfOptions[builderConfOptionsContextKey]
-	if !exists {
-		return nil, errors.New("(build::NewDockerDriver)", "Docker building context has not been defined on build options")
-	}
-	dockerBuildContext, err = builddockercontext.GenerateDockerBuildContext(context)
-	if err != nil {
-		return nil, errors.New("(build::NewDockerDriver)", "Docker build context could not be extracted", err)
-	}
-
-	err = dockerBuilder.AddBuildContext(dockerBuildContext)
-	if err != nil {
-		return nil, errors.New("(images::NewDockerDriver)", "Error adding docker build context", err)
-	}
-
-	// include dockerfile location
-	if o.Dockerfile != "" {
-		dockerBuilder.ImageBuildOptions.Dockerfile = o.Dockerfile
-	} else {
-		dockerfile, exists := builderConfOptions["dockerfile"]
-		if exists {
-			dockerBuilder.ImageBuildOptions.Dockerfile = dockerfile.(string)
-		}
-	}
-
-	// add docker tags
-	if len(o.Tags) > 0 {
-		for _, tag := range o.Tags {
-
-			tag = drivercommon.SanitizeTag(tag)
-
-			imageURL := &image.ImageURL{
-				Name: o.ImageName,
-				Tag:  tag,
-			}
-
-			if o.RegistryNamespace != "" {
-				imageURL.Namespace = o.RegistryNamespace
-			}
-			if o.RegistryHost != "" {
-				imageURL.Registry = o.RegistryHost
-			}
-
-			url, err := imageURL.URL()
-			if err != nil {
-				return nil, errors.New("(build::NewDockerDriver)", "Image url for image '"+o.ImageName+"' and tag '"+tag+"' could not be created", err)
-			}
-			dockerBuilder.AddTags(url)
-		}
+	if options.BuilderOptions.Dockerfile != "" {
+		d.driver.WithDockerfile(options.BuilderOptions.Dockerfile)
 	}
 
 	// add docker build arguments: Persistent vars contains the variables defined by the user on execution time and has precedences over vars and the persistent vars defined on the image
-	if len(o.PersistentVars) > 0 {
-		for varName, varValue := range o.PersistentVars {
-			dockerBuilder.AddBuildArgs(varName, varValue.(string))
+	if len(i.PersistentVars) > 0 {
+		for varName, varValue := range i.PersistentVars {
+			d.driver.AddBuildArgs(varName, varValue.(string))
 		}
 	}
 
 	// add docker build arguments: Vars contains the variables defined by the user on execution time and has precedences over the default values
-	if len(o.Vars) > 0 {
-		for varName, varValue := range o.Vars {
-			dockerBuilder.AddBuildArgs(varName, varValue.(string))
+	if len(i.Vars) > 0 {
+		for varName, varValue := range i.Vars {
+			d.driver.AddBuildArgs(varName, varValue.(string))
+		}
+	}
+
+	// add docker tags
+	if len(i.Tags) > 0 {
+		for _, tag := range i.Tags {
+
+			imageTaggedAux, err := image.NewImage(i.Name, tag, i.RegistryHost, i.RegistryNamespace)
+			if err != nil {
+				return errors.New(errContext, "", err)
+			}
+			imageTaggedName, err := imageTaggedAux.DockerNormalizedNamed()
+			if err != nil {
+				return errors.New(errContext, "", err)
+			}
+
+			d.driver.AddTags(imageTaggedName)
+		}
+	}
+
+	if len(i.Labels) > 0 {
+		for label, value := range i.Labels {
+			d.driver.AddLabel(label, value)
 		}
 	}
 
 	// add docker build arguments
-	if o.ImageFromRegistryNamespace != "" {
-		dockerBuilder.AddBuildArgs(o.BuilderVarMappings[varsmap.VarMappingImageFromRegistryNamespaceKey], o.ImageFromRegistryNamespace)
+	if i.Parent != nil && i.Parent.RegistryNamespace != "" {
+		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromRegistryNamespaceKey], i.Parent.RegistryNamespace)
 	}
 
-	if o.ImageFromName != "" {
-		dockerBuilder.AddBuildArgs(o.BuilderVarMappings[varsmap.VarMappingImageFromNameKey], o.ImageFromName)
+	if i.Parent != nil && i.Parent.Name != "" {
+		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromNameKey], i.Parent.Name)
 	}
 
-	if o.ImageFromVersion != "" {
-		dockerBuilder.AddBuildArgs(o.BuilderVarMappings[varsmap.VarMappingImageFromTagKey], o.ImageFromVersion)
+	if i.Parent != nil && i.Parent.Version != "" {
+		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromTagKey], i.Parent.Version)
 	}
 
 	// add docker build arguments: map de command flag options to build argurments
-	if o.ImageFromRegistryHost != "" {
-		dockerBuilder.AddBuildArgs(o.BuilderVarMappings[varsmap.VarMappingImageFromRegistryHostKey], o.ImageFromRegistryHost)
+	if i.Parent != nil && i.Parent.RegistryHost != "" {
+		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromRegistryHostKey], i.Parent.RegistryHost)
 
-		auth, err = credentials.AchieveCredential(o.ImageFromRegistryHost)
-		if err == nil {
-			user := auth.Username
-			pass := auth.Password
-			dockerBuilder.AddAuth(user, pass, o.ImageFromRegistryHost)
+		if options.PullAuthUsername != "" && options.PullAuthPassword != "" {
+			d.driver.AddAuth(options.PullAuthUsername, options.PullAuthPassword, i.Parent.RegistryHost)
 		}
 	}
 
-	// set whether to push automatically images after build is done
-	if o.PushImages {
-		dockerBuilder.PushAfterBuild = o.PushImages
+	if options.PushAuthUsername != "" && options.PushAuthPassword != "" {
+		d.driver.AddAuth(options.PushAuthUsername, options.PushAuthPassword, i.RegistryHost)
+	}
 
-		auth, err = credentials.AchieveCredential(o.RegistryHost)
-		if err == nil {
-			user := auth.Username
-			pass := auth.Password
-			dockerBuilder.AddPushAuth(user, pass)
+	if options.PushImageAfterBuild {
+		d.driver.WithPushAfterBuild()
 
-			// add auth to build options when it not already set
-			_, added := dockerBuilder.ImageBuildOptions.AuthConfigs[o.RegistryHost]
-			if !added {
-				dockerBuilder.AddAuth(user, pass, o.RegistryHost)
-			}
+		if options.PushAuthUsername != "" && options.PushAuthPassword != "" {
+			d.driver.AddPushAuth(options.PushAuthUsername, options.PushAuthPassword)
 		}
 	}
 
-	return dockerBuilder, nil
+	if options.PullParentImage {
+		d.driver.WithPullParentImage()
+	}
+
+	if options.RemoveImageAfterBuild {
+		d.driver.WithRemoveAfterPush()
+	}
+
+	if options.BuilderOptions.Context == nil || len(options.BuilderOptions.Context) == 0 {
+		return errors.New(errContext, "Docker building context has not been defined on build options")
+	}
+
+	err = d.driver.AddBuildContext(options.BuilderOptions.Context...)
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
+
+	responseOutputPrefix := options.OutputPrefix
+	if responseOutputPrefix == "" {
+		responseOutputPrefix = imageName
+	}
+
+	d.driver.WithResponse(d.writer, responseOutputPrefix)
+	d.driver.WithUseNormalizedNamed()
+
+	err = d.driver.Run(ctx)
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
+
+	return nil
 }

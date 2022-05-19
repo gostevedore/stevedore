@@ -1,39 +1,29 @@
-package mockdriver
+package driver
 
 import (
 	"context"
 
-	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/types"
+	"github.com/gostevedore/stevedore/internal/driver"
+	"github.com/gostevedore/stevedore/internal/images/image"
+	"github.com/stretchr/testify/mock"
 )
 
-const (
-	DriverName = "mock"
-)
+// const (
+// 	DriverName = "mock"
+// )
 
-// MockBuilder
-type MockDriver struct{}
-
-func NewMockDriver(ctx context.Context, o *types.BuildOptions) (types.Driverer, error) {
-	return &MockDriver{}, nil
+// MockDriver is a mock implementation of driver.BuildDriverer
+type MockDriver struct {
+	mock.Mock
 }
 
-func (b *MockDriver) Run(ctx context.Context) error {
-	return nil
+// NewMockDriver creates a new MockDriver
+func NewMockDriver() *MockDriver {
+	return &MockDriver{}
 }
 
-// MockBuilderRunErr
-type MockDriverErr struct{}
-
-func NewMockDriverErr(ctx context.Context, o *types.BuildOptions) (types.Driverer, error) {
-	return &MockDriverErr{}, nil
-}
-
-func (b *MockDriverErr) Run(ctx context.Context) error {
-	return errors.New("(MockDriverRunErr)", "Error")
-}
-
-// NewMockDrivererOnNew
-func NewMockDriverErrOnNew(ctx context.Context, o *types.BuildOptions) (types.Driverer, error) {
-	return nil, errors.New("(NewMockDriverErrOnNew)", "Error")
+// Build simulate a new image build
+func (d *MockDriver) Build(ctx context.Context, i *image.Image, options *driver.BuildDriverOptions) error {
+	args := d.Called(ctx, i, options)
+	return args.Error(0)
 }

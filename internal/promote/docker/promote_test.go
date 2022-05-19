@@ -164,9 +164,9 @@ func TestPromote(t *testing.T) {
 
 			err := test.prom.Promote(context.TODO(), test.options)
 
-			if err != nil && assert.Error(t, err) {
-				assert.Equal(t, test.err.Error(), err.Error())
-			}
+			// if err != nil && assert.Error(t, err) {
+			// 	assert.Equal(t, test.err.Error(), err.Error())
+			// }
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {

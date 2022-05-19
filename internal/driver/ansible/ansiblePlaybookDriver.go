@@ -1,150 +1,191 @@
-package ansibledriver
+package driver
 
 import (
 	"context"
+	"io"
+	"os"
 	"strings"
 
-	"github.com/apenella/go-ansible/pkg/execute"
 	"github.com/apenella/go-ansible/pkg/options"
 	ansible "github.com/apenella/go-ansible/pkg/playbook"
-	"github.com/apenella/go-ansible/pkg/stdoutcallback/results"
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/build/varsmap"
-	"github.com/gostevedore/stevedore/internal/driver/common"
-	drivercommon "github.com/gostevedore/stevedore/internal/driver/common"
-	"github.com/gostevedore/stevedore/internal/types"
-	"github.com/gostevedore/stevedore/internal/ui/console"
+	"github.com/gostevedore/stevedore/internal/builders/varsmap"
+	"github.com/gostevedore/stevedore/internal/driver"
+	"github.com/gostevedore/stevedore/internal/images/image"
 )
 
 const (
+	// DriverName is the name for the driver
 	DriverName = "ansible-playbook"
 )
 
-func NewAnsiblePlaybookDriver(ctx context.Context, o *types.BuildOptions) (types.Driverer, error) {
+// AnsiblePlaybookDriver drives the build through ansible
+type AnsiblePlaybookDriver struct {
+	driver AnsibleDriverer
+	writer io.Writer
+}
+
+// NewAnsiblePlaybookDriver returns an AnsiblePlaybookDriver. In case driver is null, it returns an error
+func NewAnsiblePlaybookDriver(driver AnsibleDriverer, writer io.Writer) (*AnsiblePlaybookDriver, error) {
+
+	errContext := "(ansibledriver::NewAnsiblePlaybookDriver)"
+
+	if driver == nil {
+		return nil, errors.New(errContext, "To create an AnsiblePlaybookDriver is required a driver")
+	}
+
+	if writer == nil {
+		writer = os.Stdout
+	}
+
+	return &AnsiblePlaybookDriver{
+		driver: driver,
+		writer: writer,
+	}, nil
+}
+
+// Build performs the build. In case the build could not performed it returns an error
+func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *driver.BuildDriverOptions) error {
 
 	builderName := "builder"
+	errContext := "(ansibledriver::Build)"
+
+	if d.driver == nil {
+		return errors.New(errContext, "To build an image is required a driver")
+	}
+
+	if i == nil {
+		return errors.New(errContext, "To build an image is required a image")
+	}
 
 	if o == nil {
-		return nil, errors.New("(build::NewAnsiblePlaybookDriver)", "Build options are nil")
+		return errors.New(errContext, "To build an image is required a build options")
 	}
 
 	if ctx == nil {
-		return nil, errors.New("(build::NewAnsiblePlaybookDriver)", "Context is nil")
+		return errors.New(errContext, "To build an image is required a golang context")
 	}
 
-	builderConfOptions := o.BuilderOptions
-
-	playbook, ok := builderConfOptions["playbook"]
-	if !ok {
-		return nil, errors.New("(build::NewAnsiblePlaybookDriver)", "playbook has not been defined on build options")
+	if o.BuilderOptions == nil {
+		return errors.New(errContext, "To build an image are required the options from the builder")
 	}
 
-	inventory, ok := builderConfOptions["inventory"]
-	if !ok {
-		return nil, errors.New("(build::NewAnsiblePlaybookDriver)", "inventory has not been defined on build options")
+	playbook := o.BuilderOptions.Playbook
+	if playbook == "" {
+		return errors.New(errContext, "Playbook has not been defined on build options")
+	}
+
+	inventory := o.BuilderOptions.Inventory
+	if o.AnsibleInventoryPath != "" {
+		inventory = o.AnsibleInventoryPath
+	}
+
+	if inventory == "" {
+		return errors.New(errContext, "Inventory has not been defined on build options")
 	}
 
 	ansiblePlaybookOptions := &ansible.AnsiblePlaybookOptions{
-		Inventory: inventory.(string),
+		Inventory: inventory,
 	}
 
 	ansiblePlaybookConnectionOptions := &options.AnsibleConnectionOptions{}
-	if o.ConnectionLocal {
+	if o.AnsibleConnectionLocal {
 		ansiblePlaybookConnectionOptions.Connection = "local"
 	}
 
-	if o.ImageName == "" {
-		return nil, errors.New("(build::NewAnsiblePlaybookDriver)", "Image name is not set")
-	}
-	ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageNameKey], o.ImageName)
-
-	if o.RegistryNamespace != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingRegistryNamespaceKey], o.RegistryNamespace)
-		builderName = strings.Join([]string{builderName, o.RegistryNamespace}, "_")
+	if i.Name == "" {
+		return errors.New(errContext, "Image has not been defined on build options")
 	}
 
-	builderName = strings.Join([]string{builderName, o.ImageName}, "_")
+	ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageNameKey], i.Name)
 
-	if o.ImageVersion != "" {
-		o.ImageVersion = common.SanitizeTag(o.ImageVersion)
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageTagKey], o.ImageVersion)
-		builderName = strings.Join([]string{builderName, o.ImageVersion}, "_")
+	if i.RegistryNamespace != "" {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingRegistryNamespaceKey], i.RegistryNamespace)
+		builderName = strings.Join([]string{builderName, i.RegistryNamespace}, "_")
 	}
 
-	if len(o.BuilderName) > 0 {
-		builderName = o.BuilderName
+	builderName = strings.Join([]string{builderName, i.Name}, "_")
+	if i.Version != "" {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageTagKey], i.Version)
+		builderName = strings.Join([]string{builderName, i.Version}, "_")
 	}
+
+	if len(o.AnsibleIntermediateContainerName) > 0 {
+		builderName = o.AnsibleIntermediateContainerName
+	}
+
+	if o.AnsibleLimit != "" {
+		ansiblePlaybookOptions.Limit = o.AnsibleLimit
+	}
+
 	ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageBuilderLabelKey], builderName)
 
-	if o.RegistryHost != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingRegistryHostKey], o.RegistryHost)
+	if i.RegistryHost != "" {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingRegistryHostKey], i.RegistryHost)
 	}
 
 	// Persistent vars contains the variables defined by the user on execution time and has precedences over vars and the persistent vars defined on the image
-	if len(o.PersistentVars) > 0 {
-		for varName, varValue := range o.PersistentVars {
+	if len(i.PersistentVars) > 0 {
+		for varName, varValue := range i.PersistentVars {
 			ansiblePlaybookOptions.AddExtraVar(varName, varValue)
 		}
 	}
 
 	// Vars contains the variables defined by the user on execution time and has precedences over the default values
-	if len(o.Vars) > 0 {
-		for varName, varValue := range o.Vars {
+	if len(i.Vars) > 0 {
+		for varName, varValue := range i.Vars {
 			ansiblePlaybookOptions.AddExtraVar(varName, varValue)
 		}
 	}
 
-	if len(o.Tags) > 0 {
-		sanitizedTags := []string{}
-		for _, tag := range o.Tags {
-			tag = drivercommon.SanitizeTag(tag)
-			sanitizedTags = append(sanitizedTags, tag)
-		}
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], sanitizedTags)
+	if len(i.Tags) > 0 {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], i.Tags)
+	}
+
+	if len(i.Labels) > 0 {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], i.Labels)
 	}
 
 	if o.OutputPrefix == "" {
-		o.OutputPrefix = o.ImageName
-		if o.ImageVersion != "" {
-			o.OutputPrefix = strings.Join([]string{o.OutputPrefix, o.ImageVersion}, ":")
+		o.OutputPrefix = i.Name
+		if i.Version != "" {
+			o.OutputPrefix = strings.Join([]string{o.OutputPrefix, i.Version}, ":")
 		}
 	}
 
-	if o.ImageFromName != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromNameKey], o.ImageFromName)
+	if i.Parent != nil && i.Parent.Name != "" {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromNameKey], i.Parent.Name)
+
 	}
 
-	if o.ImageFromRegistryNamespace != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromRegistryNamespaceKey], o.ImageFromRegistryNamespace)
+	if i.Parent != nil && i.Parent.RegistryNamespace != "" {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromRegistryNamespaceKey], i.Parent.RegistryNamespace)
 	}
 
-	if o.ImageFromRegistryHost != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromRegistryHostKey], o.ImageFromRegistryHost)
+	if i.Parent != nil && i.Parent.RegistryHost != "" {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromRegistryHostKey], i.Parent.RegistryHost)
 	}
 
-	if o.ImageFromVersion != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromTagKey], o.ImageFromVersion)
+	if i.Parent != nil && i.Parent.Version != "" {
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromTagKey], i.Parent.Version)
 	}
 
-	if !o.PushImages {
+	if !o.PushImageAfterBuild {
 		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingPushImagetKey], false)
 	}
 
-	options.AnsibleForceColor()
+	// TODO:
+	// go-ansible library is not able to pass secrets, auth values won't be passed to ansible playbook till this is allowed
 
-	ansiblePlaybook := &ansible.AnsiblePlaybookCmd{
-		Playbooks:         []string{playbook.(string)},
-		Options:           ansiblePlaybookOptions,
-		ConnectionOptions: ansiblePlaybookConnectionOptions,
-		Exec: execute.NewDefaultExecute(
-			execute.WithWrite(console.GetConsole()),
-			execute.WithTransformers(
-				results.Prepend(o.OutputPrefix),
-			),
-		),
+	d.driver.WithPlaybook(playbook)
+	d.driver.WithOptions(ansiblePlaybookOptions)
+	d.driver.WithConnectionOptions(ansiblePlaybookConnectionOptions)
+	d.driver.PrepareExecutor(d.writer, o.OutputPrefix)
+
+	err := d.driver.Run(ctx)
+	if err != nil {
+		return errors.New(errContext, "", err)
 	}
 
-	console.Blue(ansiblePlaybook.String())
-
-	return ansiblePlaybook, nil
+	return nil
 }

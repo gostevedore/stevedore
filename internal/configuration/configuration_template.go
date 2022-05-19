@@ -9,62 +9,52 @@ const (
 #
 # Images tree location path
 #  default value:
-#    tree_path: stevedore.yaml
-{{ with .TreePathFile  -}}
-tree_path: {{ . }}
+#    images_path: stevedore.yaml
+{{ with .ImagesPath  -}}
+images_path: {{ . }}
 {{ else -}}
 #
-# tree_path: stevedore.yaml
+# images_path: stevedore.yaml
 {{ end }}
 #
 # Builders location path
 #  default value:
-#    builder_path: stevedore.yaml
-{{ with .BuilderPathFile -}}
-builder_path: {{ . }}
+#    builders_path: stevedore.yaml
+{{ with .BuildersPath -}}
+builders_path: {{ . }}
 {{ else -}}
 #
-# builder_path: stevedore.yaml
+# builders_path: stevedore.yaml
 {{ end }}
 #
 # Log file location path
 #  default value: 
-#    log_path: /dev/null
+#    log_path: /var/log/stevedore.log
 {{ with .LogPathFile -}}
 log_path: {{ . }}
 {{ else -}}
 #
-# log_path: /dev/null
+# log_path: /var/log/stevedore.log
 {{ end }}
 #
 # It defines the number of workers to build images which corresponds to the number of images that can be build concurrently
 #  default value: 
-#    num_workers: 4
-{{ with .NumWorkers -}}
-num_workers: {{ . }}
+#    concurrency: 4
+{{ with .Concurrency -}}
+concurrency: {{ . }}
 {{ else -}}
 #
-# num_workers: 4
+# concurrency: 4
 {{ end }}
 #
 # On build, push images automatically after it finishes
 #  default value: 
-#    push_images: true
+#    push_images: false
 {{ if not .PushImages -}}
 push_images: {{ .PushImages }}
 {{ else -}}
 #
-# push_images: true
-{{ end }}
-#
-# On build, start children images building once an image build is finished
-#  default value: 
-#   build_on_cascade: false
-{{ with .BuildOnCascade -}}
-build_on_cascade: {{ . }}
-{{ else -}}
-#
-# build_on_cascade: true
+# push_images: false
 {{ end }}
 #
 # Directory to store docker registry credentials
@@ -112,21 +102,7 @@ semantic_version_tags_templates:
 {{ end }}
 #
 # Define builder types
-# You could define builders on its own file. Stevedore will look up for builders on the file set at 'builder_path'
-# 
-# Builder definition must match to golang struct defined below. Options structure depends on each driver.
-# 
-#     type Builder struct {
-#         Name    string                 #u0060yaml:"name"#u0060
-#         Driver  string                 #u0060yaml:"driver"#u0060
-#         Options map[string]interface{} #u0060yaml:"options"#u0060
-#     }
-# 
-# Set of builders must match to golang struct defined below
-# 
-#     type Builders struct {
-#         Builders map[string]*Builder #u0060yaml:"builders"#u0060
-#     }
+# You could define builders on its own file. Stevedore will look up for builders on the file set at 'builders_path'
 # 
 # examples:
 #   1) Define one builder named 'infrastructure' which use docker as driver and current folder as Docker build context
@@ -140,32 +116,13 @@ semantic_version_tags_templates:
 
 #
 # Define images tree
-# You could define an images tree on its own file. Stevedore will look up for images tree on the file set at 'tree_path'
-#
-# An images must be defined based on the golang struct defined below:
-# 
-#     type Image struct {
-#         Name      string                 #u0060yaml:"name"#u0060
-#         Registry  string                 #u0060yaml:"registry"#u0060
-#         Builder   interface{}            #u0060yaml:"builder"#u0060
-#         Namespace string                 #u0060yaml:"namespace"#u0060
-#         Version   string                 #u0060yaml:"version"#u0060
-#         Tags      []string               #u0060yaml:"tags"#u0060
-#         Vars      map[string]interface{} #u0060yaml:"vars"#u0060
-#         Children  map[string][]string    #u0060yaml:"childs"#u0060
-#     }
-# 
-#  An images tree define the relationship among a set of images and must match to golang struct defined below:
-# 
-#     type ImagesTree struct {
-#         Images map[string]map[string]*image.Image #u0060yaml:"images_tree"#u0060
-#     }
+# You could define an images tree on its own file. Stevedore will look up for images tree on the file set at 'images_path'
 # 
 #  examples:
 #    1) Define an images tree that has one image named 'ubuntu' which has two versions, '20.04' and '18.04'.
-#       The image '20.04' has two children: 'php-fpm' and 'php-cli', both versions defined are '7.4' while the version '18.04' has only one child: 'php-fpm' and version '7.3'
+#       The image '20.04' has two children: 'php-fpm' and 'php-cli', both having the version '7.4' defined. And the image '18.04' has only one child: 'php-fpm', with version '7.3' defined.
 #       
-#       images_tree:
+#       images:
 #         ubuntu:
 #           18.04:
 #             builder: infrastructure
