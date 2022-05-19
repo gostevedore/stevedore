@@ -50,7 +50,7 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 
 			err = promote.Execute(ctx, cmd.Flags().Args(), conf, handlerOptions)
 			if err != nil {
-				return errors.New(errContext, err.Error())
+				return errors.New(errContext, "", err)
 			}
 
 			return nil
