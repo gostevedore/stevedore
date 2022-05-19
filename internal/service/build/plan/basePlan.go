@@ -26,13 +26,13 @@ func (p *BasePlan) findImages(name string, versions []string) ([]*image.Image, e
 	if versions == nil || len(versions) < 1 {
 		images, err = p.images.FindByName(name)
 		if err != nil {
-			return nil, errors.New(errContext, err.Error())
+			return nil, errors.New(errContext, "", err)
 		}
 	} else {
 		for _, version := range versions {
 			imageAux, err = p.images.Find(name, version)
 			if err != nil {
-				return nil, errors.New(errContext, err.Error())
+				return nil, errors.New(errContext, "", err)
 			}
 			images = append(images, imageAux)
 		}

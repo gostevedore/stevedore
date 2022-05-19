@@ -32,7 +32,7 @@ func (p *CascadePlan) Plan(name string, versions []string) ([]*Step, error) {
 
 	images, err = p.findImages(name, versions)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	for _, image := range images {

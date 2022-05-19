@@ -1,7 +1,6 @@
 package build
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"strings"
@@ -15,6 +14,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/schedule"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 	"github.com/gostevedore/stevedore/internal/service/build/plan"
+	"gopkg.in/yaml.v2"
 )
 
 // OptionsFunc is a function used to configure the service
@@ -115,7 +115,7 @@ func (s *Service) Build(ctx context.Context, buildPlan Planner, name string, ver
 
 	steps, err = buildPlan.Plan(name, version)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	// configure service options before start build
@@ -282,7 +282,7 @@ func (s *Service) build(ctx context.Context, image *image.Image, options *Servic
 	if image.Parent != nil {
 		pullAuth, err := s.getCredentials(image.Parent.RegistryHost)
 		if err != nil {
-			return errors.New(errContext, err.Error())
+			return errors.New(errContext, "", err)
 		}
 
 		if pullAuth != nil {
@@ -294,16 +294,16 @@ func (s *Service) build(ctx context.Context, image *image.Image, options *Servic
 
 	pushAuth, err := s.getCredentials(image.RegistryHost)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 	if pushAuth != nil {
 		buildOptions.PushAuthUsername = pushAuth.Username
 		buildOptions.PushAuthPassword = pushAuth.Password
 	}
 
-	imageBuilder, err := s.getBuilder(image.Builder)
+	imageBuilder, err := s.getBuilder(image)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	buildOptions.BuilderOptions = imageBuilder.Options
@@ -312,7 +312,7 @@ func (s *Service) build(ctx context.Context, image *image.Image, options *Servic
 
 	driver, err := s.getDriver(imageBuilder, options)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	// used by ansible driver
@@ -333,20 +333,20 @@ func (s *Service) build(ctx context.Context, image *image.Image, options *Servic
 
 	cmd, err := s.command(driver, image, buildOptions)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	// End options enrichment
 	job, err := s.job(ctx, cmd)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	s.dispatch.Enqueue(job)
 
 	err = job.Wait()
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	return nil
@@ -411,17 +411,21 @@ func (s *Service) getDriver(builder *builder.Builder, options *ServiceOptions) (
 
 	driver, err := s.driverFactory.Get(driverName)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return driver, nil
 }
 
-func (s *Service) getBuilder(builderDefinition interface{}) (*builder.Builder, error) {
+func (s *Service) getBuilder(i *image.Image) (*builder.Builder, error) {
 
 	errContext := "(build::builder)"
 
-	if builderDefinition == nil {
+	if i == nil {
+		return nil, errors.New(errContext, "To generate a builder, is required an image definition")
+	}
+
+	if i.Builder == nil {
 		return nil, errors.New(errContext, "To generate a builder, is required a builder definition")
 	}
 
@@ -429,15 +433,25 @@ func (s *Service) getBuilder(builderDefinition interface{}) (*builder.Builder, e
 		return nil, errors.New(errContext, "To generate a builder, is required a builder store defined on build service")
 	}
 
-	switch builderDefinition.(type) {
+	switch i.Builder.(type) {
 	case string:
-		return s.builders.Find(builderDefinition.(string))
+		return s.builders.Find(i.Builder.(string))
 	case *builder.Builder:
-		builderAux := builderDefinition.(*builder.Builder)
+
+		builderAux := i.Builder.(*builder.Builder)
 
 		return builder.NewBuilder(builderAux.Name, builderAux.Driver, builderAux.Options, builderAux.VarMapping), nil
 	default:
-		// In-line builder definition
-		return builder.NewBuilderFromIOReader(bytes.NewBuffer([]byte(builderDefinition.(string))))
+		builderDefinitionBytes, err := yaml.Marshal(i.Builder)
+		if err != nil {
+			return nil, errors.New(errContext, fmt.Sprintf("There is an error marshaling '%s:%s' builder", i.Name, i.Version), err)
+		}
+
+		b, err := builder.NewBuilderFromByteArray(builderDefinitionBytes)
+		if err != nil {
+			return nil, errors.New(errContext, fmt.Sprintf("There is an error creating the builder for '%s:%s'", i.Name, i.Version), err)
+		}
+
+		return b, nil
 	}
 }

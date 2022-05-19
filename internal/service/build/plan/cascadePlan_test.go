@@ -25,7 +25,7 @@ func TestCascadePlanPlan(t *testing.T) {
 		{
 			desc: "Testing error when images storer is nil",
 			plan: &CascadePlan{},
-			err:  errors.New(errContext, "Images storer is nil"),
+			err:  errors.New(errContext, "\n\tImages storer is nil"),
 		},
 		{
 			desc: "Testing generate cascade plan with three images",
@@ -142,7 +142,8 @@ func TestCascadePlanPlan(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-			//t.Log(test.desc)
+			t.Log(test.desc)
+
 			if test.prepareAssertFunc != nil {
 				test.prepareAssertFunc(test.plan)
 			}

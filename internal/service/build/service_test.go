@@ -495,28 +495,32 @@ func TestGetBuilder(t *testing.T) {
 	tests := []struct {
 		desc              string
 		service           *Service
-		builderDefinition interface{}
+		image             *image.Image
 		res               *builder.Builder
 		prepareAssertFunc func(*Service)
 		assertFunc        func(expected, actual *builder.Builder) bool
 		err               error
 	}{
 		{
-			desc:              "Testing error getting a builder with no builder definition",
-			service:           &Service{},
-			builderDefinition: nil,
-			err:               errors.New(errContext, "To generate a builder, is required a builder definition"),
+			desc:    "Testing error getting a builder to nil image",
+			service: &Service{},
+			image:   nil,
+			err:     errors.New(errContext, "To generate a builder, is required an image definition"),
 		},
 		{
-			desc:              "Testing error getting a builder with no builders store",
-			service:           &Service{},
-			builderDefinition: "test",
-			err:               errors.New(errContext, "To generate a builder, is required a builder store defined on build service"),
+			desc:    "Testing error getting a builder with no builders store",
+			service: &Service{},
+			image: &image.Image{
+				Builder: "test",
+			},
+			err: errors.New(errContext, "To generate a builder, is required a builder store defined on build service"),
 		},
 		{
-			desc:              "Testing return a builder defined by an string",
-			service:           &Service{builders: store.NewMockBuildersStore()},
-			builderDefinition: "test",
+			desc:    "Testing return a builder defined by an string",
+			service: &Service{builders: store.NewMockBuildersStore()},
+			image: &image.Image{
+				Builder: "test",
+			},
 			prepareAssertFunc: func(s *Service) {
 				s.builders.(*store.MockBuildersStore).On("Find", "test").Return(&builder.Builder{
 					Name: "test",
@@ -532,48 +536,57 @@ func TestGetBuilder(t *testing.T) {
 			},
 		},
 		// That test to be tested from the caller because is not possible to force builderDerfinetion to be seen as an interface
-		// 		{
-		// 			desc:    "Testing return a builder defined by an interface{}",
-		// 			service: &Service{builders: builders.NewMockBuilders()},
-		// 			builderDefinition: `
-		// driver: docker
-		// options:
-		//     dockerfile: Dockerfile.test
-		//     context:
-		//     - git:
-		//         path: path
-		//         repository: repository
-		//         reference: reference
-		//         auth:
-		//             username: username
-		//             password: password
-		// `,
-		// 			prepareAssertFunc: nil,
-		// 			assertFunc: func(expected, actual *builder.Builder) bool {
-		// 				//return s.builders.(*builders.MockBuilders).AssertExpectations(t)
-		// 				return assert.Equal(t, expected, actual)
-		// 			},
-		// 			res: &builder.Builder{
-		// 				Name:   "",
-		// 				Driver: "docker",
-		// 				Options: &builder.BuilderOptions{
-		// 					Context: []*builder.DockerDriverContextOptions{
-		// 						{
-		// 							Git: &builder.DockerDriverGitContextOptions{
-		// 								Path:       "path",
-		// 								Repository: "repository",
-		// 								Reference:  "reference",
-		// 								Auth: &builder.DockerDriverGitContextAuthOptions{
-		// 									Username: "username",
-		// 									Password: "password",
-		// 								},
-		// 							},
-		// 						},
-		// 					},
-		// 					Dockerfile: "Dockerfile.test",
-		// 				},
-		// 			},
-		// 		},
+		{
+			desc:    "Testing return a builder defined by an interface{}",
+			service: &Service{builders: store.NewMockBuildersStore()},
+			image: &image.Image{
+				Builder: map[interface{}]interface{}{
+					"driver": "docker",
+					"options": map[interface{}]interface{}{
+						"dockerfile": "Dockerfile.test",
+						"context": []map[interface{}]interface{}{
+							{
+								"git": map[interface{}]interface{}{
+									"path":       "path",
+									"repository": "repository",
+									"reference":  "reference",
+									"auth": map[interface{}]interface{}{
+										"username": "username",
+										"password": "password",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
+			prepareAssertFunc: nil,
+			assertFunc: func(expected, actual *builder.Builder) bool {
+				return assert.Equal(t, expected, actual)
+			},
+			res: &builder.Builder{
+				Name:   "",
+				Driver: "docker",
+				Options: &builder.BuilderOptions{
+					Context: []*builder.DockerDriverContextOptions{
+						{
+							Git: &builder.DockerDriverGitContextOptions{
+								Path:       "path",
+								Repository: "repository",
+								Reference:  "reference",
+								Auth: &builder.DockerDriverGitContextAuthOptions{
+									Username: "username",
+									Password: "password",
+								},
+							},
+						},
+					},
+					Dockerfile: "Dockerfile.test",
+				},
+				VarMapping: varsmap.New(),
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -584,7 +597,7 @@ func TestGetBuilder(t *testing.T) {
 				test.prepareAssertFunc(test.service)
 			}
 
-			res, err := test.service.getBuilder(test.builderDefinition)
+			res, err := test.service.getBuilder(test.image)
 			_ = res
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
