@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/gostevedore/stevedore/internal/images/image"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 )
 
 // GraphTemplateStorer is the interface for the graph template store

@@ -6,8 +6,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/driver"
-	"github.com/gostevedore/stevedore/internal/images/image"
 )
 
 // DryRunDriver is a driver that just simulates the build process

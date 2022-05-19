@@ -8,7 +8,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/configuration/images/graph"
 	"github.com/gostevedore/stevedore/internal/configuration/images/image"
-	domainimage "github.com/gostevedore/stevedore/internal/images/image"
+	domainimage "github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 )

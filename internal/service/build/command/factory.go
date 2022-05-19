@@ -1,8 +1,8 @@
 package command
 
 import (
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/driver"
-	"github.com/gostevedore/stevedore/internal/images/image"
 )
 
 // BuildCommandFactory is a factory to create a build command

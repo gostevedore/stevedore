@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/gostevedore/stevedore/internal/images/image"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 )
 
 func TestStepSecuence(t *testing.T) {

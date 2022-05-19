@@ -2,7 +2,7 @@ package image
 
 import (
 	errors "github.com/apenella/go-common-utils/error"
-	domainimage "github.com/gostevedore/stevedore/internal/images/image"
+	domainimage "github.com/gostevedore/stevedore/internal/core/domain/image"
 	"gopkg.in/yaml.v2"
 )
 

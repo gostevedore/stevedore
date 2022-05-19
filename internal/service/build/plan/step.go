@@ -2,7 +2,7 @@ package plan
 
 import (
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/images/image"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 )
 
 // Step is a plan step

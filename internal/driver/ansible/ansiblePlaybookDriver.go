@@ -10,8 +10,8 @@ import (
 	ansible "github.com/apenella/go-ansible/pkg/playbook"
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/builders/varsmap"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/driver"
-	"github.com/gostevedore/stevedore/internal/images/image"
 )
 
 const (

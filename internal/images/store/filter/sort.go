@@ -1,6 +1,6 @@
 package filter
 
-import "github.com/gostevedore/stevedore/internal/images/image"
+import "github.com/gostevedore/stevedore/internal/core/domain/image"
 
 // SortedImages implements sort.Interface based on the image Name field and then image version field
 type SortedImages []*image.Image

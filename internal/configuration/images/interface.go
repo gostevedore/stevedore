@@ -3,7 +3,7 @@ package images
 import (
 	"github.com/gostevedore/stevedore/internal/configuration/images/graph"
 	configimage "github.com/gostevedore/stevedore/internal/configuration/images/image"
-	domainimage "github.com/gostevedore/stevedore/internal/images/image"
+	domainimage "github.com/gostevedore/stevedore/internal/core/domain/image"
 )
 
 // TemplatesStorer interface

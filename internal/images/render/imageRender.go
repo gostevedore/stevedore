@@ -7,8 +7,8 @@ import (
 	"time"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/images/image"
-	"github.com/gostevedore/stevedore/internal/images/image/render/now"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
+	"github.com/gostevedore/stevedore/internal/images/render/now"
 )
 
 // ImageRender contains the information to render an image from template

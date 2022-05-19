@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/images/image"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 )
 
 // BasePlan is the base plan which all plans should extend

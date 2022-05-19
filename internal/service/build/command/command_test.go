@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	driver "github.com/gostevedore/stevedore/internal/driver"
 	mockdriver "github.com/gostevedore/stevedore/internal/driver/mock"
-	"github.com/gostevedore/stevedore/internal/images/image"
 	"github.com/stretchr/testify/assert"
 )
 

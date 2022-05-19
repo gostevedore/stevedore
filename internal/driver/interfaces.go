@@ -3,7 +3,7 @@ package driver
 import (
 	"context"
 
-	"github.com/gostevedore/stevedore/internal/images/image"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 )
 
 // BuildDriverer interface defines which methods are used to build a docker image

@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	domainimage "github.com/gostevedore/stevedore/internal/images/image"
-	"github.com/gostevedore/stevedore/internal/images/image/render/now"
+	domainimage "github.com/gostevedore/stevedore/internal/core/domain/image"
+	"github.com/gostevedore/stevedore/internal/images/render/now"
 	"github.com/stretchr/testify/assert"
 )
 

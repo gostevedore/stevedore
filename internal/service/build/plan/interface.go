@@ -1,7 +1,7 @@
 package plan
 
 import (
-	"github.com/gostevedore/stevedore/internal/images/image"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 )
 
 // ImagesStorer interfaces defines the storage of images
