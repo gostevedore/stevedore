@@ -113,7 +113,7 @@ func NewBuilderFromIOReader(reader io.Reader) (*Builder, error) {
 
 	_, err = buff.ReadFrom(reader)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	err = yaml.Unmarshal(buff.Bytes(), &builder)
