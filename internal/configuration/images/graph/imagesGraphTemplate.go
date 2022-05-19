@@ -78,7 +78,7 @@ func (m *ImagesGraphTemplate) AddImage(name, version string, i *image.Image) err
 		node = m.graphFactory.NewGraphTemplateNode(generateNodeName(name, version))
 		err = m.graph.AddNode(node)
 		if err != nil {
-			return errors.New(errContext, err.Error())
+			return errors.New(errContext, "", err)
 		}
 	}
 	node.AddItem(i)
@@ -92,13 +92,13 @@ func (m *ImagesGraphTemplate) AddImage(name, version string, i *image.Image) err
 					parentNode = m.graphFactory.NewGraphTemplateNode(generateNodeName(parentName, parentVersion))
 					err = m.graph.AddNode(parentNode)
 					if err != nil {
-						return errors.New(errContext, err.Error())
+						return errors.New(errContext, "", err)
 					}
 				}
 
 				err = m.graph.AddRelationship(parentNode, node)
 				if err != nil {
-					return errors.New(errContext, err.Error())
+					return errors.New(errContext, "", err)
 				}
 			}
 		}
@@ -113,13 +113,13 @@ func (m *ImagesGraphTemplate) AddImage(name, version string, i *image.Image) err
 					childNode = m.graphFactory.NewGraphTemplateNode(generateNodeName(childName, childVersion))
 					err = m.graph.AddNode(childNode)
 					if err != nil {
-						return errors.New(errContext, err.Error())
+						return errors.New(errContext, "", err)
 					}
 				}
 
 				err = m.graph.AddRelationship(node, childNode)
 				if err != nil {
-					return errors.New(errContext, err.Error())
+					return errors.New(errContext, "", err)
 				}
 			}
 		}
