@@ -71,22 +71,22 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 
 	options, err = e.prepareHandlerOptions(args, conf, handlerOptions)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	promoteRepoFactory, err = e.createPromoteFactory()
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	credentialsStore, err = e.createCredentialsStore(conf)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	semverGenerator, err = e.createSemanticVersionFactory()
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	promoteService := service.NewService(
@@ -98,7 +98,7 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 	promoteHandler := handler.NewHandler(promoteService)
 	err = promoteHandler.Handler(ctx, options)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	return nil
@@ -161,7 +161,7 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.Configuration) (
 	credentialsStore := credentials.NewCredentialsStore(e.fs)
 	err := credentialsStore.LoadCredentials(conf.DockerCredentialsDir)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return credentialsStore, nil
@@ -173,7 +173,7 @@ func (e *Entrypoint) createPromoteFactory() (promote.PromoteFactory, error) {
 
 	dockerClient, err := dockerclient.NewClientWithOpts(dockerclient.FromEnv)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	copyCmd := copy.NewDockerImageCopyCmd(dockerClient)
@@ -183,11 +183,11 @@ func (e *Entrypoint) createPromoteFactory() (promote.PromoteFactory, error) {
 	promoteRepoFactory := promote.NewPromoteFactory()
 	err = promoteRepoFactory.Register(promote.DockerPromoterName, promoteRepoDocker)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 	err = promoteRepoFactory.Register(promote.DryRunPromoterName, promoteRepoDryRun)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return promoteRepoFactory, nil

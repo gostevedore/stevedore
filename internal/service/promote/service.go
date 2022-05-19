@@ -87,16 +87,16 @@ func (s *Service) Promote(ctx context.Context, options *ServiceOptions) error {
 	promoteOptions.SourceImageName = options.SourceImageName
 	sourceImage, err = image.Parse(options.SourceImageName)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 	targetImage, err = sourceImage.Copy()
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	pullAuth, err := s.getCredentials(sourceImage.RegistryHost)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 	if pullAuth != nil {
 		promoteOptions.PullAuthUsername = pullAuth.Username
@@ -133,12 +133,12 @@ func (s *Service) Promote(ctx context.Context, options *ServiceOptions) error {
 
 	promoteOptions.TargetImageName, err = targetImage.DockerNormalizedNamed()
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	pushAuth, err := s.getCredentials(targetImage.RegistryHost)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 	if pushAuth != nil {
 		promoteOptions.PushAuthUsername = pushAuth.Username
@@ -150,12 +150,12 @@ func (s *Service) Promote(ctx context.Context, options *ServiceOptions) error {
 
 	promoter, err := s.getPromoter(options)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	err = promoter.Promote(ctx, promoteOptions)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	return nil
@@ -187,7 +187,7 @@ func (e *Service) getPromoter(options *ServiceOptions) (promote.Promoter, error)
 	}
 	promoter, err := e.factory.Get(promoteDriver)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return promoter, nil

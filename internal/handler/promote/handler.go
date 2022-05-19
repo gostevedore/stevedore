@@ -55,7 +55,7 @@ func (h *Handler) Handler(ctx context.Context, options *Options) error {
 
 	err := h.service.Promote(ctx, serviceOptions)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	return nil

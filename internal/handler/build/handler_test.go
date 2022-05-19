@@ -139,6 +139,8 @@ func TestHandler(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 
+			t.Log(test.desc)
+
 			if test.prepareAssertFunc != nil {
 				test.prepareAssertFunc(test.imageName, test.handler.planFactory, test.handler.service)
 			}
@@ -188,11 +190,11 @@ func TestCreateBuildPlan(t *testing.T) {
 				CascadeDepth:   5,
 			},
 			res: nil,
-			err: &errors.Error{},
+			err: nil,
 			prepareAssertFunc: func(p PlanFactorier) {
 				p.(*plan.MockPlanFactory).On("NewPlan", "cascade", map[string]interface{}{
 					"depth": 5,
-				}).Return(plan.NewMockPlan(), &errors.Error{})
+				}).Return(plan.NewMockPlan(), nil)
 			},
 			assertFunc: func(p PlanFactorier) {
 				p.(*plan.MockPlanFactory).AssertExpectations(t)
@@ -203,9 +205,9 @@ func TestCreateBuildPlan(t *testing.T) {
 			handler: NewHandler(plan.NewMockPlanFactory(), build.NewMockService()),
 			options: &Options{},
 			res:     nil,
-			err:     &errors.Error{},
+			err:     nil,
 			prepareAssertFunc: func(p PlanFactorier) {
-				p.(*plan.MockPlanFactory).On("NewPlan", "single", map[string]interface{}{}).Return(plan.NewMockPlan(), &errors.Error{})
+				p.(*plan.MockPlanFactory).On("NewPlan", "single", map[string]interface{}{}).Return(plan.NewMockPlan(), nil)
 			},
 			assertFunc: func(p PlanFactorier) {
 				p.(*plan.MockPlanFactory).AssertExpectations(t)
@@ -215,6 +217,8 @@ func TestCreateBuildPlan(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
+
+			t.Log(test.desc)
 
 			if test.prepareAssertFunc != nil {
 				test.prepareAssertFunc(test.handler.planFactory)

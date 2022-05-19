@@ -92,7 +92,7 @@ func (h *Handler) Handler(ctx context.Context, imageName string, options *Option
 
 	buildPlan, err = h.createBuildPlan(options)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	err = h.service.Build(
@@ -103,7 +103,7 @@ func (h *Handler) Handler(ctx context.Context, imageName string, options *Option
 		buildServiceOptions,
 	)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	return nil
@@ -129,7 +129,7 @@ func (h *Handler) createBuildPlan(options *Options) (plan.Planner, error) {
 	if options.BuildOnCascade {
 		err = validateCascadePlanOptions(options)
 		if err != nil {
-			return nil, errors.New(errContext, err.Error())
+			return nil, errors.New(errContext, "", err)
 		}
 
 		planType = "cascade"
@@ -138,7 +138,7 @@ func (h *Handler) createBuildPlan(options *Options) (plan.Planner, error) {
 
 	plan, err = h.planFactory.NewPlan(planType, planParameters)
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return plan, nil
