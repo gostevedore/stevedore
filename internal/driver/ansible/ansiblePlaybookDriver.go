@@ -184,7 +184,7 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *dr
 
 	err := d.driver.Run(ctx)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	return nil

@@ -70,13 +70,9 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *drive
 		return errors.New(errContext, "To build an image is required an image name")
 	}
 
-	// imageAux, err := image.NewImage(options.ImageName, options.ImageVersion, options.RegistryHost, options.RegistryNamespace)
-	// if err != nil {
-	// 	return errors.New(errContext, err.Error())
-	// }
 	imageName, err = i.DockerNormalizedNamed()
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	d.driver.WithImageName(imageName)
@@ -109,11 +105,11 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *drive
 
 			imageTaggedAux, err := image.NewImage(i.Name, tag, i.RegistryHost, i.RegistryNamespace)
 			if err != nil {
-				return errors.New(errContext, err.Error())
+				return errors.New(errContext, "", err)
 			}
 			imageTaggedName, err := imageTaggedAux.DockerNormalizedNamed()
 			if err != nil {
-				return errors.New(errContext, err.Error())
+				return errors.New(errContext, "", err)
 			}
 
 			d.driver.AddTags(imageTaggedName)
@@ -174,7 +170,7 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *drive
 
 	err = d.driver.AddBuildContext(options.BuilderOptions.Context...)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	responseOutputPrefix := options.OutputPrefix
@@ -187,7 +183,7 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *drive
 
 	err = d.driver.Run(ctx)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	return nil

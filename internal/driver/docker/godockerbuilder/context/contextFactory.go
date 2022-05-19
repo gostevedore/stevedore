@@ -60,7 +60,7 @@ func (f *DockerBuildContextFactory) GenerateDockerBuildContext(options *builder.
 
 			auth, err := f.gitAuth.GenerateAuthMethod(options.Git.Auth)
 			if err != nil {
-				return nil, errors.New(errContext, err.Error())
+				return nil, errors.New(errContext, "", err)
 			}
 
 			gitBuildContext.WithAuth(auth)

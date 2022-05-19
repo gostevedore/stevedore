@@ -115,16 +115,17 @@ func TestGenerateDockerBuildContext(t *testing.T) {
 				gitAuth: gitauth.NewGitAuthFactory(nil),
 			},
 			context: nil,
-			err:     errors.New(errContext, "Credentials store is expected when a credentials id is configured"),
+			err:     errors.New(errContext, "\n\tCredentials store is expected when a credentials id is configured"),
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
 			context, err := test.factory.GenerateDockerBuildContext(test.options)
 
 			if err != nil {
-				assert.Equal(t, test.err, err)
+				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
 				assert.Equal(t, test.context, context)
 			}

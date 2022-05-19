@@ -36,7 +36,7 @@ func (f *GitAuthFactory) GenerateAuthMethod(options *builder.DockerDriverGitCont
 
 		cred, err := f.Credentials.Get(options.CredentialsID)
 		if err != nil {
-			return nil, errors.New(errContext, err.Error())
+			return nil, errors.New(errContext, "", err)
 		}
 
 		options.Username = cred.Username
