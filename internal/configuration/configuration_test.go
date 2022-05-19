@@ -343,7 +343,7 @@ semantic_version_tags_templates:
 			desc:          "Testing error when reload configuration from file",
 			file:          "unknown",
 			compatibility: compatibility.NewMockCompatibility(),
-			err: errors.New(errContext, "Configuration file could be loaded",
+			err: errors.New(errContext, "\n\tConfiguration file could be loaded",
 				errors.New("", "open unknown: file does not exist")),
 			res: nil,
 			prepareAssertFunc: func(c Compatibilitier) {

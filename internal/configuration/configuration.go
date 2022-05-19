@@ -143,7 +143,7 @@ func New(fs afero.Fs, compatibility Compatibilitier) (*Configuration, error) {
 
 	err = config.CheckCompatibility()
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return config, nil
@@ -194,7 +194,7 @@ func LoadFromFile(fs afero.Fs, file string, compatibility Compatibilitier) (*Con
 
 	err = config.CheckCompatibility()
 	if err != nil {
-		return nil, errors.New(errContext, err.Error())
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return config, nil
@@ -206,7 +206,7 @@ func (c *Configuration) ReloadConfigurationFromFile(fs afero.Fs, file string, co
 
 	newConfig, err := LoadFromFile(fs, file, compatibility)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	*c = *newConfig
