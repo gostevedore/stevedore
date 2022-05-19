@@ -37,7 +37,7 @@ func (b *Builders) LoadBuilders(path string) error {
 
 	isDir, err = afero.IsDir(b.fs, path)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	if isDir {
@@ -64,7 +64,7 @@ func (b *Builders) LoadBuildersFromFile(path string) error {
 
 	fileData, err = afero.ReadFile(b.fs, path)
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	err = yaml.Unmarshal(fileData, buildersAux)
@@ -98,12 +98,12 @@ func (b *Builders) LoadBuildersFromDir(dir string) error {
 
 	yamlFiles, err := afero.Glob(b.fs, dir+"/*.yaml")
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 
 	ymlFiles, err := afero.Glob(b.fs, dir+"/*.yml")
 	if err != nil {
-		return errors.New(errContext, err.Error())
+		return errors.New(errContext, "", err)
 	}
 	files := append(yamlFiles, ymlFiles...)
 

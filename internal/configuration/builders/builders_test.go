@@ -379,7 +379,7 @@ builders:
 			desc:     "Testing error loading builders from unexisting directory",
 			path:     "/builders_unexisting",
 			builders: NewBuilders(testFs, store.NewMockBuildersStore()),
-			err:      errors.New(errContext, "open /builders_unexisting: file does not exist"),
+			err:      errors.New(errContext, "\n\topen /builders_unexisting: file does not exist"),
 		},
 	}
 
