@@ -7,7 +7,8 @@ import (
 	gitcontextbasicauth "github.com/apenella/go-docker-builder/pkg/auth/git/basic"
 	gitcontextkeyauth "github.com/apenella/go-docker-builder/pkg/auth/git/key"
 	gitcontextsshagentauth "github.com/apenella/go-docker-builder/pkg/auth/git/sshagent"
-	"github.com/gostevedore/stevedore/internal/builders/builder"
+	"github.com/gostevedore/stevedore/internal/core/domain/builder"
+	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	credentialsstore "github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/stretchr/testify/assert"
 )
@@ -74,7 +75,7 @@ func TestGenerateAuthMethod(t *testing.T) {
 			},
 			factory: &GitAuthFactory{
 				Credentials: &credentialsstore.CredentialsStore{
-					Store: map[string]*credentialsstore.UserPasswordAuth{
+					Store: map[string]*credentials.UserPasswordAuth{
 						"1c88d75d861f84fd80b43bb117b2fcde": {
 							Username: "user",
 							Password: "pass",

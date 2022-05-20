@@ -1,7 +1,7 @@
 package driver
 
 import (
-	"github.com/gostevedore/stevedore/internal/builders/builder"
+	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 )
 
 // BuildDriverOptions options required by driver to build an image

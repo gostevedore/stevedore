@@ -1,6 +1,6 @@
 package output
 
-import "github.com/gostevedore/stevedore/internal/builders/builder"
+import "github.com/gostevedore/stevedore/internal/core/domain/builder"
 
 // BuildersPrinter is an interface for printing builders content output.
 type BuildersPrinter interface {

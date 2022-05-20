@@ -1,6 +1,6 @@
 package builders
 
-import "github.com/gostevedore/stevedore/internal/builders/builder"
+import "github.com/gostevedore/stevedore/internal/core/domain/builder"
 
 // BuildersStorer interface
 type BuildersStorer interface {

@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"github.com/apenella/go-docker-builder/pkg/build/context/filesystem"
-	"github.com/gostevedore/stevedore/internal/builders/builder"
+	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 )
 
 // DockerBuildContexter defines a docker build context

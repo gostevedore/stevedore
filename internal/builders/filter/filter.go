@@ -3,8 +3,8 @@ package filter
 import (
 	"sort"
 
-	"github.com/gostevedore/stevedore/internal/builders/builder"
 	"github.com/gostevedore/stevedore/internal/builders/store"
+	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 )
 
 // BuildersFilter is a filter that filters the builders

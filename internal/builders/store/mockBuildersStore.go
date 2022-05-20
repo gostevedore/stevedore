@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/gostevedore/stevedore/internal/builders/builder"
+	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/stretchr/testify/mock"
 )
 

@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/builders/builder"
 	"github.com/gostevedore/stevedore/internal/builders/store"
+	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )

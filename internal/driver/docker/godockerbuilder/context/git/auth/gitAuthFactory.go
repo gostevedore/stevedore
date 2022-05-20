@@ -5,7 +5,7 @@ import (
 	gitcontextbasicauth "github.com/apenella/go-docker-builder/pkg/auth/git/basic"
 	gitcontextkeyauth "github.com/apenella/go-docker-builder/pkg/auth/git/key"
 	gitcontextsshagentauth "github.com/apenella/go-docker-builder/pkg/auth/git/sshagent"
-	"github.com/gostevedore/stevedore/internal/builders/builder"
+	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 )
 
 // GitAuthFactory is a factory for creating GitAuther

@@ -1,18 +1,21 @@
 package credentials
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 )
 
 type CredentialsStore struct {
-	Store map[string]*UserPasswordAuth
+	Store map[string]*credentials.UserPasswordAuth
 	mutex sync.RWMutex
 	wg    sync.WaitGroup
 	fs    afero.Fs
@@ -20,7 +23,7 @@ type CredentialsStore struct {
 
 func NewCredentialsStore(fs afero.Fs) *CredentialsStore {
 	return &CredentialsStore{
-		Store: make(map[string]*UserPasswordAuth),
+		Store: make(map[string]*credentials.UserPasswordAuth),
 
 		fs: fs,
 	}
@@ -37,7 +40,7 @@ func (s *CredentialsStore) LoadCredentials(path string) error {
 	// }
 
 	if s.Store == nil {
-		s.Store = make(map[string]*UserPasswordAuth)
+		s.Store = make(map[string]*credentials.UserPasswordAuth)
 	}
 
 	isDir, err = afero.IsDir(s.fs, path)
@@ -134,7 +137,7 @@ func (s *CredentialsStore) LoadCredentialsFromFile(path string) error {
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
-	userpass := &UserPasswordAuth{}
+	userpass := &credentials.UserPasswordAuth{}
 	err = yaml.Unmarshal(fileData, userpass)
 	if err != nil {
 		return errors.New(errContext, fmt.Sprintf("Error loading credentials from file '%s'", path), err)
@@ -154,7 +157,7 @@ func (s *CredentialsStore) LoadCredentialsFromFile(path string) error {
 }
 
 // AddCredential
-func (s *CredentialsStore) AddCredentials(id string, auth *UserPasswordAuth) error {
+func (s *CredentialsStore) AddCredentials(id string, auth *credentials.UserPasswordAuth) error {
 
 	errContext := "(credentials::AddCredential)"
 
@@ -163,7 +166,7 @@ func (s *CredentialsStore) AddCredentials(id string, auth *UserPasswordAuth) err
 	}
 
 	if s.Store == nil {
-		s.Store = make(map[string]*UserPasswordAuth)
+		s.Store = make(map[string]*credentials.UserPasswordAuth)
 	}
 
 	s.mutex.Lock()
@@ -180,7 +183,7 @@ func (s *CredentialsStore) AddCredentials(id string, auth *UserPasswordAuth) err
 }
 
 // GetCredentials
-func (s *CredentialsStore) Get(registry string) (*UserPasswordAuth, error) {
+func (s *CredentialsStore) Get(registry string) (*credentials.UserPasswordAuth, error) {
 
 	errContext := "(credentials::GetCredential)"
 
@@ -200,4 +203,13 @@ func (s *CredentialsStore) Get(registry string) (*UserPasswordAuth, error) {
 	}
 
 	return credential, nil
+}
+
+// hashRegistryName
+func hashRegistryName(registry string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(registry))
+	registryHashed := hex.EncodeToString(hasher.Sum(nil))
+
+	return registryHashed
 }

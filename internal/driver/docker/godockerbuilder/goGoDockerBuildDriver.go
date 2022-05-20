@@ -9,7 +9,7 @@ import (
 	"github.com/apenella/go-docker-builder/pkg/build"
 	godockerbuilderbuildcontext "github.com/apenella/go-docker-builder/pkg/build/context"
 	"github.com/apenella/go-docker-builder/pkg/response"
-	"github.com/gostevedore/stevedore/internal/builders/builder"
+	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	buildcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context"
 )
 

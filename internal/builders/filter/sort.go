@@ -1,6 +1,6 @@
 package filter
 
-import "github.com/gostevedore/stevedore/internal/builders/builder"
+import "github.com/gostevedore/stevedore/internal/core/domain/builder"
 
 // SortedBuilders implements sort.Interface based on the Builder Name field
 type SortedBuilders []*builder.Builder

@@ -1,7 +1,7 @@
 package promote
 
 import (
-	"github.com/gostevedore/stevedore/internal/credentials"
+	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/promote"
 )
 

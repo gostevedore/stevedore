@@ -5,7 +5,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	gitcontextbasicauth "github.com/apenella/go-docker-builder/pkg/auth/git/basic"
-	"github.com/gostevedore/stevedore/internal/builders/builder"
+	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	gitcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/git"
 	gitauth "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/git/auth"
 	pathcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/path"

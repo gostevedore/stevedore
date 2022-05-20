@@ -6,11 +6,12 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/builders/builder"
 	"github.com/gostevedore/stevedore/internal/builders/store"
 	"github.com/gostevedore/stevedore/internal/builders/varsmap"
+	"github.com/gostevedore/stevedore/internal/core/domain/builder"
+	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
-	"github.com/gostevedore/stevedore/internal/credentials"
+	credentialsstore "github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/driver"
 	dockerdriver "github.com/gostevedore/stevedore/internal/driver/docker"
 	dryrundriver "github.com/gostevedore/stevedore/internal/driver/dryrun"
@@ -63,7 +64,7 @@ func TestBuild(t *testing.T) {
 				WithJobFactory(job.NewMockJobFactory()),
 				WithDispatch(dispatch.NewMockDispatch()),
 				WithSemver(semver.NewSemVerGenerator()),
-				WithCredentials(credentials.NewCredentialsStoreMock()),
+				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
 			),
 			buildPlan: plan.NewMockPlan(),
 			name:      "parent",
@@ -81,7 +82,7 @@ func TestBuild(t *testing.T) {
 			},
 			err: &errors.Error{},
 			assertFunc: func(service *Service) bool {
-				return service.credentials.(*credentials.CredentialsStoreMock).AssertExpectations(t) &&
+				return service.credentials.(*credentialsstore.CredentialsStoreMock).AssertExpectations(t) &&
 					service.commandFactory.(*command.MockBuildCommandFactory).AssertExpectations(t) &&
 					service.dispatch.(*dispatch.MockDispatch).AssertExpectations(t) &&
 					service.jobFactory.(*job.MockJobFactory).AssertExpectations(t)
@@ -123,7 +124,7 @@ func TestBuild(t *testing.T) {
 					stepChild,
 				}, nil)
 
-				service.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry").Return(&credentials.UserPasswordAuth{
+				service.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry").Return(&credentials.UserPasswordAuth{
 					Username: "user",
 					Password: "pass",
 				}, nil)
@@ -261,7 +262,7 @@ func TestBuildWorker(t *testing.T) {
 				WithJobFactory(job.NewMockJobFactory()),
 				WithDispatch(dispatch.NewMockDispatch()),
 				WithSemver(semver.NewSemVerGenerator()),
-				WithCredentials(credentials.NewCredentialsStoreMock()),
+				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
 			),
 			options: &ServiceOptions{
 				EnableSemanticVersionTags:    true,
@@ -300,7 +301,7 @@ func TestBuildWorker(t *testing.T) {
 			},
 			err: &errors.Error{},
 			assertFunc: func(service *Service) bool {
-				return service.credentials.(*credentials.CredentialsStoreMock).AssertExpectations(t) &&
+				return service.credentials.(*credentialsstore.CredentialsStoreMock).AssertExpectations(t) &&
 					service.commandFactory.(*command.MockBuildCommandFactory).AssertExpectations(t) &&
 					service.dispatch.(*dispatch.MockDispatch).AssertExpectations(t) &&
 					service.jobFactory.(*job.MockJobFactory).AssertExpectations(t)
@@ -310,12 +311,12 @@ func TestBuildWorker(t *testing.T) {
 				mockJob := job.NewMockJob()
 				mockJob.On("Wait").Return(nil)
 
-				service.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry").Return(&credentials.UserPasswordAuth{
+				service.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry").Return(&credentials.UserPasswordAuth{
 					Username: "user",
 					Password: "pass",
 				}, nil)
 
-				service.credentials.(*credentials.CredentialsStoreMock).On("Get", "parent_registry").Return(&credentials.UserPasswordAuth{
+				service.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "parent_registry").Return(&credentials.UserPasswordAuth{
 					Username: "parent_user",
 					Password: "parent_pass",
 				}, nil)
@@ -631,7 +632,7 @@ func TestGetCredentials(t *testing.T) {
 			desc: "Testing get credentials",
 			service: NewService(
 				WithCredentials(
-					credentials.NewCredentialsStoreMock(),
+					credentialsstore.NewCredentialsStoreMock(),
 				),
 			),
 			registry: "registry.test",
@@ -640,7 +641,7 @@ func TestGetCredentials(t *testing.T) {
 				Password: "pass",
 			},
 			prepareAssertFunc: func(service *Service) {
-				service.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
+				service.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
 					Username: "user",
 					Password: "pass",
 				}, nil)
@@ -651,13 +652,13 @@ func TestGetCredentials(t *testing.T) {
 			desc: "Testing get unexisting credentials",
 			service: NewService(
 				WithCredentials(
-					credentials.NewCredentialsStoreMock(),
+					credentialsstore.NewCredentialsStoreMock(),
 				),
 			),
 			registry: "registry.test",
 			res:      nil,
 			prepareAssertFunc: func(service *Service) {
-				service.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry.test").Return(nil, errors.New(errContext, "Credentials not found"))
+				service.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(nil, errors.New(errContext, "Credentials not found"))
 			},
 			err: errors.New(errContext, "Credentials not found"),
 		},

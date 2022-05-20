@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/builders/builder"
+	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 )
 
 // BuildersStore contains builders details

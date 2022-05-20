@@ -5,7 +5,8 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/credentials"
+	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
+	credentialsstore "github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/promote"
 	promoterepository "github.com/gostevedore/stevedore/internal/promote"
 	dockerpromote "github.com/gostevedore/stevedore/internal/promote/docker"
@@ -28,7 +29,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote source image from local",
 			service: NewService(
-				WithCredentials(credentials.NewCredentialsStoreMock()),
+				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(promoterepository.NewPromoteFactory()),
 			),
@@ -59,7 +60,7 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "pass",
 				}
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
+				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
 					Username: "name",
 					Password: "pass",
 				}, nil)
@@ -73,7 +74,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote source image from remote",
 			service: NewService(
-				WithCredentials(credentials.NewCredentialsStoreMock()),
+				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(promoterepository.NewPromoteFactory()),
 			),
@@ -110,7 +111,7 @@ func TestPromote(t *testing.T) {
 				factory.Register(promote.DockerPromoterName, mock)
 				p.factory = factory
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
+				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
 					Username: "name",
 					Password: "pass",
 				}, nil)
@@ -120,7 +121,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote source image with all options",
 			service: NewService(
-				WithCredentials(credentials.NewCredentialsStoreMock()),
+				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(promoterepository.NewPromoteFactory()),
 			),
@@ -150,12 +151,12 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "pushpass",
 				}
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
+				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
 					Username: "pullname",
 					Password: "pullpass",
 				}, nil)
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{
+				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{
 					Username: "pushname",
 					Password: "pushpass",
 				}, nil)
@@ -172,7 +173,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote source image with no credentials",
 			service: NewService(
-				WithCredentials(credentials.NewCredentialsStoreMock()),
+				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(promoterepository.NewPromoteFactory()),
 			),
@@ -202,8 +203,8 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "",
 				}
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{}, nil)
-				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{}, nil)
+				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{}, nil)
+				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{}, nil)
 
 				mock := mockpromote.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
@@ -217,7 +218,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote source image with all options and using semver configuration parameters",
 			service: NewService(
-				WithCredentials(credentials.NewCredentialsStoreMock()),
+				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(promoterepository.NewPromoteFactory()),
 			),
@@ -247,12 +248,12 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "pushpass",
 				}
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
+				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
 					Username: "pullname",
 					Password: "pullpass",
 				}, nil)
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{
+				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{
 					Username: "pushname",
 					Password: "pushpass",
 				}, nil)
@@ -269,7 +270,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote source image with all options, using semver configuration parameters overridden by service options",
 			service: &Service{
-				credentials: credentials.NewCredentialsStoreMock(),
+				credentials: credentialsstore.NewCredentialsStoreMock(),
 				semver:      semver.NewSemVerGenerator(),
 			},
 			context: context.TODO(),
@@ -298,12 +299,12 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "pushpass",
 				}
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
+				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
 					Username: "pullname",
 					Password: "pullpass",
 				}, nil)
 
-				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{
+				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{
 					Username: "pushname",
 					Password: "pushpass",
 				}, nil)
@@ -357,11 +358,11 @@ func TestGetCredentials(t *testing.T) {
 		{
 			desc: "Testing get credentials",
 			service: &Service{
-				credentials: credentials.NewCredentialsStoreMock(),
+				credentials: credentialsstore.NewCredentialsStoreMock(),
 			},
 			registry: "myregistry",
 			prepareMockFunc: func(p *Service) {
-				p.credentials.(*credentials.CredentialsStoreMock).On("Get", "myregistry").Return(&credentials.UserPasswordAuth{
+				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "myregistry").Return(&credentials.UserPasswordAuth{
 					Username: "name",
 					Password: "pass",
 				}, nil)

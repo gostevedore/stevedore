@@ -3,9 +3,9 @@ package output
 import (
 	"testing"
 
-	"github.com/gostevedore/stevedore/internal/builders/builder"
 	"github.com/gostevedore/stevedore/internal/builders/filter"
 	"github.com/gostevedore/stevedore/internal/builders/store"
+	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/ui/console"
 	"github.com/stretchr/testify/assert"
 )
