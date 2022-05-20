@@ -9,8 +9,10 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
+	"github.com/gostevedore/stevedore/internal/core/domain/driver"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
-	"github.com/gostevedore/stevedore/internal/driver"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
+	"github.com/gostevedore/stevedore/internal/core/ports/service"
 	"github.com/gostevedore/stevedore/internal/schedule"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 	"github.com/gostevedore/stevedore/internal/service/build/plan"
@@ -24,7 +26,7 @@ type OptionsFunc func(*Service)
 type Service struct {
 	builders       BuildersStorer
 	commandFactory BuildCommandFactorier
-	driverFactory  DriverFactorier
+	driverFactory  service.DriverFactorier
 	jobFactory     JobFactorier
 	dispatch       Dispatcher
 	semver         Semverser
@@ -55,7 +57,7 @@ func WithCommandFactory(commandFactory BuildCommandFactorier) OptionsFunc {
 }
 
 // WithDriverFactory sets the driver factory
-func WithDriverFactory(driverFactory DriverFactorier) OptionsFunc {
+func WithDriverFactory(driverFactory service.DriverFactorier) OptionsFunc {
 	return func(s *Service) {
 		s.driverFactory = driverFactory
 	}
@@ -362,7 +364,7 @@ func (s *Service) job(ctx context.Context, cmd job.Commander) (schedule.Jobber, 
 	return s.jobFactory.New(cmd), nil
 }
 
-func (s *Service) command(driver driver.BuildDriverer, image *image.Image, options *driver.BuildDriverOptions) (job.Commander, error) {
+func (s *Service) command(driver repository.BuildDriverer, image *image.Image, options *driver.BuildDriverOptions) (job.Commander, error) {
 	errContext := "(build::command)"
 
 	if s.commandFactory == nil {
@@ -397,7 +399,7 @@ func (s *Service) getCredentials(registry string) (*credentials.UserPasswordAuth
 	return auth, nil
 }
 
-func (s *Service) getDriver(builder *builder.Builder, options *ServiceOptions) (driver.BuildDriverer, error) {
+func (s *Service) getDriver(builder *builder.Builder, options *ServiceOptions) (repository.BuildDriverer, error) {
 	errContext := "(build::getDriver)"
 
 	if s.driverFactory == nil {

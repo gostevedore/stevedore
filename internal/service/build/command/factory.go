@@ -1,8 +1,9 @@
 package command
 
 import (
+	"github.com/gostevedore/stevedore/internal/core/domain/driver"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
-	"github.com/gostevedore/stevedore/internal/driver"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
 
 // BuildCommandFactory is a factory to create a build command
@@ -14,6 +15,6 @@ func NewBuildCommandFactory() *BuildCommandFactory {
 }
 
 // New returns a new build command constructor
-func (f *BuildCommandFactory) New(driver driver.BuildDriverer, image *image.Image, options *driver.BuildDriverOptions) BuildCommander {
+func (f *BuildCommandFactory) New(driver repository.BuildDriverer, image *image.Image, options *driver.BuildDriverOptions) BuildCommander {
 	return NewBuildCommand(driver, image, options)
 }

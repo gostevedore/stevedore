@@ -3,7 +3,6 @@ package build
 import (
 	"context"
 
-	"github.com/gostevedore/stevedore/internal/driver"
 	"github.com/gostevedore/stevedore/internal/schedule"
 	"github.com/gostevedore/stevedore/internal/schedule/dispatch"
 	"github.com/gostevedore/stevedore/internal/service/build"
@@ -26,8 +25,8 @@ type Dispatcher interface {
 	Enqueue(schedule.Jobber)
 }
 
-// DriverFactorier interface defines the factory to create a build driver
-type DriverFactorier interface {
-	Get(id string) (driver.BuildDriverer, error)
-	Register(id string, driver driver.BuildDriverer) error
-}
+// // DriverFactorier interface defines the factory to create a build driver
+// type DriverFactorier interface {
+// 	Get(id string) (driver.BuildDriverer, error)
+// 	Register(id string, driver driver.BuildDriverer) error
+// }

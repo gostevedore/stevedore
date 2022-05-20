@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/builders/varsmap"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
+	"github.com/gostevedore/stevedore/internal/core/domain/driver"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
-	"github.com/gostevedore/stevedore/internal/driver"
+	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
 	"github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder"
 	"github.com/stretchr/testify/assert"
 )

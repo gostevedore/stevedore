@@ -3,8 +3,9 @@ package build
 import (
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
+	"github.com/gostevedore/stevedore/internal/core/domain/driver"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
-	"github.com/gostevedore/stevedore/internal/driver"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	"github.com/gostevedore/stevedore/internal/schedule"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 	"github.com/gostevedore/stevedore/internal/service/build/command"
@@ -30,7 +31,7 @@ type BuildersStorer interface {
 
 // BuildCommandFactorier interface defines the factory of build commands
 type BuildCommandFactorier interface {
-	New(driver.BuildDriverer, *image.Image, *driver.BuildDriverOptions) command.BuildCommander
+	New(repository.BuildDriverer, *image.Image, *driver.BuildDriverOptions) command.BuildCommander
 }
 
 // JobFactorier interface defines the factory of build jobs
@@ -43,10 +44,10 @@ type Dispatcher interface {
 	Enqueue(schedule.Jobber)
 }
 
-// DriverFactorier interface defines the factory to create a build driver
-type DriverFactorier interface {
-	Get(id string) (driver.BuildDriverer, error)
-}
+// // DriverFactorier interface defines the factory to create a build driver
+// type DriverFactorier interface {
+// 	Get(id string) (repository.BuildDriverer, error)
+// }
 
 // Semverser
 type Semverser interface {

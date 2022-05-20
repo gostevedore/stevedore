@@ -11,12 +11,13 @@ import (
 	"github.com/gostevedore/stevedore/internal/configuration"
 	imagesconfiguration "github.com/gostevedore/stevedore/internal/configuration/images"
 	imagesgraphtemplate "github.com/gostevedore/stevedore/internal/configuration/images/graph"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	"github.com/gostevedore/stevedore/internal/credentials"
-	"github.com/gostevedore/stevedore/internal/driver"
 	ansibledriver "github.com/gostevedore/stevedore/internal/driver/ansible"
 	defaultdriver "github.com/gostevedore/stevedore/internal/driver/default"
 	dockerdriver "github.com/gostevedore/stevedore/internal/driver/docker"
 	dryrundriver "github.com/gostevedore/stevedore/internal/driver/dryrun"
+	driverfactory "github.com/gostevedore/stevedore/internal/driver/factory"
 	handler "github.com/gostevedore/stevedore/internal/handler/build"
 	"github.com/gostevedore/stevedore/internal/images/graph"
 	"github.com/gostevedore/stevedore/internal/images/render"
@@ -744,7 +745,7 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 		credentials *credentials.CredentialsStore
 		options     *Options
 		err         error
-		assertions  func(t *testing.T, driverFactory driver.BuildDriverFactory)
+		assertions  func(t *testing.T, driverFactory driverfactory.BuildDriverFactory)
 	}{
 		{
 			desc:        "Testing create build driver factory with empty credentials",
@@ -773,7 +774,7 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 			credentials: credentials.NewCredentialsStore(afero.NewMemMapFs()),
 			options:     &Options{},
 			err:         &errors.Error{},
-			assertions: func(t *testing.T, f driver.BuildDriverFactory) {
+			assertions: func(t *testing.T, f driverfactory.BuildDriverFactory) {
 				dDocker, eDocker := f.Get("docker")
 				assert.Nil(t, eDocker)
 				assert.NotNil(t, dDocker)
@@ -812,7 +813,7 @@ func TestCreateDryRunDriver(t *testing.T) {
 	tests := []struct {
 		desc       string
 		entrypoint *Entrypoint
-		res        driver.BuildDriverer
+		res        repository.BuildDriverer
 		err        error
 	}{
 		{
@@ -844,7 +845,7 @@ func TestCreateDefaultDriver(t *testing.T) {
 	tests := []struct {
 		desc       string
 		entrypoint *Entrypoint
-		res        driver.BuildDriverer
+		res        repository.BuildDriverer
 		err        error
 	}{
 		{
@@ -877,7 +878,7 @@ func TestCreateAnsibleDriver(t *testing.T) {
 		desc       string
 		entrypoint *Entrypoint
 		options    *Options
-		res        driver.BuildDriverer
+		res        repository.BuildDriverer
 		err        error
 	}{
 		{
@@ -917,7 +918,7 @@ func TestCreateDockerDriver(t *testing.T) {
 		entrypoint  *Entrypoint
 		credentials *credentials.CredentialsStore
 		options     *Options
-		res         driver.BuildDriverer
+		res         repository.BuildDriverer
 		err         error
 	}{
 		{

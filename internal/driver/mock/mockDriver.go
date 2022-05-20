@@ -3,8 +3,8 @@ package driver
 import (
 	"context"
 
+	"github.com/gostevedore/stevedore/internal/core/domain/driver"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
-	"github.com/gostevedore/stevedore/internal/driver"
 	"github.com/stretchr/testify/mock"
 )
 

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/builders/varsmap"
+	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -7,14 +7,16 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/builders/store"
-	"github.com/gostevedore/stevedore/internal/builders/varsmap"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
+	"github.com/gostevedore/stevedore/internal/core/domain/driver"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
+	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	credentialsstore "github.com/gostevedore/stevedore/internal/credentials"
-	"github.com/gostevedore/stevedore/internal/driver"
 	dockerdriver "github.com/gostevedore/stevedore/internal/driver/docker"
 	dryrundriver "github.com/gostevedore/stevedore/internal/driver/dryrun"
+	driverfactory "github.com/gostevedore/stevedore/internal/driver/factory"
 	mockdriver "github.com/gostevedore/stevedore/internal/driver/mock"
 	"github.com/gostevedore/stevedore/internal/schedule/dispatch"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
@@ -57,7 +59,7 @@ func TestBuild(t *testing.T) {
 				WithBuilders(store.NewMockBuildersStore()),
 				WithCommandFactory(command.NewMockBuildCommandFactory()),
 				WithDriverFactory(
-					&driver.BuildDriverFactory{
+					&driverfactory.BuildDriverFactory{
 						"mock": mockdriver.NewMockDriver(),
 					},
 				),
@@ -232,7 +234,7 @@ func TestBuildWorker(t *testing.T) {
 			desc: "Testing error when no semantic version generator is given to worker",
 			service: &Service{
 				dispatch:      dispatch.NewDispatch(worker.NewMockWorkerFactory()),
-				driverFactory: driver.NewBuildDriverFactory(),
+				driverFactory: driverfactory.NewBuildDriverFactory(),
 			},
 			options: &ServiceOptions{},
 			image:   &image.Image{},
@@ -242,7 +244,7 @@ func TestBuildWorker(t *testing.T) {
 			desc: "Testing error when no credentials store is given to worker",
 			service: &Service{
 				dispatch:      dispatch.NewDispatch(worker.NewMockWorkerFactory()),
-				driverFactory: driver.NewBuildDriverFactory(),
+				driverFactory: driverfactory.NewBuildDriverFactory(),
 				semver:        semver.NewSemVerGenerator(),
 			},
 			options: &ServiceOptions{},
@@ -255,7 +257,7 @@ func TestBuildWorker(t *testing.T) {
 				WithBuilders(store.NewMockBuildersStore()),
 				WithCommandFactory(command.NewMockBuildCommandFactory()),
 				WithDriverFactory(
-					&driver.BuildDriverFactory{
+					&driverfactory.BuildDriverFactory{
 						"mock": mockdriver.NewMockDriver(),
 					},
 				),
@@ -412,13 +414,13 @@ func TestJob(t *testing.T) {
 func TestCommand(t *testing.T) {
 	errContext := "(build::command)"
 
-	driverFactory := driver.NewBuildDriverFactory()
+	driverFactory := driverfactory.NewBuildDriverFactory()
 	driverFactory.Register("mock", mockdriver.NewMockDriver())
 
 	tests := []struct {
 		desc              string
 		service           *Service
-		driver            driver.BuildDriverer
+		driver            repository.BuildDriverer
 		image             *image.Image
 		options           *driver.BuildDriverOptions
 		res               job.Commander
@@ -690,7 +692,7 @@ func TestGetDriver(t *testing.T) {
 		service *Service
 		builder *builder.Builder
 		options *ServiceOptions
-		res     driver.BuildDriverer
+		res     repository.BuildDriverer
 		err     error
 	}{
 		{
@@ -707,7 +709,7 @@ func TestGetDriver(t *testing.T) {
 			desc: "Testing get driver",
 			service: NewService(
 				WithDriverFactory(
-					&driver.BuildDriverFactory{
+					&driverfactory.BuildDriverFactory{
 						"docker": mockdriver.NewMockDriver(),
 					},
 				),
@@ -723,7 +725,7 @@ func TestGetDriver(t *testing.T) {
 			desc: "Testing get driver with dry-run",
 			service: NewService(
 				WithDriverFactory(
-					&driver.BuildDriverFactory{
+					&driverfactory.BuildDriverFactory{
 						"docker":  mockdriver.NewMockDriver(),
 						"dry-run": dryrundriver.NewDryRunDriver(ioutil.Discard),
 					},

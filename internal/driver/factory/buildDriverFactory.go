@@ -1,13 +1,14 @@
-package driver
+package factory
 
 import (
 	"fmt"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
 
 // BuildDriverFactory type define a map of BuildDriverer
-type BuildDriverFactory map[string]BuildDriverer
+type BuildDriverFactory map[string]repository.BuildDriverer
 
 // NewBuildDriverFactory returns a new BuildDriverFactory
 func NewBuildDriverFactory() BuildDriverFactory {
@@ -15,7 +16,7 @@ func NewBuildDriverFactory() BuildDriverFactory {
 }
 
 // Get returns a BuildDriverer
-func (f BuildDriverFactory) Get(id string) (BuildDriverer, error) {
+func (f BuildDriverFactory) Get(id string) (repository.BuildDriverer, error) {
 	errContext := "(BuildDriverFactory::Get)"
 
 	driver, exist := f[id]
@@ -27,7 +28,7 @@ func (f BuildDriverFactory) Get(id string) (BuildDriverer, error) {
 }
 
 // Register registers a BuildDriverer
-func (f BuildDriverFactory) Register(id string, driver BuildDriverer) error {
+func (f BuildDriverFactory) Register(id string, driver repository.BuildDriverer) error {
 
 	errContext := "(BuildDriverFactory::Register)"
 
