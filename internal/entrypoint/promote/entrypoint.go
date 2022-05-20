@@ -10,6 +10,7 @@ import (
 	"github.com/apenella/go-docker-builder/pkg/copy"
 	dockerclient "github.com/docker/docker/client"
 	"github.com/gostevedore/stevedore/internal/configuration"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/credentials"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
 	"github.com/gostevedore/stevedore/internal/promote"
@@ -181,11 +182,11 @@ func (e *Entrypoint) createPromoteFactory() (promote.PromoteFactory, error) {
 	promoteRepoDocker := repodocker.NewDockerPromote(copyCmdFacade, os.Stdout)
 	promoteRepoDryRun := repodryrun.NewDryRunPromote(copyCmdFacade, os.Stdout)
 	promoteRepoFactory := promote.NewPromoteFactory()
-	err = promoteRepoFactory.Register(promote.DockerPromoterName, promoteRepoDocker)
+	err = promoteRepoFactory.Register(image.DockerPromoterName, promoteRepoDocker)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
-	err = promoteRepoFactory.Register(promote.DryRunPromoterName, promoteRepoDryRun)
+	err = promoteRepoFactory.Register(image.DryRunPromoterName, promoteRepoDryRun)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}

@@ -6,6 +6,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	credentialsstore "github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/promote"
 	promoterepository "github.com/gostevedore/stevedore/internal/promote"
@@ -67,7 +68,7 @@ func TestPromote(t *testing.T) {
 
 				mock := mockpromote.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
-				p.factory.Register(promote.DockerPromoterName, mock)
+				p.factory.Register(image.DockerPromoterName, mock)
 			},
 			err: &errors.Error{},
 		},
@@ -108,7 +109,7 @@ func TestPromote(t *testing.T) {
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
 				factory := promoterepository.NewPromoteFactory()
-				factory.Register(promote.DockerPromoterName, mock)
+				factory.Register(image.DockerPromoterName, mock)
 				p.factory = factory
 
 				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
@@ -165,7 +166,7 @@ func TestPromote(t *testing.T) {
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
 				factory := promoterepository.NewPromoteFactory()
-				factory.Register(promote.DockerPromoterName, mock)
+				factory.Register(image.DockerPromoterName, mock)
 				p.factory = factory
 			},
 			err: &errors.Error{},
@@ -210,7 +211,7 @@ func TestPromote(t *testing.T) {
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
 				factory := promoterepository.NewPromoteFactory()
-				factory.Register(promote.DockerPromoterName, mock)
+				factory.Register(image.DockerPromoterName, mock)
 				p.factory = factory
 			},
 			err: &errors.Error{},
@@ -262,7 +263,7 @@ func TestPromote(t *testing.T) {
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
 				factory := promoterepository.NewPromoteFactory()
-				factory.Register(promote.DockerPromoterName, mock)
+				factory.Register(image.DockerPromoterName, mock)
 				p.factory = factory
 			},
 			err: &errors.Error{},
@@ -313,7 +314,7 @@ func TestPromote(t *testing.T) {
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
 				factory := promoterepository.NewPromoteFactory()
-				factory.Register(promote.DockerPromoterName, mock)
+				factory.Register(image.DockerPromoterName, mock)
 				p.factory = factory
 			},
 			err: &errors.Error{},
@@ -332,7 +333,7 @@ func TestPromote(t *testing.T) {
 			if err != nil && assert.Error(t, err) {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				promote, _ := test.service.factory.Get(promote.DockerPromoterName)
+				promote, _ := test.service.factory.Get(image.DockerPromoterName)
 				promote.(*mockpromote.MockPromote).AssertExpectations(t)
 			}
 		})
@@ -417,7 +418,7 @@ func TestGetPromoter(t *testing.T) {
 			},
 			options: &ServiceOptions{},
 			prepareAssertFunc: func(p *Service) {
-				p.factory.Register(promote.DockerPromoterName, &dockerpromote.DockerPromete{})
+				p.factory.Register(image.DockerPromoterName, &dockerpromote.DockerPromete{})
 			},
 			res: &dockerpromote.DockerPromete{},
 			err: &errors.Error{},
@@ -431,8 +432,8 @@ func TestGetPromoter(t *testing.T) {
 				DryRun: true,
 			},
 			prepareAssertFunc: func(p *Service) {
-				p.factory.Register(promote.DockerPromoterName, &dockerpromote.DockerPromete{})
-				p.factory.Register(promote.DryRunPromoterName, &dryrunpromote.DryRunPromote{})
+				p.factory.Register(image.DockerPromoterName, &dockerpromote.DockerPromete{})
+				p.factory.Register(image.DryRunPromoterName, &dryrunpromote.DryRunPromote{})
 			},
 			res: &dryrunpromote.DryRunPromote{},
 			err: &errors.Error{},

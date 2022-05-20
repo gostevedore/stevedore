@@ -1,4 +1,4 @@
-package promote
+package image
 
 const (
 	// DockerDriverName is the name for the docker promoter

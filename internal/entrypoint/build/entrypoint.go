@@ -13,6 +13,7 @@ import (
 	buildersconfiguration "github.com/gostevedore/stevedore/internal/configuration/builders"
 	imagesconfiguration "github.com/gostevedore/stevedore/internal/configuration/images"
 	imagesgraphtemplate "github.com/gostevedore/stevedore/internal/configuration/images/graph"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	"github.com/gostevedore/stevedore/internal/credentials"
 	driveransible "github.com/gostevedore/stevedore/internal/driver/ansible"
@@ -460,10 +461,10 @@ func (e *Entrypoint) createBuildDriverFactory(credentialsStore *credentials.Cred
 		return nil, errors.New(errContext, "", err)
 	}
 
-	factory.Register("ansible-playbook", ansiblePlaybookDriver)
-	factory.Register("docker", dockerDriver)
-	factory.Register("default", defaultDriver)
-	factory.Register("dry-run", dryRunDriver)
+	factory.Register(image.AnsiblePlaybookDriverName, ansiblePlaybookDriver)
+	factory.Register(image.DockerDriverName, dockerDriver)
+	factory.Register(image.DefaultDriverName, defaultDriver)
+	factory.Register(image.DryRunDriverName, dryRunDriver)
 
 	return factory, nil
 }
