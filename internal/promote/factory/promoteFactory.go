@@ -1,18 +1,19 @@
-package promote
+package factory
 
 import (
 	"fmt"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
 
-type PromoteFactory map[string]Promoter
+type PromoteFactory map[string]repository.Promoter
 
 func NewPromoteFactory() PromoteFactory {
 	return make(PromoteFactory)
 }
 
-func (f PromoteFactory) Get(id string) (Promoter, error) {
+func (f PromoteFactory) Get(id string) (repository.Promoter, error) {
 	errContext := "(PromoteFactory::GetPromoter)"
 
 	promoter, exist := f[id]
@@ -23,7 +24,7 @@ func (f PromoteFactory) Get(id string) (Promoter, error) {
 	return promoter, nil
 }
 
-func (f PromoteFactory) Register(id string, promoter Promoter) error {
+func (f PromoteFactory) Register(id string, promoter repository.Promoter) error {
 
 	errContext := "(PromoteFactory::Register)"
 

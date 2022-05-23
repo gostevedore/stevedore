@@ -8,10 +8,11 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/configuration"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
-	"github.com/gostevedore/stevedore/internal/promote"
 	repodocker "github.com/gostevedore/stevedore/internal/promote/docker"
 	repodryrun "github.com/gostevedore/stevedore/internal/promote/dryrun"
+	"github.com/gostevedore/stevedore/internal/promote/factory"
 	"github.com/gostevedore/stevedore/internal/semver"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -188,8 +189,8 @@ func TestCreateCredentialsStore(t *testing.T) {
 func TestCreatePromoteFactory(t *testing.T) {
 
 	var err error
-	var promoteRepoFactory promote.PromoteFactory
-	var promoteRepoDocker, promoteRepoDryRun promote.Promoter
+	var promoteRepoFactory factory.PromoteFactory
+	var promoteRepoDocker, promoteRepoDryRun repository.Promoter
 
 	e := NewEntrypoint()
 	promoteRepoFactory, err = e.createPromoteFactory()

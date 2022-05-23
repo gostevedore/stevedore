@@ -4,7 +4,6 @@ import (
 	"context"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/core/domain/driver"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
@@ -13,11 +12,11 @@ import (
 type BuildCommand struct {
 	driver  repository.BuildDriverer
 	image   *image.Image
-	options *driver.BuildDriverOptions
+	options *image.BuildDriverOptions
 }
 
 // NewBuildCommand creates a command to build docker images
-func NewBuildCommand(driver repository.BuildDriverer, i *image.Image, options *driver.BuildDriverOptions) *BuildCommand {
+func NewBuildCommand(driver repository.BuildDriverer, i *image.Image, options *image.BuildDriverOptions) *BuildCommand {
 	return &BuildCommand{
 		driver:  driver,
 		image:   i,

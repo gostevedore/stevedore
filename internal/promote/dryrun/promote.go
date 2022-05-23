@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/promote"
 )
 
@@ -18,7 +19,7 @@ func NewDryRunPromote(cmd promote.DockerCopier, w io.Writer) *DryRunPromote {
 	}
 }
 
-func (p *DryRunPromote) Promote(ctx context.Context, options *promote.PromoteOptions) error {
+func (p *DryRunPromote) Promote(ctx context.Context, options *image.PromoteOptions) error {
 	fmt.Fprint(p.writer, options.String())
 	return nil
 }

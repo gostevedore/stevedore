@@ -3,7 +3,6 @@ package build
 import (
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
-	"github.com/gostevedore/stevedore/internal/core/domain/driver"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	"github.com/gostevedore/stevedore/internal/schedule"
@@ -31,7 +30,7 @@ type BuildersStorer interface {
 
 // BuildCommandFactorier interface defines the factory of build commands
 type BuildCommandFactorier interface {
-	New(repository.BuildDriverer, *image.Image, *driver.BuildDriverOptions) command.BuildCommander
+	New(repository.BuildDriverer, *image.Image, *image.BuildDriverOptions) command.BuildCommander
 }
 
 // JobFactorier interface defines the factory of build jobs

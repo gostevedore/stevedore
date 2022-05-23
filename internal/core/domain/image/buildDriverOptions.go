@@ -1,4 +1,4 @@
-package driver
+package image
 
 import (
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"

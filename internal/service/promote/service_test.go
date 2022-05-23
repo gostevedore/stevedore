@@ -7,11 +7,11 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	credentialsstore "github.com/gostevedore/stevedore/internal/credentials"
-	"github.com/gostevedore/stevedore/internal/promote"
-	promoterepository "github.com/gostevedore/stevedore/internal/promote"
 	dockerpromote "github.com/gostevedore/stevedore/internal/promote/docker"
 	dryrunpromote "github.com/gostevedore/stevedore/internal/promote/dryrun"
+	"github.com/gostevedore/stevedore/internal/promote/factory"
 	mockpromote "github.com/gostevedore/stevedore/internal/promote/mock"
 	"github.com/gostevedore/stevedore/internal/semver"
 	"github.com/stretchr/testify/assert"
@@ -32,7 +32,7 @@ func TestPromote(t *testing.T) {
 			service: NewService(
 				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
 				WithSemver(semver.NewSemVerGenerator()),
-				WithPromoteFactory(promoterepository.NewPromoteFactory()),
+				WithPromoteFactory(factory.NewPromoteFactory()),
 			),
 			context: context.TODO(),
 			options: &ServiceOptions{
@@ -49,7 +49,7 @@ func TestPromote(t *testing.T) {
 			},
 			prepareMockFunc: func(p *Service) {
 
-				options := &promoterepository.PromoteOptions{
+				options := &image.PromoteOptions{
 					TargetImageName:       "registry.test/namespace/image:tag",
 					TargetImageTags:       nil,
 					RemoveTargetImageTags: false,
@@ -77,7 +77,7 @@ func TestPromote(t *testing.T) {
 			service: NewService(
 				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
 				WithSemver(semver.NewSemVerGenerator()),
-				WithPromoteFactory(promoterepository.NewPromoteFactory()),
+				WithPromoteFactory(factory.NewPromoteFactory()),
 			),
 			context: context.TODO(),
 			options: &ServiceOptions{
@@ -93,7 +93,7 @@ func TestPromote(t *testing.T) {
 				SemanticVersionTagsTemplates: nil,
 			},
 			prepareMockFunc: func(p *Service) {
-				options := &promoterepository.PromoteOptions{
+				options := &image.PromoteOptions{
 					TargetImageName:       "registry.test/namespace/image:tag",
 					TargetImageTags:       nil,
 					RemoveTargetImageTags: false,
@@ -108,7 +108,7 @@ func TestPromote(t *testing.T) {
 				mock := mockpromote.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
-				factory := promoterepository.NewPromoteFactory()
+				factory := factory.NewPromoteFactory()
 				factory.Register(image.DockerPromoterName, mock)
 				p.factory = factory
 
@@ -124,7 +124,7 @@ func TestPromote(t *testing.T) {
 			service: NewService(
 				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
 				WithSemver(semver.NewSemVerGenerator()),
-				WithPromoteFactory(promoterepository.NewPromoteFactory()),
+				WithPromoteFactory(factory.NewPromoteFactory()),
 			),
 			context: context.TODO(),
 			options: &ServiceOptions{
@@ -140,7 +140,7 @@ func TestPromote(t *testing.T) {
 				SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
 			},
 			prepareMockFunc: func(p *Service) {
-				options := &promoterepository.PromoteOptions{
+				options := &image.PromoteOptions{
 					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
 					TargetImageTags:       []string{"tag", "tag1", "tag2", "1"},
 					RemoveTargetImageTags: true,
@@ -165,7 +165,7 @@ func TestPromote(t *testing.T) {
 				mock := mockpromote.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
-				factory := promoterepository.NewPromoteFactory()
+				factory := factory.NewPromoteFactory()
 				factory.Register(image.DockerPromoterName, mock)
 				p.factory = factory
 			},
@@ -176,7 +176,7 @@ func TestPromote(t *testing.T) {
 			service: NewService(
 				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
 				WithSemver(semver.NewSemVerGenerator()),
-				WithPromoteFactory(promoterepository.NewPromoteFactory()),
+				WithPromoteFactory(factory.NewPromoteFactory()),
 			),
 			context: context.TODO(),
 			options: &ServiceOptions{
@@ -192,7 +192,7 @@ func TestPromote(t *testing.T) {
 				SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
 			},
 			prepareMockFunc: func(p *Service) {
-				options := &promoterepository.PromoteOptions{
+				options := &image.PromoteOptions{
 					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
 					TargetImageTags:       []string{"tag", "tag1", "tag2", "1"},
 					RemoveTargetImageTags: true,
@@ -210,7 +210,7 @@ func TestPromote(t *testing.T) {
 				mock := mockpromote.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
-				factory := promoterepository.NewPromoteFactory()
+				factory := factory.NewPromoteFactory()
 				factory.Register(image.DockerPromoterName, mock)
 				p.factory = factory
 			},
@@ -221,7 +221,7 @@ func TestPromote(t *testing.T) {
 			service: NewService(
 				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
 				WithSemver(semver.NewSemVerGenerator()),
-				WithPromoteFactory(promoterepository.NewPromoteFactory()),
+				WithPromoteFactory(factory.NewPromoteFactory()),
 			),
 			context: context.TODO(),
 			options: &ServiceOptions{
@@ -237,7 +237,7 @@ func TestPromote(t *testing.T) {
 				SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
 			},
 			prepareMockFunc: func(p *Service) {
-				options := &promoterepository.PromoteOptions{
+				options := &image.PromoteOptions{
 					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
 					TargetImageTags:       []string{"tag", "tag1", "tag2", "1"},
 					RemoveTargetImageTags: true,
@@ -262,7 +262,7 @@ func TestPromote(t *testing.T) {
 				mock := mockpromote.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
-				factory := promoterepository.NewPromoteFactory()
+				factory := factory.NewPromoteFactory()
 				factory.Register(image.DockerPromoterName, mock)
 				p.factory = factory
 			},
@@ -288,7 +288,7 @@ func TestPromote(t *testing.T) {
 				SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
 			},
 			prepareMockFunc: func(p *Service) {
-				options := &promoterepository.PromoteOptions{
+				options := &image.PromoteOptions{
 					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
 					TargetImageTags:       []string{"tag", "tag1", "tag2", "1"},
 					RemoveTargetImageTags: true,
@@ -313,7 +313,7 @@ func TestPromote(t *testing.T) {
 				mock := mockpromote.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
-				factory := promoterepository.NewPromoteFactory()
+				factory := factory.NewPromoteFactory()
 				factory.Register(image.DockerPromoterName, mock)
 				p.factory = factory
 			},
@@ -403,7 +403,7 @@ func TestGetPromoter(t *testing.T) {
 		service           *Service
 		options           *ServiceOptions
 		prepareAssertFunc func(*Service)
-		res               promote.Promoter
+		res               repository.Promoter
 		err               error
 	}{
 		{
@@ -414,7 +414,7 @@ func TestGetPromoter(t *testing.T) {
 		{
 			desc: "Testing get promoter",
 			service: &Service{
-				factory: promoterepository.NewPromoteFactory(),
+				factory: factory.NewPromoteFactory(),
 			},
 			options: &ServiceOptions{},
 			prepareAssertFunc: func(p *Service) {
@@ -426,7 +426,7 @@ func TestGetPromoter(t *testing.T) {
 		{
 			desc: "Testing get promoter with dry-run",
 			service: &Service{
-				factory: promoterepository.NewPromoteFactory(),
+				factory: factory.NewPromoteFactory(),
 			},
 			options: &ServiceOptions{
 				DryRun: true,

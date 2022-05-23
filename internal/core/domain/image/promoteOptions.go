@@ -1,4 +1,4 @@
-package promote
+package image
 
 import (
 	data "github.com/apenella/go-common-utils/data"

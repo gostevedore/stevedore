@@ -6,7 +6,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
-	"github.com/gostevedore/stevedore/internal/promote"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
 
 // OptionsFunc is a function used to configure the service
@@ -61,7 +61,7 @@ func (s *Service) Promote(ctx context.Context, options *ServiceOptions) error {
 	var err error
 	var sourceImage, targetImage *image.Image
 
-	promoteOptions := &promote.PromoteOptions{}
+	promoteOptions := &image.PromoteOptions{}
 	errContext := "(Service::Promote)"
 
 	if s.factory == nil {
@@ -173,7 +173,7 @@ func (e *Service) getCredentials(registry string) (*credentials.UserPasswordAuth
 	return auth, nil
 }
 
-func (e *Service) getPromoter(options *ServiceOptions) (promote.Promoter, error) {
+func (e *Service) getPromoter(options *ServiceOptions) (repository.Promoter, error) {
 
 	errContext := "(Handler::getPromoter)"
 

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/promote"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	promoter "github.com/gostevedore/stevedore/internal/promote/docker/promoter"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,9 +26,9 @@ func TestPromote(t *testing.T) {
 
 	tests := []struct {
 		desc              string
-		options           *promote.PromoteOptions
+		options           *image.PromoteOptions
 		prom              *DockerPromete
-		prepareAssertFunc func(*DockerPromete, *promote.PromoteOptions)
+		prepareAssertFunc func(*DockerPromete, *image.PromoteOptions)
 		assertFunc        func(*DockerPromete) bool
 		err               error
 	}{
@@ -61,7 +61,7 @@ func TestPromote(t *testing.T) {
 				cmd:    promoter.NewPromoteMock(),
 				writer: dummyWriter,
 			},
-			options: &promote.PromoteOptions{},
+			options: &image.PromoteOptions{},
 			err:     errors.New(contextError, "Image could not be promoted because source image name must be defined on promote options"),
 		},
 		{
@@ -70,7 +70,7 @@ func TestPromote(t *testing.T) {
 				cmd:    promoter.NewPromoteMock(),
 				writer: dummyWriter,
 			},
-			options: &promote.PromoteOptions{
+			options: &image.PromoteOptions{
 				SourceImageName: "image",
 			},
 			err: errors.New(contextError, "Image could not be promoted because target image name must be defined on promote options"),
@@ -81,13 +81,13 @@ func TestPromote(t *testing.T) {
 				cmd:    promoter.NewPromoteMock(),
 				writer: dummyWriter,
 			},
-			options: &promote.PromoteOptions{
+			options: &image.PromoteOptions{
 				SourceImageName: "image",
 				TargetImageName: "promoteImage",
 				TargetImageTags: []string{"tag1", "tag2"},
 			},
 			err: errors.New(contextError, "Image 'image' could not be promoted", errors.New(contextError, "error from mock")),
-			prepareAssertFunc: func(m *DockerPromete, o *promote.PromoteOptions) {
+			prepareAssertFunc: func(m *DockerPromete, o *image.PromoteOptions) {
 				m.cmd.(*promoter.PromoteMock).On("WithSourceImage", o.SourceImageName)
 				m.cmd.(*promoter.PromoteMock).On("WithTargetImage", o.TargetImageName)
 				m.cmd.(*promoter.PromoteMock).On("WithResponse", m.writer, o.TargetImageName)
@@ -103,7 +103,7 @@ func TestPromote(t *testing.T) {
 				cmd:    promoter.NewPromoteMock(),
 				writer: dummyWriter,
 			},
-			options: &promote.PromoteOptions{
+			options: &image.PromoteOptions{
 				SourceImageName:       "sourceRegistry/namespace/image",
 				TargetImageName:       "targetRegistry/namespace/image",
 				TargetImageTags:       []string{"tag1", "tag2"},
@@ -115,7 +115,7 @@ func TestPromote(t *testing.T) {
 				PushAuthPassword:      "pushpass",
 			},
 			err: &errors.Error{},
-			prepareAssertFunc: func(m *DockerPromete, o *promote.PromoteOptions) {
+			prepareAssertFunc: func(m *DockerPromete, o *image.PromoteOptions) {
 
 				// m.credentials.(*credentials.CredentialsStoreMock).On("GetCredentials", "sourceRegistry").Return(&credentials.RegistryUserPassAuth{
 				// 	Username: "name",

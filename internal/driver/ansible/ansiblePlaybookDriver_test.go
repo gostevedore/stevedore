@@ -10,7 +10,6 @@ import (
 	ansible "github.com/apenella/go-ansible/pkg/playbook"
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
-	"github.com/gostevedore/stevedore/internal/core/domain/driver"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
 	"github.com/gostevedore/stevedore/internal/driver/ansible/goansible"
@@ -70,7 +69,7 @@ func TestBuild(t *testing.T) {
 		desc              string
 		driver            *AnsiblePlaybookDriver
 		image             *image.Image
-		options           *driver.BuildDriverOptions
+		options           *image.BuildDriverOptions
 		err               error
 		prepareAssertFunc func(driver AnsibleDriverer)
 		assertFunc        func(driver AnsibleDriverer) bool
@@ -109,7 +108,7 @@ func TestBuild(t *testing.T) {
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: nil,
 			},
-			options: &driver.BuildDriverOptions{},
+			options: &image.BuildDriverOptions{},
 			err:     errors.New(errContext, "To build an image are required the options from the builder"),
 		},
 		{
@@ -119,7 +118,7 @@ func TestBuild(t *testing.T) {
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: nil,
 			},
-			options: &driver.BuildDriverOptions{
+			options: &image.BuildDriverOptions{
 				BuilderOptions: &builder.BuilderOptions{},
 			},
 			err: errors.New(errContext, "Playbook has not been defined on build options"),
@@ -131,7 +130,7 @@ func TestBuild(t *testing.T) {
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: nil,
 			},
-			options: &driver.BuildDriverOptions{
+			options: &image.BuildDriverOptions{
 				BuilderOptions: &builder.BuilderOptions{
 					Playbook: "site.yml",
 				},
@@ -145,7 +144,7 @@ func TestBuild(t *testing.T) {
 				driver: goansible.NewMockAnsibleDriver(),
 				writer: nil,
 			},
-			options: &driver.BuildDriverOptions{
+			options: &image.BuildDriverOptions{
 				BuilderOptions: &builder.BuilderOptions{
 					Playbook:  "site.yml",
 					Inventory: "inventory.yml",
@@ -165,7 +164,7 @@ func TestBuild(t *testing.T) {
 				RegistryNamespace: "namespace",
 				RegistryHost:      "registry",
 			},
-			options: &driver.BuildDriverOptions{
+			options: &image.BuildDriverOptions{
 				BuilderOptions: &builder.BuilderOptions{
 					Playbook:  "site.yml",
 					Inventory: "inventory.yml",
@@ -249,7 +248,7 @@ func TestBuild(t *testing.T) {
 					"var2": "value2",
 				},
 			},
-			options: &driver.BuildDriverOptions{
+			options: &image.BuildDriverOptions{
 				BuilderOptions: &builder.BuilderOptions{
 					Playbook:  "site.yml",
 					Inventory: "inventory.yml",
@@ -337,7 +336,7 @@ func TestBuild(t *testing.T) {
 					"var2": "value2",
 				},
 			},
-			options: &driver.BuildDriverOptions{
+			options: &image.BuildDriverOptions{
 				BuilderOptions: &builder.BuilderOptions{
 					Playbook:  "site.yml",
 					Inventory: "inventory.yml",

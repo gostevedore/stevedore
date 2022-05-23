@@ -2,7 +2,7 @@ package promote
 
 import (
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
-	"github.com/gostevedore/stevedore/internal/promote"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
 
 // CredentialsStorer
@@ -19,8 +19,8 @@ type Outputter interface {
 
 // PromoteFactorier
 type PromoteFactorier interface {
-	Get(string) (promote.Promoter, error)
-	Register(id string, promoter promote.Promoter) error
+	Get(string) (repository.Promoter, error)
+	Register(id string, promoter repository.Promoter) error
 }
 
 // Semverser

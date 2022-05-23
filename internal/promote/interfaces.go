@@ -5,10 +5,10 @@ import (
 	"io"
 )
 
-// Promoter
-type Promoter interface {
-	Promote(context.Context, *PromoteOptions) error
-}
+// // Promoter
+// type Promoter interface {
+// 	Promote(context.Context, *image.PromoteOptions) error
+// }
 
 // DockerCopier
 type DockerCopier interface {

@@ -8,7 +8,6 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
-	"github.com/gostevedore/stevedore/internal/core/domain/driver"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
 	"github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder"
@@ -68,7 +67,7 @@ func TestBuild(t *testing.T) {
 		driver            *DockerDriver
 		ctx               context.Context
 		image             *image.Image
-		options           *driver.BuildDriverOptions
+		options           *image.BuildDriverOptions
 		prepareAssertFunc func(DockerDriverer)
 		assertFunc        func(*testing.T, DockerDriverer)
 		err               error
@@ -101,7 +100,7 @@ func TestBuild(t *testing.T) {
 			driver: &DockerDriver{
 				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
 			},
-			options: &driver.BuildDriverOptions{},
+			options: &image.BuildDriverOptions{},
 			err:     errors.New(errContext, "To build an image is required a golang context"),
 		},
 		{
@@ -111,7 +110,7 @@ func TestBuild(t *testing.T) {
 				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
 			},
 			ctx:     context.TODO(),
-			options: &driver.BuildDriverOptions{},
+			options: &image.BuildDriverOptions{},
 			err:     errors.New(errContext, "To build an image is required an image name"),
 		},
 		{
@@ -142,7 +141,7 @@ func TestBuild(t *testing.T) {
 				Tags:   []string{"tag1", "tag2"},
 				Labels: map[string]string{"label1": "value1", "label2": "value2"},
 			},
-			options: &driver.BuildDriverOptions{
+			options: &image.BuildDriverOptions{
 				PushImageAfterBuild:   true,
 				PullParentImage:       true,
 				RemoveImageAfterBuild: true,
@@ -258,7 +257,7 @@ func TestBuild(t *testing.T) {
 					Tags: []string{"tag1", "tag2"},
 				},
 			},
-			options: &driver.BuildDriverOptions{
+			options: &image.BuildDriverOptions{
 				PushImageAfterBuild: true,
 				BuilderVarMappings: map[string]string{
 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
@@ -329,7 +328,7 @@ func TestBuild(t *testing.T) {
 					Tags: []string{"tag1", "tag2"},
 				},
 			},
-			options: &driver.BuildDriverOptions{
+			options: &image.BuildDriverOptions{
 				PushImageAfterBuild: true,
 				BuilderVarMappings: map[string]string{
 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,

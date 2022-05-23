@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/gostevedore/stevedore/internal/core/domain/driver"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 )
 
@@ -28,7 +27,7 @@ func NewDefaultDriver(w io.Writer) *DefaultDriver {
 }
 
 // Build simulate a new image build
-func (d *DefaultDriver) Build(ctx context.Context, i *image.Image, options *driver.BuildDriverOptions) error {
+func (d *DefaultDriver) Build(ctx context.Context, i *image.Image, options *image.BuildDriverOptions) error {
 	fmt.Fprintln(d.write, fmt.Sprintf("%+v", *options))
 	return nil
 }

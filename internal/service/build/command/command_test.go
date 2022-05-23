@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/core/domain/driver"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	mockdriver "github.com/gostevedore/stevedore/internal/driver/mock"
 	"github.com/stretchr/testify/assert"
@@ -36,7 +35,7 @@ func TestExecute(t *testing.T) {
 			desc: "Testing execute command",
 			command: &BuildCommand{
 				image:   &image.Image{},
-				options: &driver.BuildDriverOptions{},
+				options: &image.BuildDriverOptions{},
 				driver:  mockdriver.NewMockDriver(),
 			},
 			prepareAssertFunc: func(command *BuildCommand) {

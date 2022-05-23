@@ -6,7 +6,6 @@ import (
 	"os"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/core/domain/driver"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
 )
@@ -42,7 +41,7 @@ func NewDockerDriver(driver DockerDriverer, writer io.Writer) (*DockerDriver, er
 }
 
 // Build performs the build. In case the build could not performed it returns an error
-func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *driver.BuildDriverOptions) error {
+func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *image.BuildDriverOptions) error {
 
 	var err error
 	//var dockerBuildContext dockercontext.DockerBuildContexter

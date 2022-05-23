@@ -7,6 +7,7 @@ import (
 	"os"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/promote"
 )
 
@@ -32,7 +33,7 @@ func NewDockerPromote(cmd promote.DockerCopier, w io.Writer) *DockerPromete {
 	}
 }
 
-func (p *DockerPromete) Promote(ctx context.Context, options *promote.PromoteOptions) error {
+func (p *DockerPromete) Promote(ctx context.Context, options *image.PromoteOptions) error {
 
 	var err error
 

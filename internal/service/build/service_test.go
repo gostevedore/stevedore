@@ -9,7 +9,6 @@ import (
 	"github.com/gostevedore/stevedore/internal/builders/store"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
-	"github.com/gostevedore/stevedore/internal/core/domain/driver"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
@@ -133,7 +132,7 @@ func TestBuild(t *testing.T) {
 				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
 					mockdriver.NewMockDriver(),
 					stepParent.Image(),
-					&driver.BuildDriverOptions{
+					&image.BuildDriverOptions{
 						AnsibleConnectionLocal:           true,
 						AnsibleIntermediateContainerName: "intermediate_container",
 						AnsibleInventoryPath:             "inventory",
@@ -150,7 +149,7 @@ func TestBuild(t *testing.T) {
 				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
 					mockdriver.NewMockDriver(),
 					stepChild.Image(),
-					&driver.BuildDriverOptions{
+					&image.BuildDriverOptions{
 						AnsibleConnectionLocal:           true,
 						AnsibleIntermediateContainerName: "intermediate_container",
 						AnsibleInventoryPath:             "inventory",
@@ -308,7 +307,7 @@ func TestBuildWorker(t *testing.T) {
 					service.dispatch.(*dispatch.MockDispatch).AssertExpectations(t) &&
 					service.jobFactory.(*job.MockJobFactory).AssertExpectations(t)
 			},
-			prepareAssertFunc: func(service *Service, image *image.Image) {
+			prepareAssertFunc: func(service *Service, i *image.Image) {
 
 				mockJob := job.NewMockJob()
 				mockJob.On("Wait").Return(nil)
@@ -324,8 +323,8 @@ func TestBuildWorker(t *testing.T) {
 				}, nil)
 				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
 					mockdriver.NewMockDriver(),
-					image,
-					&driver.BuildDriverOptions{
+					i,
+					&image.BuildDriverOptions{
 						AnsibleConnectionLocal:           false,
 						AnsibleIntermediateContainerName: "builder_mock_namespace_image_0.0.0",
 						OutputPrefix:                     "",
@@ -422,7 +421,7 @@ func TestCommand(t *testing.T) {
 		service           *Service
 		driver            repository.BuildDriverer
 		image             *image.Image
-		options           *driver.BuildDriverOptions
+		options           *image.BuildDriverOptions
 		res               job.Commander
 		prepareAssertFunc func(*Service, *image.Image)
 		err               error
@@ -463,9 +462,9 @@ func TestCommand(t *testing.T) {
 			),
 			driver:  mockdriver.NewMockDriver(),
 			image:   &image.Image{},
-			options: &driver.BuildDriverOptions{},
-			prepareAssertFunc: func(s *Service, image *image.Image) {
-				s.commandFactory.(*command.MockBuildCommandFactory).On("New", mockdriver.NewMockDriver(), image, &driver.BuildDriverOptions{}).Return(command.NewMockBuildCommand(), nil)
+			options: &image.BuildDriverOptions{},
+			prepareAssertFunc: func(s *Service, i *image.Image) {
+				s.commandFactory.(*command.MockBuildCommandFactory).On("New", mockdriver.NewMockDriver(), i, &image.BuildDriverOptions{}).Return(command.NewMockBuildCommand(), nil)
 			},
 			res: &command.MockBuildCommand{},
 			err: &errors.Error{},
