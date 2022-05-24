@@ -26,6 +26,7 @@ type PromoteOptions struct {
 	PushAuthPassword string
 }
 
+// String TODO
 func (o *PromoteOptions) String() string {
 	str, err := data.ObjectToYamlString(o)
 	if err != nil {

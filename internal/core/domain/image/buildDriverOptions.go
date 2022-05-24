@@ -35,3 +35,11 @@ type BuildDriverOptions struct {
 	// RemoveImageAfterBuild flag indicate whether to remove the image after build
 	RemoveImageAfterBuild bool `yaml:"remove_image_after_build"`
 }
+
+// String TODO
+func (o *BuildDriverOptions) String() string {
+
+	str := ""
+
+	return str
+}
