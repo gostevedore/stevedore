@@ -1,4 +1,4 @@
-package store
+package images
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	"github.com/gostevedore/stevedore/internal/images/filter"
 )
 
@@ -15,9 +16,9 @@ const (
 	ImageWildcardVersionSymbol = "*"
 )
 
-// ImageStore is a store for images
-type ImageStore struct {
-	render                ImageRenderer
+// Store is a store for images
+type Store struct {
+	render                repository.Renderer
 	store                 []*image.Image
 	imageNameVersionIndex map[string]map[string]*image.Image
 	imageWildcardIndex    map[string]*image.Image
@@ -25,9 +26,9 @@ type ImageStore struct {
 	mutex sync.Mutex
 }
 
-// NewImageStore returns a new instance of the ImageStore
-func NewImageStore(render ImageRenderer) *ImageStore {
-	return &ImageStore{
+// NewStore returns a new instance of the Store
+func NewStore(render repository.Renderer) *Store {
+	return &Store{
 		render:                render,
 		store:                 []*image.Image{},
 		imageNameVersionIndex: make(map[string]map[string]*image.Image),
@@ -35,7 +36,7 @@ func NewImageStore(render ImageRenderer) *ImageStore {
 }
 
 // Store adds an image to the store
-func (s *ImageStore) Store(name string, version string, i *image.Image) error {
+func (s *Store) Store(name string, version string, i *image.Image) error {
 	var err error
 	var renderedImage *image.Image
 	errContext := "(store::Store)"
@@ -103,7 +104,7 @@ func (s *ImageStore) Store(name string, version string, i *image.Image) error {
 }
 
 // storeImage stores the image in the store
-func (s *ImageStore) storeImage(name string, version string, i *image.Image) error {
+func (s *Store) storeImage(name string, version string, i *image.Image) error {
 
 	errContext := "(store::storeImage)"
 
@@ -131,7 +132,7 @@ func (s *ImageStore) storeImage(name string, version string, i *image.Image) err
 
 //  wildcard images are those images that have * on its version. Wildcard images are used to generate a default image definition, and accepts any version value
 // storeWildcardImage stores the image in the store
-func (s *ImageStore) storeWildcardImage(name string, i *image.Image) error {
+func (s *Store) storeWildcardImage(name string, i *image.Image) error {
 
 	errContext := "(store::storeWildcardImage)"
 
@@ -154,7 +155,7 @@ func (s *ImageStore) storeWildcardImage(name string, i *image.Image) error {
 }
 
 // List returns a sorted list of all images
-func (s *ImageStore) List() ([]*image.Image, error) {
+func (s *Store) List() ([]*image.Image, error) {
 
 	errContext := "(store::List)"
 
@@ -167,7 +168,7 @@ func (s *ImageStore) List() ([]*image.Image, error) {
 }
 
 // FindByName returns all the images asociated to the image name
-func (s *ImageStore) FindByName(name string) ([]*image.Image, error) {
+func (s *Store) FindByName(name string) ([]*image.Image, error) {
 
 	errContext := "(store::FindByName)"
 	list := []*image.Image{}
@@ -186,7 +187,7 @@ func (s *ImageStore) FindByName(name string) ([]*image.Image, error) {
 }
 
 // Find returns the image associated to the image name and version
-func (s *ImageStore) Find(name string, version string) (*image.Image, error) {
+func (s *Store) Find(name string, version string) (*image.Image, error) {
 	errContext := "(store::Find)"
 
 	if s.store == nil {
@@ -208,7 +209,7 @@ func (s *ImageStore) Find(name string, version string) (*image.Image, error) {
 }
 
 // FindGuaranteed returns the image associated to the image name and version. In case of a wildcard image, it generates the image. Otherwise, it returns a nil image and an error
-func (s *ImageStore) FindGuaranteed(findName, findVersion, imageName, imageVersion string) (*image.Image, error) {
+func (s *Store) FindGuaranteed(findName, findVersion, imageName, imageVersion string) (*image.Image, error) {
 
 	var err error
 	errContext := "(store::FindGuaranteed)"
@@ -244,7 +245,7 @@ func (s *ImageStore) FindGuaranteed(findName, findVersion, imageName, imageVersi
 	return image, nil
 }
 
-func (s *ImageStore) FindWildcardImage(name string) (*image.Image, error) {
+func (s *Store) FindWildcardImage(name string) (*image.Image, error) {
 
 	errContext := "(store::FindWildcardImage)"
 
@@ -264,7 +265,7 @@ func (s *ImageStore) FindWildcardImage(name string) (*image.Image, error) {
 	return i, nil
 }
 
-func (s *ImageStore) GenerateImageFromWildcard(i *image.Image, name string, version string) (*image.Image, error) {
+func (s *Store) GenerateImageFromWildcard(i *image.Image, name string, version string) (*image.Image, error) {
 
 	var err error
 	var parent, parentWildcard, renderedImage, imageToRender *image.Image

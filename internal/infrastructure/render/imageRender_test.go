@@ -5,7 +5,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	domainimage "github.com/gostevedore/stevedore/internal/core/domain/image"
-	"github.com/gostevedore/stevedore/internal/images/render/now"
+	"github.com/gostevedore/stevedore/internal/infrastructure/now"
 	"github.com/stretchr/testify/assert"
 )
 

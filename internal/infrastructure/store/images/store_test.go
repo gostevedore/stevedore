@@ -1,11 +1,11 @@
-package store
+package images
 
 import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
-	"github.com/gostevedore/stevedore/internal/images/render"
+	"github.com/gostevedore/stevedore/internal/infrastructure/render"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,40 +15,40 @@ func TestStore(t *testing.T) {
 
 	tests := []struct {
 		desc              string
-		store             *ImageStore
+		store             *Store
 		name              string
 		version           string
 		image             *image.Image
 		err               error
-		prepareAssertFunc func(*ImageStore, *image.Image)
-		assertFunc        func(*testing.T, *ImageStore)
+		prepareAssertFunc func(*Store, *image.Image)
+		assertFunc        func(*testing.T, *Store)
 	}{
 		{
 			desc:  "Testing error when render is not defined",
-			store: NewImageStore(nil),
+			store: NewStore(nil),
 			err:   errors.New(errContext, "To add an image to the store an image render is required"),
 		},
 		{
 			desc:  "Testing error when name is not defined",
-			store: NewImageStore(render.NewMockImageRender()),
+			store: NewStore(render.NewMockImageRender()),
 			err:   errors.New(errContext, "To add an image to the store a name is required"),
 		},
 		{
 			desc:  "Testing error when version is not defined",
-			store: NewImageStore(render.NewMockImageRender()),
+			store: NewStore(render.NewMockImageRender()),
 			name:  "image_name",
 			err:   errors.New(errContext, "To add an image to the store a version is required"),
 		},
 		{
 			desc:    "Testing error when image is not defined",
-			store:   NewImageStore(render.NewMockImageRender()),
+			store:   NewStore(render.NewMockImageRender()),
 			name:    "image_name",
 			version: "image_version",
 			err:     errors.New(errContext, "To add an image to the store an image is required"),
 		},
 		{
 			desc:    "Testing add a image to an empty store",
-			store:   NewImageStore(render.NewMockImageRender()),
+			store:   NewStore(render.NewMockImageRender()),
 			name:    "image_name",
 			version: "image_version",
 			image: &image.Image{
@@ -62,7 +62,7 @@ func TestStore(t *testing.T) {
 				},
 				Tags: []string{"tag1", "tag2"},
 			},
-			prepareAssertFunc: func(s *ImageStore, i *image.Image) {
+			prepareAssertFunc: func(s *Store, i *image.Image) {
 				s.render.(*render.MockImageRender).On("Render", "image_name", "image_version", i).Return(
 					&image.Image{
 						Name:              "image_name-parent_name",
@@ -78,7 +78,7 @@ func TestStore(t *testing.T) {
 					nil,
 				)
 			},
-			assertFunc: func(t *testing.T, s *ImageStore) {
+			assertFunc: func(t *testing.T, s *Store) {
 				assert.Equal(t, 1, len(s.store), "Unexpected number of images in the store")
 				assert.Equal(t, 1, len(s.imageNameVersionIndex), "Unexpected number of images in the index")
 				assert.Equal(t, 0, len(s.imageWildcardIndex), "Unexpected number of images in the wildcard index")
@@ -88,7 +88,7 @@ func TestStore(t *testing.T) {
 		},
 		{
 			desc:    "Testing add a wildcard image to an empty store",
-			store:   NewImageStore(render.NewMockImageRender()),
+			store:   NewStore(render.NewMockImageRender()),
 			name:    "image_name",
 			version: "*",
 			image: &image.Image{
@@ -102,8 +102,8 @@ func TestStore(t *testing.T) {
 				},
 				Tags: []string{"tag1", "tag2"},
 			},
-			prepareAssertFunc: func(s *ImageStore, i *image.Image) {},
-			assertFunc: func(t *testing.T, s *ImageStore) {
+			prepareAssertFunc: func(s *Store, i *image.Image) {},
+			assertFunc: func(t *testing.T, s *Store) {
 
 				image := &image.Image{
 					Name:              "{{.Name}}-{{.Parent.Name}}",
@@ -126,7 +126,7 @@ func TestStore(t *testing.T) {
 
 		// {
 		// 	desc:    "Testing add a image using variables on tags",
-		// 	store:   NewImageStore(render.NewMockImageRender()),
+		// 	store:   NewStore(render.NewMockImageRender()),
 		// 	name:    "image_name",
 		// 	version: "*",
 		// 	image: &image.Image{
@@ -140,8 +140,8 @@ func TestStore(t *testing.T) {
 		// 		},
 		// 		Tags: []string{"tag1", "tag2"},
 		// 	},
-		// 	prepareAssertFunc: func(s *ImageStore, i *image.Image) {},
-		// 	assertFunc: func(t *testing.T, s *ImageStore) {
+		// 	prepareAssertFunc: func(s *Store, i *image.Image) {},
+		// 	assertFunc: func(t *testing.T, s *Store) {
 
 		// 		image := &image.Image{
 		// 			Name:              "{{.Name}}-{{.Parent.Name}}",
@@ -189,26 +189,26 @@ func TestStoreImage(t *testing.T) {
 
 	tests := []struct {
 		desc              string
-		store             *ImageStore
+		store             *Store
 		name              string
 		version           string
 		image             *image.Image
 		err               error
-		prepareAssertFunc func(s *ImageStore)
-		assertFunc        func(t *testing.T, s *ImageStore)
+		prepareAssertFunc func(s *Store)
+		assertFunc        func(t *testing.T, s *Store)
 	}{
 		{
 			desc:       "Testing store an image that is nil",
-			store:      NewImageStore(render.NewMockImageRender()),
+			store:      NewStore(render.NewMockImageRender()),
 			name:       "image_name",
 			version:    "image_version",
 			image:      nil,
 			err:        errors.New(errContext, "Provided image for 'image_name:image_version' is nil"),
-			assertFunc: func(t *testing.T, s *ImageStore) {},
+			assertFunc: func(t *testing.T, s *Store) {},
 		},
 		{
 			desc:    "Testing store an image",
-			store:   NewImageStore(render.NewMockImageRender()),
+			store:   NewStore(render.NewMockImageRender()),
 			name:    "image_name",
 			version: "image_version",
 			image: &image.Image{
@@ -223,7 +223,7 @@ func TestStoreImage(t *testing.T) {
 				Tags: []string{"tag1", "tag2"},
 			},
 			err: &errors.Error{},
-			assertFunc: func(t *testing.T, s *ImageStore) {
+			assertFunc: func(t *testing.T, s *Store) {
 				expected := &image.Image{
 					Name:              "image_name-parent_name",
 					Version:           "image_version-parent_version",
@@ -245,7 +245,7 @@ func TestStoreImage(t *testing.T) {
 		},
 		{
 			desc:    "Testing store an existing image",
-			store:   NewImageStore(render.NewMockImageRender()),
+			store:   NewStore(render.NewMockImageRender()),
 			name:    "image_name",
 			version: "image_version",
 			image: &image.Image{
@@ -260,7 +260,7 @@ func TestStoreImage(t *testing.T) {
 				Tags: []string{"tag1", "tag2"},
 			},
 			err: errors.New(errContext, "Image 'image_name:image_version' already exists"),
-			prepareAssertFunc: func(s *ImageStore) {
+			prepareAssertFunc: func(s *Store) {
 				s.storeImage("image_name", "image_version", &image.Image{
 					Name:              "image_name-parent_name",
 					Version:           "image_version-parent_version",
@@ -299,25 +299,25 @@ func TestStoreWildcardImage(t *testing.T) {
 
 	tests := []struct {
 		desc              string
-		store             *ImageStore
+		store             *Store
 		name              string
 		image             *image.Image
 		err               error
-		prepareAssertFunc func(s *ImageStore)
-		assertFunc        func(t *testing.T, s *ImageStore)
+		prepareAssertFunc func(s *Store)
+		assertFunc        func(t *testing.T, s *Store)
 	}{
 		{
 			desc:       "Testing store an image that is nil",
-			store:      NewImageStore(render.NewMockImageRender()),
+			store:      NewStore(render.NewMockImageRender()),
 			name:       "image_name",
 			image:      nil,
 			err:        errors.New(errContext, "Provided wildcard image for 'image_name' is nil"),
-			assertFunc: func(t *testing.T, s *ImageStore) {},
+			assertFunc: func(t *testing.T, s *Store) {},
 		},
 
 		{
 			desc:  "Testing store an image",
-			store: NewImageStore(render.NewMockImageRender()),
+			store: NewStore(render.NewMockImageRender()),
 			name:  "image_name",
 			image: &image.Image{
 				Name:              "{{.Name}}-{{.Parent.Name}}",
@@ -331,7 +331,7 @@ func TestStoreWildcardImage(t *testing.T) {
 				Tags: []string{"tag1", "tag2"},
 			},
 			err: &errors.Error{},
-			assertFunc: func(t *testing.T, s *ImageStore) {
+			assertFunc: func(t *testing.T, s *Store) {
 				expected := &image.Image{
 					Name:              "{{.Name}}-{{.Parent.Name}}",
 					Version:           "{{.Version}}-{{.Parent.Version}}",
@@ -351,7 +351,7 @@ func TestStoreWildcardImage(t *testing.T) {
 		},
 		{
 			desc:  "Testing store an existing image",
-			store: NewImageStore(render.NewMockImageRender()),
+			store: NewStore(render.NewMockImageRender()),
 			name:  "image_name",
 			image: &image.Image{
 				Name:              "{{.Name}}-{{.Parent.Name}}",
@@ -365,7 +365,7 @@ func TestStoreWildcardImage(t *testing.T) {
 				Tags: []string{"tag1", "tag2"},
 			},
 			err: errors.New(errContext, "Image 'image_name' already exists on wildcard images index"),
-			prepareAssertFunc: func(s *ImageStore) {
+			prepareAssertFunc: func(s *Store) {
 				s.storeWildcardImage("image_name", &image.Image{
 					Name:              "{{.Name}}-{{.Parent.Name}}",
 					Version:           "{{.Version}}-{{.Parent.Version}}",
@@ -406,20 +406,20 @@ func TestList(t *testing.T) {
 
 	tests := []struct {
 		desc              string
-		store             *ImageStore
-		prepareAssertFunc func(*ImageStore)
-		assertFunc        func(*testing.T, *ImageStore, []*image.Image)
+		store             *Store
+		prepareAssertFunc func(*Store)
+		assertFunc        func(*testing.T, *Store, []*image.Image)
 		err               error
 	}{
 		{
 			desc:  "Testing error listing images when store is not initialized",
-			store: &ImageStore{},
+			store: &Store{},
 			err:   errors.New(errContext, "Store has not been initialized"),
 		},
 		{
 			desc:  "Testing list images",
-			store: NewImageStore(render.NewMockImageRender()),
-			prepareAssertFunc: func(s *ImageStore) {
+			store: NewStore(render.NewMockImageRender()),
+			prepareAssertFunc: func(s *Store) {
 
 				s.store = []*image.Image{
 					{
@@ -440,7 +440,7 @@ func TestList(t *testing.T) {
 					},
 				}
 			},
-			assertFunc: func(t *testing.T, s *ImageStore, list []*image.Image) {
+			assertFunc: func(t *testing.T, s *Store, list []*image.Image) {
 				expected := []*image.Image{
 					{
 						Name:    "image_1",
@@ -489,22 +489,22 @@ func TestFindByName(t *testing.T) {
 
 	tests := []struct {
 		desc              string
-		store             *ImageStore
+		store             *Store
 		name              string
-		prepareAssertFunc func(*ImageStore)
-		assertFunc        func(*testing.T, *ImageStore, []*image.Image)
+		prepareAssertFunc func(*Store)
+		assertFunc        func(*testing.T, *Store, []*image.Image)
 		err               error
 	}{
 		{
 			desc:  "Testing error finding images by name when store is not initialized",
-			store: &ImageStore{},
+			store: &Store{},
 			err:   errors.New(errContext, "Store has not been initialized"),
 		},
 		{
 			desc:  "Testing find images by name",
-			store: NewImageStore(render.NewMockImageRender()),
+			store: NewStore(render.NewMockImageRender()),
 			name:  "image_1",
-			prepareAssertFunc: func(s *ImageStore) {
+			prepareAssertFunc: func(s *Store) {
 
 				s.imageNameVersionIndex = map[string]map[string]*image.Image{
 					"image_1": {
@@ -531,7 +531,7 @@ func TestFindByName(t *testing.T) {
 					},
 				}
 			},
-			assertFunc: func(t *testing.T, s *ImageStore, list []*image.Image) {
+			assertFunc: func(t *testing.T, s *Store, list []*image.Image) {
 				expected := []*image.Image{
 					{
 						Name:    "image_1",
@@ -573,24 +573,24 @@ func TestFind(t *testing.T) {
 
 	tests := []struct {
 		desc              string
-		store             *ImageStore
+		store             *Store
 		name              string
 		version           string
-		prepareAssertFunc func(*ImageStore)
-		assertFunc        func(*testing.T, *ImageStore, *image.Image)
+		prepareAssertFunc func(*Store)
+		assertFunc        func(*testing.T, *Store, *image.Image)
 		err               error
 	}{
 		{
 			desc:  "Testing error finding an image when store is not initialized",
-			store: &ImageStore{},
+			store: &Store{},
 			err:   errors.New(errContext, "Store has not been initialized"),
 		},
 		{
 			desc:    "Testing find an image",
-			store:   NewImageStore(render.NewMockImageRender()),
+			store:   NewStore(render.NewMockImageRender()),
 			name:    "image_1",
 			version: "version_1",
-			prepareAssertFunc: func(s *ImageStore) {
+			prepareAssertFunc: func(s *Store) {
 				s.imageNameVersionIndex = map[string]map[string]*image.Image{
 					"image_1": {
 						"version_1": &image.Image{
@@ -616,7 +616,7 @@ func TestFind(t *testing.T) {
 					},
 				}
 			},
-			assertFunc: func(t *testing.T, s *ImageStore, i *image.Image) {
+			assertFunc: func(t *testing.T, s *Store, i *image.Image) {
 				expected := &image.Image{
 					Name:    "image_1",
 					Version: "version_1",
@@ -628,10 +628,10 @@ func TestFind(t *testing.T) {
 		},
 		{
 			desc:    "Testing find the wildcard image",
-			store:   NewImageStore(render.NewMockImageRender()),
+			store:   NewStore(render.NewMockImageRender()),
 			name:    "image",
 			version: "*",
-			prepareAssertFunc: func(s *ImageStore) {
+			prepareAssertFunc: func(s *Store) {
 
 				s.imageWildcardIndex = map[string]*image.Image{
 					"image": {
@@ -641,7 +641,7 @@ func TestFind(t *testing.T) {
 				}
 
 			},
-			assertFunc: func(t *testing.T, s *ImageStore, i *image.Image) {
+			assertFunc: func(t *testing.T, s *Store, i *image.Image) {
 				expected := &image.Image{
 					Name:    "image_wildcard",
 					Version: "{{ .Version }}",
@@ -653,13 +653,13 @@ func TestFind(t *testing.T) {
 		},
 		{
 			desc:    "Testing find unexisting image",
-			store:   NewImageStore(render.NewMockImageRender()),
+			store:   NewStore(render.NewMockImageRender()),
 			name:    "image",
 			version: "unexisting",
-			prepareAssertFunc: func(s *ImageStore) {
+			prepareAssertFunc: func(s *Store) {
 				s.imageWildcardIndex = map[string]*image.Image{}
 			},
-			assertFunc: func(t *testing.T, s *ImageStore, i *image.Image) {
+			assertFunc: func(t *testing.T, s *Store, i *image.Image) {
 				assert.Nil(t, i)
 			},
 			err: &errors.Error{},
@@ -690,28 +690,28 @@ func TestFindGuaranteed(t *testing.T) {
 
 	tests := []struct {
 		desc              string
-		store             *ImageStore
+		store             *Store
 		findName          string
 		findVersion       string
 		imageName         string
 		imageVersion      string
-		prepareAssertFunc func(*ImageStore)
-		assertFunc        func(*testing.T, *ImageStore, *image.Image)
+		prepareAssertFunc func(*Store)
+		assertFunc        func(*testing.T, *Store, *image.Image)
 		err               error
 	}{
 		{
 			desc:  "Testing error finding an image when store is not initialized",
-			store: &ImageStore{},
+			store: &Store{},
 			err:   errors.New(errContext, "Store has not been initialized"),
 		},
 		{
 			desc:         "Testing find an image",
-			store:        NewImageStore(render.NewMockImageRender()),
+			store:        NewStore(render.NewMockImageRender()),
 			findName:     "image_1",
 			findVersion:  "version_1",
 			imageName:    "image_1",
 			imageVersion: "version_1",
-			prepareAssertFunc: func(s *ImageStore) {
+			prepareAssertFunc: func(s *Store) {
 				s.imageNameVersionIndex = map[string]map[string]*image.Image{
 					"image_1": {
 						"version_1": &image.Image{
@@ -737,7 +737,7 @@ func TestFindGuaranteed(t *testing.T) {
 					},
 				}
 			},
-			assertFunc: func(t *testing.T, s *ImageStore, i *image.Image) {
+			assertFunc: func(t *testing.T, s *Store, i *image.Image) {
 				expected := &image.Image{
 					Name:    "image_1",
 					Version: "version_1",
@@ -749,12 +749,12 @@ func TestFindGuaranteed(t *testing.T) {
 		},
 		{
 			desc:         "Testing find a wildcard image to be rendered",
-			store:        NewImageStore(render.NewMockImageRender()),
+			store:        NewStore(render.NewMockImageRender()),
 			findName:     "image_wildcard",
 			findVersion:  "wildcard",
 			imageName:    "image_wildcard",
 			imageVersion: "wildcard",
-			prepareAssertFunc: func(s *ImageStore) {
+			prepareAssertFunc: func(s *Store) {
 
 				s.imageWildcardIndex = map[string]*image.Image{
 					"image_wildcard": {
@@ -857,7 +857,7 @@ func TestFindGuaranteed(t *testing.T) {
 					nil,
 				)
 			},
-			assertFunc: func(t *testing.T, s *ImageStore, i *image.Image) {
+			assertFunc: func(t *testing.T, s *Store, i *image.Image) {
 				expected := &image.Image{
 					Children:         []*image.Image{},
 					Labels:           map[string]string{},
@@ -889,10 +889,10 @@ func TestFindGuaranteed(t *testing.T) {
 		},
 		{
 			desc:        "Testing find the wildcard image",
-			store:       NewImageStore(render.NewMockImageRender()),
+			store:       NewStore(render.NewMockImageRender()),
 			findName:    "image",
 			findVersion: "*",
-			prepareAssertFunc: func(s *ImageStore) {
+			prepareAssertFunc: func(s *Store) {
 
 				s.imageWildcardIndex = map[string]*image.Image{
 					"image": {
@@ -902,7 +902,7 @@ func TestFindGuaranteed(t *testing.T) {
 				}
 
 			},
-			assertFunc: func(t *testing.T, s *ImageStore, i *image.Image) {
+			assertFunc: func(t *testing.T, s *Store, i *image.Image) {
 				expected := &image.Image{
 					Name:    "image_wildcard",
 					Version: "{{ .Version }}",
@@ -914,15 +914,15 @@ func TestFindGuaranteed(t *testing.T) {
 		},
 		{
 			desc:         "Testing find unexisting image",
-			store:        NewImageStore(render.NewMockImageRender()),
+			store:        NewStore(render.NewMockImageRender()),
 			findName:     "image",
 			findVersion:  "unexisting",
 			imageName:    "image",
 			imageVersion: "unexisting",
-			prepareAssertFunc: func(s *ImageStore) {
+			prepareAssertFunc: func(s *Store) {
 				s.imageWildcardIndex = map[string]*image.Image{}
 			},
-			assertFunc: func(t *testing.T, s *ImageStore, i *image.Image) {
+			assertFunc: func(t *testing.T, s *Store, i *image.Image) {
 				assert.Nil(t, i)
 			},
 			err: errors.New(errContext, "Image 'image:unexisting' does not exist on the store"),
@@ -952,7 +952,7 @@ func TestFindWildcardImage(t *testing.T) {
 
 	tests := []struct {
 		desc  string
-		store *ImageStore
+		store *Store
 		name  string
 		res   *image.Image
 		err   error
@@ -960,19 +960,19 @@ func TestFindWildcardImage(t *testing.T) {
 
 		{
 			desc:  "Testing find wildcard image error when store has not been initialized",
-			store: &ImageStore{},
+			store: &Store{},
 			err:   errors.New(errContext, "Store has not been initialized"),
 		},
 		{
 			desc: "Testing find wild card image error when wildcard index has not been initialized",
-			store: &ImageStore{
+			store: &Store{
 				store: []*image.Image{},
 			},
 			err: errors.New(errContext, "Wildcard index has not been initialized"),
 		},
 		{
 			desc: "Testing find the wildcard image",
-			store: &ImageStore{
+			store: &Store{
 				store: []*image.Image{},
 				imageWildcardIndex: map[string]*image.Image{
 					"image": {
@@ -1009,22 +1009,22 @@ func TestGenerateImageFromWildcard(t *testing.T) {
 
 	tests := []struct {
 		desc              string
-		store             *ImageStore
+		store             *Store
 		image             *image.Image
 		name              string
 		version           string
-		prepareAssertFunc func(*ImageStore)
-		assertFunc        func(*testing.T, *ImageStore, *image.Image)
+		prepareAssertFunc func(*Store)
+		assertFunc        func(*testing.T, *Store, *image.Image)
 		err               error
 	}{
 		{
 			desc:  "Testing error when generating an image when wildcard image is nil",
-			store: &ImageStore{},
+			store: &Store{},
 			err:   errors.New(errContext, "Provided wildcard image is nil"),
 		},
 		{
 			desc:  "Testing error when generating an image when store is not initialized",
-			store: &ImageStore{},
+			store: &Store{},
 			image: &image.Image{
 				Parent: &image.Image{},
 			},
@@ -1032,7 +1032,7 @@ func TestGenerateImageFromWildcard(t *testing.T) {
 		},
 		{
 			desc:    "Testing when generating an image from wildcard image",
-			store:   NewImageStore(render.NewMockImageRender()),
+			store:   NewStore(render.NewMockImageRender()),
 			name:    "image_wildcard",
 			version: "wildcard",
 			image: &image.Image{
@@ -1047,7 +1047,7 @@ func TestGenerateImageFromWildcard(t *testing.T) {
 					},
 				},
 			},
-			prepareAssertFunc: func(s *ImageStore) {
+			prepareAssertFunc: func(s *Store) {
 				s.imageWildcardIndex = map[string]*image.Image{
 					"image_wildcard": {
 						Name:    "image_wildcard",
@@ -1148,7 +1148,7 @@ func TestGenerateImageFromWildcard(t *testing.T) {
 					nil,
 				)
 			},
-			assertFunc: func(t *testing.T, s *ImageStore, i *image.Image) {
+			assertFunc: func(t *testing.T, s *Store, i *image.Image) {
 				expected := &image.Image{
 					Children:         []*image.Image{},
 					Labels:           map[string]string{},
