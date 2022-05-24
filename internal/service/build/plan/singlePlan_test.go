@@ -5,7 +5,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
-	"github.com/gostevedore/stevedore/internal/images/store"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,7 +32,7 @@ func TestSinglePlanPlan(t *testing.T) {
 			desc: "Testing generate plan with an image name and versions",
 			plan: &SinglePlan{
 				BasePlan{
-					images: store.NewMockImageStore(),
+					images: images.NewMockStore(),
 				},
 			},
 			name:     "image",
@@ -40,31 +40,31 @@ func TestSinglePlanPlan(t *testing.T) {
 			err:      &errors.Error{},
 			res:      2,
 			prepareAssertFunc: func(p *SinglePlan) {
-				p.images.(*store.MockImageStore).On("Find", "image", "version1").Return(&image.Image{
+				p.images.(*images.MockStore).On("Find", "image", "version1").Return(&image.Image{
 					Name:    "image",
 					Version: "version1",
 				}, nil)
-				p.images.(*store.MockImageStore).On("Find", "image", "version2").Return(&image.Image{
+				p.images.(*images.MockStore).On("Find", "image", "version2").Return(&image.Image{
 					Name:    "image",
 					Version: "version2",
 				}, nil)
 			},
 			assertFunc: func(p *SinglePlan) bool {
-				return p.images.(*store.MockImageStore).AssertExpectations(t)
+				return p.images.(*images.MockStore).AssertExpectations(t)
 			},
 		},
 		{
 			desc: "Testing generate plan when no version is provided",
 			plan: &SinglePlan{
 				BasePlan{
-					images: store.NewMockImageStore(),
+					images: images.NewMockStore(),
 				},
 			},
 			name:     "image",
 			versions: []string{},
 			err:      &errors.Error{},
 			prepareAssertFunc: func(p *SinglePlan) {
-				p.images.(*store.MockImageStore).On("FindByName", "image").Return([]*image.Image{
+				p.images.(*images.MockStore).On("FindByName", "image").Return([]*image.Image{
 					{
 						Name:    "image",
 						Version: "version1",
@@ -77,7 +77,7 @@ func TestSinglePlanPlan(t *testing.T) {
 			},
 			res: 2,
 			assertFunc: func(p *SinglePlan) bool {
-				return p.images.(*store.MockImageStore).AssertExpectations(t)
+				return p.images.(*images.MockStore).AssertExpectations(t)
 			},
 		},
 	}

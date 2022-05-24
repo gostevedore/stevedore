@@ -18,10 +18,6 @@ import (
 	buildhandler "github.com/gostevedore/stevedore/internal/handler/build"
 	handler "github.com/gostevedore/stevedore/internal/handler/build"
 	"github.com/gostevedore/stevedore/internal/images/graph"
-	"github.com/gostevedore/stevedore/internal/images/render"
-	"github.com/gostevedore/stevedore/internal/images/render/now"
-	"github.com/gostevedore/stevedore/internal/images/store"
-	imagesstore "github.com/gostevedore/stevedore/internal/images/store"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible/goansible"
 	driverdefault "github.com/gostevedore/stevedore/internal/infrastructure/driver/default"
@@ -31,7 +27,10 @@ import (
 	gitauth "github.com/gostevedore/stevedore/internal/infrastructure/driver/docker/godockerbuilder/context/git/auth"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
+	"github.com/gostevedore/stevedore/internal/infrastructure/now"
+	"github.com/gostevedore/stevedore/internal/infrastructure/render"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/gostevedore/stevedore/internal/schedule/dispatch"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 	"github.com/gostevedore/stevedore/internal/schedule/worker"
@@ -102,7 +101,7 @@ func (e *Entrypoint) Execute(
 	var imageName string
 	var imageRender *render.ImageRender
 	var imagesGraphTemplatesStore *imagesgraphtemplate.ImagesGraphTemplate
-	var imagesStore *imagesstore.ImageStore
+	var imagesStore *images.Store
 	var jobFactory *job.JobFactory
 	var planFactory *plan.PlanFactory
 	var semVerFactory *semver.SemVerGenerator
@@ -365,7 +364,7 @@ func (e *Entrypoint) createImageRender(now render.Nower) (*render.ImageRender, e
 	return render.NewImageRender(now), nil
 }
 
-func (e *Entrypoint) createImagesStore(conf *configuration.Configuration, render imagesstore.ImageRenderer, graph imagesconfiguration.ImagesGraphTemplatesStorer, compatibility Compatibilitier) (*imagesstore.ImageStore, error) {
+func (e *Entrypoint) createImagesStore(conf *configuration.Configuration, render repository.Renderer, graph imagesconfiguration.ImagesGraphTemplatesStorer, compatibility Compatibilitier) (*images.Store, error) {
 
 	errContext := "(Entrypoint::createImagesStore)"
 
@@ -393,7 +392,7 @@ func (e *Entrypoint) createImagesStore(conf *configuration.Configuration, render
 		return nil, errors.New(errContext, "To create an images store, images path must be provided in configuration")
 	}
 
-	store := imagesstore.NewImageStore(render)
+	store := images.NewStore(render)
 	imagesConfiguration := imagesconfiguration.NewImagesConfiguration(e.fs, graph, store, compatibility)
 	err := imagesConfiguration.LoadImagesToStore(conf.ImagesPath)
 	if err != nil {
@@ -535,7 +534,7 @@ func (e *Entrypoint) createDispatcher(options *Options) (*dispatch.Dispatch, err
 	return d, nil
 }
 
-func (e *Entrypoint) createPlanFactory(store *store.ImageStore, options *Options) (*plan.PlanFactory, error) {
+func (e *Entrypoint) createPlanFactory(store *images.Store, options *Options) (*plan.PlanFactory, error) {
 	factory := plan.NewPlanFactory(store)
 
 	return factory, nil

@@ -5,7 +5,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
-	"github.com/gostevedore/stevedore/internal/images/store"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,7 +31,7 @@ func TestCascadePlanPlan(t *testing.T) {
 			desc: "Testing generate cascade plan with three images",
 			plan: &CascadePlan{
 				BasePlan{
-					images: store.NewMockImageStore(),
+					images: images.NewMockStore(),
 				},
 				// Depth
 				-1,
@@ -41,7 +41,7 @@ func TestCascadePlanPlan(t *testing.T) {
 			err:      &errors.Error{},
 			res:      3,
 			prepareAssertFunc: func(p *CascadePlan) {
-				p.images.(*store.MockImageStore).On("Find", "image", "version1").Return(&image.Image{
+				p.images.(*images.MockStore).On("Find", "image", "version1").Return(&image.Image{
 					Name:    "image",
 					Version: "version1",
 					Children: []*image.Image{
@@ -59,14 +59,14 @@ func TestCascadePlanPlan(t *testing.T) {
 				}, nil)
 			},
 			assertFunc: func(p *CascadePlan) bool {
-				return p.images.(*store.MockImageStore).AssertExpectations(t)
+				return p.images.(*images.MockStore).AssertExpectations(t)
 			},
 		},
 		{
 			desc: "Testing generate cascade plan with depth defined",
 			plan: &CascadePlan{
 				BasePlan{
-					images: store.NewMockImageStore(),
+					images: images.NewMockStore(),
 				},
 				// Depth
 				2,
@@ -76,7 +76,7 @@ func TestCascadePlanPlan(t *testing.T) {
 			err:      &errors.Error{},
 			res:      2,
 			prepareAssertFunc: func(p *CascadePlan) {
-				p.images.(*store.MockImageStore).On("Find", "image", "version1").Return(&image.Image{
+				p.images.(*images.MockStore).On("Find", "image", "version1").Return(&image.Image{
 					Name:    "image",
 					Version: "version1",
 					Children: []*image.Image{
@@ -94,14 +94,14 @@ func TestCascadePlanPlan(t *testing.T) {
 				}, nil)
 			},
 			assertFunc: func(p *CascadePlan) bool {
-				return p.images.(*store.MockImageStore).AssertExpectations(t)
+				return p.images.(*images.MockStore).AssertExpectations(t)
 			},
 		},
 		{
 			desc: "Testing generate cascade plan when no version is provided",
 			plan: &CascadePlan{
 				BasePlan{
-					images: store.NewMockImageStore(),
+					images: images.NewMockStore(),
 				},
 				// Depth
 				-1,
@@ -110,7 +110,7 @@ func TestCascadePlanPlan(t *testing.T) {
 			versions: []string{},
 			err:      &errors.Error{},
 			prepareAssertFunc: func(p *CascadePlan) {
-				p.images.(*store.MockImageStore).On("FindByName", "image").Return([]*image.Image{
+				p.images.(*images.MockStore).On("FindByName", "image").Return([]*image.Image{
 					{
 						Name:    "image",
 						Version: "version1",
@@ -135,7 +135,7 @@ func TestCascadePlanPlan(t *testing.T) {
 			},
 			res: 4,
 			assertFunc: func(p *CascadePlan) bool {
-				return p.images.(*store.MockImageStore).AssertExpectations(t)
+				return p.images.(*images.MockStore).AssertExpectations(t)
 			},
 		},
 	}

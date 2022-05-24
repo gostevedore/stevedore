@@ -14,15 +14,15 @@ import (
 	"github.com/gostevedore/stevedore/internal/credentials"
 	handler "github.com/gostevedore/stevedore/internal/handler/build"
 	"github.com/gostevedore/stevedore/internal/images/graph"
-	"github.com/gostevedore/stevedore/internal/images/render"
-	"github.com/gostevedore/stevedore/internal/images/render/now"
-	imagesstore "github.com/gostevedore/stevedore/internal/images/store"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible"
 	defaultdriver "github.com/gostevedore/stevedore/internal/infrastructure/driver/default"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
+	"github.com/gostevedore/stevedore/internal/infrastructure/now"
+	"github.com/gostevedore/stevedore/internal/infrastructure/render"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 	"github.com/gostevedore/stevedore/internal/semver"
 	"github.com/gostevedore/stevedore/internal/service/build/command"
@@ -575,10 +575,10 @@ func TestCreateImagesStore(t *testing.T) {
 		desc          string
 		entrypoint    *Entrypoint
 		conf          *configuration.Configuration
-		render        imagesstore.ImageRenderer
+		render        repository.Renderer
 		graph         imagesconfiguration.ImagesGraphTemplatesStorer
 		compatibility Compatibilitier
-		res           *imagesstore.ImageStore
+		res           *images.Store
 		err           error
 	}{
 		{
@@ -644,7 +644,7 @@ func TestCreateImagesStore(t *testing.T) {
 				graph.NewGraphTemplateFactory(false),
 			),
 			compatibility: &compatibility.Compatibility{},
-			res:           &imagesstore.ImageStore{},
+			res:           &images.Store{},
 			err:           &errors.Error{},
 		},
 	}
@@ -985,7 +985,7 @@ func TestCreatePlanFactory(t *testing.T) {
 		e := NewEntrypoint()
 		options := &Options{}
 
-		imageStore := imagesstore.NewImageStore(nil)
+		imageStore := images.NewStore(nil)
 		planFactory, err := e.createPlanFactory(imageStore, options)
 
 		assert.Nil(t, err)

@@ -15,3 +15,8 @@ type BuildDriverer interface {
 type Promoter interface {
 	Promote(context.Context, *image.PromoteOptions) error
 }
+
+// Renderer is the interface for the image renderer
+type Renderer interface {
+	Render(name, version string, image *image.Image) (*image.Image, error)
+}

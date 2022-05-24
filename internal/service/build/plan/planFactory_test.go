@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/images/store"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,20 +21,20 @@ func TestNewPlan(t *testing.T) {
 	}{
 		{
 			desc:    "Testing new plan error when unknown id",
-			factory: NewPlanFactory(store.NewMockImageStore()),
+			factory: NewPlanFactory(images.NewMockStore()),
 			id:      "unknown",
 			err:     errors.New(errContext, "Plan 'unknown' has not been registered"),
 		},
 		{
 			desc:       "Testing new plan error when depth is not provided on cascade plan",
-			factory:    NewPlanFactory(store.NewMockImageStore()),
+			factory:    NewPlanFactory(images.NewMockStore()),
 			id:         "cascade",
 			parameters: map[string]interface{}{},
 			err:        errors.New(errContext, "To create a cascade plan, is required a depth"),
 		},
 		{
 			desc:    "Testing new plan that returns a cascade plan",
-			factory: NewPlanFactory(store.NewMockImageStore()),
+			factory: NewPlanFactory(images.NewMockStore()),
 			id:      "cascade",
 			parameters: map[string]interface{}{
 				"depth": -1,
@@ -44,7 +44,7 @@ func TestNewPlan(t *testing.T) {
 		},
 		{
 			desc:       "Testing new plan that returns a single plan",
-			factory:    NewPlanFactory(store.NewMockImageStore()),
+			factory:    NewPlanFactory(images.NewMockStore()),
 			id:         "single",
 			parameters: map[string]interface{}{},
 			res:        &SinglePlan{},

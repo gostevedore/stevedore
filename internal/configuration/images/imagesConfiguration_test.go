@@ -10,7 +10,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/configuration/images/image"
 	domainimage "github.com/gostevedore/stevedore/internal/core/domain/image"
 	imagesgraph "github.com/gostevedore/stevedore/internal/images/graph"
-	"github.com/gostevedore/stevedore/internal/images/store"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -138,19 +138,19 @@ image:
 				graph.NewImagesGraphTemplate(
 					imagesgraph.NewGraphTemplateFactory(false),
 				),
-				store.NewMockImageStore(),
+				images.NewMockStore(),
 				compatibility.NewMockCompatibility(),
 			),
-			prepareAssertFunc: func(images *ImagesConfiguration) {
+			prepareAssertFunc: func(i *ImagesConfiguration) {
 
-				images.store.(*store.MockImageStore).On("Find", "parent1", "parent1_version").Return(&domainimage.Image{
+				i.store.(*images.MockStore).On("Find", "parent1", "parent1_version").Return(&domainimage.Image{
 					RegistryHost:      "registry.test",
 					RegistryNamespace: "namespace",
 					Name:              "parent1",
 					Version:           "parent1_version",
 					Builder:           "builder",
 				}, nil)
-				images.store.(*store.MockImageStore).On("Find", "parent2", "parent2_version").Return(&domainimage.Image{
+				i.store.(*images.MockStore).On("Find", "parent2", "parent2_version").Return(&domainimage.Image{
 					RegistryHost:      "registry.test",
 					RegistryNamespace: "namespace",
 					Name:              "parent2",
@@ -213,15 +213,15 @@ image:
 				)
 				// parent2.AddChild(childParent2)
 
-				images.store.(*store.MockImageStore).On("Store", "parent1", "parent1_version", mock.AnythingOfType("*image.Image")).Return(nil)
-				images.store.(*store.MockImageStore).On("Store", "parent2", "parent2_version", mock.AnythingOfType("*image.Image")).Return(nil)
-				images.store.(*store.MockImageStore).On("Store", "child", "version", mock.AnythingOfType("*image.Image")).Return(nil)
-				images.store.(*store.MockImageStore).On("Store", "child", "version", mock.AnythingOfType("*image.Image")).Return(nil)
-				images.store.(*store.MockImageStore).On("Store", "other_child", "other_child_version", mock.AnythingOfType("*image.Image")).Return(nil)
+				i.store.(*images.MockStore).On("Store", "parent1", "parent1_version", mock.AnythingOfType("*image.Image")).Return(nil)
+				i.store.(*images.MockStore).On("Store", "parent2", "parent2_version", mock.AnythingOfType("*image.Image")).Return(nil)
+				i.store.(*images.MockStore).On("Store", "child", "version", mock.AnythingOfType("*image.Image")).Return(nil)
+				i.store.(*images.MockStore).On("Store", "child", "version", mock.AnythingOfType("*image.Image")).Return(nil)
+				i.store.(*images.MockStore).On("Store", "other_child", "other_child_version", mock.AnythingOfType("*image.Image")).Return(nil)
 			},
-			assertFunc: func(t *testing.T, images *ImagesConfiguration) {
-				images.store.(*store.MockImageStore).AssertExpectations(t)
-				images.store.(*store.MockImageStore).AssertNumberOfCalls(t, "Store", 5)
+			assertFunc: func(t *testing.T, i *ImagesConfiguration) {
+				i.store.(*images.MockStore).AssertExpectations(t)
+				i.store.(*images.MockStore).AssertNumberOfCalls(t, "Store", 5)
 			},
 			err: &errors.Error{},
 		},
@@ -412,7 +412,7 @@ parent1:
 			tree: NewImagesConfiguration(
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
-				store.NewMockImageStore(),
+				images.NewMockStore(),
 				compatibility.NewMockCompatibility(),
 			),
 			err: errors.New(errContext, "Error loading images tree from file '/imagestree/tab_error_file.yaml'\nfound:\n\nimages:\nimage:\n  version:\n\tregistry: registry\n\tnamespace: namespace\n\n\tyaml: line 5: found character that cannot start any token"),
@@ -423,7 +423,7 @@ parent1:
 			tree: NewImagesConfiguration(
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
-				store.NewMockImageStore(),
+				images.NewMockStore(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
@@ -459,7 +459,7 @@ parent1:
 			tree: NewImagesConfiguration(
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
-				store.NewMockImageStore(),
+				images.NewMockStore(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
@@ -508,7 +508,7 @@ parent1:
 			tree: NewImagesConfiguration(
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
-				store.NewMockImageStore(),
+				images.NewMockStore(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
@@ -557,7 +557,7 @@ parent1:
 			tree: NewImagesConfiguration(
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
-				store.NewMockImageStore(),
+				images.NewMockStore(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
@@ -594,7 +594,7 @@ parent1:
 			tree: NewImagesConfiguration(
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
-				store.NewMockImageStore(),
+				images.NewMockStore(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
@@ -727,7 +727,7 @@ image:
 			tree: NewImagesConfiguration(
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
-				store.NewMockImageStore(),
+				images.NewMockStore(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
@@ -772,7 +772,7 @@ image:
 			tree: NewImagesConfiguration(
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
-				store.NewMockImageStore(),
+				images.NewMockStore(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
@@ -869,7 +869,7 @@ images:
 			images: NewImagesConfiguration(
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
-				store.NewMockImageStore(),
+				images.NewMockStore(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
@@ -889,7 +889,7 @@ images:
 			images: NewImagesConfiguration(
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
-				store.NewMockImageStore(),
+				images.NewMockStore(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
