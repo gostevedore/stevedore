@@ -8,7 +8,6 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	godockerbuild "github.com/apenella/go-docker-builder/pkg/build"
 	dockerclient "github.com/docker/docker/client"
-	buildersstore "github.com/gostevedore/stevedore/internal/builders/store"
 	"github.com/gostevedore/stevedore/internal/configuration"
 	buildersconfiguration "github.com/gostevedore/stevedore/internal/configuration/builders"
 	imagesconfiguration "github.com/gostevedore/stevedore/internal/configuration/images"
@@ -32,6 +31,7 @@ import (
 	gitauth "github.com/gostevedore/stevedore/internal/infrastructure/driver/docker/godockerbuilder/context/git/auth"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
 	"github.com/gostevedore/stevedore/internal/schedule/dispatch"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 	"github.com/gostevedore/stevedore/internal/schedule/worker"
@@ -90,7 +90,7 @@ func (e *Entrypoint) Execute(
 	inputHandlerOptions *handler.Options) error {
 
 	var buildDriverFactory factory.BuildDriverFactory
-	var buildersStore *buildersstore.BuildersStore
+	var buildersStore *builders.Store
 	var buildHandler *buildhandler.Handler
 	var buildService *service.Service
 	var commandFactory *command.BuildCommandFactory
@@ -317,7 +317,7 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.Configuration) (
 	return credentialsStore, nil
 }
 
-func (e *Entrypoint) createBuildersStore(conf *configuration.Configuration) (*buildersstore.BuildersStore, error) {
+func (e *Entrypoint) createBuildersStore(conf *configuration.Configuration) (*builders.Store, error) {
 
 	errContext := "(Entrypoint::createBuildersStore)"
 
@@ -333,7 +333,7 @@ func (e *Entrypoint) createBuildersStore(conf *configuration.Configuration) (*bu
 		return nil, errors.New(errContext, "To create a builders store, builders path must be provided in configuration")
 	}
 
-	buildersStore := buildersstore.NewBuildersStore()
+	buildersStore := builders.NewStore()
 	buildersConfiguration := buildersconfiguration.NewBuilders(e.fs, buildersStore)
 	err := buildersConfiguration.LoadBuilders(conf.BuildersPath)
 	if err != nil {

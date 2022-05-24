@@ -1,23 +1,23 @@
-package filter
+package builders
 
 import (
 	"testing"
 
-	"github.com/gostevedore/stevedore/internal/builders/store"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAll(t *testing.T) {
 	tests := []struct {
 		desc     string
-		Builders *BuildersFilter
+		Builders *Filter
 		res      []*builder.Builder
 	}{
 		{
 			desc: "Testing filter to get all builders",
-			Builders: NewBuildersFilter(
-				&store.BuildersStore{
+			Builders: NewFilter(
+				&builders.Store{
 					Builders: map[string]*builder.Builder{
 						"builder1": {
 							Name:   "builder1",
@@ -57,14 +57,14 @@ func TestFilterByName(t *testing.T) {
 	tests := []struct {
 		desc     string
 		name     string
-		Builders *BuildersFilter
+		Builders *Filter
 		res      *builder.Builder
 	}{
 		{
 			desc: "Testing filter by name",
 			name: "test",
-			Builders: NewBuildersFilter(
-				&store.BuildersStore{
+			Builders: NewFilter(
+				&builders.Store{
 					Builders: map[string]*builder.Builder{
 						"test": {
 							Name: "test",
@@ -92,14 +92,14 @@ func TestFilterByDriver(t *testing.T) {
 	tests := []struct {
 		desc     string
 		driver   string
-		Builders *BuildersFilter
+		Builders *Filter
 		res      []*builder.Builder
 	}{
 		{
 			desc:   "Testing filter by driver",
 			driver: "driver1",
-			Builders: NewBuildersFilter(
-				&store.BuildersStore{
+			Builders: NewFilter(
+				&builders.Store{
 					Builders: map[string]*builder.Builder{
 						"driver1": {
 							Driver: "driver1",

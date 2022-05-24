@@ -1,14 +1,14 @@
-package output
+package builders
 
-// BuildersOutput is an output for the builders
-type BuildersOutput struct {
+// Output is an output for the builders
+type Output struct {
 	BuildersFilterer
 	Write BuildersPrinter
 }
 
-// NewBuildersOutput creates a new BuildersOutput
-func NewBuildersOutput(write BuildersPrinter, builders BuildersFilterer) *BuildersOutput {
-	return &BuildersOutput{
+// NewOutput creates a new Output
+func NewOutput(write BuildersPrinter, builders BuildersFilterer) *Output {
+	return &Output{
 		builders, write,
 	}
 }
@@ -19,7 +19,7 @@ func builderHeader() []string {
 }
 
 // PrintAll prints all the builders
-func (o *BuildersOutput) PrintAll() {
+func (o *Output) PrintAll() {
 
 	content := [][]string{}
 	content = append(content, builderHeader())
@@ -32,6 +32,6 @@ func (o *BuildersOutput) PrintAll() {
 	o.Write.PrintTable(content)
 }
 
-// func (o *BuildersOutput) Filter() *builder.Builder {
+// func (o *Output) Filter() *builder.Builder {
 // 	return nil
 // }

@@ -1,4 +1,4 @@
-package filter
+package builders
 
 import "github.com/gostevedore/stevedore/internal/core/domain/builder"
 

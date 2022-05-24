@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/builders/store"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
@@ -17,6 +16,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/mock"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
 	"github.com/gostevedore/stevedore/internal/schedule/dispatch"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 	"github.com/gostevedore/stevedore/internal/schedule/worker"
@@ -55,7 +55,7 @@ func TestBuild(t *testing.T) {
 		{
 			desc: "Testing build an image",
 			service: NewService(
-				WithBuilders(store.NewMockBuildersStore()),
+				WithBuilders(builders.NewMockStore()),
 				WithCommandFactory(command.NewMockBuildCommandFactory()),
 				WithDriverFactory(
 					&factory.BuildDriverFactory{
@@ -253,7 +253,7 @@ func TestBuildWorker(t *testing.T) {
 		{
 			desc: "Testing worker to build an image",
 			service: NewService(
-				WithBuilders(store.NewMockBuildersStore()),
+				WithBuilders(builders.NewMockStore()),
 				WithCommandFactory(command.NewMockBuildCommandFactory()),
 				WithDriverFactory(
 					&factory.BuildDriverFactory{
@@ -519,12 +519,12 @@ func TestGetBuilder(t *testing.T) {
 		},
 		{
 			desc:    "Testing return a builder defined by an string",
-			service: &Service{builders: store.NewMockBuildersStore()},
+			service: &Service{builders: builders.NewMockStore()},
 			image: &image.Image{
 				Builder: "test",
 			},
 			prepareAssertFunc: func(s *Service) {
-				s.builders.(*store.MockBuildersStore).On("Find", "test").Return(&builder.Builder{
+				s.builders.(*builders.MockStore).On("Find", "test").Return(&builder.Builder{
 					Name: "test",
 				}, nil)
 			},
@@ -540,7 +540,7 @@ func TestGetBuilder(t *testing.T) {
 		// That test to be tested from the caller because is not possible to force builderDerfinetion to be seen as an interface
 		{
 			desc:    "Testing return a builder defined by an interface{}",
-			service: &Service{builders: store.NewMockBuildersStore()},
+			service: &Service{builders: builders.NewMockStore()},
 			image: &image.Image{
 				Builder: map[interface{}]interface{}{
 					"driver": "docker",

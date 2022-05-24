@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	buildersstore "github.com/gostevedore/stevedore/internal/builders/store"
 	"github.com/gostevedore/stevedore/internal/compatibility"
 	"github.com/gostevedore/stevedore/internal/configuration"
 	imagesconfiguration "github.com/gostevedore/stevedore/internal/configuration/images"
@@ -17,13 +16,13 @@ import (
 	"github.com/gostevedore/stevedore/internal/images/graph"
 	"github.com/gostevedore/stevedore/internal/images/render"
 	"github.com/gostevedore/stevedore/internal/images/render/now"
-	"github.com/gostevedore/stevedore/internal/images/store"
 	imagesstore "github.com/gostevedore/stevedore/internal/images/store"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible"
 	defaultdriver "github.com/gostevedore/stevedore/internal/infrastructure/driver/default"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 	"github.com/gostevedore/stevedore/internal/semver"
 	"github.com/gostevedore/stevedore/internal/service/build/command"
@@ -389,7 +388,7 @@ func TestCreateBuildersStore(t *testing.T) {
 		desc       string
 		entrypoint *Entrypoint
 		conf       *configuration.Configuration
-		res        *buildersstore.BuildersStore
+		res        *builders.Store
 		err        error
 	}{
 		{
@@ -420,7 +419,7 @@ func TestCreateBuildersStore(t *testing.T) {
 			conf: &configuration.Configuration{
 				BuildersPath: baseDir,
 			},
-			res: &buildersstore.BuildersStore{},
+			res: &builders.Store{},
 			err: &errors.Error{},
 		},
 	}
@@ -986,7 +985,7 @@ func TestCreatePlanFactory(t *testing.T) {
 		e := NewEntrypoint()
 		options := &Options{}
 
-		imageStore := store.NewImageStore(nil)
+		imageStore := imagesstore.NewImageStore(nil)
 		planFactory, err := e.createPlanFactory(imageStore, options)
 
 		assert.Nil(t, err)

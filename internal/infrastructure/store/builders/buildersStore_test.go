@@ -1,4 +1,4 @@
-package store
+package builders
 
 import (
 	"testing"
@@ -14,13 +14,13 @@ func TestStore(t *testing.T) {
 	tests := []struct {
 		desc     string
 		err      error
-		builders *BuildersStore
+		builders *Store
 		builder  *builder.Builder
 		res      map[string]*builder.Builder
 	}{
 		{
 			desc:     "Testing add a builder",
-			builders: NewBuildersStore(),
+			builders: NewStore(),
 			err:      &errors.Error{},
 			builder: &builder.Builder{
 				Name: "first",
@@ -32,7 +32,7 @@ func TestStore(t *testing.T) {
 
 		{
 			desc: "Testing error adding already existing builder",
-			builders: &BuildersStore{
+			builders: &Store{
 				Builders: map[string]*builder.Builder{
 					"first": {Name: "first"},
 				},
@@ -67,13 +67,13 @@ func TestFind(t *testing.T) {
 	tests := []struct {
 		desc     string
 		err      error
-		builders *BuildersStore
+		builders *Store
 		builder  string
 		res      *builder.Builder
 	}{
 		{
 			desc: "Testing get a builder",
-			builders: &BuildersStore{
+			builders: &Store{
 				Builders: map[string]*builder.Builder{
 					"first": {Name: "first"},
 				},
@@ -87,7 +87,7 @@ func TestFind(t *testing.T) {
 
 		{
 			desc: "Testing error getting an unexisting",
-			builders: &BuildersStore{
+			builders: &Store{
 				Builders: map[string]*builder.Builder{},
 			},
 			err:     errors.New(errContext, "Builder 'first' does not exists"),

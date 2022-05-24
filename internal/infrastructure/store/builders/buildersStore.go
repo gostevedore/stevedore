@@ -1,4 +1,4 @@
-package store
+package builders
 
 import (
 	"fmt"
@@ -8,21 +8,21 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 )
 
-// BuildersStore contains builders details
-type BuildersStore struct {
+// Store contains builders details
+type Store struct {
 	mutex    sync.RWMutex
 	Builders map[string]*builder.Builder
 }
 
-// NewBuildersStore creates a new builders configuration
-func NewBuildersStore() *BuildersStore {
-	return &BuildersStore{
+// NewStore creates a new builders configuration
+func NewStore() *Store {
+	return &Store{
 		Builders: make(map[string]*builder.Builder),
 	}
 }
 
 // Store include a new builder to builders
-func (b *BuildersStore) Store(builder *builder.Builder) error {
+func (b *Store) Store(builder *builder.Builder) error {
 
 	errContext := "(builders::Store)"
 
@@ -44,7 +44,7 @@ func (b *BuildersStore) Store(builder *builder.Builder) error {
 }
 
 // Find returns the builder registered with input name
-func (b *BuildersStore) Find(name string) (*builder.Builder, error) {
+func (b *Store) Find(name string) (*builder.Builder, error) {
 
 	errContext := "(builders::GetBuilder)"
 
