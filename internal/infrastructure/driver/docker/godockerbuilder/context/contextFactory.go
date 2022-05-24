@@ -3,8 +3,8 @@ package context
 import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
-	gitcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/git"
-	pathcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/path"
+	gitcontext "github.com/gostevedore/stevedore/internal/infrastructure/driver/docker/godockerbuilder/context/git"
+	pathcontext "github.com/gostevedore/stevedore/internal/infrastructure/driver/docker/godockerbuilder/context/path"
 )
 
 // DockerBuildContextFactory is a factory for docker build context

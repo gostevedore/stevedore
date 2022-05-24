@@ -10,7 +10,7 @@ import (
 	godockerbuilderbuildcontext "github.com/apenella/go-docker-builder/pkg/build/context"
 	"github.com/apenella/go-docker-builder/pkg/response"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
-	buildcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context"
+	buildcontext "github.com/gostevedore/stevedore/internal/infrastructure/driver/docker/godockerbuilder/context"
 )
 
 // GoDockerBuildDriver is a driver for building docker images

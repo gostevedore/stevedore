@@ -3,7 +3,7 @@ package context
 import (
 	"github.com/apenella/go-docker-builder/pkg/build/context/filesystem"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
-	gitauth "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/git/auth"
+	gitauth "github.com/gostevedore/stevedore/internal/infrastructure/driver/docker/godockerbuilder/context/git/auth"
 )
 
 // DockerBuildContexter defines a docker build context entity

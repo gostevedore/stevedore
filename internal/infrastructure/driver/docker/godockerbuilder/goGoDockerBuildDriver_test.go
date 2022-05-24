@@ -7,9 +7,9 @@ import (
 	"github.com/apenella/go-docker-builder/pkg/build"
 	godockerbuilderbuildcontext "github.com/apenella/go-docker-builder/pkg/build/context"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
-	dockerbuildcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context"
-	gitcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/git"
-	pathcontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/path"
+	dockerbuildcontext "github.com/gostevedore/stevedore/internal/infrastructure/driver/docker/godockerbuilder/context"
+	gitcontext "github.com/gostevedore/stevedore/internal/infrastructure/driver/docker/godockerbuilder/context/git"
+	pathcontext "github.com/gostevedore/stevedore/internal/infrastructure/driver/docker/godockerbuilder/context/path"
 	"github.com/stretchr/testify/assert"
 )
 

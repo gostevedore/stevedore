@@ -1,4 +1,4 @@
-package driver
+package ansible
 
 import (
 	"context"

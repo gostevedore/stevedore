@@ -1,4 +1,4 @@
-package driver
+package ansible
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
-	"github.com/gostevedore/stevedore/internal/driver/ansible/goansible"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible/goansible"
 	"github.com/stretchr/testify/assert"
 )
 
