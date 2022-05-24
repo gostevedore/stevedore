@@ -9,10 +9,10 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	credentialsstore "github.com/gostevedore/stevedore/internal/credentials"
-	dockerpromote "github.com/gostevedore/stevedore/internal/promote/docker"
-	dryrunpromote "github.com/gostevedore/stevedore/internal/promote/dryrun"
-	"github.com/gostevedore/stevedore/internal/promote/factory"
-	mockpromote "github.com/gostevedore/stevedore/internal/promote/mock"
+	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker"
+	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
+	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
+	"github.com/gostevedore/stevedore/internal/infrastructure/promote/mock"
 	"github.com/gostevedore/stevedore/internal/semver"
 	"github.com/stretchr/testify/assert"
 )
@@ -66,7 +66,7 @@ func TestPromote(t *testing.T) {
 					Password: "pass",
 				}, nil)
 
-				mock := mockpromote.NewMockPromote()
+				mock := mock.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
 				p.factory.Register(image.DockerPromoterName, mock)
 			},
@@ -105,7 +105,7 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "pass",
 				}
 
-				mock := mockpromote.NewMockPromote()
+				mock := mock.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
 				factory := factory.NewPromoteFactory()
@@ -162,7 +162,7 @@ func TestPromote(t *testing.T) {
 					Password: "pushpass",
 				}, nil)
 
-				mock := mockpromote.NewMockPromote()
+				mock := mock.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
 				factory := factory.NewPromoteFactory()
@@ -207,7 +207,7 @@ func TestPromote(t *testing.T) {
 				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{}, nil)
 				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{}, nil)
 
-				mock := mockpromote.NewMockPromote()
+				mock := mock.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
 				factory := factory.NewPromoteFactory()
@@ -259,7 +259,7 @@ func TestPromote(t *testing.T) {
 					Password: "pushpass",
 				}, nil)
 
-				mock := mockpromote.NewMockPromote()
+				mock := mock.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
 				factory := factory.NewPromoteFactory()
@@ -310,7 +310,7 @@ func TestPromote(t *testing.T) {
 					Password: "pushpass",
 				}, nil)
 
-				mock := mockpromote.NewMockPromote()
+				mock := mock.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
 
 				factory := factory.NewPromoteFactory()
@@ -334,7 +334,7 @@ func TestPromote(t *testing.T) {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
 				promote, _ := test.service.factory.Get(image.DockerPromoterName)
-				promote.(*mockpromote.MockPromote).AssertExpectations(t)
+				promote.(*mock.MockPromote).AssertExpectations(t)
 			}
 		})
 	}
@@ -418,9 +418,9 @@ func TestGetPromoter(t *testing.T) {
 			},
 			options: &ServiceOptions{},
 			prepareAssertFunc: func(p *Service) {
-				p.factory.Register(image.DockerPromoterName, &dockerpromote.DockerPromete{})
+				p.factory.Register(image.DockerPromoterName, &docker.DockerPromete{})
 			},
-			res: &dockerpromote.DockerPromete{},
+			res: &docker.DockerPromete{},
 			err: &errors.Error{},
 		},
 		{
@@ -432,10 +432,10 @@ func TestGetPromoter(t *testing.T) {
 				DryRun: true,
 			},
 			prepareAssertFunc: func(p *Service) {
-				p.factory.Register(image.DockerPromoterName, &dockerpromote.DockerPromete{})
-				p.factory.Register(image.DryRunPromoterName, &dryrunpromote.DryRunPromote{})
+				p.factory.Register(image.DockerPromoterName, &docker.DockerPromete{})
+				p.factory.Register(image.DryRunPromoterName, &dryrun.DryRunPromote{})
 			},
-			res: &dryrunpromote.DryRunPromote{},
+			res: &dryrun.DryRunPromote{},
 			err: &errors.Error{},
 		},
 	}

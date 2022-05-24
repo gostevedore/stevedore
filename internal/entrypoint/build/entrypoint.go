@@ -16,15 +16,6 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	"github.com/gostevedore/stevedore/internal/credentials"
-	driveransible "github.com/gostevedore/stevedore/internal/driver/ansible"
-	"github.com/gostevedore/stevedore/internal/driver/ansible/goansible"
-	driverdefault "github.com/gostevedore/stevedore/internal/driver/default"
-	driverdocker "github.com/gostevedore/stevedore/internal/driver/docker"
-	"github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder"
-	driverdockercontext "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context"
-	gitauth "github.com/gostevedore/stevedore/internal/driver/docker/godockerbuilder/context/git/auth"
-	driverdryrun "github.com/gostevedore/stevedore/internal/driver/dryrun"
-	driverfactory "github.com/gostevedore/stevedore/internal/driver/factory"
 	buildhandler "github.com/gostevedore/stevedore/internal/handler/build"
 	handler "github.com/gostevedore/stevedore/internal/handler/build"
 	"github.com/gostevedore/stevedore/internal/images/graph"
@@ -32,11 +23,20 @@ import (
 	"github.com/gostevedore/stevedore/internal/images/render/now"
 	"github.com/gostevedore/stevedore/internal/images/store"
 	imagesstore "github.com/gostevedore/stevedore/internal/images/store"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible/goansible"
+	driverdefault "github.com/gostevedore/stevedore/internal/infrastructure/driver/default"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/docker"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/docker/godockerbuilder"
+	dockercontext "github.com/gostevedore/stevedore/internal/infrastructure/driver/docker/godockerbuilder/context"
+	gitauth "github.com/gostevedore/stevedore/internal/infrastructure/driver/docker/godockerbuilder/context/git/auth"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/dryrun"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
 	"github.com/gostevedore/stevedore/internal/schedule/dispatch"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 	"github.com/gostevedore/stevedore/internal/schedule/worker"
 	"github.com/gostevedore/stevedore/internal/semver"
-	buildservice "github.com/gostevedore/stevedore/internal/service/build"
+	service "github.com/gostevedore/stevedore/internal/service/build"
 	"github.com/gostevedore/stevedore/internal/service/build/command"
 	"github.com/gostevedore/stevedore/internal/service/build/plan"
 	"github.com/spf13/afero"
@@ -89,10 +89,10 @@ func (e *Entrypoint) Execute(
 	inputEntrypointOptions *Options,
 	inputHandlerOptions *handler.Options) error {
 
-	var buildDriverFactory driverfactory.BuildDriverFactory
+	var buildDriverFactory factory.BuildDriverFactory
 	var buildersStore *buildersstore.BuildersStore
 	var buildHandler *buildhandler.Handler
-	var buildService *buildservice.Service
+	var buildService *service.Service
 	var commandFactory *command.BuildCommandFactory
 	var credentialsStore *credentials.CredentialsStore
 	var dispatcher *dispatch.Dispatch
@@ -165,14 +165,14 @@ func (e *Entrypoint) Execute(
 		return errors.New(errContext, "", err)
 	}
 
-	buildService = buildservice.NewService(
-		buildservice.WithBuilders(buildersStore),
-		buildservice.WithCommandFactory(commandFactory),
-		buildservice.WithDriverFactory(buildDriverFactory),
-		buildservice.WithJobFactory(jobFactory),
-		buildservice.WithDispatch(dispatcher),
-		buildservice.WithSemver(semVerFactory),
-		buildservice.WithCredentials(credentialsStore),
+	buildService = service.NewService(
+		service.WithBuilders(buildersStore),
+		service.WithCommandFactory(commandFactory),
+		service.WithDriverFactory(buildDriverFactory),
+		service.WithJobFactory(jobFactory),
+		service.WithDispatch(dispatcher),
+		service.WithSemver(semVerFactory),
+		service.WithCredentials(credentialsStore),
 	)
 
 	imageRender, err = e.createImageRender(now.NewNow())
@@ -419,7 +419,7 @@ func (e *Entrypoint) createGraphTemplateFactory() (*graph.GraphTemplateFactory, 
 	return graph.NewGraphTemplateFactory(false), nil
 }
 
-func (e *Entrypoint) createBuildDriverFactory(credentialsStore *credentials.CredentialsStore, options *Options) (driverfactory.BuildDriverFactory, error) {
+func (e *Entrypoint) createBuildDriverFactory(credentialsStore *credentials.CredentialsStore, options *Options) (factory.BuildDriverFactory, error) {
 
 	var ansiblePlaybookDriver repository.BuildDriverer
 	var defaultDriver repository.BuildDriverer
@@ -441,7 +441,7 @@ func (e *Entrypoint) createBuildDriverFactory(credentialsStore *credentials.Cred
 		return nil, errors.New(errContext, "Register drivers requires a writer")
 	}
 
-	factory := driverfactory.NewBuildDriverFactory()
+	factory := factory.NewBuildDriverFactory()
 
 	ansiblePlaybookDriver, err = e.createAnsibleDriver(options)
 	if err != nil {
@@ -474,7 +474,7 @@ func (e *Entrypoint) createDefaultDriver() (repository.BuildDriverer, error) {
 }
 
 func (e *Entrypoint) createDryRunDriver() (repository.BuildDriverer, error) {
-	return driverdryrun.NewDryRunDriver(e.writer), nil
+	return dryrun.NewDryRunDriver(e.writer), nil
 }
 
 func (e *Entrypoint) createAnsibleDriver(options *Options) (repository.BuildDriverer, error) {
@@ -485,7 +485,7 @@ func (e *Entrypoint) createAnsibleDriver(options *Options) (repository.BuildDriv
 		return nil, errors.New(errContext, "Entrypoint options are required to create ansible driver")
 	}
 
-	ansiblePlaybookDriver, err := driveransible.NewAnsiblePlaybookDriver(goansible.NewGoAnsibleDriver(), e.writer)
+	ansiblePlaybookDriver, err := ansible.NewAnsiblePlaybookDriver(goansible.NewGoAnsibleDriver(), e.writer)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
@@ -495,8 +495,8 @@ func (e *Entrypoint) createAnsibleDriver(options *Options) (repository.BuildDriv
 
 func (e *Entrypoint) createDockerDriver(credentialsStore *credentials.CredentialsStore, options *Options) (repository.BuildDriverer, error) {
 	var dockerClient *dockerclient.Client
-	var dockerDriver *driverdocker.DockerDriver
-	var dockerDriverBuldContext *driverdockercontext.DockerBuildContextFactory
+	var dockerDriver *docker.DockerDriver
+	var dockerDriverBuldContext *dockercontext.DockerBuildContextFactory
 	var err error
 	var gitAuth *gitauth.GitAuthFactory
 	var goDockerBuildDriver *godockerbuilder.GoDockerBuildDriver
@@ -518,9 +518,9 @@ func (e *Entrypoint) createDockerDriver(credentialsStore *credentials.Credential
 
 	goDockerBuild := godockerbuild.NewDockerBuildCmd(dockerClient)
 	gitAuth = gitauth.NewGitAuthFactory(credentialsStore)
-	dockerDriverBuldContext = driverdockercontext.NewDockerBuildContextFactory(gitAuth)
+	dockerDriverBuldContext = dockercontext.NewDockerBuildContextFactory(gitAuth)
 	goDockerBuildDriver = godockerbuilder.NewGoDockerBuildDriver(goDockerBuild, dockerDriverBuldContext)
-	dockerDriver, err = driverdocker.NewDockerDriver(goDockerBuildDriver, e.writer)
+	dockerDriver, err = docker.NewDockerDriver(goDockerBuildDriver, e.writer)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}

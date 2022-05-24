@@ -6,7 +6,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
-	mockdriver "github.com/gostevedore/stevedore/internal/driver/mock"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/mock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -36,13 +36,13 @@ func TestExecute(t *testing.T) {
 			command: &BuildCommand{
 				image:   &image.Image{},
 				options: &image.BuildDriverOptions{},
-				driver:  mockdriver.NewMockDriver(),
+				driver:  mock.NewMockDriver(),
 			},
 			prepareAssertFunc: func(command *BuildCommand) {
-				command.driver.(*mockdriver.MockDriver).On("Build", context.TODO(), command.image, command.options).Return(nil)
+				command.driver.(*mock.MockDriver).On("Build", context.TODO(), command.image, command.options).Return(nil)
 			},
 			assertFunc: func(t *testing.T, command *BuildCommand) {
-				assert.True(t, command.driver.(*mockdriver.MockDriver).AssertExpectations(t))
+				assert.True(t, command.driver.(*mock.MockDriver).AssertExpectations(t))
 			},
 			err: &errors.Error{},
 		},

@@ -13,17 +13,17 @@ import (
 	imagesgraphtemplate "github.com/gostevedore/stevedore/internal/configuration/images/graph"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	"github.com/gostevedore/stevedore/internal/credentials"
-	ansibledriver "github.com/gostevedore/stevedore/internal/driver/ansible"
-	defaultdriver "github.com/gostevedore/stevedore/internal/driver/default"
-	dockerdriver "github.com/gostevedore/stevedore/internal/driver/docker"
-	dryrundriver "github.com/gostevedore/stevedore/internal/driver/dryrun"
-	driverfactory "github.com/gostevedore/stevedore/internal/driver/factory"
 	handler "github.com/gostevedore/stevedore/internal/handler/build"
 	"github.com/gostevedore/stevedore/internal/images/graph"
 	"github.com/gostevedore/stevedore/internal/images/render"
 	"github.com/gostevedore/stevedore/internal/images/render/now"
 	"github.com/gostevedore/stevedore/internal/images/store"
 	imagesstore "github.com/gostevedore/stevedore/internal/images/store"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible"
+	defaultdriver "github.com/gostevedore/stevedore/internal/infrastructure/driver/default"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/docker"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/dryrun"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 	"github.com/gostevedore/stevedore/internal/semver"
 	"github.com/gostevedore/stevedore/internal/service/build/command"
@@ -745,7 +745,7 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 		credentials *credentials.CredentialsStore
 		options     *Options
 		err         error
-		assertions  func(t *testing.T, driverFactory driverfactory.BuildDriverFactory)
+		assertions  func(t *testing.T, driverFactory factory.BuildDriverFactory)
 	}{
 		{
 			desc:        "Testing create build driver factory with empty credentials",
@@ -774,16 +774,16 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 			credentials: credentials.NewCredentialsStore(afero.NewMemMapFs()),
 			options:     &Options{},
 			err:         &errors.Error{},
-			assertions: func(t *testing.T, f driverfactory.BuildDriverFactory) {
+			assertions: func(t *testing.T, f factory.BuildDriverFactory) {
 				dDocker, eDocker := f.Get("docker")
 				assert.Nil(t, eDocker)
 				assert.NotNil(t, dDocker)
-				assert.IsType(t, &dockerdriver.DockerDriver{}, dDocker)
+				assert.IsType(t, &docker.DockerDriver{}, dDocker)
 
 				dAnsible, eAnsible := f.Get("ansible-playbook")
 				assert.Nil(t, eAnsible)
 				assert.NotNil(t, dAnsible)
-				assert.IsType(t, &ansibledriver.AnsiblePlaybookDriver{}, dAnsible)
+				assert.IsType(t, &ansible.AnsiblePlaybookDriver{}, dAnsible)
 
 				dDefault, eDefault := f.Get("default")
 				assert.Nil(t, eDefault)
@@ -819,7 +819,7 @@ func TestCreateDryRunDriver(t *testing.T) {
 		{
 			desc:       "Testing create dry-run driver",
 			entrypoint: NewEntrypoint(),
-			res:        &dryrundriver.DryRunDriver{},
+			res:        &dryrun.DryRunDriver{},
 		},
 	}
 
@@ -891,7 +891,7 @@ func TestCreateAnsibleDriver(t *testing.T) {
 			desc:       "Testing create ansible driver",
 			entrypoint: NewEntrypoint(),
 			options:    &Options{},
-			res:        &ansibledriver.AnsiblePlaybookDriver{},
+			res:        &ansible.AnsiblePlaybookDriver{},
 		},
 	}
 
@@ -939,7 +939,7 @@ func TestCreateDockerDriver(t *testing.T) {
 			entrypoint:  NewEntrypoint(),
 			credentials: credentials.NewCredentialsStore(afero.NewMemMapFs()),
 			options:     &Options{},
-			res:         &dockerdriver.DockerDriver{},
+			res:         &docker.DockerDriver{},
 			err:         &errors.Error{},
 		},
 	}

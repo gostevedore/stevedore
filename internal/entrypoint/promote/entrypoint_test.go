@@ -10,9 +10,9 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
-	repodocker "github.com/gostevedore/stevedore/internal/promote/docker"
-	repodryrun "github.com/gostevedore/stevedore/internal/promote/dryrun"
-	"github.com/gostevedore/stevedore/internal/promote/factory"
+	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker"
+	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
+	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
 	"github.com/gostevedore/stevedore/internal/semver"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -203,13 +203,13 @@ func TestCreatePromoteFactory(t *testing.T) {
 	t.Run("Testing docker promote repository is returned", func(t *testing.T) {
 		promoteRepoDocker, err = promoteRepoFactory.Get(image.DockerPromoterName)
 		assert.Nil(t, err)
-		assert.IsType(t, &repodocker.DockerPromete{}, promoteRepoDocker)
+		assert.IsType(t, &docker.DockerPromete{}, promoteRepoDocker)
 	})
 
 	t.Run("Testing dry run promote repository is returned", func(t *testing.T) {
 		promoteRepoDryRun, err = promoteRepoFactory.Get(image.DryRunPromoterName)
 		assert.Nil(t, err)
-		assert.IsType(t, &repodryrun.DryRunPromote{}, promoteRepoDryRun)
+		assert.IsType(t, &dryrun.DryRunPromote{}, promoteRepoDryRun)
 	})
 }
 

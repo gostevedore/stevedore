@@ -13,10 +13,10 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/credentials"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
-	repodocker "github.com/gostevedore/stevedore/internal/promote/docker"
-	repodockercopy "github.com/gostevedore/stevedore/internal/promote/docker/promoter"
-	repodryrun "github.com/gostevedore/stevedore/internal/promote/dryrun"
-	"github.com/gostevedore/stevedore/internal/promote/factory"
+	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker"
+	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker/godockerbuilder"
+	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
+	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
 	"github.com/gostevedore/stevedore/internal/semver"
 	service "github.com/gostevedore/stevedore/internal/service/promote"
 	"github.com/spf13/afero"
@@ -178,9 +178,9 @@ func (e *Entrypoint) createPromoteFactory() (factory.PromoteFactory, error) {
 	}
 
 	copyCmd := copy.NewDockerImageCopyCmd(dockerClient)
-	copyCmdFacade := repodockercopy.NewDockerCopy(copyCmd)
-	promoteRepoDocker := repodocker.NewDockerPromote(copyCmdFacade, os.Stdout)
-	promoteRepoDryRun := repodryrun.NewDryRunPromote(copyCmdFacade, os.Stdout)
+	copyCmdFacade := godockerbuilder.NewDockerCopy(copyCmd)
+	promoteRepoDocker := docker.NewDockerPromote(copyCmdFacade, os.Stdout)
+	promoteRepoDryRun := dryrun.NewDryRunPromote(os.Stdout)
 	promoteRepoFactory := factory.NewPromoteFactory()
 	err = promoteRepoFactory.Register(image.DockerPromoterName, promoteRepoDocker)
 	if err != nil {

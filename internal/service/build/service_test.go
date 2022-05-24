@@ -13,10 +13,10 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	credentialsstore "github.com/gostevedore/stevedore/internal/credentials"
-	dockerdriver "github.com/gostevedore/stevedore/internal/driver/docker"
-	dryrundriver "github.com/gostevedore/stevedore/internal/driver/dryrun"
-	driverfactory "github.com/gostevedore/stevedore/internal/driver/factory"
-	mockdriver "github.com/gostevedore/stevedore/internal/driver/mock"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/docker"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/dryrun"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/mock"
 	"github.com/gostevedore/stevedore/internal/schedule/dispatch"
 	"github.com/gostevedore/stevedore/internal/schedule/job"
 	"github.com/gostevedore/stevedore/internal/schedule/worker"
@@ -58,8 +58,8 @@ func TestBuild(t *testing.T) {
 				WithBuilders(store.NewMockBuildersStore()),
 				WithCommandFactory(command.NewMockBuildCommandFactory()),
 				WithDriverFactory(
-					&driverfactory.BuildDriverFactory{
-						"mock": mockdriver.NewMockDriver(),
+					&factory.BuildDriverFactory{
+						"mock": mock.NewMockDriver(),
 					},
 				),
 				WithJobFactory(job.NewMockJobFactory()),
@@ -130,7 +130,7 @@ func TestBuild(t *testing.T) {
 					Password: "pass",
 				}, nil)
 				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
-					mockdriver.NewMockDriver(),
+					mock.NewMockDriver(),
 					stepParent.Image(),
 					&image.BuildDriverOptions{
 						AnsibleConnectionLocal:           true,
@@ -147,7 +147,7 @@ func TestBuild(t *testing.T) {
 					},
 				).Return(command.NewMockBuildCommand(), nil)
 				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
-					mockdriver.NewMockDriver(),
+					mock.NewMockDriver(),
 					stepChild.Image(),
 					&image.BuildDriverOptions{
 						AnsibleConnectionLocal:           true,
@@ -233,7 +233,7 @@ func TestBuildWorker(t *testing.T) {
 			desc: "Testing error when no semantic version generator is given to worker",
 			service: &Service{
 				dispatch:      dispatch.NewDispatch(worker.NewMockWorkerFactory()),
-				driverFactory: driverfactory.NewBuildDriverFactory(),
+				driverFactory: factory.NewBuildDriverFactory(),
 			},
 			options: &ServiceOptions{},
 			image:   &image.Image{},
@@ -243,7 +243,7 @@ func TestBuildWorker(t *testing.T) {
 			desc: "Testing error when no credentials store is given to worker",
 			service: &Service{
 				dispatch:      dispatch.NewDispatch(worker.NewMockWorkerFactory()),
-				driverFactory: driverfactory.NewBuildDriverFactory(),
+				driverFactory: factory.NewBuildDriverFactory(),
 				semver:        semver.NewSemVerGenerator(),
 			},
 			options: &ServiceOptions{},
@@ -256,8 +256,8 @@ func TestBuildWorker(t *testing.T) {
 				WithBuilders(store.NewMockBuildersStore()),
 				WithCommandFactory(command.NewMockBuildCommandFactory()),
 				WithDriverFactory(
-					&driverfactory.BuildDriverFactory{
-						"mock": mockdriver.NewMockDriver(),
+					&factory.BuildDriverFactory{
+						"mock": mock.NewMockDriver(),
 					},
 				),
 				WithJobFactory(job.NewMockJobFactory()),
@@ -322,7 +322,7 @@ func TestBuildWorker(t *testing.T) {
 					Password: "parent_pass",
 				}, nil)
 				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
-					mockdriver.NewMockDriver(),
+					mock.NewMockDriver(),
 					i,
 					&image.BuildDriverOptions{
 						AnsibleConnectionLocal:           false,
@@ -413,8 +413,8 @@ func TestJob(t *testing.T) {
 func TestCommand(t *testing.T) {
 	errContext := "(build::command)"
 
-	driverFactory := driverfactory.NewBuildDriverFactory()
-	driverFactory.Register("mock", mockdriver.NewMockDriver())
+	driverFactory := factory.NewBuildDriverFactory()
+	driverFactory.Register("mock", mock.NewMockDriver())
 
 	tests := []struct {
 		desc              string
@@ -443,7 +443,7 @@ func TestCommand(t *testing.T) {
 			service: &Service{
 				commandFactory: command.NewMockBuildCommandFactory(),
 			},
-			driver: mockdriver.NewMockDriver(),
+			driver: mock.NewMockDriver(),
 			err:    errors.New(errContext, "To create a build command, is required a image"),
 		},
 		{
@@ -451,7 +451,7 @@ func TestCommand(t *testing.T) {
 			service: &Service{
 				commandFactory: command.NewMockBuildCommandFactory(),
 			},
-			driver: mockdriver.NewMockDriver(),
+			driver: mock.NewMockDriver(),
 			image:  &image.Image{},
 			err:    errors.New(errContext, "To create a build command, is required a service options"),
 		},
@@ -460,11 +460,11 @@ func TestCommand(t *testing.T) {
 			service: NewService(
 				WithCommandFactory(command.NewMockBuildCommandFactory()),
 			),
-			driver:  mockdriver.NewMockDriver(),
+			driver:  mock.NewMockDriver(),
 			image:   &image.Image{},
 			options: &image.BuildDriverOptions{},
 			prepareAssertFunc: func(s *Service, i *image.Image) {
-				s.commandFactory.(*command.MockBuildCommandFactory).On("New", mockdriver.NewMockDriver(), i, &image.BuildDriverOptions{}).Return(command.NewMockBuildCommand(), nil)
+				s.commandFactory.(*command.MockBuildCommandFactory).On("New", mock.NewMockDriver(), i, &image.BuildDriverOptions{}).Return(command.NewMockBuildCommand(), nil)
 			},
 			res: &command.MockBuildCommand{},
 			err: &errors.Error{},
@@ -701,15 +701,15 @@ func TestGetDriver(t *testing.T) {
 				Driver: "docker",
 			},
 			options: &ServiceOptions{},
-			res:     &dockerdriver.DockerDriver{},
+			res:     &docker.DockerDriver{},
 			err:     errors.New(errContext, "To create a build driver, is required a driver factory"),
 		},
 		{
 			desc: "Testing get driver",
 			service: NewService(
 				WithDriverFactory(
-					&driverfactory.BuildDriverFactory{
-						"docker": mockdriver.NewMockDriver(),
+					&factory.BuildDriverFactory{
+						"docker": mock.NewMockDriver(),
 					},
 				),
 			),
@@ -717,16 +717,16 @@ func TestGetDriver(t *testing.T) {
 				Driver: "docker",
 			},
 			options: &ServiceOptions{},
-			res:     &mockdriver.MockDriver{},
+			res:     &mock.MockDriver{},
 			err:     &errors.Error{},
 		},
 		{
 			desc: "Testing get driver with dry-run",
 			service: NewService(
 				WithDriverFactory(
-					&driverfactory.BuildDriverFactory{
-						"docker":  mockdriver.NewMockDriver(),
-						"dry-run": dryrundriver.NewDryRunDriver(ioutil.Discard),
+					&factory.BuildDriverFactory{
+						"docker":  mock.NewMockDriver(),
+						"dry-run": dryrun.NewDryRunDriver(ioutil.Discard),
 					},
 				),
 			),
@@ -736,7 +736,7 @@ func TestGetDriver(t *testing.T) {
 			options: &ServiceOptions{
 				DryRun: true,
 			},
-			res: &dryrundriver.DryRunDriver{},
+			res: &dryrun.DryRunDriver{},
 			err: &errors.Error{},
 		},
 	}
