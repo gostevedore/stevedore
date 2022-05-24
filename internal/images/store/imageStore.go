@@ -7,7 +7,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
-	"github.com/gostevedore/stevedore/internal/images/store/filter"
+	"github.com/gostevedore/stevedore/internal/images/filter"
 )
 
 const (
