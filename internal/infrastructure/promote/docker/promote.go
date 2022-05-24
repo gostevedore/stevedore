@@ -1,4 +1,4 @@
-package dockerpromote
+package docker
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
-	"github.com/gostevedore/stevedore/internal/promote"
 )
 
 const (
@@ -16,12 +15,12 @@ const (
 )
 
 type DockerPromete struct {
-	cmd promote.DockerCopier
+	cmd DockerCopier
 	//	logger Logger
 	writer io.Writer
 }
 
-func NewDockerPromote(cmd promote.DockerCopier, w io.Writer) *DockerPromete {
+func NewDockerPromote(cmd DockerCopier, w io.Writer) *DockerPromete {
 
 	if w == nil {
 		w = os.Stdout

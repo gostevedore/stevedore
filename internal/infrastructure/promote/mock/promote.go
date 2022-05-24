@@ -1,4 +1,4 @@
-package mockpromote
+package mock
 
 import (
 	"context"
