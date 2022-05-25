@@ -3,9 +3,9 @@ package build
 import (
 	"context"
 
-	"github.com/gostevedore/stevedore/internal/configuration"
 	entrypoint "github.com/gostevedore/stevedore/internal/entrypoint/build"
 	handler "github.com/gostevedore/stevedore/internal/handler/build"
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 )
 
 // Entrypointer is the interface that wraps the main build function

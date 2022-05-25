@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/gostevedore/stevedore/internal/cli/command"
-	"github.com/gostevedore/stevedore/internal/configuration"
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 
 	"github.com/spf13/cobra"
 )

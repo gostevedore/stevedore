@@ -8,7 +8,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
-	"github.com/gostevedore/stevedore/internal/images/filter"
+	"github.com/gostevedore/stevedore/internal/infrastructure/filters/images"
 )
 
 const (
@@ -163,7 +163,7 @@ func (s *Store) List() ([]*image.Image, error) {
 		return nil, errors.New(errContext, "Store has not been initialized")
 	}
 
-	sort.Sort(filter.SortedImages(s.store))
+	sort.Sort(images.SortedImages(s.store))
 	return s.store, nil
 }
 
@@ -182,7 +182,7 @@ func (s *Store) FindByName(name string) ([]*image.Image, error) {
 		list = append(list, i)
 	}
 
-	sort.Sort(filter.SortedImages(list))
+	sort.Sort(images.SortedImages(list))
 	return list, nil
 }
 

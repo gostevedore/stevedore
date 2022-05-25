@@ -3,8 +3,8 @@ package build
 import (
 	"context"
 
-	"github.com/gostevedore/stevedore/internal/schedule"
-	"github.com/gostevedore/stevedore/internal/schedule/dispatch"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/dispatch"
 	"github.com/gostevedore/stevedore/internal/service/build"
 	"github.com/gostevedore/stevedore/internal/service/build/plan"
 )
@@ -22,11 +22,5 @@ type ServiceBuilder interface {
 // Dispatcher is a dispatcher for build commands
 type Dispatcher interface {
 	Start(ctx context.Context, opts ...dispatch.OptionsFunc) error
-	Enqueue(schedule.Jobber)
+	Enqueue(scheduler.Jobber)
 }
-
-// // DriverFactorier interface defines the factory to create a build driver
-// type DriverFactorier interface {
-// 	Get(id string) (driver.BuildDriverer, error)
-// 	Register(id string, driver driver.BuildDriverer) error
-// }

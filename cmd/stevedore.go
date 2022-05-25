@@ -5,10 +5,10 @@ import (
 	"os"
 
 	"github.com/gostevedore/stevedore/internal/cli/stevedore"
-	"github.com/gostevedore/stevedore/internal/configuration"
 	"github.com/gostevedore/stevedore/internal/infrastructure/compatibility"
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
+	"github.com/gostevedore/stevedore/internal/infrastructure/console"
 	"github.com/gostevedore/stevedore/internal/infrastructure/logger"
-	"github.com/gostevedore/stevedore/internal/ui/console"
 	"github.com/spf13/afero"
 )
 

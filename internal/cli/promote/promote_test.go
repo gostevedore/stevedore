@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/configuration"
 	entrypoint "github.com/gostevedore/stevedore/internal/entrypoint/promote"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/compatibility"
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	"github.com/stretchr/testify/assert"
 )
 

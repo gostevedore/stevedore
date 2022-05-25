@@ -5,8 +5,8 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
-	"github.com/gostevedore/stevedore/internal/schedule"
-	"github.com/gostevedore/stevedore/internal/schedule/job"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/job"
 	"github.com/gostevedore/stevedore/internal/service/build/command"
 	"github.com/gostevedore/stevedore/internal/service/build/plan"
 )
@@ -35,12 +35,12 @@ type BuildCommandFactorier interface {
 
 // JobFactorier interface defines the factory of build jobs
 type JobFactorier interface {
-	New(job.Commander) schedule.Jobber
+	New(job.Commander) scheduler.Jobber
 }
 
 // Dispatcher is a dispatcher to build docker images
 type Dispatcher interface {
-	Enqueue(schedule.Jobber)
+	Enqueue(scheduler.Jobber)
 }
 
 // // DriverFactorier interface defines the factory to create a build driver

@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
+	"github.com/gostevedore/stevedore/internal/infrastructure/console"
 	filter "github.com/gostevedore/stevedore/internal/infrastructure/filters/builders"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
-	"github.com/gostevedore/stevedore/internal/ui/console"
 	"github.com/stretchr/testify/assert"
 )
 

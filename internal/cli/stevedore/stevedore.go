@@ -11,9 +11,9 @@ import (
 	"github.com/gostevedore/stevedore/internal/cli/command/middleware"
 	"github.com/gostevedore/stevedore/internal/cli/completion"
 	"github.com/gostevedore/stevedore/internal/cli/promote"
-	"github.com/gostevedore/stevedore/internal/configuration"
 	buildentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/build"
 	promoteentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/promote"
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )

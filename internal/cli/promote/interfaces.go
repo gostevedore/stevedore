@@ -3,8 +3,8 @@ package promote
 import (
 	"context"
 
-	"github.com/gostevedore/stevedore/internal/configuration"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 )
 
 // HandlerPromoter is the interface that wraps the handler promote

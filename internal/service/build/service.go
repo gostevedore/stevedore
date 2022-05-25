@@ -12,8 +12,8 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	"github.com/gostevedore/stevedore/internal/core/ports/service"
-	"github.com/gostevedore/stevedore/internal/schedule"
-	"github.com/gostevedore/stevedore/internal/schedule/job"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/job"
 	"github.com/gostevedore/stevedore/internal/service/build/plan"
 	"gopkg.in/yaml.v2"
 )
@@ -353,7 +353,7 @@ func (s *Service) build(ctx context.Context, i *image.Image, options *ServiceOpt
 	return nil
 }
 
-func (s *Service) job(ctx context.Context, cmd job.Commander) (schedule.Jobber, error) {
+func (s *Service) job(ctx context.Context, cmd job.Commander) (scheduler.Jobber, error) {
 	errContext := "(build::job)"
 
 	if s.jobFactory == nil {
