@@ -18,10 +18,10 @@ import (
 )
 
 // OptionsFunc is a function used to configure the service
-type OptionsFunc func(*Service)
+type OptionsFunc func(*Application)
 
-// Service is an application service to build docker images
-type Service struct {
+// Application is an application service to build docker images
+type Application struct {
 	builders       BuildersStorer
 	commandFactory BuildCommandFactorier
 	driverFactory  DriverFactorier
@@ -31,10 +31,10 @@ type Service struct {
 	credentials    CredentialsStorer
 }
 
-// NewService creates a Service to build docker images
-func NewService(options ...OptionsFunc) *Service {
+// NewApplication creates a Service to build docker images
+func NewApplication(options ...OptionsFunc) *Application {
 
-	service := &Service{}
+	service := &Application{}
 	service.Options(options...)
 
 	return service
@@ -42,61 +42,61 @@ func NewService(options ...OptionsFunc) *Service {
 
 // WithBuilders sets the builders storer
 func WithBuilders(builders BuildersStorer) OptionsFunc {
-	return func(s *Service) {
+	return func(s *Application) {
 		s.builders = builders
 	}
 }
 
 // WithCommandFactory sets the command factory
 func WithCommandFactory(commandFactory BuildCommandFactorier) OptionsFunc {
-	return func(s *Service) {
+	return func(s *Application) {
 		s.commandFactory = commandFactory
 	}
 }
 
 // WithDriverFactory sets the driver factory
 func WithDriverFactory(driverFactory DriverFactorier) OptionsFunc {
-	return func(s *Service) {
+	return func(s *Application) {
 		s.driverFactory = driverFactory
 	}
 }
 
 // WithJobFactory sets the job factory
 func WithJobFactory(jobFactory JobFactorier) OptionsFunc {
-	return func(s *Service) {
+	return func(s *Application) {
 		s.jobFactory = jobFactory
 	}
 }
 
 // WithDispatch sets the dispatcher
 func WithDispatch(dispatch Dispatcher) OptionsFunc {
-	return func(s *Service) {
+	return func(s *Application) {
 		s.dispatch = dispatch
 	}
 }
 
 // WithSemver sets the semver
 func WithSemver(semver Semverser) OptionsFunc {
-	return func(s *Service) {
+	return func(s *Application) {
 		s.semver = semver
 	}
 }
 
 func WithCredentials(credentials CredentialsStorer) OptionsFunc {
-	return func(s *Service) {
+	return func(s *Application) {
 		s.credentials = credentials
 	}
 }
 
 // Options configure the service
-func (s *Service) Options(opts ...OptionsFunc) {
+func (s *Application) Options(opts ...OptionsFunc) {
 	for _, opt := range opts {
 		opt(s)
 	}
 }
 
 // Build starts the building process
-func (s *Service) Build(ctx context.Context, buildPlan Planner, name string, version []string, options *ServiceOptions, optionsFunc ...OptionsFunc) error {
+func (s *Application) Build(ctx context.Context, buildPlan Planner, name string, version []string, options *Options, optionsFunc ...OptionsFunc) error {
 
 	var err error
 	var steps []*plan.Step
@@ -122,7 +122,7 @@ func (s *Service) Build(ctx context.Context, buildPlan Planner, name string, ver
 	s.Options(optionsFunc...)
 
 	// future promise which triggers the image build
-	buildWorkerFunc := func(ctx context.Context, step PlanSteper, options *ServiceOptions) func() error {
+	buildWorkerFunc := func(ctx context.Context, step PlanSteper, options *Options) func() error {
 		var err error
 
 		c := make(chan struct{}, 1)
@@ -169,7 +169,7 @@ func (s *Service) Build(ctx context.Context, buildPlan Planner, name string, ver
 	return nil
 }
 
-func (s *Service) build(ctx context.Context, i *image.Image, options *ServiceOptions) error {
+func (s *Application) build(ctx context.Context, i *image.Image, options *Options) error {
 	errContext := "(build::build)"
 
 	if options == nil {
@@ -352,7 +352,7 @@ func (s *Service) build(ctx context.Context, i *image.Image, options *ServiceOpt
 	return nil
 }
 
-func (s *Service) job(ctx context.Context, cmd job.Commander) (scheduler.Jobber, error) {
+func (s *Application) job(ctx context.Context, cmd job.Commander) (scheduler.Jobber, error) {
 	errContext := "(build::job)"
 
 	if s.jobFactory == nil {
@@ -362,7 +362,7 @@ func (s *Service) job(ctx context.Context, cmd job.Commander) (scheduler.Jobber,
 	return s.jobFactory.New(cmd), nil
 }
 
-func (s *Service) command(driver repository.BuildDriverer, i *image.Image, options *image.BuildDriverOptions) (job.Commander, error) {
+func (s *Application) command(driver repository.BuildDriverer, i *image.Image, options *image.BuildDriverOptions) (job.Commander, error) {
 	errContext := "(build::command)"
 
 	if s.commandFactory == nil {
@@ -384,7 +384,7 @@ func (s *Service) command(driver repository.BuildDriverer, i *image.Image, optio
 	return s.commandFactory.New(driver, i, options), nil
 }
 
-func (s *Service) getCredentials(registry string) (*credentials.UserPasswordAuth, error) {
+func (s *Application) getCredentials(registry string) (*credentials.UserPasswordAuth, error) {
 
 	errContext := "(build::getCredentials)"
 
@@ -397,7 +397,7 @@ func (s *Service) getCredentials(registry string) (*credentials.UserPasswordAuth
 	return auth, nil
 }
 
-func (s *Service) getDriver(builder *builder.Builder, options *ServiceOptions) (repository.BuildDriverer, error) {
+func (s *Application) getDriver(builder *builder.Builder, options *Options) (repository.BuildDriverer, error) {
 	errContext := "(build::getDriver)"
 
 	if s.driverFactory == nil {
@@ -417,7 +417,7 @@ func (s *Service) getDriver(builder *builder.Builder, options *ServiceOptions) (
 	return driver, nil
 }
 
-func (s *Service) getBuilder(i *image.Image) (*builder.Builder, error) {
+func (s *Application) getBuilder(i *image.Image) (*builder.Builder, error) {
 
 	errContext := "(build::builder)"
 

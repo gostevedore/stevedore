@@ -8,12 +8,12 @@ import (
 )
 
 type Handler struct {
-	service ServicePromoter
+	app PromoteApplication
 }
 
-func NewHandler(p ServicePromoter) *Handler {
+func NewHandler(a PromoteApplication) *Handler {
 	return &Handler{
-		service: p,
+		app: a,
 	}
 }
 
@@ -53,7 +53,7 @@ func (h *Handler) Handler(ctx context.Context, options *Options) error {
 	serviceOptions.RemoteSourceImage = options.RemoteSourceImage
 	serviceOptions.SemanticVersionTagsTemplates = options.SemanticVersionTagsTemplates
 
-	err := h.service.Promote(ctx, serviceOptions)
+	err := h.app.Promote(ctx, serviceOptions)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}

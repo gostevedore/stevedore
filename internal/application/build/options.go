@@ -1,7 +1,7 @@
 package build
 
-// ServiceOptions
-type ServiceOptions struct {
+// Options
+type Options struct {
 	// AnsibleConnectionLocal is the local connection to use on ansible driver
 	AnsibleConnectionLocal bool
 	// AnsibleIntermediateContainerName is the name of an intermediate container that can be used during ansible build process
@@ -48,9 +48,9 @@ type ServiceOptions struct {
 	Vars map[string]interface{} `yaml:"variables"`
 }
 
-// Copy returns a copy of the ServiceOptions
-func (o *ServiceOptions) Copy() *ServiceOptions {
-	copy := &ServiceOptions{}
+// Copy returns a copy of the Options
+func (o *Options) Copy() *Options {
+	copy := &Options{}
 
 	copy.ImageName = o.ImageName
 

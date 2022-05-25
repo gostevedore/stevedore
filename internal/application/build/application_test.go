@@ -31,30 +31,30 @@ func TestBuild(t *testing.T) {
 	_ = errContext
 	tests := []struct {
 		desc              string
-		service           *Service
+		service           *Application
 		buildPlan         Planner
 		name              string
 		versions          []string
-		options           *ServiceOptions
-		prepareAssertFunc func(*Service, Planner)
-		assertFunc        func(*Service) bool
+		options           *Options
+		prepareAssertFunc func(*Application, Planner)
+		assertFunc        func(*Application) bool
 		err               error
 	}{
 		{
 			desc:    "Testing error building an image with no options",
-			service: &Service{},
+			service: &Application{},
 			options: nil,
 			err:     errors.New(errContext, "To build an image, service options are required"),
 		},
 		{
 			desc:    "Testing error building an image with no execution plan",
-			service: &Service{},
-			options: &ServiceOptions{},
+			service: &Application{},
+			options: &Options{},
 			err:     errors.New(errContext, "To build an image, a build plan is required"),
 		},
 		{
 			desc: "Testing build an image",
-			service: NewService(
+			service: NewApplication(
 				WithBuilders(builders.NewMockStore()),
 				WithCommandFactory(command.NewMockBuildCommandFactory()),
 				WithDriverFactory(
@@ -70,7 +70,7 @@ func TestBuild(t *testing.T) {
 			buildPlan: plan.NewMockPlan(),
 			name:      "parent",
 			versions:  []string{"0.0.0"},
-			options: &ServiceOptions{
+			options: &Options{
 				AnsibleConnectionLocal:           true,
 				AnsibleIntermediateContainerName: "intermediate_container",
 				AnsibleInventoryPath:             "inventory",
@@ -82,13 +82,13 @@ func TestBuild(t *testing.T) {
 				RemoveImagesAfterPush:            true,
 			},
 			err: &errors.Error{},
-			assertFunc: func(service *Service) bool {
+			assertFunc: func(service *Application) bool {
 				return service.credentials.(*credentialsstore.CredentialsStoreMock).AssertExpectations(t) &&
 					service.commandFactory.(*command.MockBuildCommandFactory).AssertExpectations(t) &&
 					service.dispatch.(*dispatch.MockDispatch).AssertExpectations(t) &&
 					service.jobFactory.(*job.MockJobFactory).AssertExpectations(t)
 			},
-			prepareAssertFunc: func(service *Service, buildPlan Planner) {
+			prepareAssertFunc: func(service *Application, buildPlan Planner) {
 
 				mockJob := job.NewMockJob()
 				mockJob.On("Wait").Return(nil)
@@ -194,65 +194,65 @@ func TestBuildWorker(t *testing.T) {
 
 	tests := []struct {
 		desc              string
-		service           *Service
+		service           *Application
 		image             *image.Image
-		options           *ServiceOptions
+		options           *Options
 		err               error
-		prepareAssertFunc func(*Service, *image.Image)
-		assertFunc        func(*Service) bool
+		prepareAssertFunc func(*Application, *image.Image)
+		assertFunc        func(*Application) bool
 	}{
 		{
 			desc:    "Testing error when no options are given to worker",
-			service: &Service{},
+			service: &Application{},
 			options: nil,
 			err:     errors.New(errContext, "Build worker requires service options"),
 		},
 		{
 			desc:    "Testing error when no image specification is given to worker",
-			service: &Service{},
-			options: &ServiceOptions{},
+			service: &Application{},
+			options: &Options{},
 			err:     errors.New(errContext, "Build worker requires an image specification"),
 		},
 		{
 			desc:    "Testing error when no image specification is given to worker",
-			service: &Service{},
-			options: &ServiceOptions{},
+			service: &Application{},
+			options: &Options{},
 			image:   &image.Image{},
 			err:     errors.New(errContext, "Build worker requires a dispatcher"),
 		},
 		{
 			desc: "Testing error when no driver factory is given to worker",
-			service: &Service{
+			service: &Application{
 				dispatch: dispatch.NewDispatch(worker.NewMockWorkerFactory()),
 			},
-			options: &ServiceOptions{},
+			options: &Options{},
 			image:   &image.Image{},
 			err:     errors.New(errContext, "Build worker requires a driver factory"),
 		},
 		{
 			desc: "Testing error when no semantic version generator is given to worker",
-			service: &Service{
+			service: &Application{
 				dispatch:      dispatch.NewDispatch(worker.NewMockWorkerFactory()),
 				driverFactory: factory.NewBuildDriverFactory(),
 			},
-			options: &ServiceOptions{},
+			options: &Options{},
 			image:   &image.Image{},
 			err:     errors.New(errContext, "Build worker requires a semver generator"),
 		},
 		{
 			desc: "Testing error when no credentials store is given to worker",
-			service: &Service{
+			service: &Application{
 				dispatch:      dispatch.NewDispatch(worker.NewMockWorkerFactory()),
 				driverFactory: factory.NewBuildDriverFactory(),
 				semver:        semver.NewSemVerGenerator(),
 			},
-			options: &ServiceOptions{},
+			options: &Options{},
 			image:   &image.Image{},
 			err:     errors.New(errContext, "Build worker requires a credentials store"),
 		},
 		{
 			desc: "Testing worker to build an image",
-			service: NewService(
+			service: NewApplication(
 				WithBuilders(builders.NewMockStore()),
 				WithCommandFactory(command.NewMockBuildCommandFactory()),
 				WithDriverFactory(
@@ -265,7 +265,7 @@ func TestBuildWorker(t *testing.T) {
 				WithSemver(semver.NewSemVerGenerator()),
 				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
 			),
-			options: &ServiceOptions{
+			options: &Options{
 				EnableSemanticVersionTags:    true,
 				PushImageAfterBuild:          true,
 				PullParentImage:              true,
@@ -301,13 +301,13 @@ func TestBuildWorker(t *testing.T) {
 				},
 			},
 			err: &errors.Error{},
-			assertFunc: func(service *Service) bool {
+			assertFunc: func(service *Application) bool {
 				return service.credentials.(*credentialsstore.CredentialsStoreMock).AssertExpectations(t) &&
 					service.commandFactory.(*command.MockBuildCommandFactory).AssertExpectations(t) &&
 					service.dispatch.(*dispatch.MockDispatch).AssertExpectations(t) &&
 					service.jobFactory.(*job.MockJobFactory).AssertExpectations(t)
 			},
-			prepareAssertFunc: func(service *Service, i *image.Image) {
+			prepareAssertFunc: func(service *Application, i *image.Image) {
 
 				mockJob := job.NewMockJob()
 				mockJob.On("Wait").Return(nil)
@@ -368,23 +368,23 @@ func TestJob(t *testing.T) {
 
 	tests := []struct {
 		desc              string
-		service           *Service
+		service           *Application
 		cmd               job.Commander
-		prepareAssertFunc func(*Service, job.Commander)
+		prepareAssertFunc func(*Application, job.Commander)
 		err               error
 	}{
 		{
 			desc:    "Testing error when no job factory is defined on service",
-			service: &Service{},
+			service: &Application{},
 			err:     errors.New(errContext, "To create a build job, is required a job factory"),
 		},
 		{
 			desc: "Testing job creation",
-			service: &Service{
+			service: &Application{
 				jobFactory: job.NewMockJobFactory(),
 			},
 			cmd: command.NewMockBuildCommand(),
-			prepareAssertFunc: func(service *Service, cmd job.Commander) {
+			prepareAssertFunc: func(service *Application, cmd job.Commander) {
 				service.jobFactory.(*job.MockJobFactory).On("New", cmd).Return(job.NewMockJob(), nil)
 			},
 			err: &errors.Error{},
@@ -418,29 +418,29 @@ func TestCommand(t *testing.T) {
 
 	tests := []struct {
 		desc              string
-		service           *Service
+		service           *Application
 		driver            repository.BuildDriverer
 		image             *image.Image
 		options           *image.BuildDriverOptions
 		res               job.Commander
-		prepareAssertFunc func(*Service, *image.Image)
+		prepareAssertFunc func(*Application, *image.Image)
 		err               error
 	}{
 		{
 			desc:    "Testing error when no command factory is provided",
-			service: &Service{},
+			service: &Application{},
 			err:     errors.New(errContext, "To create a build command, is required a command factory"),
 		},
 		{
 			desc: "Testing error when no driver is provided",
-			service: &Service{
+			service: &Application{
 				commandFactory: command.NewMockBuildCommandFactory(),
 			},
 			err: errors.New(errContext, "To create a build command, is required a driver"),
 		},
 		{
 			desc: "Testing error when no image is provided",
-			service: &Service{
+			service: &Application{
 				commandFactory: command.NewMockBuildCommandFactory(),
 			},
 			driver: mock.NewMockDriver(),
@@ -448,7 +448,7 @@ func TestCommand(t *testing.T) {
 		},
 		{
 			desc: "Testing error when no options are provided",
-			service: &Service{
+			service: &Application{
 				commandFactory: command.NewMockBuildCommandFactory(),
 			},
 			driver: mock.NewMockDriver(),
@@ -457,13 +457,13 @@ func TestCommand(t *testing.T) {
 		},
 		{
 			desc: "Testing create build command",
-			service: NewService(
+			service: NewApplication(
 				WithCommandFactory(command.NewMockBuildCommandFactory()),
 			),
 			driver:  mock.NewMockDriver(),
 			image:   &image.Image{},
 			options: &image.BuildDriverOptions{},
-			prepareAssertFunc: func(s *Service, i *image.Image) {
+			prepareAssertFunc: func(s *Application, i *image.Image) {
 				s.commandFactory.(*command.MockBuildCommandFactory).On("New", mock.NewMockDriver(), i, &image.BuildDriverOptions{}).Return(command.NewMockBuildCommand(), nil)
 			},
 			res: &command.MockBuildCommand{},
@@ -496,22 +496,22 @@ func TestGetBuilder(t *testing.T) {
 
 	tests := []struct {
 		desc              string
-		service           *Service
+		service           *Application
 		image             *image.Image
 		res               *builder.Builder
-		prepareAssertFunc func(*Service)
+		prepareAssertFunc func(*Application)
 		assertFunc        func(expected, actual *builder.Builder) bool
 		err               error
 	}{
 		{
 			desc:    "Testing error getting a builder to nil image",
-			service: &Service{},
+			service: &Application{},
 			image:   nil,
 			err:     errors.New(errContext, "To generate a builder, is required an image definition"),
 		},
 		{
 			desc:    "Testing error getting a builder with no builders store",
-			service: &Service{},
+			service: &Application{},
 			image: &image.Image{
 				Builder: "test",
 			},
@@ -519,11 +519,11 @@ func TestGetBuilder(t *testing.T) {
 		},
 		{
 			desc:    "Testing return a builder defined by an string",
-			service: &Service{builders: builders.NewMockStore()},
+			service: &Application{builders: builders.NewMockStore()},
 			image: &image.Image{
 				Builder: "test",
 			},
-			prepareAssertFunc: func(s *Service) {
+			prepareAssertFunc: func(s *Application) {
 				s.builders.(*builders.MockStore).On("Find", "test").Return(&builder.Builder{
 					Name: "test",
 				}, nil)
@@ -540,7 +540,7 @@ func TestGetBuilder(t *testing.T) {
 		// That test to be tested from the caller because is not possible to force builderDerfinetion to be seen as an interface
 		{
 			desc:    "Testing return a builder defined by an interface{}",
-			service: &Service{builders: builders.NewMockStore()},
+			service: &Application{builders: builders.NewMockStore()},
 			image: &image.Image{
 				Builder: map[interface{}]interface{}{
 					"driver": "docker",
@@ -618,20 +618,20 @@ func TestGetCredentials(t *testing.T) {
 
 	tests := []struct {
 		desc              string
-		service           *Service
+		service           *Application
 		registry          string
 		res               *credentials.UserPasswordAuth
 		err               error
-		prepareAssertFunc func(*Service)
+		prepareAssertFunc func(*Application)
 	}{
 		{
 			desc:    "Testing error when credentials store is nil",
-			service: NewService(),
+			service: NewApplication(),
 			err:     errors.New(errContext, "To get credentials, is required a credentials store"),
 		},
 		{
 			desc: "Testing get credentials",
-			service: NewService(
+			service: NewApplication(
 				WithCredentials(
 					credentialsstore.NewCredentialsStoreMock(),
 				),
@@ -641,7 +641,7 @@ func TestGetCredentials(t *testing.T) {
 				Username: "user",
 				Password: "pass",
 			},
-			prepareAssertFunc: func(service *Service) {
+			prepareAssertFunc: func(service *Application) {
 				service.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
 					Username: "user",
 					Password: "pass",
@@ -651,14 +651,14 @@ func TestGetCredentials(t *testing.T) {
 		},
 		{
 			desc: "Testing get unexisting credentials",
-			service: NewService(
+			service: NewApplication(
 				WithCredentials(
 					credentialsstore.NewCredentialsStoreMock(),
 				),
 			),
 			registry: "registry.test",
 			res:      nil,
-			prepareAssertFunc: func(service *Service) {
+			prepareAssertFunc: func(service *Application) {
 				service.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(nil, errors.New(errContext, "Credentials not found"))
 			},
 			err: errors.New(errContext, "Credentials not found"),
@@ -688,25 +688,25 @@ func TestGetDriver(t *testing.T) {
 
 	tests := []struct {
 		desc    string
-		service *Service
+		service *Application
 		builder *builder.Builder
-		options *ServiceOptions
+		options *Options
 		res     repository.BuildDriverer
 		err     error
 	}{
 		{
 			desc:    "Testing error when driver factory is not defined",
-			service: NewService(),
+			service: NewApplication(),
 			builder: &builder.Builder{
 				Driver: "docker",
 			},
-			options: &ServiceOptions{},
+			options: &Options{},
 			res:     &docker.DockerDriver{},
 			err:     errors.New(errContext, "To create a build driver, is required a driver factory"),
 		},
 		{
 			desc: "Testing get driver",
-			service: NewService(
+			service: NewApplication(
 				WithDriverFactory(
 					&factory.BuildDriverFactory{
 						"docker": mock.NewMockDriver(),
@@ -716,13 +716,13 @@ func TestGetDriver(t *testing.T) {
 			builder: &builder.Builder{
 				Driver: "docker",
 			},
-			options: &ServiceOptions{},
+			options: &Options{},
 			res:     &mock.MockDriver{},
 			err:     &errors.Error{},
 		},
 		{
 			desc: "Testing get driver with dry-run",
-			service: NewService(
+			service: NewApplication(
 				WithDriverFactory(
 					&factory.BuildDriverFactory{
 						"docker":  mock.NewMockDriver(),
@@ -733,7 +733,7 @@ func TestGetDriver(t *testing.T) {
 			builder: &builder.Builder{
 				Driver: "docker",
 			},
-			options: &ServiceOptions{
+			options: &Options{
 				DryRun: true,
 			},
 			res: &dryrun.DryRunDriver{},

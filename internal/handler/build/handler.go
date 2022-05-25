@@ -15,14 +15,14 @@ const AssignmentTokenSymbol = '='
 // Handler is a handler for build commands
 type Handler struct {
 	planFactory PlanFactorier
-	service     ServiceBuilder
+	app         BuildApplication
 }
 
 // NewHandler creates a new handler for build commands
-func NewHandler(p PlanFactorier, s ServiceBuilder) *Handler {
+func NewHandler(p PlanFactorier, a BuildApplication) *Handler {
 	return &Handler{
 		planFactory: p,
-		service:     s,
+		app:         a,
 	}
 }
 
@@ -33,13 +33,13 @@ func (h *Handler) Handler(ctx context.Context, imageName string, options *Option
 	var err error
 	var buildPlan build.Planner
 
-	buildServiceOptions := &build.ServiceOptions{}
+	buildServiceOptions := &build.Options{}
 
 	if h.planFactory == nil {
 		return errors.New(errContext, "Build handler requires a plan factory")
 	}
 
-	if h.service == nil {
+	if h.app == nil {
 		return errors.New(errContext, "Build handler requires a service to build images")
 	}
 
@@ -95,7 +95,7 @@ func (h *Handler) Handler(ctx context.Context, imageName string, options *Option
 		return errors.New(errContext, "", err)
 	}
 
-	err = h.service.Build(
+	err = h.app.Build(
 		ctx,
 		buildPlan,
 		imageName,

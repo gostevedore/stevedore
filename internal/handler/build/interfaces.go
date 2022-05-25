@@ -14,9 +14,9 @@ type PlanFactorier interface {
 	NewPlan(id string, parameters map[string]interface{}) (plan.Planner, error)
 }
 
-// ServiceBuilder is the service for build commands
-type ServiceBuilder interface {
-	Build(ctx context.Context, buildPlan build.Planner, name string, version []string, options *build.ServiceOptions, optionsFunc ...build.OptionsFunc) error
+// BuildApplication is the service for build commands
+type BuildApplication interface {
+	Build(ctx context.Context, buildPlan build.Planner, name string, version []string, options *build.Options, optionsFunc ...build.OptionsFunc) error
 }
 
 // Dispatcher is a dispatcher for build commands

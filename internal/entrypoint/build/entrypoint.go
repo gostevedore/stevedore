@@ -8,7 +8,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	godockerbuild "github.com/apenella/go-docker-builder/pkg/build"
 	dockerclient "github.com/docker/docker/client"
-	service "github.com/gostevedore/stevedore/internal/application/build"
+	application "github.com/gostevedore/stevedore/internal/application/build"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	buildhandler "github.com/gostevedore/stevedore/internal/handler/build"
@@ -91,7 +91,7 @@ func (e *Entrypoint) Execute(
 	var buildDriverFactory factory.BuildDriverFactory
 	var buildersStore *builders.Store
 	var buildHandler *buildhandler.Handler
-	var buildService *service.Service
+	var buildService *application.Application
 	var commandFactory *command.BuildCommandFactory
 	var credentialsStore *credentials.CredentialsStore
 	var dispatcher *dispatch.Dispatch
@@ -164,14 +164,14 @@ func (e *Entrypoint) Execute(
 		return errors.New(errContext, "", err)
 	}
 
-	buildService = service.NewService(
-		service.WithBuilders(buildersStore),
-		service.WithCommandFactory(commandFactory),
-		service.WithDriverFactory(buildDriverFactory),
-		service.WithJobFactory(jobFactory),
-		service.WithDispatch(dispatcher),
-		service.WithSemver(semVerFactory),
-		service.WithCredentials(credentialsStore),
+	buildService = application.NewApplication(
+		application.WithBuilders(buildersStore),
+		application.WithCommandFactory(commandFactory),
+		application.WithDriverFactory(buildDriverFactory),
+		application.WithJobFactory(jobFactory),
+		application.WithDispatch(dispatcher),
+		application.WithSemver(semVerFactory),
+		application.WithCredentials(credentialsStore),
 	)
 
 	imageRender, err = e.createImageRender(now.NewNow())

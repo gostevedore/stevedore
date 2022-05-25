@@ -66,7 +66,7 @@ func TestHandler(t *testing.T) {
 					TargetImageTags:              []string{"tag"},
 				}
 
-				h.service.(*promote.MockService).On("Promote", context.TODO(), options).Return(nil)
+				h.app.(*promote.MockService).On("Promote", context.TODO(), options).Return(nil)
 			},
 		},
 	}
@@ -82,7 +82,7 @@ func TestHandler(t *testing.T) {
 			if err != nil && assert.Error(t, err) {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				test.handler.service.(*promote.MockService).AssertExpectations(t)
+				test.handler.app.(*promote.MockService).AssertExpectations(t)
 			}
 
 		})
