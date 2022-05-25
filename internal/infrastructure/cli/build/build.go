@@ -4,9 +4,9 @@ import (
 	"context"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/cli/command"
 	entrypoint "github.com/gostevedore/stevedore/internal/entrypoint/build"
 	handler "github.com/gostevedore/stevedore/internal/handler/build"
+	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	"github.com/spf13/cobra"
 )

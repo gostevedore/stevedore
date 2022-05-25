@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/gostevedore/stevedore/internal/cli/stevedore"
+	"github.com/gostevedore/stevedore/internal/infrastructure/cli/stevedore"
 	"github.com/gostevedore/stevedore/internal/infrastructure/compatibility"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	"github.com/gostevedore/stevedore/internal/infrastructure/console"

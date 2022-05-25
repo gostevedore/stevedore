@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/gostevedore/stevedore/internal/cli/command"
+	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command"
 	"github.com/spf13/cobra"
 )
 
