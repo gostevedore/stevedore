@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/application/build/command"
+	"github.com/gostevedore/stevedore/internal/application/build/plan"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
@@ -21,8 +23,6 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
 	credentialsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials"
-	"github.com/gostevedore/stevedore/internal/service/build/command"
-	"github.com/gostevedore/stevedore/internal/service/build/plan"
 	"github.com/stretchr/testify/assert"
 )
 

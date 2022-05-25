@@ -7,14 +7,13 @@ import (
 	"sync"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/application/build/plan"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
-	"github.com/gostevedore/stevedore/internal/core/ports/service"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/job"
-	"github.com/gostevedore/stevedore/internal/service/build/plan"
 	"gopkg.in/yaml.v2"
 )
 
@@ -25,7 +24,7 @@ type OptionsFunc func(*Service)
 type Service struct {
 	builders       BuildersStorer
 	commandFactory BuildCommandFactorier
-	driverFactory  service.DriverFactorier
+	driverFactory  DriverFactorier
 	jobFactory     JobFactorier
 	dispatch       Dispatcher
 	semver         Semverser
@@ -56,7 +55,7 @@ func WithCommandFactory(commandFactory BuildCommandFactorier) OptionsFunc {
 }
 
 // WithDriverFactory sets the driver factory
-func WithDriverFactory(driverFactory service.DriverFactorier) OptionsFunc {
+func WithDriverFactory(driverFactory DriverFactorier) OptionsFunc {
 	return func(s *Service) {
 		s.driverFactory = driverFactory
 	}
