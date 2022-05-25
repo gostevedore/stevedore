@@ -17,7 +17,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker/godockerbuilder"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
-	"github.com/gostevedore/stevedore/internal/semver"
+	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	service "github.com/gostevedore/stevedore/internal/service/promote"
 	"github.com/spf13/afero"
 )

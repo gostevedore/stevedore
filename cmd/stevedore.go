@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/gostevedore/stevedore/internal/cli/stevedore"
-	"github.com/gostevedore/stevedore/internal/compatibility"
 	"github.com/gostevedore/stevedore/internal/configuration"
-	"github.com/gostevedore/stevedore/internal/logger"
+	"github.com/gostevedore/stevedore/internal/infrastructure/compatibility"
+	"github.com/gostevedore/stevedore/internal/infrastructure/logger"
 	"github.com/gostevedore/stevedore/internal/ui/console"
 	"github.com/spf13/afero"
 )

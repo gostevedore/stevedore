@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"github.com/gostevedore/stevedore/internal/schedule"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -16,8 +16,8 @@ func NewMockWorkerFactory() *MockWorkerFactory {
 }
 
 // New returns a new worker constructor
-func (f *MockWorkerFactory) New(workerPool chan chan schedule.Jobber) schedule.Workerer {
+func (f *MockWorkerFactory) New(workerPool chan chan scheduler.Jobber) scheduler.Workerer {
 	args := f.Mock.Called(workerPool)
 
-	return args.Get(0).(schedule.Workerer)
+	return args.Get(0).(scheduler.Workerer)
 }

@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/schedule"
-	"github.com/gostevedore/stevedore/internal/schedule/job"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/job"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,11 +15,11 @@ func TestNewWorker(t *testing.T) {
 
 	tests := []struct {
 		desc       string
-		workerPool chan chan schedule.Jobber
+		workerPool chan chan scheduler.Jobber
 	}{
 		{
 			desc:       "Testing create new worker",
-			workerPool: make(chan chan schedule.Jobber),
+			workerPool: make(chan chan scheduler.Jobber),
 		},
 	}
 
@@ -87,8 +87,8 @@ func TestRunJobOnAWorker(t *testing.T) {
 		t.Log(desc)
 
 		worker := &Worker{
-			WorkerPool: make(chan chan schedule.Jobber),
-			JobChannel: make(chan schedule.Jobber),
+			WorkerPool: make(chan chan scheduler.Jobber),
+			JobChannel: make(chan scheduler.Jobber),
 			quit:       make(chan bool),
 		}
 		testJob := job.NewMockJob()

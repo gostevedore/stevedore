@@ -4,22 +4,22 @@ import (
 	"context"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/schedule"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
 )
 
 // Worker defines a worker
 type Worker struct {
-	WorkerPool chan chan schedule.Jobber
-	JobChannel chan schedule.Jobber
+	WorkerPool chan chan scheduler.Jobber
+	JobChannel chan scheduler.Jobber
 	quit       chan bool
 }
 
 // NewWorker creates a new worker
-func NewWorker(workerPool chan chan schedule.Jobber) *Worker {
+func NewWorker(workerPool chan chan scheduler.Jobber) *Worker {
 
 	worker := &Worker{
 		WorkerPool: workerPool,
-		JobChannel: make(chan schedule.Jobber),
+		JobChannel: make(chan scheduler.Jobber),
 		quit:       make(chan bool),
 	}
 

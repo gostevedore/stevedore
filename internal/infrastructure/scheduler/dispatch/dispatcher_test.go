@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/schedule"
-	"github.com/gostevedore/stevedore/internal/schedule/worker"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/worker"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -59,7 +59,7 @@ func TestStart(t *testing.T) {
 		dispatch          *Dispatch
 		numWorkers        int
 		context           context.Context
-		prepareAssertFunc func(*Dispatch, chan chan schedule.Jobber)
+		prepareAssertFunc func(*Dispatch, chan chan scheduler.Jobber)
 	}{
 		{
 			desc:     "Testing error when starting a dispatcher without a context",
@@ -86,13 +86,13 @@ func TestStart(t *testing.T) {
 			err:     &errors.Error{},
 			context: context.TODO(),
 			dispatch: &Dispatch{
-				WorkerPool:    make(chan chan schedule.Jobber, 5),
-				inputJobQueue: make(chan schedule.Jobber),
+				WorkerPool:    make(chan chan scheduler.Jobber, 5),
+				inputJobQueue: make(chan scheduler.Jobber),
 				NumWorkers:    5,
 				workerFactory: worker.NewMockWorkerFactory(),
 			},
 			numWorkers: 5,
-			prepareAssertFunc: func(d *Dispatch, pool chan chan schedule.Jobber) {
+			prepareAssertFunc: func(d *Dispatch, pool chan chan scheduler.Jobber) {
 				d.workerFactory.(*worker.MockWorkerFactory).On("New", pool).Return(worker.NewWorker(pool))
 			},
 		},

@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/compatibility"
 	"github.com/gostevedore/stevedore/internal/configuration/images/graph"
 	"github.com/gostevedore/stevedore/internal/configuration/images/image"
 	domainimage "github.com/gostevedore/stevedore/internal/core/domain/image"
 	imagesgraph "github.com/gostevedore/stevedore/internal/images/graph"
+	"github.com/gostevedore/stevedore/internal/infrastructure/compatibility"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"

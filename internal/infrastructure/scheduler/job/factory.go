@@ -1,6 +1,6 @@
 package job
 
-import "github.com/gostevedore/stevedore/internal/schedule"
+import "github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
 
 // JobFactory is a factory for creating jobs
 type JobFactory struct{}
@@ -11,6 +11,6 @@ func NewJobFactory() *JobFactory {
 }
 
 // New returns a new build job constructor
-func (f *JobFactory) New(command Commander) schedule.Jobber {
+func (f *JobFactory) New(command Commander) scheduler.Jobber {
 	return NewJob(command)
 }

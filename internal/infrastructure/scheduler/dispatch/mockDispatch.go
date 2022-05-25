@@ -3,7 +3,7 @@ package dispatch
 import (
 	"context"
 
-	"github.com/gostevedore/stevedore/internal/schedule"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -23,6 +23,6 @@ func (m *MockDispatch) Start(ctx context.Context, opts ...OptionsFunc) error {
 }
 
 // Enqueue provides a mock function with given fields: _a0, _a1
-func (m *MockDispatch) Enqueue(job schedule.Jobber) {
+func (m *MockDispatch) Enqueue(job scheduler.Jobber) {
 	m.Called(job)
 }

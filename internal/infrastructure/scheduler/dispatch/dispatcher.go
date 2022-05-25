@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/schedule"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
 )
 
 // DefaultNumWorkers is the default number of workers
@@ -16,8 +16,8 @@ type OptionsFunc func(*Dispatch)
 
 // Dispatch is a dispatcher that executes jobs
 type Dispatch struct {
-	WorkerPool    chan chan schedule.Jobber
-	inputJobQueue chan schedule.Jobber
+	WorkerPool    chan chan scheduler.Jobber
+	inputJobQueue chan scheduler.Jobber
 	NumWorkers    int
 	workerFactory WorkerFactorier
 	once          sync.Once
@@ -27,8 +27,8 @@ type Dispatch struct {
 func NewDispatch(workerFactory WorkerFactorier, options ...OptionsFunc) *Dispatch {
 
 	dispatch := &Dispatch{
-		WorkerPool:    make(chan chan schedule.Jobber, DefaultNumWorkers),
-		inputJobQueue: make(chan schedule.Jobber),
+		WorkerPool:    make(chan chan scheduler.Jobber, DefaultNumWorkers),
+		inputJobQueue: make(chan scheduler.Jobber),
 		workerFactory: workerFactory,
 	}
 
@@ -51,7 +51,7 @@ func WithNumWorkers(n int) OptionsFunc {
 		} else {
 			d.NumWorkers = n
 		}
-		d.WorkerPool = make(chan chan schedule.Jobber, d.NumWorkers)
+		d.WorkerPool = make(chan chan scheduler.Jobber, d.NumWorkers)
 	}
 }
 
@@ -96,7 +96,7 @@ func (d *Dispatch) dispatch() {
 
 	for {
 		j := <-d.inputJobQueue
-		go func(j schedule.Jobber) {
+		go func(j scheduler.Jobber) {
 			jobChannel := <-d.WorkerPool
 			jobChannel <- j
 		}(j)
@@ -104,6 +104,6 @@ func (d *Dispatch) dispatch() {
 }
 
 // Enqueue enqueues a job to be executed by a worker
-func (d *Dispatch) Enqueue(job schedule.Jobber) {
+func (d *Dispatch) Enqueue(job scheduler.Jobber) {
 	d.inputJobQueue <- job
 }

@@ -1,7 +1,7 @@
 package job
 
 import (
-	"github.com/gostevedore/stevedore/internal/schedule"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -16,7 +16,7 @@ func NewMockJobFactory() *MockJobFactory {
 }
 
 // New returns a new build command constructor
-func (f *MockJobFactory) New(command Commander) schedule.Jobber {
+func (f *MockJobFactory) New(command Commander) scheduler.Jobber {
 	args := f.Called(command)
-	return args.Get(0).(schedule.Jobber)
+	return args.Get(0).(scheduler.Jobber)
 }

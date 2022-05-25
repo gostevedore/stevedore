@@ -13,7 +13,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/mock"
-	"github.com/gostevedore/stevedore/internal/semver"
+	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/stretchr/testify/assert"
 )
 
