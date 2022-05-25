@@ -9,7 +9,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/apenella/go-docker-builder/pkg/copy"
 	dockerclient "github.com/docker/docker/client"
-	service "github.com/gostevedore/stevedore/internal/application/promote"
+	application "github.com/gostevedore/stevedore/internal/application/promote"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
@@ -90,10 +90,10 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 		return errors.New(errContext, "", err)
 	}
 
-	promoteService := service.NewService(
-		service.WithPromoteFactory(promoteRepoFactory),
-		service.WithCredentials(credentialsStore),
-		service.WithSemver(semverGenerator),
+	promoteService := application.NewApplication(
+		application.WithPromoteFactory(promoteRepoFactory),
+		application.WithCredentials(credentialsStore),
+		application.WithSemver(semverGenerator),
 	)
 
 	promoteHandler := handler.NewHandler(promoteService)

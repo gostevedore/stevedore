@@ -8,5 +8,5 @@ import (
 
 // PromoteApplication
 type PromoteApplication interface {
-	Promote(ctx context.Context, options *promote.ServiceOptions) error
+	Promote(ctx context.Context, options *promote.Options) error
 }

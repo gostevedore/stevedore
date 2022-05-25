@@ -23,7 +23,7 @@ func TestHandler(t *testing.T) {
 	}{
 		{
 			desc:    "Testing promote handler error when no source image is provided",
-			handler: NewHandler(promote.NewMockService()),
+			handler: NewHandler(promote.NewMockApplication()),
 			err:     errors.New(errContext, "Source images name must be provided"),
 			options: &Options{
 
@@ -35,7 +35,7 @@ func TestHandler(t *testing.T) {
 		},
 		{
 			desc:    "Testing promote handler passing all options",
-			handler: NewHandler(promote.NewMockService()),
+			handler: NewHandler(promote.NewMockApplication()),
 			err:     &errors.Error{},
 			options: &Options{
 				DryRun:                       true,
@@ -52,7 +52,7 @@ func TestHandler(t *testing.T) {
 			},
 			prepareAssertFunc: func(h *Handler) {
 
-				options := &promote.ServiceOptions{
+				options := &promote.Options{
 					DryRun:                       true,
 					EnableSemanticVersionTags:    true,
 					PromoteSourceImageTag:        true,
@@ -66,7 +66,7 @@ func TestHandler(t *testing.T) {
 					TargetImageTags:              []string{"tag"},
 				}
 
-				h.app.(*promote.MockService).On("Promote", context.TODO(), options).Return(nil)
+				h.app.(*promote.MockApplication).On("Promote", context.TODO(), options).Return(nil)
 			},
 		},
 	}
@@ -82,7 +82,7 @@ func TestHandler(t *testing.T) {
 			if err != nil && assert.Error(t, err) {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				test.handler.app.(*promote.MockService).AssertExpectations(t)
+				test.handler.app.(*promote.MockApplication).AssertExpectations(t)
 			}
 
 		})

@@ -25,7 +25,7 @@ func (h *Handler) Handler(ctx context.Context, options *Options) error {
 		return errors.New(errContext, "Source images name must be provided")
 	}
 
-	serviceOptions := &promote.ServiceOptions{
+	serviceOptions := &promote.Options{
 		SourceImageName:       options.SourceImageName,
 		RemoveTargetImageTags: options.RemoveTargetImageTags,
 	}
