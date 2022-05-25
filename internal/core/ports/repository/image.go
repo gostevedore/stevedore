@@ -20,3 +20,9 @@ type Promoter interface {
 type Renderer interface {
 	Render(name, version string, image *image.Image) (*image.Image, error)
 }
+
+// ImagesStorer interfaces defines the storage of images
+type ImagesStorer interface {
+	Store(name string, version string, parent *image.Image) error
+	Find(name string, version string) (*image.Image, error)
+}

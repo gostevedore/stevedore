@@ -7,6 +7,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	domainimage "github.com/gostevedore/stevedore/internal/core/domain/image"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration/images/graph"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration/images/image"
 	"github.com/spf13/afero"
@@ -32,7 +33,7 @@ type ImagesConfiguration struct {
 	fs            afero.Fs
 	mutex         sync.RWMutex
 	wg            sync.WaitGroup
-	store         ImagesStorer
+	store         repository.ImagesStorer
 
 	// DEPRECATEDImagesTree is replaced by Images
 	DEPRECATEDImagesTree map[string]map[string]*image.Image `yaml:"images_tree"`
@@ -40,7 +41,7 @@ type ImagesConfiguration struct {
 }
 
 // NewImagesConfiguration method create a new ImagesConfiguration struct
-func NewImagesConfiguration(fs afero.Fs, graph ImagesGraphTemplatesStorer, store ImagesStorer, compatibility Compatibilitier) *ImagesConfiguration {
+func NewImagesConfiguration(fs afero.Fs, graph ImagesGraphTemplatesStorer, store repository.ImagesStorer, compatibility Compatibilitier) *ImagesConfiguration {
 	return &ImagesConfiguration{
 		fs:            fs,
 		compatibility: compatibility,

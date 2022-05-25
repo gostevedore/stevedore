@@ -93,14 +93,10 @@ func New(fs afero.Fs, compatibility Compatibilitier) (*Configuration, error) {
 	viper.SetConfigType("yaml")
 
 	// dynamic default values
-	defaultConcurrency := int(math.Round(float64(runtime.NumCPU()) / 4))
+	defaultConcurrency := concurrencyValue()
 
 	viper.SetDefault(BuildersPathKey, filepath.Join(DefaultConfigFolder, DefaultBuildersPath))
 	viper.SetDefault(ConcurrencyKey, defaultConcurrency)
-	// viper.SetDefault(DEPRECATEDBuilderPathKey, filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultBuilderPath))
-	// viper.SetDefault(DEPRECATEDBuildOnCascadeKey, DEPRECATEDDefaultBuildOnCascade)
-	// viper.SetDefault(DEPRECATEDNumWorkerKey, DEPRECATEDDefaultNumWorker)
-	// viper.SetDefault(DEPRECATEDTreePathFileKey, filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultTreePathFile))
 	viper.SetDefault(DockerCredentialsDirKey, filepath.Join(user.HomeDir, ".config", "stevedore", DefaultDockerCredentialsDir))
 	viper.SetDefault(EnableSemanticVersionTagsKey, DefaultEnableSemanticVersionTags)
 	viper.SetDefault(ImagesPathKey, filepath.Join(DefaultConfigFolder, DefaultImagesPath))
@@ -123,16 +119,15 @@ func New(fs afero.Fs, compatibility Compatibilitier) (*Configuration, error) {
 	}
 
 	config := &Configuration{
-		BuildersPath:              viper.GetString(BuildersPathKey),
-		Concurrency:               viper.GetInt(ConcurrencyKey),
-		DEPRECATEDBuilderPath:     viper.GetString(DEPRECATEDBuilderPathKey),
-		DEPRECATEDBuildOnCascade:  viper.GetBool(DEPRECATEDBuildOnCascadeKey),
-		DEPRECATEDNumWorkers:      viper.GetInt(DEPRECATEDNumWorkerKey),
-		DEPRECATEDTreePathFile:    viper.GetString(DEPRECATEDTreePathFileKey),
-		DockerCredentialsDir:      viper.GetString(DockerCredentialsDirKey),
-		EnableSemanticVersionTags: viper.GetBool(EnableSemanticVersionTagsKey),
-		ImagesPath:                viper.GetString(ImagesPathKey),
-		// LogPathFile:                  viper.GetString(LogPathFileKey),
+		BuildersPath:                 viper.GetString(BuildersPathKey),
+		Concurrency:                  viper.GetInt(ConcurrencyKey),
+		DEPRECATEDBuilderPath:        viper.GetString(DEPRECATEDBuilderPathKey),
+		DEPRECATEDBuildOnCascade:     viper.GetBool(DEPRECATEDBuildOnCascadeKey),
+		DEPRECATEDNumWorkers:         viper.GetInt(DEPRECATEDNumWorkerKey),
+		DEPRECATEDTreePathFile:       viper.GetString(DEPRECATEDTreePathFileKey),
+		DockerCredentialsDir:         viper.GetString(DockerCredentialsDirKey),
+		EnableSemanticVersionTags:    viper.GetBool(EnableSemanticVersionTagsKey),
+		ImagesPath:                   viper.GetString(ImagesPathKey),
 		LogWriter:                    logWriter,
 		PushImages:                   viper.GetBool(PushImagesKey),
 		SemanticVersionTagsTemplates: viper.GetStringSlice(SemanticVersionTagsTemplatesKey),
@@ -329,6 +324,7 @@ func (c *Configuration) CheckCompatibility() error {
 	return nil
 }
 
+// createLogWriter return a io.Writer associated to the log file
 func createLogWriter(fs afero.Fs, path string) (io.Writer, error) {
 
 	var err error
@@ -343,4 +339,16 @@ func createLogWriter(fs afero.Fs, path string) (io.Writer, error) {
 	}
 
 	return writer, nil
+}
+
+// concurrencyValue returns the concurrency value from the configuration, in case of panic concurrency is set to 1
+func concurrencyValue() (concurrency int) {
+
+	defer func(v *int) {
+		if err := recover(); err != nil {
+			*v = 1
+		}
+	}(&concurrency)
+
+	return int(math.Round(float64(runtime.NumCPU()) / 4))
 }

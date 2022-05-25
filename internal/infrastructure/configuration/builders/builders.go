@@ -6,6 +6,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 )
@@ -15,12 +16,12 @@ type Builders struct {
 	fs       afero.Fs
 	mutex    sync.RWMutex
 	wg       sync.WaitGroup
-	store    BuildersStorer
+	store    repository.BuildersStorer
 	Builders map[string]*builder.Builder `yaml:"builders"`
 }
 
 // NewBuilders creates a new builders configuration
-func NewBuilders(fs afero.Fs, store BuildersStorer) *Builders {
+func NewBuilders(fs afero.Fs, store repository.BuildersStorer) *Builders {
 	return &Builders{
 		fs:       fs,
 		store:    store,

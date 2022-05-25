@@ -34,7 +34,7 @@ func TestViperBehavior(t *testing.T) {
 				DEPRECATEDBuilderPath:        filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultBuilderPath),
 				LogPathFile:                  DefaultLogPathFile,
 				DEPRECATEDNumWorkers:         DEPRECATEDDefaultNumWorker,
-				Concurrency:                  4,
+				Concurrency:                  concurrencyValue(),
 				PushImages:                   DefaultPushImages,
 				DEPRECATEDBuildOnCascade:     DEPRECATEDDefaultBuildOnCascade,
 				DockerCredentialsDir:         DefaultDockerCredentialsDir,
@@ -53,7 +53,7 @@ num_workers: 5
 				DEPRECATEDBuilderPath:        filepath.Join(DefaultConfigFolder, DEPRECATEDDefaultBuilderPath),
 				LogPathFile:                  "/var/log/stevedore/stevedore.log",
 				DEPRECATEDNumWorkers:         5,
-				Concurrency:                  4,
+				Concurrency:                  concurrencyValue(),
 				PushImages:                   DefaultPushImages,
 				DEPRECATEDBuildOnCascade:     DEPRECATEDDefaultBuildOnCascade,
 				DockerCredentialsDir:         DefaultDockerCredentialsDir,
@@ -126,7 +126,7 @@ func TestNew(t *testing.T) {
 				ImagesPath:                   filepath.Join(DefaultConfigFolder, DefaultImagesPath),
 				BuildersPath:                 filepath.Join(DefaultConfigFolder, DefaultBuildersPath),
 				LogPathFile:                  DefaultLogPathFile,
-				Concurrency:                  4,
+				Concurrency:                  concurrencyValue(),
 				PushImages:                   DefaultPushImages,
 				DockerCredentialsDir:         filepath.Join(user.HomeDir, ".config", "stevedore", DefaultDockerCredentialsDir),
 				EnableSemanticVersionTags:    DefaultEnableSemanticVersionTags,
@@ -302,9 +302,7 @@ semantic_version_tags_templates:
 			assert.Equal(t, test.res.SemanticVersionTagsTemplates, config.SemanticVersionTagsTemplates)
 
 		}
-
 	}
-
 }
 
 func TestReloadConfigurationFromFile(t *testing.T) {
