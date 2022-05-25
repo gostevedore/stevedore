@@ -9,6 +9,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/apenella/go-docker-builder/pkg/copy"
 	dockerclient "github.com/docker/docker/client"
+	service "github.com/gostevedore/stevedore/internal/application/promote"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
@@ -18,7 +19,6 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials"
-	service "github.com/gostevedore/stevedore/internal/service/promote"
 	"github.com/spf13/afero"
 )
 

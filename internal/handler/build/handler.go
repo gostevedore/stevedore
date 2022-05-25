@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/service/build"
-	"github.com/gostevedore/stevedore/internal/service/build/plan"
+	"github.com/gostevedore/stevedore/internal/application/build"
+	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
 )
 
 const AssignmentTokenSymbol = '='

@@ -1,13 +1,13 @@
 package build
 
 import (
-	"github.com/gostevedore/stevedore/internal/application/build/command"
-	"github.com/gostevedore/stevedore/internal/application/build/plan"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
+	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/command"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/job"
 )
 

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/gostevedore/stevedore/internal/service/build/command"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/command"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -8,6 +8,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	godockerbuild "github.com/apenella/go-docker-builder/pkg/build"
 	dockerclient "github.com/docker/docker/client"
+	service "github.com/gostevedore/stevedore/internal/application/build"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	buildhandler "github.com/gostevedore/stevedore/internal/handler/build"
@@ -27,7 +28,9 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/graph"
 	"github.com/gostevedore/stevedore/internal/infrastructure/now"
+	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
 	"github.com/gostevedore/stevedore/internal/infrastructure/render"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/command"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/dispatch"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/job"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/worker"
@@ -35,9 +38,6 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
-	service "github.com/gostevedore/stevedore/internal/service/build"
-	"github.com/gostevedore/stevedore/internal/service/build/command"
-	"github.com/gostevedore/stevedore/internal/service/build/plan"
 	"github.com/spf13/afero"
 )
 

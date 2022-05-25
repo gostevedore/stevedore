@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/service/promote"
+	"github.com/gostevedore/stevedore/internal/application/promote"
 	"github.com/stretchr/testify/assert"
 )
 

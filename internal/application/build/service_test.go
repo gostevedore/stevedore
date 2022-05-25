@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/application/build/command"
-	"github.com/gostevedore/stevedore/internal/application/build/plan"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
@@ -17,6 +15,8 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/mock"
+	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
+	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/command"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/dispatch"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/job"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/worker"

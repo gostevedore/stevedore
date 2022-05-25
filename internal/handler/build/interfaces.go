@@ -3,10 +3,10 @@ package build
 import (
 	"context"
 
+	"github.com/gostevedore/stevedore/internal/application/build"
+	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/dispatch"
-	"github.com/gostevedore/stevedore/internal/service/build"
-	"github.com/gostevedore/stevedore/internal/service/build/plan"
 )
 
 // PlanFactorier interface defines the execution plan
