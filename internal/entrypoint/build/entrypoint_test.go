@@ -7,7 +7,6 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
-	"github.com/gostevedore/stevedore/internal/credentials"
 	handler "github.com/gostevedore/stevedore/internal/handler/build"
 	"github.com/gostevedore/stevedore/internal/infrastructure/compatibility"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
@@ -24,6 +23,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/job"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/gostevedore/stevedore/internal/service/build/command"
 	"github.com/gostevedore/stevedore/internal/service/build/plan"

@@ -10,7 +10,6 @@ import (
 	"github.com/apenella/go-docker-builder/pkg/copy"
 	dockerclient "github.com/docker/docker/client"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
-	"github.com/gostevedore/stevedore/internal/credentials"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker"
@@ -18,6 +17,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials"
 	service "github.com/gostevedore/stevedore/internal/service/promote"
 	"github.com/spf13/afero"
 )

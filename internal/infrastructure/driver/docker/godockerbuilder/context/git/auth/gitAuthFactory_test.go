@@ -9,7 +9,7 @@ import (
 	gitcontextsshagentauth "github.com/apenella/go-docker-builder/pkg/auth/git/sshagent"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
-	credentialsstore "github.com/gostevedore/stevedore/internal/credentials"
+	credentialsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials"
 	"github.com/stretchr/testify/assert"
 )
 

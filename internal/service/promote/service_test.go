@@ -8,12 +8,12 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
-	credentialsstore "github.com/gostevedore/stevedore/internal/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/mock"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
+	credentialsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials"
 	"github.com/stretchr/testify/assert"
 )
 
