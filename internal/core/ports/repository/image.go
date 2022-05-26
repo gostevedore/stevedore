@@ -23,6 +23,18 @@ type Renderer interface {
 
 // ImagesStorer interfaces defines the storage of images
 type ImagesStorer interface {
-	Store(name string, version string, parent *image.Image) error
+	ImagesStorerWriter
+	ImagesStorerReader
+}
+
+type ImagesStorerWriter interface {
+	Store(name string, version string, image *image.Image) error
+}
+
+// ImagesStorer interfaces defines the storage of images
+type ImagesStorerReader interface {
+	List() ([]*image.Image, error)
+	FindByName(name string) ([]*image.Image, error)
 	Find(name string, version string) (*image.Image, error)
+	FindGuaranteed(findName, findVersion, imageName, imageVersion string) (*image.Image, error)
 }

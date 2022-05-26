@@ -1,13 +1,15 @@
 package builders
 
+import "github.com/gostevedore/stevedore/internal/core/ports/repository"
+
 // Output is an output for the builders
 type Output struct {
-	BuildersFilterer
-	Write BuildersPrinter
+	repository.BuildersFilterer
+	Write repository.BuildersPrinter
 }
 
 // NewOutput creates a new Output
-func NewOutput(write BuildersPrinter, builders BuildersFilterer) *Output {
+func NewOutput(write repository.BuildersPrinter, builders repository.BuildersFilterer) *Output {
 	return &Output{
 		builders, write,
 	}

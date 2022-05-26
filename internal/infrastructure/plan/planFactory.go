@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
 
 const (
@@ -15,11 +16,11 @@ const (
 
 // PlanFactory is a factory to create Planner
 type PlanFactory struct {
-	imagesStore ImagesStorer
+	imagesStore repository.ImagesStorerReader
 }
 
 // NewPlanFactory creates a new PlanFactory
-func NewPlanFactory(store ImagesStorer) *PlanFactory {
+func NewPlanFactory(store repository.ImagesStorerReader) *PlanFactory {
 	return &PlanFactory{
 		imagesStore: store,
 	}

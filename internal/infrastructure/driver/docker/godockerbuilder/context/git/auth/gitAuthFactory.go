@@ -6,15 +6,16 @@ import (
 	gitcontextkeyauth "github.com/apenella/go-docker-builder/pkg/auth/git/key"
 	gitcontextsshagentauth "github.com/apenella/go-docker-builder/pkg/auth/git/sshagent"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
 
 // GitAuthFactory is a factory for creating GitAuther
 type GitAuthFactory struct {
-	Credentials CredentialsStorer
+	Credentials repository.CredentialsStorer
 }
 
 // NewGitAuthFactory creates a new GitAuthFactory
-func NewGitAuthFactory(credentials CredentialsStorer) *GitAuthFactory {
+func NewGitAuthFactory(credentials repository.CredentialsStorer) *GitAuthFactory {
 	return &GitAuthFactory{
 		Credentials: credentials,
 	}

@@ -3,6 +3,7 @@ package plan
 import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
 
 // SinglePlan is a build plan
@@ -11,7 +12,7 @@ type SinglePlan struct {
 }
 
 // NewSinglePlan returns a new SinglePlan
-func NewSinglePlan(imagesStorer ImagesStorer) *SinglePlan {
+func NewSinglePlan(imagesStorer repository.ImagesStorerReader) *SinglePlan {
 	return &SinglePlan{
 		BasePlan{
 			imagesStorer,

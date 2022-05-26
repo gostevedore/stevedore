@@ -5,11 +5,12 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
 
 // BasePlan is the base plan which all plans should extend
 type BasePlan struct {
-	images ImagesStorer
+	images repository.ImagesStorerReader
 }
 
 func (p *BasePlan) findImages(name string, versions []string) ([]*image.Image, error) {

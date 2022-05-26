@@ -3,6 +3,7 @@ package plan
 import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
 
 // CascadePlan is the plan used to cascade build
@@ -12,7 +13,7 @@ type CascadePlan struct {
 }
 
 // NewCascadePlan creates a new CascadePlan
-func NewCascadePlan(imagesStorer ImagesStorer, depth int) *CascadePlan {
+func NewCascadePlan(imagesStorer repository.ImagesStorerReader, depth int) *CascadePlan {
 	return &CascadePlan{
 		BasePlan{
 			imagesStorer,
