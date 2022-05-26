@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
@@ -441,7 +440,7 @@ func TestToArray(t *testing.T) {
 			},
 			res: [][]string{
 				{BuildersPathKey, filepath.Join(DefaultConfigFolder, DefaultBuildersPath)},
-				{ConcurrencyKey, fmt.Sprintf("%d", runtime.NumCPU()/4)},
+				{ConcurrencyKey, fmt.Sprintf("%d", concurrencyValue())},
 				{DockerCredentialsDirKey, filepath.Join("$HOME", ".config", "stevedore", DefaultDockerCredentialsDir)},
 				{EnableSemanticVersionTagsKey, fmt.Sprint(DefaultEnableSemanticVersionTags)},
 				{ImagesPathKey, filepath.Join(DefaultConfigFolder, DefaultImagesPath)},

@@ -350,5 +350,10 @@ func concurrencyValue() (concurrency int) {
 		}
 	}(&concurrency)
 
-	return int(math.Round(float64(runtime.NumCPU()) / 4))
+	concurrency = int(math.Round(float64(runtime.NumCPU()) / 4))
+	if concurrency < 1 {
+		concurrency = 1
+	}
+
+	return
 }
