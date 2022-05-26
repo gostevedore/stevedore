@@ -1,14 +1,8 @@
 package promote
 
 import (
-	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
-
-// CredentialsStorer
-type CredentialsStorer interface {
-	Get(id string) (*credentials.UserPasswordAuth, error)
-}
 
 // Outputter
 type Outputter interface {

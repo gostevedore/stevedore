@@ -53,28 +53,6 @@ func (s *CredentialsStore) LoadCredentials(path string) error {
 	} else {
 		return s.LoadCredentialsFromFile(path)
 	}
-
-	// _, err = os.Stat(dir)
-	// if err == nil {
-
-	// 	files, err := ioutil.ReadDir(dir)
-	// 	if err != nil {
-	// 		return errors.New(errContext, fmt.Sprintf("Error reading directory '%s'", dir), err)
-	// 	}
-
-	// 	for _, file := range files {
-	// 		userpass := &UserPasswordAuth{}
-	// 		if file.Mode().IsRegular() {
-	// 			filename := file.Name()
-	// 			err := data.LoadJSONFile(strings.Join([]string{dir, filename}, string(os.PathSeparator)), userpass)
-	// 			if err == nil {
-	// 				AddCredential(filename, userpass)
-	// 			}
-	// 		}
-	// 	}
-	// }
-
-	// return nil
 }
 
 func (s *CredentialsStore) LoadCredentialsFromDir(path string) error {

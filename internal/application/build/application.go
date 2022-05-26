@@ -22,13 +22,13 @@ type OptionsFunc func(*Application)
 
 // Application is an application service to build docker images
 type Application struct {
-	builders       BuildersStorer
+	builders       repository.BuildersStorer
 	commandFactory BuildCommandFactorier
 	driverFactory  DriverFactorier
 	jobFactory     JobFactorier
 	dispatch       Dispatcher
 	semver         Semverser
-	credentials    CredentialsStorer
+	credentials    repository.CredentialsStorer
 }
 
 // NewApplication creates a Service to build docker images
@@ -41,7 +41,7 @@ func NewApplication(options ...OptionsFunc) *Application {
 }
 
 // WithBuilders sets the builders storer
-func WithBuilders(builders BuildersStorer) OptionsFunc {
+func WithBuilders(builders repository.BuildersStorer) OptionsFunc {
 	return func(a *Application) {
 		a.builders = builders
 	}
@@ -82,7 +82,7 @@ func WithSemver(semver Semverser) OptionsFunc {
 	}
 }
 
-func WithCredentials(credentials CredentialsStorer) OptionsFunc {
+func WithCredentials(credentials repository.CredentialsStorer) OptionsFunc {
 	return func(a *Application) {
 		a.credentials = credentials
 	}

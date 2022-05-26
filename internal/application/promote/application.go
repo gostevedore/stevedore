@@ -14,7 +14,7 @@ type OptionsFunc func(*Application)
 
 // Application is the application used to promote images
 type Application struct {
-	credentials CredentialsStorer
+	credentials repository.CredentialsStorer
 	factory     PromoteFactorier
 	semver      Semverser
 }
@@ -28,7 +28,7 @@ func NewApplication(options ...OptionsFunc) *Application {
 }
 
 // WitCredentials sets credentials for the service
-func WithCredentials(c CredentialsStorer) OptionsFunc {
+func WithCredentials(c repository.CredentialsStorer) OptionsFunc {
 	return func(a *Application) {
 		a.credentials = c
 	}

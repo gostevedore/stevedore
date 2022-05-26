@@ -1,8 +1,6 @@
 package build
 
 import (
-	"github.com/gostevedore/stevedore/internal/core/domain/builder"
-	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
@@ -21,11 +19,6 @@ type PlanSteper interface {
 	Image() *image.Image
 	Notify()
 	Wait()
-}
-
-// BuildersStorer interface defines the storage of builders
-type BuildersStorer interface {
-	Find(name string) (*builder.Builder, error)
 }
 
 // BuildCommandFactorier interface defines the factory of build commands
@@ -54,7 +47,7 @@ type Semverser interface {
 	GenerateSemverList(version []string, tmpls []string) ([]string, error)
 }
 
-// CredentialsStorer
-type CredentialsStorer interface {
-	Get(id string) (*credentials.UserPasswordAuth, error)
-}
+// // CredentialsStorer
+// type CredentialsStorer interface {
+// 	Get(id string) (*credentials.UserPasswordAuth, error)
+// }
