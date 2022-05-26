@@ -4,16 +4,16 @@ import (
 	"context"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/service/promote"
+	"github.com/gostevedore/stevedore/internal/application/promote"
 )
 
 type Handler struct {
-	service ServicePromoter
+	app PromoteApplication
 }
 
-func NewHandler(p ServicePromoter) *Handler {
+func NewHandler(a PromoteApplication) *Handler {
 	return &Handler{
-		service: p,
+		app: a,
 	}
 }
 
@@ -25,7 +25,7 @@ func (h *Handler) Handler(ctx context.Context, options *Options) error {
 		return errors.New(errContext, "Source images name must be provided")
 	}
 
-	serviceOptions := &promote.ServiceOptions{
+	serviceOptions := &promote.Options{
 		SourceImageName:       options.SourceImageName,
 		RemoveTargetImageTags: options.RemoveTargetImageTags,
 	}
@@ -53,7 +53,7 @@ func (h *Handler) Handler(ctx context.Context, options *Options) error {
 	serviceOptions.RemoteSourceImage = options.RemoteSourceImage
 	serviceOptions.SemanticVersionTagsTemplates = options.SemanticVersionTagsTemplates
 
-	err := h.service.Promote(ctx, serviceOptions)
+	err := h.app.Promote(ctx, serviceOptions)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}

@@ -3,8 +3,8 @@ package build
 import (
 	"context"
 
-	"github.com/gostevedore/stevedore/internal/configuration"
 	handler "github.com/gostevedore/stevedore/internal/handler/build"
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	"github.com/stretchr/testify/mock"
 )
 

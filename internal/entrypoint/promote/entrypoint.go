@@ -9,15 +9,16 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/apenella/go-docker-builder/pkg/copy"
 	dockerclient "github.com/docker/docker/client"
-	"github.com/gostevedore/stevedore/internal/configuration"
-	"github.com/gostevedore/stevedore/internal/credentials"
+	application "github.com/gostevedore/stevedore/internal/application/promote"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
-	"github.com/gostevedore/stevedore/internal/promote"
-	repodocker "github.com/gostevedore/stevedore/internal/promote/docker"
-	repodockercopy "github.com/gostevedore/stevedore/internal/promote/docker/promoter"
-	repodryrun "github.com/gostevedore/stevedore/internal/promote/dryrun"
-	"github.com/gostevedore/stevedore/internal/semver"
-	service "github.com/gostevedore/stevedore/internal/service/promote"
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
+	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker"
+	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker/godockerbuilder"
+	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
+	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
+	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials"
 	"github.com/spf13/afero"
 )
 
@@ -62,7 +63,7 @@ func (e *Entrypoint) Options(opts ...OptionsFunc) {
 // Execute executes the entrypoint
 func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, handlerOptions *handler.Options) error {
 	var err error
-	var promoteRepoFactory promote.PromoteFactory
+	var promoteRepoFactory factory.PromoteFactory
 	var credentialsStore *credentials.CredentialsStore
 	var semverGenerator *semver.SemVerGenerator
 	var options *handler.Options
@@ -89,10 +90,10 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 		return errors.New(errContext, "", err)
 	}
 
-	promoteService := service.NewService(
-		service.WithPromoteFactory(promoteRepoFactory),
-		service.WithCredentials(credentialsStore),
-		service.WithSemver(semverGenerator),
+	promoteService := application.NewApplication(
+		application.WithPromoteFactory(promoteRepoFactory),
+		application.WithCredentials(credentialsStore),
+		application.WithSemver(semverGenerator),
 	)
 
 	promoteHandler := handler.NewHandler(promoteService)
@@ -167,7 +168,7 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.Configuration) (
 	return credentialsStore, nil
 }
 
-func (e *Entrypoint) createPromoteFactory() (promote.PromoteFactory, error) {
+func (e *Entrypoint) createPromoteFactory() (factory.PromoteFactory, error) {
 
 	errContext := "(Entrypoint::createPromoteFactory)"
 
@@ -177,15 +178,15 @@ func (e *Entrypoint) createPromoteFactory() (promote.PromoteFactory, error) {
 	}
 
 	copyCmd := copy.NewDockerImageCopyCmd(dockerClient)
-	copyCmdFacade := repodockercopy.NewDockerCopy(copyCmd)
-	promoteRepoDocker := repodocker.NewDockerPromote(copyCmdFacade, os.Stdout)
-	promoteRepoDryRun := repodryrun.NewDryRunPromote(copyCmdFacade, os.Stdout)
-	promoteRepoFactory := promote.NewPromoteFactory()
-	err = promoteRepoFactory.Register(promote.DockerPromoterName, promoteRepoDocker)
+	copyCmdFacade := godockerbuilder.NewDockerCopy(copyCmd)
+	promoteRepoDocker := docker.NewDockerPromote(copyCmdFacade, os.Stdout)
+	promoteRepoDryRun := dryrun.NewDryRunPromote(os.Stdout)
+	promoteRepoFactory := factory.NewPromoteFactory()
+	err = promoteRepoFactory.Register(image.DockerPromoterName, promoteRepoDocker)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
-	err = promoteRepoFactory.Register(promote.DryRunPromoterName, promoteRepoDryRun)
+	err = promoteRepoFactory.Register(image.DryRunPromoterName, promoteRepoDryRun)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
