@@ -13,6 +13,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command/middleware"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/completion"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/promote"
+	"github.com/gostevedore/stevedore/internal/infrastructure/cli/version"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -47,7 +48,8 @@ func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore Compatibili
 	stevedoreCmd := &cobra.Command{
 		Use:   "stevedore",
 		Short: "Stevedore, the docker images factory",
-		Long:  `Stevedore is a useful tool when you need to manage a bunch of Docker images in a standardized way, such on a microservices architecture. It lets you to define how to build your Docker images and their parent-child relationship. It builds automatically the children images when parent ones are done. And many other features which improve the Docker image's building process. Is not a Dockerfile's alternative, but how to use them to build your images`,
+		Long: `Stevedore is a tool to manage bunches of Docker images builds in just one command. It improves the way you build and promote your Docker images when you have a lot of them. Is not a Dockerfile's alternative, but how to use them to build your images.
+You just need to define how each image should be built and the relationship among the images. At this moment, everything is ready to build Docker images: build a single image, build all versions of the same images, build an image and all its children.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
@@ -89,6 +91,8 @@ func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore Compatibili
 	command.AddCommand(middleware.Command(ctx, promote.NewCommand(ctx, compatibilityStore, config, promoteEntrypoint), compatibilityReport, log, console))
 
 	command.AddCommand(middleware.Command(ctx, completion.NewCommand(ctx, config, command, console), compatibilityReport, log, console))
+
+	command.AddCommand(middleware.Command(ctx, version.NewCommand(ctx, console), compatibilityReport, log, console))
 
 	// command.AddCommand(middleware.Middleware(create.NewCommand(ctx, config)))
 	// command.AddCommand(middleware.Middleware(get.NewCommand(ctx, config)))

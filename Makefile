@@ -36,7 +36,7 @@ CHECKSUM_EXT=md5
 # Setup the -ldflags option for go build here, interpolate the variable values
 #  -s: Omit the symbol table and debug information.
 #  -w: Omit the DWARF symbol table
-LDFLAGS=-ldflags "-s -w -X '${PROJECT}/internal/release.BuildDate=${BUILD_DATE}' -X ${PROJECT}/internal/release.Version=${VERSION} -X ${PROJECT}/internal/release.Commit=${COMMIT}"
+LDFLAGS=-ldflags "-s -w -X '${PROJECT}/internal/core/domain/release.BuildDate=${BUILD_DATE}' -X ${PROJECT}/internal/core/domain/release.Version=${VERSION} -X ${PROJECT}/internal/release.Commit=${COMMIT}"
 
 #
 # dafault target
