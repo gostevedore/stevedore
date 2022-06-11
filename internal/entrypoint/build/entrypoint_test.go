@@ -25,7 +25,8 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/job"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
-	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials"
+	credentialsstorelocal "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
+	credentialsstoremock "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/mock"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -326,7 +327,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 		desc       string
 		entrypoint *Entrypoint
 		conf       *configuration.Configuration
-		res        *credentials.CredentialsStore
+		res        repository.CredentialsStorer
 		err        error
 	}{
 		{
@@ -347,7 +348,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 				WithFileSystem(testFs),
 			),
 			conf: &configuration.Configuration{},
-			err:  errors.New(errContext, "To create the credentials store, credentials path must be provided in configuration"),
+			err:  errors.New(errContext, "\n\tDocker credentials directory is not defined on configuration"),
 		},
 		{
 			desc: "Testing create credentials store",
@@ -357,7 +358,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 			conf: &configuration.Configuration{
 				DockerCredentialsDir: baseDir,
 			},
-			res: &credentials.CredentialsStore{},
+			res: &credentialsstorelocal.LocalStore{},
 			err: &errors.Error{},
 		},
 	}
@@ -741,7 +742,7 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 	tests := []struct {
 		desc        string
 		entrypoint  *Entrypoint
-		credentials *credentials.CredentialsStore
+		credentials repository.CredentialsStorer
 		options     *Options
 		err         error
 		assertions  func(t *testing.T, driverFactory factory.BuildDriverFactory)
@@ -756,21 +757,21 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 		{
 			desc:        "Testing create build driver factory with empty options",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentials.NewCredentialsStore(afero.NewMemMapFs()),
+			credentials: credentialsstoremock.NewMockStore(),
 			options:     nil,
 			err:         errors.New(errContext, "Register drivers requires options"),
 		},
 		{
 			desc:        "Testing create build driver factory with nil writer",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentials.NewCredentialsStore(afero.NewMemMapFs()),
+			credentials: credentialsstoremock.NewMockStore(),
 			options:     &Options{},
 			err:         errors.New(errContext, "Register drivers requires a writer"),
 		},
 		{
 			desc:        "Testing create build driver factory",
 			entrypoint:  NewEntrypoint(WithWriter(ioutil.Discard)),
-			credentials: credentials.NewCredentialsStore(afero.NewMemMapFs()),
+			credentials: credentialsstoremock.NewMockStore(),
 			options:     &Options{},
 			err:         &errors.Error{},
 			assertions: func(t *testing.T, f factory.BuildDriverFactory) {
@@ -915,7 +916,7 @@ func TestCreateDockerDriver(t *testing.T) {
 	tests := []struct {
 		desc        string
 		entrypoint  *Entrypoint
-		credentials *credentials.CredentialsStore
+		credentials repository.CredentialsStorer
 		options     *Options
 		res         repository.BuildDriverer
 		err         error
@@ -929,14 +930,14 @@ func TestCreateDockerDriver(t *testing.T) {
 		{
 			desc:        "Testing error when creating docker driver with empty options",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentials.NewCredentialsStore(afero.NewMemMapFs()),
+			credentials: credentialsstoremock.NewMockStore(),
 			options:     nil,
 			err:         errors.New(errContext, "Entrypoint options are required to create docker driver"),
 		},
 		{
 			desc:        "Testing create docker driver",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentials.NewCredentialsStore(afero.NewMemMapFs()),
+			credentials: credentialsstoremock.NewMockStore(),
 			options:     &Options{},
 			res:         &docker.DockerDriver{},
 			err:         &errors.Error{},

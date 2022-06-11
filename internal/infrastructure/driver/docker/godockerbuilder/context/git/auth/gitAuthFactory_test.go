@@ -8,19 +8,22 @@ import (
 	gitcontextkeyauth "github.com/apenella/go-docker-builder/pkg/auth/git/key"
 	gitcontextsshagentauth "github.com/apenella/go-docker-builder/pkg/auth/git/sshagent"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
-	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
-	credentialsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials"
+	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
+	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
+	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/keyfile"
+	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/sshagent"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGenerateAuthMethod(t *testing.T) {
 	errContext := "(GitAuthFactory::GenerateAuthMethod)"
 	tests := []struct {
-		desc    string
-		options *builder.DockerDriverGitContextAuthOptions
-		factory *GitAuthFactory
-		res     GitAuther
-		err     error
+		desc              string
+		options           *builder.DockerDriverGitContextAuthOptions
+		factory           *GitAuthFactory
+		prepareAssertFunc func(*GitAuthFactory)
+		res               GitAuther
+		err               error
 	}{
 		{
 			desc:    "Testing error when options is nil",
@@ -35,7 +38,9 @@ func TestGenerateAuthMethod(t *testing.T) {
 				Username: "user",
 				Password: "pass",
 			},
-			factory: &GitAuthFactory{},
+			factory: NewGitAuthFactory(
+				factory.NewMockCredentialsFactory(),
+			),
 			res: &gitcontextbasicauth.BasicAuth{
 				Username: "user",
 				Password: "pass",
@@ -49,7 +54,9 @@ func TestGenerateAuthMethod(t *testing.T) {
 				PrivateKeyPassword: "keypass",
 				GitSSHUser:         "user",
 			},
-			factory: &GitAuthFactory{},
+			factory: NewGitAuthFactory(
+				factory.NewMockCredentialsFactory(),
+			),
 			res: &gitcontextkeyauth.KeyAuth{
 				PkFile:     "keyfile",
 				PkPassword: "keypass",
@@ -62,7 +69,9 @@ func TestGenerateAuthMethod(t *testing.T) {
 			options: &builder.DockerDriverGitContextAuthOptions{
 				GitSSHUser: "user",
 			},
-			factory: &GitAuthFactory{},
+			factory: NewGitAuthFactory(
+				factory.NewMockCredentialsFactory(),
+			),
 			res: &gitcontextsshagentauth.SSHAgentAuth{
 				GitSSHUser: "user",
 			},
@@ -73,21 +82,23 @@ func TestGenerateAuthMethod(t *testing.T) {
 			options: &builder.DockerDriverGitContextAuthOptions{
 				CredentialsID: "test-credentials",
 			},
-			factory: &GitAuthFactory{
-				Credentials: &credentialsstore.CredentialsStore{
-					Store: map[string]*credentials.UserPasswordAuth{
-						"1c88d75d861f84fd80b43bb117b2fcde": {
-							Username: "user",
-							Password: "pass",
-						},
-					},
-				},
-			},
+			factory: NewGitAuthFactory(
+				factory.NewMockCredentialsFactory(),
+			),
 			res: &gitcontextbasicauth.BasicAuth{
 				Username: "user",
 				Password: "pass",
 			},
 			err: &errors.Error{},
+			prepareAssertFunc: func(f *GitAuthFactory) {
+				f.Credentials.(*factory.MockCredentialsFactory).On("Get", "test-credentials").Return(
+					&basic.BasicAuthMethod{
+						Username: "user",
+						Password: "pass",
+					},
+					nil,
+				)
+			},
 		},
 		{
 			desc: "Testing error when credentials store is nil and is passed a credentials id",
@@ -107,6 +118,12 @@ func TestGenerateAuthMethod(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.factory)
+			}
+
 			auth, err := test.factory.GenerateAuthMethod(test.options)
 			if err != nil && assert.Error(t, err) {
 				assert.Equal(t, test.err, err)
@@ -115,5 +132,115 @@ func TestGenerateAuthMethod(t *testing.T) {
 			}
 		})
 	}
-
 }
+
+func TestGenerateAuthMethodFromCredentials(t *testing.T) {
+	tests := []struct {
+		desc              string
+		credentialsID     string
+		factory           *GitAuthFactory
+		res               GitAuther
+		err               error
+		prepareAssertFunc func(*GitAuthFactory)
+	}{
+		{
+			desc: "Testing generate basic auth authorization method",
+			factory: NewGitAuthFactory(
+				factory.NewMockCredentialsFactory(),
+			),
+			credentialsID: "registry.test",
+			res:           &gitcontextbasicauth.BasicAuth{},
+			err:           &errors.Error{},
+			prepareAssertFunc: func(f *GitAuthFactory) {
+				f.Credentials.(*factory.MockCredentialsFactory).On("Get", "registry.test").Return(
+					&basic.BasicAuthMethod{
+						Username: "user",
+						Password: "pass",
+					},
+					nil,
+				)
+			},
+		},
+		{
+			desc: "Testing generate basic auth authorization method when either user nor password exists",
+			factory: NewGitAuthFactory(
+				factory.NewMockCredentialsFactory(),
+			),
+			credentialsID: "registry.test",
+			res:           nil,
+			err:           &errors.Error{},
+			prepareAssertFunc: func(f *GitAuthFactory) {
+				f.Credentials.(*factory.MockCredentialsFactory).On("Get", "registry.test").Return(
+					&basic.BasicAuthMethod{},
+					nil,
+				)
+			},
+		},
+		{
+			desc: "Testing generate key file auth authorization method",
+			factory: NewGitAuthFactory(
+				factory.NewMockCredentialsFactory(),
+			),
+			credentialsID: "registry.test",
+			res:           &gitcontextkeyauth.KeyAuth{},
+			err:           &errors.Error{},
+			prepareAssertFunc: func(f *GitAuthFactory) {
+				f.Credentials.(*factory.MockCredentialsFactory).On("Get", "registry.test").Return(
+					&keyfile.KeyFileAuthMethod{
+						PrivateKeyFile: "keyfile",
+					},
+					nil,
+				)
+			},
+		},
+		{
+			desc: "Testing generate key file auth authorization method without private key file",
+			factory: NewGitAuthFactory(
+				factory.NewMockCredentialsFactory(),
+			),
+			credentialsID: "registry.test",
+			res:           nil,
+			err:           &errors.Error{},
+			prepareAssertFunc: func(f *GitAuthFactory) {
+				f.Credentials.(*factory.MockCredentialsFactory).On("Get", "registry.test").Return(
+					&keyfile.KeyFileAuthMethod{},
+					nil,
+				)
+			},
+		},
+		{
+			desc: "Testing generate ssh-agent (default) auth authorization method",
+			factory: NewGitAuthFactory(
+				factory.NewMockCredentialsFactory(),
+			),
+			credentialsID: "registry.test",
+			res:           &gitcontextsshagentauth.SSHAgentAuth{},
+			err:           &errors.Error{},
+			prepareAssertFunc: func(f *GitAuthFactory) {
+				f.Credentials.(*factory.MockCredentialsFactory).On("Get", "registry.test").Return(
+					&sshagent.SSHAgentAuthMethod{},
+					nil,
+				)
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.factory)
+			}
+
+			auth, err := test.factory.generateAuthMethodFromCredentials(test.credentialsID)
+			if err != nil && assert.Error(t, err) {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				assert.IsType(t, test.res, auth)
+			}
+		})
+	}
+}
+
+func TestGenerateAuthMethodFromOptions(t *testing.T) {}

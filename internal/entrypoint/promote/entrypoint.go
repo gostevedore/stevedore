@@ -10,15 +10,20 @@ import (
 	"github.com/apenella/go-docker-builder/pkg/copy"
 	dockerclient "github.com/docker/docker/client"
 	application "github.com/gostevedore/stevedore/internal/application/promote"
+	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
+	credentialsproviderbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/basic"
+	credentialsproviderfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker/godockerbuilder"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
-	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials"
+	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/factory"
+	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/spf13/afero"
 )
 
@@ -64,7 +69,7 @@ func (e *Entrypoint) Options(opts ...OptionsFunc) {
 func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, handlerOptions *handler.Options) error {
 	var err error
 	var promoteRepoFactory factory.PromoteFactory
-	var credentialsStore *credentials.CredentialsStore
+	var credentialsStore repository.CredentialsStorer
 	var semverGenerator *semver.SemVerGenerator
 	var options *handler.Options
 
@@ -144,7 +149,7 @@ func (e *Entrypoint) prepareHandlerOptions(args []string, conf *configuration.Co
 	return options, nil
 }
 
-func (e *Entrypoint) createCredentialsStore(conf *configuration.Configuration) (*credentials.CredentialsStore, error) {
+func (e *Entrypoint) createCredentialsStore(conf *configuration.Configuration) (repository.CredentialsStorer, error) {
 	errContext := "(Entrypoint::createCredentialsStore)"
 
 	if e.fs == nil {
@@ -159,8 +164,15 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.Configuration) (
 		return nil, errors.New(errContext, "Docker credentials path must be provided in the configuration")
 	}
 
-	credentialsStore := credentials.NewCredentialsStore(e.fs)
-	err := credentialsStore.LoadCredentials(conf.DockerCredentialsDir)
+	authproviderfactory := credentialsproviderfactory.NewAuthProviderFactory()
+	authproviderfactory.Register(credentials.BasicAuthProvider, credentialsproviderbasic.NewBasicAuthProvider())
+	//authproviderfactory.Register(credentials.AWSECRSAuthProvider,nil)
+
+	factory := credentialsfactory.NewCredentialsStoreFactory(conf)
+	localstore := credentialslocalstore.NewLocalStore(e.fs, authproviderfactory)
+	factory.Register(credentials.LocalStore, localstore)
+
+	credentialsStore, err := factory.Get()
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}

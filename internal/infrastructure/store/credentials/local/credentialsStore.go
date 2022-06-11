@@ -1,4 +1,4 @@
-package credentials
+package local
 
 import (
 	"crypto/md5"
@@ -34,10 +34,6 @@ func (s *CredentialsStore) LoadCredentials(path string) error {
 	var isDir bool
 
 	errContext := "(credentials::LoadCredentials)"
-
-	// if s == nil {
-	// 	return errors.New(errContext, "Unable to load credentials because store is not initialized")
-	// }
 
 	if s.Store == nil {
 		s.Store = make(map[string]*credentials.UserPasswordAuth)
