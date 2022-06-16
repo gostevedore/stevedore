@@ -8,9 +8,9 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
-	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
+	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
 	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/job"
@@ -28,7 +28,7 @@ type Application struct {
 	jobFactory     JobFactorier
 	dispatch       Dispatcher
 	semver         Semverser
-	credentials    repository.CredentialsStorer
+	credentials    repository.CredentialsFactorier
 }
 
 // NewApplication creates a Service to build docker images
@@ -82,7 +82,7 @@ func WithSemver(semver Semverser) OptionsFunc {
 	}
 }
 
-func WithCredentials(credentials repository.CredentialsStorer) OptionsFunc {
+func WithCredentials(credentials repository.CredentialsFactorier) OptionsFunc {
 	return func(a *Application) {
 		a.credentials = credentials
 	}
@@ -280,23 +280,33 @@ func (a *Application) build(ctx context.Context, i *image.Image, options *Option
 	}
 
 	if i.Parent != nil {
-		pullAuth, err := a.getCredentials(i.Parent.RegistryHost)
+		auth, err := a.getCredentials(i.Parent.RegistryHost)
 		if err != nil {
 			return errors.New(errContext, "", err)
 		}
 
-		if pullAuth != nil {
-			// TODO allow other auth methods than user-pass
+		if auth != nil {
+			pullAuth, isBasicAuth := auth.(*authmethodbasic.BasicAuthMethod)
+			if !isBasicAuth {
+				return errors.New(errContext, fmt.Sprintf("Invalid credentials method for '%s'. Found '%s' when is expected basic auth method", i.Parent.RegistryHost, auth.Name()))
+			}
+
 			buildOptions.PullAuthUsername = pullAuth.Username
 			buildOptions.PullAuthPassword = pullAuth.Password
 		}
 	}
 
-	pushAuth, err := a.getCredentials(i.RegistryHost)
+	auth, err := a.getCredentials(i.RegistryHost)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
-	if pushAuth != nil {
+
+	if auth != nil {
+		pushAuth, isBasicAuth := auth.(*authmethodbasic.BasicAuthMethod)
+		if !isBasicAuth {
+			return errors.New(errContext, fmt.Sprintf("Invalid credentials method for '%s'. Found '%s' when is expected basic auth method", i.RegistryHost, auth.Name()))
+		}
+
 		buildOptions.PushAuthUsername = pushAuth.Username
 		buildOptions.PushAuthPassword = pushAuth.Password
 	}
@@ -384,7 +394,7 @@ func (a *Application) command(driver repository.BuildDriverer, i *image.Image, o
 	return a.commandFactory.New(driver, i, options), nil
 }
 
-func (a *Application) getCredentials(registry string) (*credentials.UserPasswordAuth, error) {
+func (a *Application) getCredentials(registry string) (repository.AuthMethodReader, error) {
 
 	errContext := "(build::getCredentials)"
 
