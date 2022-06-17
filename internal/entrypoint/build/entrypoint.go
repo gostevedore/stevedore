@@ -18,8 +18,11 @@ import (
 	buildersconfiguration "github.com/gostevedore/stevedore/internal/infrastructure/configuration/builders"
 	imagesconfiguration "github.com/gostevedore/stevedore/internal/infrastructure/configuration/images"
 	imagesgraphtemplate "github.com/gostevedore/stevedore/internal/infrastructure/configuration/images/graph"
-	credentialsproviderbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/basic"
-	credentialsproviderfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/factory"
+	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
+	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
+	authmethodkeyfile "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/keyfile"
+	authmethodsshagent "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/sshagent"
+	authproviderbadge "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/badge"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible/goansible"
 	driverdefault "github.com/gostevedore/stevedore/internal/infrastructure/driver/default"
@@ -39,7 +42,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/worker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
-	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/factory"
+	credentialsstorefactory "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/factory"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/spf13/afero"
@@ -97,7 +100,7 @@ func (e *Entrypoint) Execute(
 	var buildHandler *buildhandler.Handler
 	var buildService *application.Application
 	var commandFactory *command.BuildCommandFactory
-	var credentialsStore repository.CredentialsStorer
+	var credentialsFactory repository.CredentialsFactorier
 	var dispatcher *dispatch.Dispatch
 	var entrypointOptions *Options
 	var err error
@@ -128,7 +131,7 @@ func (e *Entrypoint) Execute(
 		return errors.New(errContext, "", err)
 	}
 
-	credentialsStore, err = e.createCredentialsStore(conf)
+	credentialsFactory, err = e.createCredentialsFactory(conf)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -153,7 +156,7 @@ func (e *Entrypoint) Execute(
 		return errors.New(errContext, "", err)
 	}
 
-	buildDriverFactory, err = e.createBuildDriverFactory(credentialsStore, entrypointOptions)
+	buildDriverFactory, err = e.createBuildDriverFactory(credentialsFactory, entrypointOptions)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -175,7 +178,7 @@ func (e *Entrypoint) Execute(
 		application.WithJobFactory(jobFactory),
 		application.WithDispatch(dispatcher),
 		application.WithSemver(semVerFactory),
-		application.WithCredentials(credentialsStore),
+		application.WithCredentials(credentialsFactory),
 	)
 
 	imageRender, err = e.createImageRender(now.NewNow())
@@ -296,8 +299,8 @@ func (e *Entrypoint) prepareHandlerOptions(conf *configuration.Configuration, in
 	return options, nil
 }
 
-func (e *Entrypoint) createCredentialsStore(conf *configuration.Configuration) (repository.CredentialsStorer, error) {
-	errContext := "(Entrypoint::createCredentialsStore)"
+func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration) (repository.CredentialsFactorier, error) {
+	errContext := "(Entrypoint::createCredentialsFactory)"
 
 	if e.fs == nil {
 		return nil, errors.New(errContext, "To create the credentials store, a file system is required")
@@ -307,20 +310,31 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.Configuration) (
 		return nil, errors.New(errContext, "To create the credentials store, configuration is required")
 	}
 
-	authproviderfactory := credentialsproviderfactory.NewAuthProviderFactory()
-	authproviderfactory.Register(credentials.BasicAuthProvider, credentialsproviderbasic.NewBasicAuthProvider())
-	//authproviderfactory.Register(credentials.AWSECRSAuthProvider,nil)
+	if conf.DockerCredentialsDir == "" {
+		return nil, errors.New(errContext, "Docker credentials directory must be defined on configuration")
+	}
 
-	factory := credentialsfactory.NewCredentialsStoreFactory(conf)
-	localstore := credentialslocalstore.NewLocalStore(e.fs, authproviderfactory)
-	factory.Register(credentials.LocalStore, localstore)
-
-	credentialsStore, err := factory.Get()
+	// create credentials store
+	storefactory := credentialsstorefactory.NewCredentialsStoreFactory(conf)
+	localstore := credentialslocalstore.NewLocalStore(e.fs)
+	storefactory.Register(credentials.LocalStore, localstore)
+	store, err := storefactory.Get()
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
 
-	return credentialsStore, nil
+	// create auth methods
+	basic := authmethodbasic.NewBasicAuthMethod()
+	keyfile := authmethodkeyfile.NewKeyFileAuthMethod()
+	sshagent := authmethodsshagent.NewSSHAgentAuthMethod()
+
+	// create auth providers
+	badge := authproviderbadge.NewBadgeCredentialsProvider(basic, keyfile, sshagent)
+
+	// create credentials factory
+	factory := credentialsfactory.NewCredentialsFactory(store, badge)
+
+	return factory, nil
 }
 
 func (e *Entrypoint) createBuildersStore(conf *configuration.Configuration) (*builders.Store, error) {
@@ -425,7 +439,7 @@ func (e *Entrypoint) createGraphTemplateFactory() (*graph.GraphTemplateFactory, 
 	return graph.NewGraphTemplateFactory(false), nil
 }
 
-func (e *Entrypoint) createBuildDriverFactory(credentialsStore repository.CredentialsStorer, options *Options) (factory.BuildDriverFactory, error) {
+func (e *Entrypoint) createBuildDriverFactory(credentialsFactory repository.CredentialsFactorier, options *Options) (factory.BuildDriverFactory, error) {
 
 	var ansiblePlaybookDriver repository.BuildDriverer
 	var defaultDriver repository.BuildDriverer
@@ -435,7 +449,7 @@ func (e *Entrypoint) createBuildDriverFactory(credentialsStore repository.Creden
 
 	errContext := "(entrypoint::createBuildDriverFactory)"
 
-	if credentialsStore == nil {
+	if credentialsFactory == nil {
 		return nil, errors.New(errContext, "Register drivers requires a credentials store")
 	}
 
@@ -453,7 +467,7 @@ func (e *Entrypoint) createBuildDriverFactory(credentialsStore repository.Creden
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
-	dockerDriver, err = e.createDockerDriver(credentialsStore, options)
+	dockerDriver, err = e.createDockerDriver(credentialsFactory, options)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
@@ -499,7 +513,7 @@ func (e *Entrypoint) createAnsibleDriver(options *Options) (repository.BuildDriv
 	return ansiblePlaybookDriver, nil
 }
 
-func (e *Entrypoint) createDockerDriver(credentialsStore repository.CredentialsStorer, options *Options) (repository.BuildDriverer, error) {
+func (e *Entrypoint) createDockerDriver(credentialsFactory repository.CredentialsFactorier, options *Options) (repository.BuildDriverer, error) {
 	var dockerClient *dockerclient.Client
 	var dockerDriver *docker.DockerDriver
 	var dockerDriverBuldContext *dockercontext.DockerBuildContextFactory
@@ -509,7 +523,7 @@ func (e *Entrypoint) createDockerDriver(credentialsStore repository.CredentialsS
 
 	errContext := "(entrypoint::createDockerDriver)"
 
-	if credentialsStore == nil {
+	if credentialsFactory == nil {
 		return nil, errors.New(errContext, "Docker driver requires a credentials store")
 	}
 
@@ -523,7 +537,7 @@ func (e *Entrypoint) createDockerDriver(credentialsStore repository.CredentialsS
 	}
 
 	goDockerBuild := godockerbuild.NewDockerBuildCmd(dockerClient)
-	gitAuth = gitauth.NewGitAuthFactory(credentialsStore)
+	gitAuth = gitauth.NewGitAuthFactory(credentialsFactory)
 	dockerDriverBuldContext = dockercontext.NewDockerBuildContextFactory(gitAuth)
 	goDockerBuildDriver = godockerbuilder.NewGoDockerBuildDriver(goDockerBuild, dockerDriverBuldContext)
 	dockerDriver, err = docker.NewDockerDriver(goDockerBuildDriver, e.writer)

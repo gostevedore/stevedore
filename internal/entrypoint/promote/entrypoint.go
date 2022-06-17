@@ -15,14 +15,17 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
-	credentialsproviderbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/basic"
-	credentialsproviderfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/factory"
+	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
+	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
+	authmethodkeyfile "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/keyfile"
+	authmethodsshagent "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/sshagent"
+	authproviderbadge "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/badge"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker/godockerbuilder"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
-	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/factory"
+	credentialsstorefactory "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/factory"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/spf13/afero"
 )
@@ -69,7 +72,7 @@ func (e *Entrypoint) Options(opts ...OptionsFunc) {
 func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, handlerOptions *handler.Options) error {
 	var err error
 	var promoteRepoFactory factory.PromoteFactory
-	var credentialsStore repository.CredentialsStorer
+	var credentialsFactory repository.CredentialsFactorier
 	var semverGenerator *semver.SemVerGenerator
 	var options *handler.Options
 
@@ -85,7 +88,7 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 		return errors.New(errContext, "", err)
 	}
 
-	credentialsStore, err = e.createCredentialsStore(conf)
+	credentialsFactory, err = e.createCredentialsFactory(conf)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -97,7 +100,7 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 
 	promoteService := application.NewApplication(
 		application.WithPromoteFactory(promoteRepoFactory),
-		application.WithCredentials(credentialsStore),
+		application.WithCredentials(credentialsFactory),
 		application.WithSemver(semverGenerator),
 	)
 
@@ -149,8 +152,8 @@ func (e *Entrypoint) prepareHandlerOptions(args []string, conf *configuration.Co
 	return options, nil
 }
 
-func (e *Entrypoint) createCredentialsStore(conf *configuration.Configuration) (repository.CredentialsStorer, error) {
-	errContext := "(Entrypoint::createCredentialsStore)"
+func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration) (repository.CredentialsFactorier, error) {
+	errContext := "(Entrypoint::createCredentialsFactory)"
 
 	if e.fs == nil {
 		return nil, errors.New(errContext, "To create the credentials store, a file system is required")
@@ -164,20 +167,27 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.Configuration) (
 		return nil, errors.New(errContext, "Docker credentials path must be provided in the configuration")
 	}
 
-	authproviderfactory := credentialsproviderfactory.NewAuthProviderFactory()
-	authproviderfactory.Register(credentials.BasicAuthProvider, credentialsproviderbasic.NewBasicAuthProvider())
-	//authproviderfactory.Register(credentials.AWSECRSAuthProvider,nil)
-
-	factory := credentialsfactory.NewCredentialsStoreFactory(conf)
-	localstore := credentialslocalstore.NewLocalStore(e.fs, authproviderfactory)
-	factory.Register(credentials.LocalStore, localstore)
-
-	credentialsStore, err := factory.Get()
+	// create credentials store
+	storefactory := credentialsstorefactory.NewCredentialsStoreFactory(conf)
+	localstore := credentialslocalstore.NewLocalStore(e.fs)
+	storefactory.Register(credentials.LocalStore, localstore)
+	store, err := storefactory.Get()
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
 
-	return credentialsStore, nil
+	// create auth methods
+	basic := authmethodbasic.NewBasicAuthMethod()
+	keyfile := authmethodkeyfile.NewKeyFileAuthMethod()
+	sshagent := authmethodsshagent.NewSSHAgentAuthMethod()
+
+	// create auth providers
+	badge := authproviderbadge.NewBadgeCredentialsProvider(basic, keyfile, sshagent)
+
+	// create credentials factory
+	factory := credentialsfactory.NewCredentialsFactory(store, badge)
+
+	return factory, nil
 }
 
 func (e *Entrypoint) createPromoteFactory() (factory.PromoteFactory, error) {

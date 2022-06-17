@@ -12,6 +12,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	imagesconfiguration "github.com/gostevedore/stevedore/internal/infrastructure/configuration/images"
 	imagesgraphtemplate "github.com/gostevedore/stevedore/internal/infrastructure/configuration/images/graph"
+	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible"
 	defaultdriver "github.com/gostevedore/stevedore/internal/infrastructure/driver/default"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/docker"
@@ -25,8 +26,6 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/job"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
-	credentialsstorelocal "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
-	credentialsstoremock "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/mock"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -48,12 +47,12 @@ func TestPrepareEntrypointOptions(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing error when configuration is not provided",
+			desc:       "Testing error preparing entrypoint options when configuration is not provided",
 			entrypoint: &Entrypoint{},
 			err:        errors.New(errContext, "To prepare entrypoint options, configuration is required"),
 		},
 		{
-			desc:       "Testing error when options are not provided",
+			desc:       "Testing error preparing entrypoint options when options are not provided",
 			entrypoint: &Entrypoint{},
 			conf:       &configuration.Configuration{},
 			err:        errors.New(errContext, "To prepare entrypoint options, entrypoint options are required"),
@@ -118,12 +117,12 @@ func TestPrepareImageName(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing error when no args is nil",
+			desc:       "Testing error preparing image name when no args is nil",
 			entrypoint: &Entrypoint{},
 			err:        errors.New(errContext, "To execute the build entrypoint, arguments are required"),
 		},
 		{
-			desc:       "Testing error when no args are provided",
+			desc:       "Testing error preparing image name when no args are provided",
 			entrypoint: &Entrypoint{},
 			args:       []string{},
 			err:        errors.New(errContext, "To execute the build entrypoint, arguments are required"),
@@ -163,12 +162,12 @@ func TestPrepareHandlerOptions(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing error when configuration is not provided",
+			desc:       "Testing error preparing handler options when configuration is not provided",
 			entrypoint: &Entrypoint{},
 			err:        errors.New(errContext, "To prepare handler options, configuration is required"),
 		},
 		{
-			desc:       "Testing error when options are not provided",
+			desc:       "Testing error preparing handler options when options are not provided",
 			entrypoint: &Entrypoint{},
 			conf:       &configuration.Configuration{},
 			err:        errors.New(errContext, "To prepare handler options, handler options are required"),
@@ -306,8 +305,8 @@ func TestPrepareHandlerOptions(t *testing.T) {
 	}
 }
 
-func TestCreateCredentialsStore(t *testing.T) {
-	errContext := "(Entrypoint::createCredentialsStore)"
+func TestCreateCredentialsFactory(t *testing.T) {
+	errContext := "(Entrypoint::createCredentialsFactory)"
 
 	baseDir := "/credentials"
 	testFs := afero.NewMemMapFs()
@@ -327,38 +326,38 @@ func TestCreateCredentialsStore(t *testing.T) {
 		desc       string
 		entrypoint *Entrypoint
 		conf       *configuration.Configuration
-		res        repository.CredentialsStorer
+		res        repository.CredentialsFactorier
 		err        error
 	}{
 		{
-			desc:       "Testing error when file system is not defined",
+			desc:       "Testing error creating credentials factory when file system is not defined",
 			entrypoint: NewEntrypoint(),
 			err:        errors.New(errContext, "To create the credentials store, a file system is required"),
 		},
 		{
-			desc: "Testing error when configuration is not defined",
+			desc: "Testing error creating credentials factory when configuration is not defined",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
 			err: errors.New(errContext, "To create the credentials store, configuration is required"),
 		},
 		{
-			desc: "Testing error when credentials path is not defined in configuration",
+			desc: "Testing error creating credentials factory when credentials path is not defined in configuration",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
 			conf: &configuration.Configuration{},
-			err:  errors.New(errContext, "\n\tDocker credentials directory is not defined on configuration"),
+			err:  errors.New(errContext, "Docker credentials directory must be defined on configuration"),
 		},
 		{
-			desc: "Testing create credentials store",
+			desc: "Testing create credentials factory",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
 			conf: &configuration.Configuration{
 				DockerCredentialsDir: baseDir,
 			},
-			res: &credentialsstorelocal.LocalStore{},
+			res: &credentialsfactory.CredentialsFactory{},
 			err: &errors.Error{},
 		},
 	}
@@ -367,7 +366,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			credentials, err := test.entrypoint.createCredentialsStore(test.conf)
+			credentials, err := test.entrypoint.createCredentialsFactory(test.conf)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
@@ -393,19 +392,19 @@ func TestCreateBuildersStore(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing error when file system is not defined",
+			desc:       "Testing error creating builder store when file system is not defined",
 			entrypoint: NewEntrypoint(),
 			err:        errors.New(errContext, "To create a builders store, a file system is required"),
 		},
 		{
-			desc: "Testing error when configuration is not defined",
+			desc: "Testing error creating builder store when configuration is not defined",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
 			err: errors.New(errContext, "To create a builders store, configuration is required"),
 		},
 		{
-			desc: "Testing error when builders path is not defined in configuration",
+			desc: "Testing error creating builder store when builders path is not defined in configuration",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
@@ -538,7 +537,7 @@ func TestCreateImageRender(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing error when now is not defined",
+			desc:       "Testing error creating image render when now is not defined",
 			entrypoint: NewEntrypoint(),
 			err:        errors.New(errContext, "To create an image render, a nower is required"),
 		},
@@ -583,19 +582,19 @@ func TestCreateImagesStore(t *testing.T) {
 		err           error
 	}{
 		{
-			desc:       "Testing error when fs is not defined",
+			desc:       "Testing error creating images store when fs is not defined",
 			entrypoint: NewEntrypoint(),
 			err:        errors.New(errContext, "To create an images store, a filesystem is required"),
 		},
 		{
-			desc: "Testing error when configuration is not defined",
+			desc: "Testing error creating images store when configuration is not defined",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
 			err: errors.New(errContext, "To create an images store, configuration is required"),
 		},
 		{
-			desc: "Testing error when render is not defined",
+			desc: "Testing error creating images store when render is not defined",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
@@ -603,7 +602,7 @@ func TestCreateImagesStore(t *testing.T) {
 			err:  errors.New(errContext, "To create an images store, image render is required"),
 		},
 		{
-			desc: "Testing error when graph is not defined",
+			desc: "Testing error creating images store when graph is not defined",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
@@ -612,7 +611,7 @@ func TestCreateImagesStore(t *testing.T) {
 			err:    errors.New(errContext, "To create an images store, images graph templates storer is required"),
 		},
 		{
-			desc: "Testing error when compatibility is not defined",
+			desc: "Testing error creating images store when compatibility is not defined",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
@@ -622,7 +621,7 @@ func TestCreateImagesStore(t *testing.T) {
 			err:    errors.New(errContext, "To create an images store, compatibility is required"),
 		},
 		{
-			desc: "Testing error when images path is not defined in configuration",
+			desc: "Testing error creating images store when images path is not defined in configuration",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
@@ -677,7 +676,7 @@ func TestCreateImagesGraphTemplatesStorer(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing error when factory is not defined",
+			desc:       "Testing error creating images graph templates store when factory is not defined",
 			entrypoint: NewEntrypoint(),
 			err:        errors.New(errContext, "To create an images graph templates storer, a graph template factory is required"),
 		},
@@ -742,7 +741,7 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 	tests := []struct {
 		desc        string
 		entrypoint  *Entrypoint
-		credentials repository.CredentialsStorer
+		credentials repository.CredentialsFactorier
 		options     *Options
 		err         error
 		assertions  func(t *testing.T, driverFactory factory.BuildDriverFactory)
@@ -757,21 +756,21 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 		{
 			desc:        "Testing create build driver factory with empty options",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentialsstoremock.NewMockStore(),
+			credentials: credentialsfactory.NewMockCredentialsFactory(),
 			options:     nil,
 			err:         errors.New(errContext, "Register drivers requires options"),
 		},
 		{
 			desc:        "Testing create build driver factory with nil writer",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentialsstoremock.NewMockStore(),
+			credentials: credentialsfactory.NewMockCredentialsFactory(),
 			options:     &Options{},
 			err:         errors.New(errContext, "Register drivers requires a writer"),
 		},
 		{
 			desc:        "Testing create build driver factory",
 			entrypoint:  NewEntrypoint(WithWriter(ioutil.Discard)),
-			credentials: credentialsstoremock.NewMockStore(),
+			credentials: credentialsfactory.NewMockCredentialsFactory(),
 			options:     &Options{},
 			err:         &errors.Error{},
 			assertions: func(t *testing.T, f factory.BuildDriverFactory) {
@@ -882,7 +881,7 @@ func TestCreateAnsibleDriver(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing error when creating ansible driver with nil options",
+			desc:       "Testing error creating ansible driver when creating ansible driver with nil options",
 			entrypoint: NewEntrypoint(),
 			options:    nil,
 			err:        errors.New(errContext, "Entrypoint options are required to create ansible driver"),
@@ -916,28 +915,28 @@ func TestCreateDockerDriver(t *testing.T) {
 	tests := []struct {
 		desc        string
 		entrypoint  *Entrypoint
-		credentials repository.CredentialsStorer
+		credentials repository.CredentialsFactorier
 		options     *Options
 		res         repository.BuildDriverer
 		err         error
 	}{
 		{
-			desc:        "Testing error when creating docker driver with empty credentials",
+			desc:        "Testing error creating docker driver when credentials are empty",
 			entrypoint:  NewEntrypoint(),
 			credentials: nil,
 			err:         errors.New(errContext, "Docker driver requires a credentials store"),
 		},
 		{
-			desc:        "Testing error when creating docker driver with empty options",
+			desc:        "Testing error creating docker driver when options are empty",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentialsstoremock.NewMockStore(),
+			credentials: credentialsfactory.NewMockCredentialsFactory(),
 			options:     nil,
 			err:         errors.New(errContext, "Entrypoint options are required to create docker driver"),
 		},
 		{
 			desc:        "Testing create docker driver",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentialsstoremock.NewMockStore(),
+			credentials: credentialsfactory.NewMockCredentialsFactory(),
 			options:     &Options{},
 			res:         &docker.DockerDriver{},
 			err:         &errors.Error{},

@@ -111,7 +111,7 @@ func TestPrepareHandlerOptions(t *testing.T) {
 	}
 }
 
-func TestCreateCredentialsStore(t *testing.T) {
+func TestCreateCredentialsFactory(t *testing.T) {
 	var err error
 
 	errContext := "(Entrypoint::createPromoteRepoFactory)"
@@ -176,7 +176,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			store, err := test.entrypoint.createCredentialsStore(test.conf)
+			store, err := test.entrypoint.createCredentialsFactory(test.conf)
 			if err != nil {
 				assert.Equal(t, err.Error(), test.err.Error())
 			} else {
