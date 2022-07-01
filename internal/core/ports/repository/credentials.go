@@ -27,3 +27,19 @@ type AuthMethodReader interface {
 type AuthMethodConstructor interface {
 	AuthMethod(badge *credentials.Badge) (AuthMethodReader, error)
 }
+
+// Formater interface to marshal or unmarshal bagde data
+type Formater interface {
+	Marshaler
+	Unmarshaler
+}
+
+// Marshaler is used to format the badge before persisting it, such as JSON, YAML,...
+type Marshaler interface {
+	Marshal(badge *credentials.Badge) (string, error)
+}
+
+// Unmarshaler is used to parse the badge after retrieving it, such as JSON, YAML,...
+type Unmarshaler interface {
+	Unmarshal(data []byte) (*credentials.Badge, error)
+}

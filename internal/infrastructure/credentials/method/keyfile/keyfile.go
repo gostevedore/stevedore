@@ -22,6 +22,7 @@ func NewKeyFileAuthMethod() *KeyFileAuthMethod {
 
 // AuthMethod creates a new KeyFileAuthMethod from the given badge
 func (a *KeyFileAuthMethod) AuthMethod(badge *credentials.Badge) (repository.AuthMethodReader, error) {
+
 	if badge == nil {
 		return nil, nil
 	}
@@ -31,16 +32,18 @@ func (a *KeyFileAuthMethod) AuthMethod(badge *credentials.Badge) (repository.Aut
 			PrivateKeyFile: badge.PrivateKeyFile,
 		}
 
-		if badge.PrivateKeyPassword == "" {
+		if badge.PrivateKeyPassword != "" {
 			a.PrivateKeyPassword = badge.PrivateKeyPassword
 		}
 
-		if badge.GitSSHUser == "" {
+		if badge.GitSSHUser != "" {
 			a.GitSSHUser = badge.GitSSHUser
 		}
-	}
 
-	return a, nil
+		return a, nil
+	} else {
+		return nil, nil
+	}
 }
 
 // Name returns the name of the authentication method

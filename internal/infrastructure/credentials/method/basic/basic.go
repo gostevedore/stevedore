@@ -28,9 +28,11 @@ func (a *BasicAuthMethod) AuthMethod(badge *credentials.Badge) (repository.AuthM
 			Username: badge.Username,
 			Password: badge.Password,
 		}
-	}
 
-	return a, nil
+		return a, nil
+	} else {
+		return nil, nil
+	}
 }
 
 // Name returns the name of the authentication method

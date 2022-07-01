@@ -8,6 +8,8 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/apenella/go-docker-builder/pkg/copy"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	dockerclient "github.com/docker/docker/client"
 	application "github.com/gostevedore/stevedore/internal/application/promote"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
@@ -16,9 +18,13 @@ import (
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
+	credentialsformatfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/formater/factory"
 	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
 	authmethodkeyfile "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/keyfile"
 	authmethodsshagent "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/sshagent"
+	authproviderawsecr "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr"
+	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr/token"
+	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr/token/awscredprovider"
 	authproviderbadge "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/badge"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker/godockerbuilder"
@@ -168,8 +174,10 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 	}
 
 	// create credentials store
+	credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
+	credentialsFormat, err := credentialsFormatFactory.Get(credentials.JSONFormat)
 	storefactory := credentialsstorefactory.NewCredentialsStoreFactory(conf)
-	localstore := credentialslocalstore.NewLocalStore(e.fs)
+	localstore := credentialslocalstore.NewLocalStore(e.fs, credentialsFormat)
 	storefactory.Register(credentials.LocalStore, localstore)
 	store, err := storefactory.Get()
 	if err != nil {
@@ -184,8 +192,25 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 	// create auth providers
 	badge := authproviderbadge.NewBadgeCredentialsProvider(basic, keyfile, sshagent)
 
+	// create authorization aws ecr provider
+	tokenProvider := token.NewAWSECRToken(
+		token.WithStaticCredentialsProvider(awscredprovider.NewStaticCredentialsProvider()),
+		token.WithAssumeRoleARNProvider(awscredprovider.NewAssumerRoleARNProvider()),
+		token.WithECRClientFactory(
+			token.NewECRClientFactory(
+				func(cfg aws.Config) token.ECRClienter {
+					c := ecr.NewFromConfig(cfg)
+
+					return c
+				},
+			),
+		),
+	)
+
+	awsecr := authproviderawsecr.NewAWSECRCredentialsProvider(tokenProvider, basic)
+
 	// create credentials factory
-	factory := credentialsfactory.NewCredentialsFactory(store, badge)
+	factory := credentialsfactory.NewCredentialsFactory(store, badge, awsecr)
 
 	return factory, nil
 }

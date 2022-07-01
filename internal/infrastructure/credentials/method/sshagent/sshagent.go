@@ -20,10 +20,15 @@ func (a *SSHAgentAuthMethod) AuthMethod(badge *credentials.Badge) (repository.Au
 		return nil, nil
 	}
 
+	if !badge.AllowUseSSHAgent {
+		return nil, nil
+	}
+
 	if badge.GitSSHUser != "" {
 		a = &SSHAgentAuthMethod{
 			GitSSHUser: badge.GitSSHUser,
 		}
+
 	}
 
 	return a, nil
