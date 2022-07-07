@@ -23,7 +23,11 @@ func (a *BadgeCredentialsProvider) Get(badge *credentials.Badge) (repository.Aut
 	var err error
 	var method repository.AuthMethodReader
 
-	errContext := "(factory::BadgeCredentialsProvider::Get)"
+	if badge == nil {
+		return nil, nil
+	}
+
+	errContext := "(credentials::provider::BadgeCredentialsProvider::Get)"
 
 	for _, m := range a.methods {
 		method, err = m.AuthMethod(badge)

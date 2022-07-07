@@ -21,7 +21,6 @@ func TestGet(t *testing.T) {
 		desc              string
 		credentials       *AWSECRCredentialsProvider
 		prepareAssertFunc func(*AWSECRCredentialsProvider)
-		token             string
 		badge             *credentials.Badge
 		res               *basic.BasicAuthMethod
 		err               error
@@ -41,9 +40,6 @@ RVJCVkVGZlMwVlpMQW9nSUNBZ1pYaHdhWEpoZEdsdmJqb2dNVFkxTlRVeQpOVE0yTmdwOQ==`),
 					},
 				}, nil)
 			},
-			token: `QVdTOmV3b2dJQ0FnY0dGNWJHOWhaRG9nWTBkR05XSkhPV2hhUVQwOUxBb2dJQ0FnWkdGMFlXdGxl
-VG9nV2tkR01GbFhkR3hsVVQwOUxBb2cKSUNBZ2RtVnljMmx2YmpvZ01pd0tJQ0FnSUhSNWNHVTZJ
-RVJCVkVGZlMwVlpMQW9nSUNBZ1pYaHdhWEpoZEdsdmJqb2dNVFkxTlRVeQpOVE0yTmdwOQ==`,
 			res: &basic.BasicAuthMethod{
 				Username: "AWS",
 				Password: `ewogICAgcGF5bG9hZDogY0dGNWJHOWhaQT09LAogICAgZGF0YWtleTogWkdGMFlXdGxlUT09LAog
@@ -73,7 +69,7 @@ NTM2Ngp9`,
 
 func TestAuthMethod(t *testing.T) {
 
-	errContext := "(ecr::AWSECRCredentialsProvider::AuthMethod)"
+	errContext := "(credentials::provider::AWSECRCredentialsProvider::AuthMethod)"
 
 	tests := []struct {
 		desc        string
@@ -115,10 +111,12 @@ NTM2Ngp9`,
 			}
 		})
 	}
-
 }
 
-func TestAll(t *testing.T) {
+// TestFunctional is kept as skiped to avoid running this test automatically
+func TestFunctional(t *testing.T) {
+
+	t.Skip()
 
 	credprov := NewAWSECRCredentialsProvider(token.NewAWSECRToken(
 		token.WithStaticCredentialsProvider(awscredprovider.NewStaticCredentialsProvider()),
@@ -134,14 +132,6 @@ func TestAll(t *testing.T) {
 	))
 
 	badge := &credentials.Badge{
-		AWSProfile: "bedbank-production",
-		//AWSRoleARN: "arn:aws:iam::880589387022:role/role-admin-access",
-		// AWSSharedConfigFiles: []string{
-		// 	"/aws/config",
-		// },
-		// AWSSharedCredentialsFiles: []string{
-		// 	"/aws/credentials",
-		// },
 		AWSUseDefaultCredentialsChain: true,
 	}
 
@@ -151,5 +141,4 @@ func TestAll(t *testing.T) {
 	} else {
 		t.Log(auth)
 	}
-
 }

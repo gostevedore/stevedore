@@ -18,7 +18,7 @@ func NewFormatFactory() *FormatFactory {
 
 func (f *FormatFactory) Get(format string) (repository.Formater, error) {
 
-	errContext := "(formater::FormatFactory::Get)"
+	errContext := "(credentials::formater::FormatFactory::Get)"
 
 	switch format {
 	case credentials.JSONFormat:

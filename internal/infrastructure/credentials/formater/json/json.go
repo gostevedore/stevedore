@@ -26,7 +26,7 @@ func (f *JSONFormater) Marshal(badge *credentials.Badge) (string, error) {
 
 	jsoned, err = json.MarshalIndent(badge, "", "  ")
 	if err != nil {
-		return err.Error(), err
+		return "", err
 	}
 
 	return string(jsoned), nil

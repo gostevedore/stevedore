@@ -12,7 +12,7 @@ import (
 )
 
 func TestGet(t *testing.T) {
-	errContext := "(formater::FormatFactory::Get)"
+	errContext := "(credentials::formater::FormatFactory::Get)"
 
 	tests := []struct {
 		desc    string

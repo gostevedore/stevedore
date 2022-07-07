@@ -20,20 +20,18 @@ const (
 // AWSECRCredentialsProvider return auth method from badge
 type AWSECRCredentialsProvider struct {
 	tokenProvider AWSECRTokenProvider
-	methods       []repository.AuthMethodConstructor
 }
 
 // NewAWSECRCredentialsProvider return new instance of AWSECRCredentialsProvider
-func NewAWSECRCredentialsProvider(provider AWSECRTokenProvider, methods ...repository.AuthMethodConstructor) *AWSECRCredentialsProvider {
+func NewAWSECRCredentialsProvider(provider AWSECRTokenProvider) *AWSECRCredentialsProvider {
 	return &AWSECRCredentialsProvider{
 		tokenProvider: provider,
-		methods:       methods,
 	}
 }
 
 // Get return user password auth for docker registry
 func (p *AWSECRCredentialsProvider) Get(badge *credentials.Badge) (repository.AuthMethodReader, error) {
-	errContext := "(factory::AWSECRCredentialsProvider::Get)"
+	errContext := "(credentials::provider::AWSECRCredentialsProvider::Get)"
 
 	token, err := p.tokenProvider.Get(context.TODO(),
 		func(ctx context.Context, loadOptionsFuncs ...func(*config.LoadOptions) error) (aws.Config, error) {
@@ -66,7 +64,7 @@ func (p *AWSECRCredentialsProvider) Get(badge *credentials.Badge) (repository.Au
 
 func (p *AWSECRCredentialsProvider) AuthMethod(authorizationToken string) (repository.AuthMethodReader, error) {
 
-	errContext := "(ecr::AWSECRCredentialsProvider::AuthMethod)"
+	errContext := "(credentials::provider::AWSECRCredentialsProvider::AuthMethod)"
 
 	decodedToken, err := base64.StdEncoding.DecodeString(authorizationToken)
 	if err != nil {
