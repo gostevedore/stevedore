@@ -37,7 +37,19 @@ func NewLocalStore(fs afero.Fs, f repository.Formater) *LocalStore {
 func (s *LocalStore) Store(id string, badge *credentials.Badge) error {
 
 	errContext := "(store::credentials::local::Store)"
-	hashedID := hashID(id)
+
+	if id == "" {
+		return errors.New(errContext, "To store a badge into local store, id must be provided")
+	}
+
+	if badge == nil {
+		return errors.New(errContext, fmt.Sprintf("To store a badge for '%s' into local store, credentials badge must be provided", id))
+	}
+
+	hashedID, err := hashID(id)
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
 
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -60,7 +72,23 @@ func (s *LocalStore) Persist(path, id string, badge *credentials.Badge) error {
 	var credentialFile afero.File
 
 	errContext := "(store::credentials::local::Persist)"
-	hashedID := hashID(id)
+
+	if path == "" {
+		return errors.New(errContext, "To persist a badge into local store, local store path must be provided")
+	}
+
+	if id == "" {
+		return errors.New(errContext, "To persist a badge into local store, id must be provided")
+	}
+
+	if badge == nil {
+		return errors.New(errContext, fmt.Sprintf("To persist a badge for '%s' into local store, credentials badge must be provided", id))
+	}
+
+	hashedID, err := hashID(id)
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
 
 	err = s.Store(id, badge)
 	if err != nil {
@@ -91,9 +119,16 @@ func (s *LocalStore) Persist(path, id string, badge *credentials.Badge) error {
 // Get returns a auth for the badge id
 func (s *LocalStore) Get(id string) (*credentials.Badge, error) {
 
-	errContext := "(store::credentials::local::GetAuth)"
+	errContext := "(store::credentials::local::Get)"
 
-	hashedID := hashID(id)
+	if id == "" {
+		return nil, errors.New(errContext, "To get a badge from the store, id must be provided")
+	}
+
+	hashedID, err := hashID(id)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
 
 	badge, exists := s.store[hashedID]
 	if !exists {
@@ -104,12 +139,19 @@ func (s *LocalStore) Get(id string) (*credentials.Badge, error) {
 }
 
 // hashID
-func hashID(id string) string {
+func hashID(id string) (string, error) {
+
+	errContext := "(store::credentials::local::hashID)"
+
+	if id == "" {
+		return "", errors.New(errContext, "Hash method requires an id")
+	}
+
 	hasher := md5.New()
 	hasher.Write([]byte(id))
 	registryHashed := hex.EncodeToString(hasher.Sum(nil))
 
-	return registryHashed
+	return registryHashed, nil
 }
 
 // LoadCredentials to the store
@@ -118,6 +160,10 @@ func (s *LocalStore) LoadCredentials(path string) error {
 	var isDir bool
 
 	errContext := "(store::credentials::local::LoadCredentials)"
+
+	if path == "" {
+		return errors.New(errContext, "To load credentials from local store, path must be provided")
+	}
 
 	if s.store == nil {
 		s.store = make(map[string]*credentials.Badge)
@@ -139,6 +185,10 @@ func (s *LocalStore) LoadCredentialsFromDir(path string) error {
 	var err error
 	errFuncs := []func() error{}
 	errContext := "(store::credentials::local::LoadCredentialsFromDir)"
+
+	if path == "" {
+		return errors.New(errContext, "To load credentials from local store directory, path must be provided")
+	}
 
 	credFiles, err := afero.Glob(s.fs, filepath.Join(path, "*"))
 	if err != nil {
@@ -192,6 +242,10 @@ func (s *LocalStore) LoadCredentialsFromFile(path string) error {
 
 	errContext := "(store::credentials::local::LoadCredentialsFromFile)"
 
+	if path == "" {
+		return errors.New(errContext, "To load credentials from local store file, path must be provided")
+	}
+
 	fileData, err = afero.ReadFile(s.fs, path)
 	if err != nil {
 		return errors.New(errContext, fmt.Sprintf("Error reading credentials file '%s'", path), err)
@@ -207,36 +261,10 @@ func (s *LocalStore) LoadCredentialsFromFile(path string) error {
 		return errors.New(errContext, fmt.Sprintf("Error getting the stat of credentials file '%s'", path), err)
 	}
 
-	err = s.AddCredentials(fileInfo.Name(), badge)
+	err = s.Store(fileInfo.Name(), badge)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
-
-	return nil
-}
-
-// AddCredential
-func (s *LocalStore) AddCredentials(id string, auth *credentials.Badge) error {
-
-	errContext := "(store::credentials::local::AddCredential)"
-
-	if s == nil {
-		return errors.New(errContext, "Unable to add new credential because store is not initialized")
-	}
-
-	if s.store == nil {
-		s.store = make(map[string]*credentials.Badge)
-	}
-
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	_, exists := s.store[id]
-	if exists {
-		return errors.New(errContext, fmt.Sprintf("Auth method with id '%s' already exist", id))
-	}
-
-	s.store[id] = auth
 
 	return nil
 }
