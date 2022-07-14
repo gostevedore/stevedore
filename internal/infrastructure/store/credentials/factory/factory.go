@@ -4,53 +4,48 @@ import (
 	"fmt"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
-	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
-	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 )
 
 type CredentialsStoreFactory struct {
-	configuration *configuration.Configuration
-	backend       map[string]repository.CredentialsStorer
+	store map[string]repository.CredentialsStorer
 }
 
-func NewCredentialsStoreFactory(configuration *configuration.Configuration) *CredentialsStoreFactory {
+func NewCredentialsStoreFactory() *CredentialsStoreFactory {
 	return &CredentialsStoreFactory{
-		configuration: configuration,
+		store: make(map[string]repository.CredentialsStorer),
 	}
 }
 
 func (f *CredentialsStoreFactory) Register(id string, store repository.CredentialsStorer) error {
 
-	errContext := "(factory::Register)"
+	errContext := "(store::credentials::factory::Register)"
 
-	if f.backend == nil {
-		f.backend = make(map[string]repository.CredentialsStorer)
+	if f.store == nil {
+		f.store = make(map[string]repository.CredentialsStorer)
 	}
 
-	if _, exists := f.backend[id]; exists {
+	if _, exists := f.store[id]; exists {
 		return errors.New(errContext, fmt.Sprintf("Credentials store with id '%s' already exists", id))
 	}
 
-	f.backend[id] = store
+	f.store[id] = store
 
 	return nil
 }
 
-func (f *CredentialsStoreFactory) Get() (repository.CredentialsStorer, error) {
+func (f *CredentialsStoreFactory) Get(id string) (repository.CredentialsStorer, error) {
 
-	errContext := "(factory::Get)"
+	errContext := "(store::credentials::factory::Get)"
 
-	if f.configuration.DockerCredentialsDir == "" {
-		return nil, errors.New(errContext, "Docker credentials directory is not defined on configuration")
+	if f.store == nil {
+		return nil, errors.New(errContext, "Credentials factory store is not initialized")
 	}
 
-	backend := f.backend[credentials.LocalStore]
-	err := backend.(*local.LocalStore).LoadCredentials(f.configuration.DockerCredentialsDir)
-	if err != nil {
-		return nil, errors.New(errContext, "", err)
+	store, exist := f.store[id]
+	if !exist {
+		return nil, errors.New(errContext, fmt.Sprintf("Credentials store with id '%s' does not exist", id))
 	}
 
-	return backend, nil
+	return store, nil
 }

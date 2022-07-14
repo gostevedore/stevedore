@@ -82,7 +82,7 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 	var semverGenerator *semver.SemVerGenerator
 	var options *handler.Options
 
-	errContext := "(Entrypoint::Execute)"
+	errContext := "(promote::entrypoint::Execute)"
 
 	options, err = e.prepareHandlerOptions(args, conf, handlerOptions)
 	if err != nil {
@@ -120,7 +120,7 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 }
 
 func (e *Entrypoint) prepareHandlerOptions(args []string, conf *configuration.Configuration, inputOptions *handler.Options) (*handler.Options, error) {
-	errContext := "(Entrypoint::prepareHandlerOptions)"
+	errContext := "(promote::entrypoint::prepareHandlerOptions)"
 
 	if len(args) < 1 || args == nil {
 		return nil, errors.New(errContext, "To execute the promote entrypoint, promote image argument is required")
@@ -158,28 +158,61 @@ func (e *Entrypoint) prepareHandlerOptions(args []string, conf *configuration.Co
 	return options, nil
 }
 
+func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.CredentialsConfiguration) (*credentialslocalstore.LocalStore, error) {
+
+	errContext := "(build::entrypoint::createCredentialsStore)"
+
+	if conf == nil {
+		return nil, errors.New(errContext, "To create credentials store, credentials configuration is required")
+	}
+
+	if conf.Format == "" {
+		return nil, errors.New(errContext, "To create credentials store, credentials format must be specified")
+	}
+
+	switch conf.StorageType {
+	case credentials.LocalStore:
+		if conf.LocalStoragePath == "" {
+			return nil, errors.New(errContext, "To create credentials store, local storage path is required")
+		}
+
+		credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
+		credentialsFormat, err := credentialsFormatFactory.Get(credentials.JSONFormat)
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
+		store := credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat)
+
+		return store, nil
+	default:
+		return nil, errors.New(errContext, fmt.Sprintf("Unsupported credentials storage type '%s'", conf.StorageType))
+	}
+}
+
 func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration) (repository.CredentialsFactorier, error) {
-	errContext := "(Entrypoint::createCredentialsFactory)"
+	errContext := "(promote::entrypoint::createCredentialsFactory)"
 
 	if e.fs == nil {
 		return nil, errors.New(errContext, "To create the credentials store, a file system is required")
 	}
 
 	if conf == nil {
-		return nil, errors.New(errContext, "To execute the promote entrypoint, configuration is required")
+		return nil, errors.New(errContext, "To create the credentials store, configuration is required")
 	}
 
-	if conf.DockerCredentialsDir == "" {
-		return nil, errors.New(errContext, "Docker credentials path must be provided in the configuration")
+	if conf.Credentials == nil {
+		return nil, errors.New(errContext, "To create the credentials store, credentials configuration is required")
 	}
 
 	// create credentials store
-	credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
-	credentialsFormat, err := credentialsFormatFactory.Get(credentials.JSONFormat)
-	storefactory := credentialsstorefactory.NewCredentialsStoreFactory(conf)
-	localstore := credentialslocalstore.NewLocalStore(e.fs, credentialsFormat)
+	localstore, err := e.createCredentialsLocalStore(conf.Credentials)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+	storefactory := credentialsstorefactory.NewCredentialsStoreFactory()
 	storefactory.Register(credentials.LocalStore, localstore)
-	store, err := storefactory.Get()
+	// since there is only one store, we can just use it directly
+	store, err := storefactory.Get(credentials.LocalStore)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
@@ -207,7 +240,7 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 		),
 	)
 
-	awsecr := authproviderawsecr.NewAWSECRCredentialsProvider(tokenProvider, basic)
+	awsecr := authproviderawsecr.NewAWSECRCredentialsProvider(tokenProvider)
 
 	// create credentials factory
 	factory := credentialsfactory.NewCredentialsFactory(store, badge, awsecr)
@@ -217,7 +250,7 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 
 func (e *Entrypoint) createPromoteFactory() (factory.PromoteFactory, error) {
 
-	errContext := "(Entrypoint::createPromoteFactory)"
+	errContext := "(promote::entrypoint::createPromoteFactory)"
 
 	dockerClient, err := dockerclient.NewClientWithOpts(dockerclient.FromEnv)
 	if err != nil {

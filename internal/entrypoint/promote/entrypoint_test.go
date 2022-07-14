@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
@@ -14,6 +15,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
+	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
@@ -111,6 +113,63 @@ func TestPrepareHandlerOptions(t *testing.T) {
 	}
 }
 
+func TestCreateCredentialsLocalStore(t *testing.T) {
+
+	errContext := "(promote::entrypoint::createCredentialsStore)"
+
+	tests := []struct {
+		desc       string
+		entrypoint *Entrypoint
+		conf       *configuration.CredentialsConfiguration
+		err        error
+	}{
+		{
+			desc:       "Testing error when create credentials local store with not defined configuration",
+			entrypoint: NewEntrypoint(),
+			err:        errors.New(errContext, "To create credentials store, credentials configuration is required"),
+		},
+		{
+			desc:       "Testing error when create credentials local store with undefined format",
+			entrypoint: NewEntrypoint(),
+			conf: &configuration.CredentialsConfiguration{
+				StorageType: credentials.LocalStore,
+			},
+			err: errors.New(errContext, "To create credentials store, credentials format must be specified"),
+		},
+		{
+			desc:       "Testing error when create credentials local store with unsupported storage type",
+			entrypoint: NewEntrypoint(),
+			conf: &configuration.CredentialsConfiguration{
+				StorageType: "unsupported",
+				Format:      credentials.JSONFormat,
+			},
+			err: errors.New(errContext, "Unsupported credentials storage type 'unsupported'"),
+		},
+		{
+			desc:       "Testing create credentials local store",
+			entrypoint: NewEntrypoint(),
+			conf: &configuration.CredentialsConfiguration{
+				StorageType:      "local",
+				LocalStoragePath: "local-storage-path",
+				Format:           credentials.JSONFormat,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			store, err := test.entrypoint.createCredentialsLocalStore(test.conf)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				assert.IsType(t, &credentialslocalstore.LocalStore{}, store)
+			}
+		})
+	}
+}
+
 func TestCreateCredentialsFactory(t *testing.T) {
 	var err error
 
@@ -148,7 +207,7 @@ func TestCreateCredentialsFactory(t *testing.T) {
 				WithFileSystem(testFs),
 			),
 			conf: nil,
-			err:  errors.New(errContext, "To execute the promote entrypoint, configuration is required"),
+			err:  errors.New(errContext, "To create the credentials store, configuration is required"),
 		},
 		{
 			desc: "Testing error when credentials dir is not provided",
@@ -157,7 +216,7 @@ func TestCreateCredentialsFactory(t *testing.T) {
 				WithFileSystem(testFs),
 			),
 			conf: &configuration.Configuration{},
-			err:  errors.New(errContext, "Docker credentials path must be provided in the configuration"),
+			err:  errors.New(errContext, "To create the credentials store, credentials configuration is required"),
 		},
 		{
 			desc: "Testing create credentials store",
@@ -166,7 +225,11 @@ func TestCreateCredentialsFactory(t *testing.T) {
 				WithFileSystem(testFs),
 			),
 			conf: &configuration.Configuration{
-				DockerCredentialsDir: baseDir,
+				Credentials: &configuration.CredentialsConfiguration{
+					StorageType:      credentials.LocalStore,
+					LocalStoragePath: baseDir,
+					Format:           credentials.JSONFormat,
+				},
 			},
 			err: &errors.Error{},
 		},

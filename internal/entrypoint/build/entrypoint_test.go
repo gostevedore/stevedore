@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	handler "github.com/gostevedore/stevedore/internal/handler/build"
 	"github.com/gostevedore/stevedore/internal/infrastructure/compatibility"
@@ -26,6 +27,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/job"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
+	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -36,7 +38,7 @@ func TestOptions(t *testing.T) {
 }
 
 func TestPrepareEntrypointOptions(t *testing.T) {
-	errContext := "(Entrypoint::prepareEntrypointOptions)"
+	errContext := "(build::entrypoint::prepareEntrypointOptions)"
 
 	tests := []struct {
 		desc       string
@@ -107,7 +109,7 @@ func TestPrepareEntrypointOptions(t *testing.T) {
 
 func TestPrepareImageName(t *testing.T) {
 
-	errContext := "(Entrypoint::prepareImageName)"
+	errContext := "(build::entrypoint::prepareImageName)"
 
 	tests := []struct {
 		desc       string
@@ -151,7 +153,7 @@ func TestPrepareImageName(t *testing.T) {
 }
 
 func TestPrepareHandlerOptions(t *testing.T) {
-	errContext := "(Entrypoint::prepareHandlerOptions)"
+	errContext := "(build::entrypoint::prepareHandlerOptions)"
 
 	tests := []struct {
 		desc       string
@@ -305,8 +307,66 @@ func TestPrepareHandlerOptions(t *testing.T) {
 	}
 }
 
+func TestCreateCredentialsLocalStore(t *testing.T) {
+
+	errContext := "(build::entrypoint::createCredentialsStore)"
+
+	tests := []struct {
+		desc       string
+		entrypoint *Entrypoint
+		conf       *configuration.CredentialsConfiguration
+		err        error
+	}{
+		{
+			desc:       "Testing error when create credentials local store with not defined configuration",
+			entrypoint: NewEntrypoint(),
+			err:        errors.New(errContext, "To create credentials store, credentials configuration is required"),
+		},
+		{
+			desc:       "Testing error when create credentials local store with not defined configuration",
+			entrypoint: NewEntrypoint(),
+			conf: &configuration.CredentialsConfiguration{
+				StorageType: credentials.LocalStore,
+			},
+			err: errors.New(errContext, "To create credentials store, credentials format must be specified"),
+		},
+		{
+			desc:       "Testing error when create credentials local store with unsupported storage type",
+			entrypoint: NewEntrypoint(),
+			conf: &configuration.CredentialsConfiguration{
+				StorageType: "unsupported",
+				Format:      credentials.JSONFormat,
+			},
+			err: errors.New(errContext, "Unsupported credentials storage type 'unsupported'"),
+		},
+		{
+			desc:       "Testing create credentials local store",
+			entrypoint: NewEntrypoint(),
+			conf: &configuration.CredentialsConfiguration{
+				StorageType:      "local",
+				LocalStoragePath: "local-storage-path",
+				Format:           credentials.JSONFormat,
+			},
+			err: &errors.Error{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			store, err := test.entrypoint.createCredentialsLocalStore(test.conf)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				assert.IsType(t, &credentialslocalstore.LocalStore{}, store)
+			}
+		})
+	}
+}
+
 func TestCreateCredentialsFactory(t *testing.T) {
-	errContext := "(Entrypoint::createCredentialsFactory)"
+	errContext := "(build::entrypoint::createCredentialsFactory)"
 
 	baseDir := "/credentials"
 	testFs := afero.NewMemMapFs()
@@ -342,12 +402,12 @@ func TestCreateCredentialsFactory(t *testing.T) {
 			err: errors.New(errContext, "To create the credentials store, configuration is required"),
 		},
 		{
-			desc: "Testing error creating credentials factory when credentials path is not defined in configuration",
+			desc: "Testing error creating credentials factory when credentials configuration is not defined",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
 			conf: &configuration.Configuration{},
-			err:  errors.New(errContext, "Docker credentials directory must be defined on configuration"),
+			err:  errors.New(errContext, "To create the credentials store, credentials configuration is required"),
 		},
 		{
 			desc: "Testing create credentials factory",
@@ -355,7 +415,11 @@ func TestCreateCredentialsFactory(t *testing.T) {
 				WithFileSystem(testFs),
 			),
 			conf: &configuration.Configuration{
-				DockerCredentialsDir: baseDir,
+				Credentials: &configuration.CredentialsConfiguration{
+					StorageType:      credentials.LocalStore,
+					LocalStoragePath: baseDir,
+					Format:           credentials.JSONFormat,
+				},
 			},
 			res: &credentialsfactory.CredentialsFactory{},
 			err: &errors.Error{},
@@ -378,7 +442,7 @@ func TestCreateCredentialsFactory(t *testing.T) {
 }
 
 func TestCreateBuildersStore(t *testing.T) {
-	errContext := "(Entrypoint::createBuildersStore)"
+	errContext := "(build::entrypoint::createBuildersStore)"
 
 	baseDir := "/builders"
 	testFs := afero.NewMemMapFs()
@@ -527,7 +591,7 @@ func TestCreateSemVerFactory(t *testing.T) {
 }
 
 func TestCreateImageRender(t *testing.T) {
-	errContext := "(Entrypoint::createImageRender)"
+	errContext := "(build::entrypoint::createImageRender)"
 
 	tests := []struct {
 		desc       string
@@ -565,7 +629,7 @@ func TestCreateImageRender(t *testing.T) {
 }
 
 func TestCreateImagesStore(t *testing.T) {
-	errContext := "(Entrypoint::createImagesStore)"
+	errContext := "(build::entrypoint::createImagesStore)"
 
 	baseDir := "/images"
 	testFs := afero.NewMemMapFs()
@@ -666,7 +730,7 @@ func TestCreateImagesStore(t *testing.T) {
 }
 
 func TestCreateImagesGraphTemplatesStorer(t *testing.T) {
-	errContext := "(Entrypoint::createImagesGraphTemplatesStorer)"
+	errContext := "(build::entrypoint::createImagesGraphTemplatesStorer)"
 
 	tests := []struct {
 		desc       string

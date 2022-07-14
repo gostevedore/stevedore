@@ -16,27 +16,34 @@ import (
 
 // LocalStore is a local store for credentials
 type LocalStore struct {
-	// auth  repository.AuthProviderer
-	store    map[string]*credentials.Badge
 	fs       afero.Fs
+	path     string
 	mutex    sync.RWMutex
 	wg       sync.WaitGroup
 	formater repository.Formater
 }
 
 // NewLocalStore creates a new local store for credentials
-func NewLocalStore(fs afero.Fs, f repository.Formater) *LocalStore {
+func NewLocalStore(fs afero.Fs, path string, f repository.Formater) *LocalStore {
 	return &LocalStore{
-		store:    make(map[string]*credentials.Badge),
+		path:     path,
 		fs:       fs,
 		formater: f,
 	}
 }
 
-// Store stores a badge on memory store
+// Store save a badge in the local store
 func (s *LocalStore) Store(id string, badge *credentials.Badge) error {
 
+	var err error
+	var formatedBadge string
+	var credentialFile afero.File
+
 	errContext := "(store::credentials::local::Store)"
+
+	if s.path == "" {
+		return errors.New(errContext, "To store a badge into local store, local store path must be provided")
+	}
 
 	if id == "" {
 		return errors.New(errContext, "To store a badge into local store, id must be provided")
@@ -51,61 +58,17 @@ func (s *LocalStore) Store(id string, badge *credentials.Badge) error {
 		return errors.New(errContext, "", err)
 	}
 
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	_, exists := s.store[hashedID]
-	if exists {
-		return errors.New(errContext, fmt.Sprintf("Badge with id '%s' already exists", id))
-	}
-
-	s.store[hashedID] = badge
-
-	return nil
-}
-
-// Persist save a badge in the local store
-func (s *LocalStore) Persist(path, id string, badge *credentials.Badge) error {
-
-	var err error
-	var formatedBadge string
-	var credentialFile afero.File
-
-	errContext := "(store::credentials::local::Persist)"
-
-	if path == "" {
-		return errors.New(errContext, "To persist a badge into local store, local store path must be provided")
-	}
-
-	if id == "" {
-		return errors.New(errContext, "To persist a badge into local store, id must be provided")
-	}
-
-	if badge == nil {
-		return errors.New(errContext, fmt.Sprintf("To persist a badge for '%s' into local store, credentials badge must be provided", id))
-	}
-
-	hashedID, err := hashID(id)
+	err = s.fs.MkdirAll(s.path, 0755)
 	if err != nil {
-		return errors.New(errContext, "", err)
+		return errors.New(errContext, fmt.Sprintf("Error creating directory '%s'", s.path), err)
 	}
 
-	err = s.Store(id, badge)
-	if err != nil {
-		return errors.New(errContext, fmt.Sprintf("Badge with id '%s', could not be persisted to '%s'", id, path), err)
-	}
-
-	err = s.fs.MkdirAll(path, 0755)
-	if err != nil {
-		return errors.New(errContext, fmt.Sprintf("Error creating directory '%s'", path), err)
-	}
-
-	credentialFile, err = s.fs.OpenFile(filepath.Join(path, hashedID), os.O_RDWR|os.O_CREATE, 0600)
+	credentialFile, err = s.fs.OpenFile(filepath.Join(s.path, hashedID), os.O_RDWR|os.O_CREATE, 0600)
 	defer credentialFile.Close()
 
 	formatedBadge, err = s.formater.Marshal(badge)
 	if err != nil {
-		return errors.New(errContext, fmt.Sprintf("Error formatting '%s' badge before to be persisted on '%s'", id, path), err)
+		return errors.New(errContext, fmt.Sprintf("Error formatting '%s' badge before to be persisted on '%s'", id, s.path), err)
 	}
 
 	_, err = credentialFile.WriteString(formatedBadge)
@@ -119,6 +82,10 @@ func (s *LocalStore) Persist(path, id string, badge *credentials.Badge) error {
 // Get returns a auth for the badge id
 func (s *LocalStore) Get(id string) (*credentials.Badge, error) {
 
+	var err error
+	var fileData []byte
+	var badge *credentials.Badge
+
 	errContext := "(store::credentials::local::Get)"
 
 	if id == "" {
@@ -130,9 +97,14 @@ func (s *LocalStore) Get(id string) (*credentials.Badge, error) {
 		return nil, errors.New(errContext, "", err)
 	}
 
-	badge, exists := s.store[hashedID]
-	if !exists {
-		return nil, errors.New(errContext, fmt.Sprintf("Badge with id '%s' not found", id))
+	fileData, err = afero.ReadFile(s.fs, filepath.Join(s.path, hashedID))
+	if err != nil {
+		return nil, errors.New(errContext, fmt.Sprintf("Error reading credentials file '%s'", filepath.Join(s.path, hashedID)), err)
+	}
+
+	badge, err = s.formater.Unmarshal(fileData)
+	if err != nil {
+		return nil, errors.New(errContext, fmt.Sprintf("Error unmarshaling credentials from file '%s'", filepath.Join(s.path, hashedID)), err)
 	}
 
 	return badge, nil
@@ -152,119 +124,4 @@ func hashID(id string) (string, error) {
 	registryHashed := hex.EncodeToString(hasher.Sum(nil))
 
 	return registryHashed, nil
-}
-
-// LoadCredentials to the store
-func (s *LocalStore) LoadCredentials(path string) error {
-	var err error
-	var isDir bool
-
-	errContext := "(store::credentials::local::LoadCredentials)"
-
-	if path == "" {
-		return errors.New(errContext, "To load credentials from local store, path must be provided")
-	}
-
-	if s.store == nil {
-		s.store = make(map[string]*credentials.Badge)
-	}
-
-	isDir, err = afero.IsDir(s.fs, path)
-	if err != nil {
-		return errors.New(errContext, "", err)
-	}
-
-	if isDir {
-		return s.LoadCredentialsFromDir(path)
-	} else {
-		return s.LoadCredentialsFromFile(path)
-	}
-}
-
-func (s *LocalStore) LoadCredentialsFromDir(path string) error {
-	var err error
-	errFuncs := []func() error{}
-	errContext := "(store::credentials::local::LoadCredentialsFromDir)"
-
-	if path == "" {
-		return errors.New(errContext, "To load credentials from local store directory, path must be provided")
-	}
-
-	credFiles, err := afero.Glob(s.fs, filepath.Join(path, "*"))
-	if err != nil {
-		return errors.New(errContext, "", err)
-	}
-
-	loadCredentialsFromFile := func(path string) func() error {
-		var err error
-
-		c := make(chan struct{}, 1)
-		go func() {
-			defer close(c)
-			err = s.LoadCredentialsFromFile(path)
-			s.wg.Done()
-		}()
-
-		return func() error {
-			<-c
-			return err
-		}
-	}
-
-	for _, file := range credFiles {
-		s.wg.Add(1)
-		f := loadCredentialsFromFile(file)
-		errFuncs = append(errFuncs, f)
-	}
-
-	s.wg.Wait()
-
-	errMsg := ""
-	for _, f := range errFuncs {
-		err = f()
-		if err != nil {
-			errMsg = fmt.Sprintf("%s%s\n", errMsg, err.Error())
-		}
-	}
-	if errMsg != "" {
-		return errors.New(errContext, errMsg)
-	}
-
-	return nil
-}
-
-func (s *LocalStore) LoadCredentialsFromFile(path string) error {
-
-	var err error
-	var fileData []byte
-	var fileInfo os.FileInfo
-	var badge *credentials.Badge
-
-	errContext := "(store::credentials::local::LoadCredentialsFromFile)"
-
-	if path == "" {
-		return errors.New(errContext, "To load credentials from local store file, path must be provided")
-	}
-
-	fileData, err = afero.ReadFile(s.fs, path)
-	if err != nil {
-		return errors.New(errContext, fmt.Sprintf("Error reading credentials file '%s'", path), err)
-	}
-
-	badge, err = s.formater.Unmarshal(fileData)
-	if err != nil {
-		return errors.New(errContext, fmt.Sprintf("Error unmarshaling credentials from file '%s'", path), err)
-	}
-
-	fileInfo, err = s.fs.Stat(path)
-	if err != nil {
-		return errors.New(errContext, fmt.Sprintf("Error getting the stat of credentials file '%s'", path), err)
-	}
-
-	err = s.Store(fileInfo.Name(), badge)
-	if err != nil {
-		return errors.New(errContext, "", err)
-	}
-
-	return nil
 }

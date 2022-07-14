@@ -120,7 +120,7 @@ func (e *Entrypoint) Execute(
 	var semVerFactory *semver.SemVerGenerator
 	var graphTemplateFactory *graph.GraphTemplateFactory
 
-	errContext := "(Entrypoint::Execute)"
+	errContext := "(build::entrypoint::Execute)"
 
 	imageName, err = e.prepareImageName(args)
 	if err != nil {
@@ -223,7 +223,7 @@ func (e *Entrypoint) Execute(
 
 func (e *Entrypoint) prepareEntrypointOptions(conf *configuration.Configuration, inputEntrypointOptions *Options) (*Options, error) {
 
-	errContext := "(Entrypoint::prepareEntrypointOptions)"
+	errContext := "(build::entrypoint::prepareEntrypointOptions)"
 
 	options := &Options{}
 
@@ -246,7 +246,7 @@ func (e *Entrypoint) prepareEntrypointOptions(conf *configuration.Configuration,
 
 func (e *Entrypoint) prepareImageName(args []string) (string, error) {
 
-	errContext := "(Entrypoint::prepareImageName)"
+	errContext := "(build::entrypoint::prepareImageName)"
 
 	if len(args) < 1 || args == nil {
 		return "", errors.New(errContext, "To execute the build entrypoint, arguments are required")
@@ -262,7 +262,7 @@ func (e *Entrypoint) prepareImageName(args []string) (string, error) {
 
 func (e *Entrypoint) prepareHandlerOptions(conf *configuration.Configuration, inputHandlerOptions *handler.Options) (*handler.Options, error) {
 
-	errContext := "(Entrypoint::prepareHandlerOptions)"
+	errContext := "(build::entrypoint::prepareHandlerOptions)"
 	options := &handler.Options{}
 
 	if conf == nil {
@@ -305,8 +305,39 @@ func (e *Entrypoint) prepareHandlerOptions(conf *configuration.Configuration, in
 	return options, nil
 }
 
+func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.CredentialsConfiguration) (*credentialslocalstore.LocalStore, error) {
+
+	errContext := "(build::entrypoint::createCredentialsStore)"
+
+	if conf == nil {
+		return nil, errors.New(errContext, "To create credentials store, credentials configuration is required")
+	}
+
+	if conf.Format == "" {
+		return nil, errors.New(errContext, "To create credentials store, credentials format must be specified")
+	}
+
+	switch conf.StorageType {
+	case credentials.LocalStore:
+		if conf.LocalStoragePath == "" {
+			return nil, errors.New(errContext, "To create credentials store, local storage path is required")
+		}
+
+		credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
+		credentialsFormat, err := credentialsFormatFactory.Get(conf.Format)
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
+		store := credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat)
+
+		return store, nil
+	default:
+		return nil, errors.New(errContext, fmt.Sprintf("Unsupported credentials storage type '%s'", conf.StorageType))
+	}
+}
+
 func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration) (repository.CredentialsFactorier, error) {
-	errContext := "(Entrypoint::createCredentialsFactory)"
+	errContext := "(build::entrypoint::createCredentialsFactory)"
 
 	if e.fs == nil {
 		return nil, errors.New(errContext, "To create the credentials store, a file system is required")
@@ -316,18 +347,19 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 		return nil, errors.New(errContext, "To create the credentials store, configuration is required")
 	}
 
-	if conf.DockerCredentialsDir == "" {
-		return nil, errors.New(errContext, "Docker credentials directory must be defined on configuration")
+	if conf.Credentials == nil {
+		return nil, errors.New(errContext, "To create the credentials store, credentials configuration is required")
 	}
 
 	// create credentials store
-
-	credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
-	credentialsFormat, err := credentialsFormatFactory.Get(credentials.JSONFormat)
-	storefactory := credentialsstorefactory.NewCredentialsStoreFactory(conf)
-	localstore := credentialslocalstore.NewLocalStore(e.fs, credentialsFormat)
+	localstore, err := e.createCredentialsLocalStore(conf.Credentials)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+	storefactory := credentialsstorefactory.NewCredentialsStoreFactory()
 	storefactory.Register(credentials.LocalStore, localstore)
-	store, err := storefactory.Get()
+	// since there is only one store, we can use it directly
+	store, err := storefactory.Get(credentials.LocalStore)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
@@ -355,7 +387,7 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 		),
 	)
 
-	awsecr := authproviderawsecr.NewAWSECRCredentialsProvider(tokenProvider, basic)
+	awsecr := authproviderawsecr.NewAWSECRCredentialsProvider(tokenProvider)
 
 	// create credentials factory
 	factory := credentialsfactory.NewCredentialsFactory(store, badge, awsecr)
@@ -365,7 +397,7 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 
 func (e *Entrypoint) createBuildersStore(conf *configuration.Configuration) (*builders.Store, error) {
 
-	errContext := "(Entrypoint::createBuildersStore)"
+	errContext := "(build::entrypoint::createBuildersStore)"
 
 	if e.fs == nil {
 		return nil, errors.New(errContext, "To create a builders store, a file system is required")
@@ -402,7 +434,7 @@ func (e *Entrypoint) createSemVerFactory() (*semver.SemVerGenerator, error) {
 }
 
 func (e *Entrypoint) createImageRender(now render.Nower) (*render.ImageRender, error) {
-	errContext := "(Entrypoint::createImageRender)"
+	errContext := "(build::entrypoint::createImageRender)"
 
 	if now == nil {
 		return nil, errors.New(errContext, "To create an image render, a nower is required")
@@ -413,7 +445,7 @@ func (e *Entrypoint) createImageRender(now render.Nower) (*render.ImageRender, e
 
 func (e *Entrypoint) createImagesStore(conf *configuration.Configuration, render repository.Renderer, graph imagesconfiguration.ImagesGraphTemplatesStorer, compatibility Compatibilitier) (*images.Store, error) {
 
-	errContext := "(Entrypoint::createImagesStore)"
+	errContext := "(build::entrypoint::createImagesStore)"
 
 	if e.fs == nil {
 		return nil, errors.New(errContext, "To create an images store, a filesystem is required")
@@ -450,7 +482,7 @@ func (e *Entrypoint) createImagesStore(conf *configuration.Configuration, render
 }
 
 func (e *Entrypoint) createImagesGraphTemplatesStorer(factory *graph.GraphTemplateFactory) (*imagesgraphtemplate.ImagesGraphTemplate, error) {
-	errContext := "(Entrypoint::createImagesGraphTemplatesStorer)"
+	errContext := "(build::entrypoint::createImagesGraphTemplatesStorer)"
 
 	if factory == nil {
 		return nil, errors.New(errContext, "To create an images graph templates storer, a graph template factory is required")

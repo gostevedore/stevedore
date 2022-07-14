@@ -15,8 +15,10 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/version"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration/loader"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // stevedoreCmdFlags
@@ -36,7 +38,8 @@ func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore Compatibili
 	errContext := "(stevedore::NewCommand)"
 
 	if config == nil {
-		config, err = configuration.New(fs, compatibilityStore)
+		configLoader := loader.NewConfigurationLoader(viper.New())
+		config, err = configuration.New(fs, configLoader, compatibilityStore)
 		if err != nil {
 			console.Error(err.Error())
 			os.Exit(1)
@@ -54,7 +57,7 @@ You just need to define how each image should be built and the relationship amon
 			var err error
 
 			if len(stevedoreCmdFlagsVars.ConfigFile) > 0 {
-				err = config.ReloadConfigurationFromFile(fs, stevedoreCmdFlagsVars.ConfigFile, compatibilityStore)
+				err = config.ReloadConfigurationFromFile(stevedoreCmdFlagsVars.ConfigFile)
 				if err != nil {
 					console.Error(err.Error())
 					return errors.New(errContext, fmt.Sprintf("Error loading configuration from file '%s'", stevedoreCmdFlagsVars.ConfigFile), err)
