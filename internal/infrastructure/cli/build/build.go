@@ -43,7 +43,7 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
-			errContext := "(build::RunE)"
+			errContext := "(cli::build::RunE)"
 			handlerOptions := &handler.Options{}
 			entrypointOptions := &entrypoint.Options{}
 

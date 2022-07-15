@@ -28,7 +28,7 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
-			errContext := "(promote::RunE)"
+			errContext := "(cli::promote::RunE)"
 			handlerOptions := &handler.Options{}
 
 			// Transitorial flags
