@@ -176,18 +176,18 @@ func TestNew(t *testing.T) {
 				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsFormatKey}, ".")).Return(DefaultCredentialsFormat)
 			},
 			res: &Configuration{
-				ImagesPath:                   filepath.Join(DefaultConfigFolder, DefaultImagesPath),
-				BuildersPath:                 filepath.Join(DefaultConfigFolder, DefaultBuildersPath),
-				LogPathFile:                  DefaultLogPathFile,
+				ImagesPath:                   filepath.Join(".", "stevedore.yaml"),
+				BuildersPath:                 filepath.Join(".", "stevedore.yaml"),
+				LogPathFile:                  "",
 				Concurrency:                  concurrencyValue(),
-				PushImages:                   DefaultPushImages,
+				PushImages:                   false,
 				LogWriter:                    ioutil.Discard,
-				EnableSemanticVersionTags:    DefaultEnableSemanticVersionTags,
-				SemanticVersionTagsTemplates: []string{DefaultSemanticVersionTagsTemplates},
+				EnableSemanticVersionTags:    false,
+				SemanticVersionTagsTemplates: []string{"{{ .Major }}.{{ .Minor }}.{{ .Patch }}"},
 				Credentials: &CredentialsConfiguration{
-					StorageType:      DefaultCredentialsStorage,
-					LocalStoragePath: DefaultCredentialsLocalStoragePath,
-					Format:           DefaultCredentialsFormat,
+					StorageType:      "local",
+					LocalStoragePath: "credentials",
+					Format:           "json",
 				},
 			},
 			err: &errors.Error{},
@@ -234,14 +234,14 @@ func TestLoadFromFile(t *testing.T) {
 	testFs.MkdirAll(baseDir, 0755)
 
 	err = afero.WriteFile(testFs, filepath.Join(baseDir, "stevedore.yaml"), []byte(`
-builders_path: mystevedore.yaml
+builders_path: /config/stevedore.yaml
 concurrency: 10
 credentials:
   storage_type: local
   local_storage_path: mycredentials
   format: yaml
 semantic_version_tags_enabled: true
-images_path: mystevedore.yaml
+images_path: /config/stevedore.yaml
 log_path: mystevedore.log
 push_images: false
 semantic_version_tags_templates:
@@ -252,13 +252,20 @@ semantic_version_tags_templates:
 		t.Log(err)
 	}
 
+	err = afero.WriteFile(testFs, filepath.Join(baseDir, "stevedore_emtpy.yaml"), []byte(`
+# empty file
+`), 0644)
+	if err != nil {
+		t.Log(err)
+	}
+
 	err = afero.WriteFile(testFs, filepath.Join(baseDir, "stevedore_deprecated.yaml"), []byte(`
-builder_path: mystevedore.yaml
+builder_path: /config/stevedore.yaml
 num_workers: 10
 docker_registry_credentials_dir: mycredentials
 build_on_cascade: true
 semantic_version_tags_enabled: true
-tree_path: mystevedore.yaml
+tree_path: /config/stevedore.yaml
 log_path: mystevedore.log
 push_images: false
 semantic_version_tags_templates:
@@ -314,7 +321,7 @@ semantic_version_tags_templates:
 			file:   filepath.Join(baseDir, "stevedore.yaml"),
 			err:    &errors.Error{},
 			res: &Configuration{
-				BuildersPath: "mystevedore.yaml",
+				BuildersPath: "/config/stevedore.yaml",
 				Concurrency:  10,
 				Credentials: &CredentialsConfiguration{
 					StorageType:      "local",
@@ -322,12 +329,36 @@ semantic_version_tags_templates:
 					Format:           "yaml",
 				},
 				EnableSemanticVersionTags: true,
-				ImagesPath:                "mystevedore.yaml",
+				ImagesPath:                "/config/stevedore.yaml",
 				LogPathFile:               "mystevedore.log",
 				PushImages:                false,
 				SemanticVersionTagsTemplates: []string{
 					"{{ -Major }}",
 					"{{ -Major }}.{{ .Minor }}",
+				},
+			},
+			compatibility: compatibility.NewMockCompatibility(),
+		},
+		{
+			desc:   "Testing create new configuration from an empty file",
+			fs:     testFs,
+			loader: loader.NewConfigurationLoader(viper.New()),
+			file:   filepath.Join(baseDir, "stevedore_emtpy.yaml"),
+			err:    &errors.Error{},
+			res: &Configuration{
+				BuildersPath: "stevedore.yaml",
+				Concurrency:  concurrencyValue(),
+				Credentials: &CredentialsConfiguration{
+					StorageType:      "local",
+					LocalStoragePath: "credentials",
+					Format:           "json",
+				},
+				EnableSemanticVersionTags: false,
+				ImagesPath:                "stevedore.yaml",
+				LogPathFile:               "",
+				PushImages:                false,
+				SemanticVersionTagsTemplates: []string{
+					"{{ .Major }}.{{ .Minor }}.{{ .Patch }}",
 				},
 			},
 			compatibility: compatibility.NewMockCompatibility(),
@@ -339,14 +370,15 @@ semantic_version_tags_templates:
 			file:   filepath.Join(baseDir, "stevedore_deprecated.yaml"),
 			err:    &errors.Error{},
 			res: &Configuration{
-				BuildersPath: "mystevedore.yaml",
+				BuildersPath: "/config/stevedore.yaml",
 				Credentials: &CredentialsConfiguration{
 					StorageType:      "local",
 					LocalStoragePath: "mycredentials",
+					Format:           "json",
 				},
 				Concurrency:               10,
 				EnableSemanticVersionTags: true,
-				ImagesPath:                "mystevedore.yaml",
+				ImagesPath:                "/config/stevedore.yaml",
 				LogPathFile:               "mystevedore.log",
 				PushImages:                false,
 				SemanticVersionTagsTemplates: []string{
@@ -385,6 +417,101 @@ semantic_version_tags_templates:
 				assert.Equal(t, test.res.LogPathFile, config.LogPathFile, "assert LogPathFile")
 				assert.Equal(t, test.res.PushImages, config.PushImages, "assert PushImages")
 				assert.Equal(t, test.res.SemanticVersionTagsTemplates, config.SemanticVersionTagsTemplates, "assert SemanticVersionTagsTemplates")
+			}
+		})
+	}
+}
+
+func TestReloadConfigurationFromFile(t *testing.T) {
+	var err error
+
+	errContext := "(Configuration::ReloadConfigurationFromFile)"
+
+	baseDir := "/config"
+	testFs := afero.NewMemMapFs()
+	testFs.MkdirAll(baseDir, 0755)
+	err = afero.WriteFile(testFs, filepath.Join(baseDir, "stevedore.yaml"), []byte(`
+builders_path: /config/mystevedore.yaml
+concurrency: 10
+credentials:
+  storage_type: local
+  local_storage_path: mycredentials
+semantic_version_tags_enabled: true
+images_path: /config/mystevedore.yaml
+log_path: mystevedore.log
+push_images: true
+semantic_version_tags_templates:
+  - "{{ .Major }}"
+`), 0644)
+	if err != nil {
+		t.Log(err)
+	}
+	err = afero.WriteFile(testFs, filepath.Join(baseDir, "mystevedore.yaml"), []byte(`
+	`), 0644)
+	if err != nil {
+		t.Log(err)
+	}
+
+	tests := []struct {
+		desc              string
+		config            *Configuration
+		file              string
+		res               *Configuration
+		prepareAssertFunc func(c *Configuration)
+		err               error
+	}{
+		{
+			desc:   "Testing error when reloading configuration from file with missing file",
+			config: &Configuration{},
+			err:    errors.New(errContext, "Configuration file must be provided to reload configuration from file"),
+		},
+		{
+			desc: "Testing reloading configuration from file",
+			config: &Configuration{
+				fs:            testFs,
+				loader:        loader.NewConfigurationLoader(viper.New()),
+				compatibility: compatibility.NewMockCompatibility(),
+			},
+
+			file: filepath.Join(baseDir, "stevedore.yaml"),
+			res: &Configuration{
+				BuildersPath: "/config/mystevedore.yaml",
+				Concurrency:  10,
+				ImagesPath:   "/config/mystevedore.yaml",
+				Credentials: &CredentialsConfiguration{
+					StorageType:      "local",
+					LocalStoragePath: "mycredentials",
+					Format:           "json",
+				},
+				LogPathFile:                  "mystevedore.log",
+				PushImages:                   true,
+				EnableSemanticVersionTags:    true,
+				SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
+			},
+			err: &errors.Error{},
+		},
+	}
+
+	for _, test := range tests {
+
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.config)
+			}
+
+			err := test.config.ReloadConfigurationFromFile(test.file)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				assert.Equal(t, test.res.BuildersPath, test.config.BuildersPath, "assert BuildersPath")
+				assert.Equal(t, test.res.Concurrency, test.config.Concurrency, "assert Concurrency")
+				assert.Equal(t, test.res.Credentials, test.config.Credentials, "assert Credentials")
+				assert.Equal(t, test.res.EnableSemanticVersionTags, test.config.EnableSemanticVersionTags, "assert EnableSemanticVersionTags")
+				assert.Equal(t, test.res.ImagesPath, test.config.ImagesPath, "assert ImagesPath")
+				assert.Equal(t, test.res.PushImages, test.config.PushImages, "assert PushImages")
+				assert.Equal(t, test.res.SemanticVersionTagsTemplates, test.config.SemanticVersionTagsTemplates, "assert SemanticVersionTagsTemplates")
 			}
 		})
 	}
@@ -473,201 +600,122 @@ func TestCheckCompatibility(t *testing.T) {
 	}
 }
 
-func TestReloadConfigurationFromFile(t *testing.T) {
+func TestValidateConfiguration(t *testing.T) {
 	var err error
-
-	errContext := "(Configuration::ReloadConfigurationFromFile)"
+	errContext := "(Configuration::ValidateConfiguration)"
 
 	baseDir := "/config"
 	testFs := afero.NewMemMapFs()
 	testFs.MkdirAll(baseDir, 0755)
-	err = afero.WriteFile(testFs, filepath.Join(baseDir, "stevedore.yaml"), []byte(`
-builders_path: mystevedore.yaml
-concurrency: 10
-credentials:
-  storage_type: local
-  local_storage_path: mycredentials
-semantic_version_tags_enabled: true
-images_path: mystevedore.yaml
-log_path: mystevedore.log
-push_images: true
-semantic_version_tags_templates:
-  - "{{ .Major }}"
+	err = afero.WriteFile(testFs, filepath.Join(baseDir, "mystevedore.yaml"), []byte(`
 `), 0644)
 	if err != nil {
 		t.Log(err)
 	}
 
 	tests := []struct {
-		desc              string
-		config            *Configuration
-		file              string
-		res               *Configuration
-		prepareAssertFunc func(c *Configuration)
-		err               error
+		desc   string
+		config *Configuration
+		err    error
 	}{
 		{
-			desc:   "Testing error when reloading configuration from file with missing file",
-			config: &Configuration{},
-			err:    errors.New(errContext, "Configuration file must be provided to reload configuration from file"),
-		},
-		{
-			desc: "Testing reloading configuration from file",
+			desc: "Testing validate configuration when everything is ok",
 			config: &Configuration{
-				fs:            testFs,
-				loader:        loader.NewConfigurationLoader(viper.New()),
-				compatibility: compatibility.NewMockCompatibility(),
-			},
-			// prepareAssertFunc: func(c *Configuration) {
-			// 	c.loader.(*loader.MockConfigurationLoader).On("SetFs", testFs).Return()
-			// 	c.loader.(*loader.MockConfigurationLoader).On("SetConfigFile", "stevedore.yaml").Return()
-			// 	c.loader.(*loader.MockConfigurationLoader).On("ReadInConfig").Return(nil)
-			// },
-			file: filepath.Join(baseDir, "stevedore.yaml"),
-			res: &Configuration{
-				BuildersPath: "mystevedore.yaml",
+				BuildersPath: filepath.Join(baseDir, "mystevedore.yaml"),
 				Concurrency:  10,
-				ImagesPath:   "mystevedore.yaml",
+				ImagesPath:   filepath.Join(baseDir, "mystevedore.yaml"),
 				Credentials: &CredentialsConfiguration{
 					StorageType:      "local",
 					LocalStoragePath: "mycredentials",
+					Format:           "json",
 				},
 				LogPathFile:                  "mystevedore.log",
 				PushImages:                   true,
 				EnableSemanticVersionTags:    true,
 				SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
+				fs:                           testFs,
 			},
 			err: &errors.Error{},
+		},
+		{
+			desc:   "Testing error when file system is not defined on configuration",
+			config: &Configuration{},
+			err:    errors.New(errContext, "File system must be provided to create a new configuration"),
+		},
+		{
+			desc: "Testing error when builders path is not defined",
+			config: &Configuration{
+				fs: testFs,
+			},
+			err: errors.New(errContext, "Invalid configuration, builders path must be provided"),
+		},
+		{
+			desc: "Testing error when images path is not defined",
+			config: &Configuration{
+				BuildersPath: filepath.Join(baseDir, "mystevedore.yaml"),
+				fs:           testFs,
+			},
+			err: errors.New(errContext, "Invalid configuration, images path must be provided"),
+		},
+		{
+			desc: "Testing error when currency is lower than 1",
+			config: &Configuration{
+				BuildersPath: filepath.Join(baseDir, "mystevedore.yaml"),
+				ImagesPath:   filepath.Join(baseDir, "mystevedore.yaml"),
+				Concurrency:  0,
+				fs:           testFs,
+			},
+			err: errors.New(errContext, "Invalid configuration, concurrency must be greater than 0"),
+		},
+		{
+			desc: "Testing error when credentials storage type is not defined",
+			config: &Configuration{
+				BuildersPath: filepath.Join(baseDir, "mystevedore.yaml"),
+				ImagesPath:   filepath.Join(baseDir, "mystevedore.yaml"),
+				Concurrency:  1,
+				Credentials:  &CredentialsConfiguration{},
+				fs:           testFs,
+			},
+			err: errors.New(errContext, "Invalid configuration, credentials storage type must be provided"),
+		},
+		{
+			desc: "Testing error when credentials format is not defined",
+			config: &Configuration{
+				BuildersPath: filepath.Join(baseDir, "mystevedore.yaml"),
+				ImagesPath:   filepath.Join(baseDir, "mystevedore.yaml"),
+				Concurrency:  1,
+				Credentials: &CredentialsConfiguration{
+					StorageType: "local",
+				},
+				fs: testFs,
+			},
+			err: errors.New(errContext, "Invalid configuration, credentials format must be provided"),
+		},
+		{
+			desc: "Testing error when credentials local storage path is not defined when is used credentials local storage type",
+			config: &Configuration{
+				BuildersPath: filepath.Join(baseDir, "mystevedore.yaml"),
+				ImagesPath:   filepath.Join(baseDir, "mystevedore.yaml"),
+				Concurrency:  1,
+				Credentials: &CredentialsConfiguration{
+					StorageType: "local",
+					Format:      "json",
+				},
+				fs: testFs,
+			},
+			err: errors.New(errContext, "Invalid configuration, credentials local storage path must be provided"),
 		},
 	}
 
 	for _, test := range tests {
-
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			if test.prepareAssertFunc != nil {
-				test.prepareAssertFunc(test.config)
-			}
+			err := test.config.ValidateConfiguration()
 
-			err := test.config.ReloadConfigurationFromFile(test.file)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
-			} else {
-				assert.Equal(t, test.res.BuildersPath, test.config.BuildersPath, "assert BuildersPath")
-				assert.Equal(t, test.res.Concurrency, test.config.Concurrency, "assert Concurrency")
-				assert.Equal(t, test.res.Credentials, test.config.Credentials, "assert Credentials")
-				assert.Equal(t, test.res.EnableSemanticVersionTags, test.config.EnableSemanticVersionTags, "assert EnableSemanticVersionTags")
-				assert.Equal(t, test.res.ImagesPath, test.config.ImagesPath, "assert ImagesPath")
-				assert.Equal(t, test.res.PushImages, test.config.PushImages, "assert PushImages")
-				assert.Equal(t, test.res.SemanticVersionTagsTemplates, test.config.SemanticVersionTagsTemplates, "assert SemanticVersionTagsTemplates")
 			}
 		})
 	}
 }
-
-// func TestToArray(t *testing.T) {
-
-// 	tests := []struct {
-// 		desc   string
-// 		config *Configuration
-// 		res    [][]string
-// 		err    error
-// 	}{
-// 		{
-// 			desc:   "Testing transform a nil configuration to array",
-// 			config: nil,
-// 			res:    nil,
-// 			err:    errors.New("(Configuration::ToArray)", "Configuration is nil"),
-// 		},
-// 		{
-// 			desc: "Testing transform configuration to array",
-// 			config: &Configuration{
-// 				ImagesPath:                     filepath.Join(DefaultConfigFolder, DefaultImagesPath),
-// 				BuildersPath:                   filepath.Join(DefaultConfigFolder, DefaultBuildersPath),
-// 				LogPathFile:                    DefaultLogPathFile,
-// 				Concurrency:                    concurrencyValue(),
-// 				PushImages:                     DefaultPushImages,
-// 				DEPRECATEDDockerCredentialsDir: filepath.Join("$HOME", ".config", "stevedore", DEPRECATEDDefaultDockerCredentialsDir),
-// 				EnableSemanticVersionTags:      DefaultEnableSemanticVersionTags,
-// 				SemanticVersionTagsTemplates:   []string{DefaultSemanticVersionTagsTemplates},
-// 			},
-// 			res: [][]string{
-// 				{BuildersPathKey, filepath.Join(DefaultConfigFolder, DefaultBuildersPath)},
-// 				{ConcurrencyKey, fmt.Sprintf("%d", concurrencyValue())},
-// 				{DEPRECATEDDockerCredentialsDirKey, filepath.Join("$HOME", ".config", "stevedore", DEPRECATEDDefaultDockerCredentialsDir)},
-// 				{EnableSemanticVersionTagsKey, fmt.Sprint(DefaultEnableSemanticVersionTags)},
-// 				{ImagesPathKey, filepath.Join(DefaultConfigFolder, DefaultImagesPath)},
-// 				{LogPathFileKey, DefaultLogPathFile},
-// 				{PushImagesKey, fmt.Sprint(DefaultPushImages)},
-// 				{SemanticVersionTagsTemplatesKey, fmt.Sprintf("[%s]", DefaultSemanticVersionTagsTemplates)},
-// 			},
-// 			err: nil,
-// 		},
-// 	}
-
-// 	for _, test := range tests {
-
-// 		t.Log(test.desc)
-
-// 		array, err := test.config.ToArray()
-
-// 		if err != nil {
-// 			assert.Equal(t, test.err, err)
-// 		} else {
-// 			assert.Equal(t, test.res, array, "Configuration values does not coincide")
-// 		}
-// 	}
-// }
-
-// func TestString(t *testing.T) {
-
-// 	tests := []struct {
-// 		desc   string
-// 		config *Configuration
-// 		res    string
-// 	}{
-// 		{
-// 			desc: "Testing transform configuration to string",
-// 			config: &Configuration{
-// 				ImagesPath:                     filepath.Join(DefaultConfigFolder, DefaultImagesPath),
-// 				BuildersPath:                   filepath.Join(DefaultConfigFolder, DefaultBuildersPath),
-// 				LogPathFile:                    DefaultLogPathFile,
-// 				Concurrency:                    4,
-// 				PushImages:                     DefaultPushImages,
-// 				DEPRECATEDBuildOnCascade:       DEPRECATEDDefaultBuildOnCascade,
-// 				DEPRECATEDDockerCredentialsDir: filepath.Join(DEPRECATEDDefaultDockerCredentialsDir),
-// 				EnableSemanticVersionTags:      DefaultEnableSemanticVersionTags,
-// 				SemanticVersionTagsTemplates:   []string{DefaultSemanticVersionTagsTemplates},
-// 			},
-// 			res: `
-//  builders_path :  stevedore.yaml
-//  concurrency :  4
-//  docker_registry_credentials_dir :  credentials
-//  semantic_version_tags_enabled : false
-//  images_path :  stevedore.yaml
-//  log_path :
-//  push_images :  true
-//  semantic_version_tags_templates : [{{ .Major }}.{{ .Minor }}.{{ .Patch }}]
-// `,
-// 		},
-// 	}
-
-// 	for _, test := range tests {
-
-// 		t.Log(test.desc)
-
-// 		str := test.config.String()
-
-// 		assert.Equal(t, test.res, str, "Configuration values does not coincide")
-// 	}
-// }
-
-// func TestConfigurationHeaders(t *testing.T) {
-
-// 	t.Log("Testing list configuration header")
-// 	expected := []string{"PARAMETER", "VALUE"}
-// 	res := ConfigurationHeaders()
-
-// 	assert.Equal(t, expected, res)
-// }

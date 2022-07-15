@@ -23,21 +23,33 @@ type CredentialsConfiguration struct {
 }
 
 type Configuration struct {
-	BuildersPath                   string
-	Concurrency                    int
-	DEPRECATEDBuilderPath          string
-	DEPRECATEDBuildOnCascade       bool
-	DEPRECATEDNumWorkers           int
-	DEPRECATEDTreePathFile         string
-	DEPRECATEDDockerCredentialsDir string
-
+	// BuildersPath is the path where the builders are stored
+	BuildersPath string
+	// Concurrency is the number of concurrent builds
+	Concurrency int
+	// Credentials is the credentials configuration block
 	Credentials *CredentialsConfiguration
-
-	EnableSemanticVersionTags    bool
-	ImagesPath                   string
-	LogPathFile                  string
-	LogWriter                    io.Writer
-	PushImages                   bool
+	// DEPRECATEDBuilderPath is the path where the builders are stored
+	DEPRECATEDBuilderPath string
+	// DEPRECATEDBuildOnCascade is the flag to build on cascade
+	DEPRECATEDBuildOnCascade bool
+	// DEPRECATEDDockerCredentialsDir is the path to the docker credentials directory
+	DEPRECATEDDockerCredentialsDir string
+	// DEPRECATEDNumWorkers is the number of concurrent workers
+	DEPRECATEDNumWorkers int
+	// DEPRECATEDTreePathFile is the path to the tree path file
+	DEPRECATEDTreePathFile string
+	// EnableSemanticVersionTags is the flag to enable semantic version tags
+	EnableSemanticVersionTags bool
+	// ImagesPath is the path where the images are stored
+	ImagesPath string
+	// LogPathFile is the path to the log file
+	LogPathFile string
+	// LogWriter is the writer to the log file
+	LogWriter io.Writer
+	// PushImages is the flag to push images automatically after build
+	PushImages bool
+	// SemanticVersionTagsTemplates is the list of semantic version tags templates
 	SemanticVersionTagsTemplates []string
 
 	compatibility Compatibilitier
@@ -46,41 +58,75 @@ type Configuration struct {
 }
 
 const (
-	DefaultConfigFile          = "stevedore"
+
+	// DefaultConfigFile is the name of the default configuration file
+	DefaultConfigFile = "stevedore"
+	// DefaultConfigFileExtention is the default configuration file extention
 	DefaultConfigFileExtention = "yaml"
-	DefaultConfigFolder        = "."
+	// DefaultConfigFolder is the default configuration folder
+	DefaultConfigFolder = "."
 
-	DefaultBuildersPath                   = "stevedore.yaml"
-	DefaultCredentialsFormat              = credentials.JSONFormat
-	DefaultCredentialsLocalStoragePath    = "credentials"
-	DefaultCredentialsStorage             = credentials.LocalStore
-	DefaultEnableSemanticVersionTags      = false
-	DefaultImagesPath                     = "stevedore.yaml"
-	DefaultLogPathFile                    = ""
-	DefaultPushImages                     = true
-	DefaultSemanticVersionTagsTemplates   = "{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
-	DEPRECATEDDefaultBuilderPath          = "stevedore.yaml"
-	DEPRECATEDDefaultBuildOnCascade       = false
+	// DefaultBuildersPath is the default builders path
+	DefaultBuildersPath = "stevedore.yaml"
+	// DefaultCredentialsFormat is the default credentials format
+	DefaultCredentialsFormat = credentials.JSONFormat
+	// DefaultCredentialsLocalStoragePath is the default credentials local storage path
+	DefaultCredentialsLocalStoragePath = "credentials"
+	// DefaultCredentialsStorage is the default credentials storage
+	DefaultCredentialsStorage = credentials.LocalStore
+	// DefaultEnableSemanticVersionTags is the default enable semantic version tags
+	DefaultEnableSemanticVersionTags = false
+	// DefaultImagesPath is the default images path
+	DefaultImagesPath = "stevedore.yaml"
+	// DefaultLogPathFile is the default log path file
+	DefaultLogPathFile = ""
+	// DefaultPushImages by default images won't be pushed
+	DefaultPushImages = false
+	// DefaultSemanticVersionTagsTemplates is the default semantic version tags templates
+	DefaultSemanticVersionTagsTemplates = "{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+	// DEPRECATEDDefaultBuilderPath is the default builder path
+	DEPRECATEDDefaultBuilderPath = "stevedore.yaml"
+	// DEPRECATEDDefaultBuildOnCascade
+	DEPRECATEDDefaultBuildOnCascade = false
+	// DEPRECATEDDefaultDockerCredentialsDir
 	DEPRECATEDDefaultDockerCredentialsDir = "credentials"
-	DEPRECATEDDefaultNumWorker            = 4
-	DEPRECATEDDefaultTreePathFile         = "stevedore.yaml"
+	// DEPRECATEDDefaultNumWorker
+	DEPRECATEDDefaultNumWorker = 4
+	// DEPRECATEDDefaultTreePathFile
+	DEPRECATEDDefaultTreePathFile = "stevedore.yaml"
 
-	BuildersPathKey                   = "builders_path"
-	ConcurrencyKey                    = "concurrency"
-	CredentialsFormatKey              = "format"
-	CredentialsKey                    = "credentials"
-	CredentialsLocalStoragePathKey    = "local_storage_path"
-	CredentialsStorageTypeKey         = "storage_type"
-	DEPRECATEDBuilderPathKey          = "builder_path"
-	DEPRECATEDBuildOnCascadeKey       = "build_on_cascade"
+	// BuildersPathKey is the key for the builders path
+	BuildersPathKey = "builders_path"
+	// ConcurrencyKey is the key for the concurrency value
+	ConcurrencyKey = "concurrency"
+	// CredentialsFormatKey is the key for the credentials format
+	CredentialsFormatKey = "format"
+	// CredentialsKey is the key for the credentials block
+	CredentialsKey = "credentials"
+	// CredentialsLocalStoragePathKey is the key for the credentials local storage path
+	CredentialsLocalStoragePathKey = "local_storage_path"
+	// CredentialsStorageTypeKey is the key for the credentials storage type
+	CredentialsStorageTypeKey = "storage_type"
+	// DEPRECATEDBuilderPathKey is the key for the deprecated builder path
+	DEPRECATEDBuilderPathKey = "builder_path"
+	// DEPRECATEDBuildOnCascadeKey is the key for the deprecated build on cascade value
+	DEPRECATEDBuildOnCascadeKey = "build_on_cascade"
+	// DEPRECATEDDockerCredentialsDirKey is the key for the deprecated docker credentials dir
 	DEPRECATEDDockerCredentialsDirKey = "docker_registry_credentials_dir"
-	DEPRECATEDNumWorkerKey            = "num_workers"
-	DEPRECATEDTreePathFileKey         = "tree_path"
-	EnableSemanticVersionTagsKey      = "semantic_version_tags_enabled"
-	ImagesPathKey                     = "images_path"
-	LogPathFileKey                    = "log_path"
-	PushImagesKey                     = "push_images"
-	SemanticVersionTagsTemplatesKey   = "semantic_version_tags_templates"
+	// DEPRECATEDNumWorkerKey is the key for the deprecated number of workers
+	DEPRECATEDNumWorkerKey = "num_workers"
+	// DEPRECATEDTreePathFileKey is the key for the deprecated tree path file
+	DEPRECATEDTreePathFileKey = "tree_path"
+	// EnableSemanticVersionTagsKey is the key for the enable semantic version tags value
+	EnableSemanticVersionTagsKey = "semantic_version_tags_enabled"
+	// ImagesPathKey is the key for the images path
+	ImagesPathKey = "images_path"
+	// LogPathFileKey is the key for the log path file
+	LogPathFileKey = "log_path"
+	// PushImagesKey is the key for the push images value
+	PushImagesKey = "push_images"
+	// SemanticVersionTagsTemplatesKey is the key for the semantic version tags templates
+	SemanticVersionTagsTemplatesKey = "semantic_version_tags_templates"
 )
 
 // New method create a new configuration object
@@ -131,7 +177,6 @@ func New(fs afero.Fs, loader ConfigurationLoader, compatibility Compatibilitier)
 
 	loader.SetDefault(BuildersPathKey, filepath.Join(DefaultConfigFolder, DefaultBuildersPath))
 	loader.SetDefault(ConcurrencyKey, defaultConcurrency)
-	//loader.SetDefault(DEPRECATEDDockerCredentialsDirKey, filepath.Join(user.HomeDir, ".config", "stevedore", DEPRECATEDDefaultDockerCredentialsDir))
 	loader.SetDefault(EnableSemanticVersionTagsKey, DefaultEnableSemanticVersionTags)
 	loader.SetDefault(ImagesPathKey, filepath.Join(DefaultConfigFolder, DefaultImagesPath))
 	loader.SetDefault(LogPathFileKey, DefaultLogPathFile)
@@ -177,6 +222,11 @@ func New(fs afero.Fs, loader ConfigurationLoader, compatibility Compatibilitier)
 		return nil, errors.New(errContext, "", err)
 	}
 
+	err = config.ValidateConfiguration()
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
 	return config, nil
 }
 
@@ -185,6 +235,7 @@ func LoadFromFile(fs afero.Fs, loader ConfigurationLoader, file string, compatib
 
 	var err error
 	var logWriter io.Writer
+	var config *Configuration
 
 	errContext := "(configuration::LoadFromFile)"
 
@@ -207,12 +258,7 @@ func LoadFromFile(fs afero.Fs, loader ConfigurationLoader, file string, compatib
 		return nil, errors.New(errContext, "Configuration file could be loaded", err)
 	}
 
-	logWriter, err = createLogWriter(fs, loader.GetString(LogPathFileKey))
-	if err != nil {
-		return nil, errors.New(errContext, "", err)
-	}
-
-	config := &Configuration{
+	config = &Configuration{
 		BuildersPath: loader.GetString(BuildersPathKey),
 		Concurrency:  loader.GetInt(ConcurrencyKey),
 		Credentials: &CredentialsConfiguration{
@@ -242,6 +288,58 @@ func LoadFromFile(fs afero.Fs, loader ConfigurationLoader, file string, compatib
 		return nil, errors.New(errContext, "", err)
 	}
 
+	if config.BuildersPath == "" {
+		config.BuildersPath = DefaultBuildersPath
+	}
+
+	if config.Concurrency < 1 {
+		config.Concurrency = concurrencyValue()
+	}
+
+	if config.Credentials.StorageType == "" {
+		config.Credentials.StorageType = DefaultCredentialsStorage
+	}
+
+	// DEPRECATEDDockerCredentialsDir must be check to avoid deprecation warning
+	if config.Credentials.StorageType == DefaultCredentialsStorage && config.Credentials.LocalStoragePath == "" && config.DEPRECATEDDockerCredentialsDir == "" {
+		config.Credentials.LocalStoragePath = DefaultCredentialsLocalStoragePath
+	}
+
+	if config.Credentials.Format == "" {
+		config.Credentials.Format = DefaultCredentialsFormat
+	}
+
+	if !config.EnableSemanticVersionTags {
+		config.EnableSemanticVersionTags = DefaultEnableSemanticVersionTags
+	}
+
+	if config.ImagesPath == "" {
+		config.ImagesPath = DefaultImagesPath
+	}
+
+	if config.LogPathFile == "" {
+		config.LogPathFile = DefaultLogPathFile
+	}
+
+	logWriter, err = createLogWriter(fs, config.LogPathFile)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+	config.LogWriter = logWriter
+
+	if config.PushImages == false {
+		config.PushImages = DefaultPushImages
+	}
+
+	if len(config.SemanticVersionTagsTemplates) == 0 {
+		config.SemanticVersionTagsTemplates = append([]string{}, DefaultSemanticVersionTagsTemplates)
+	}
+
+	err = config.ValidateConfiguration()
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
 	return config, nil
 }
 
@@ -258,59 +356,54 @@ func (c *Configuration) ReloadConfigurationFromFile(file string) error {
 		return errors.New(errContext, "", err)
 	}
 
+	err = newConfig.ValidateConfiguration()
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
+
 	*c = *newConfig
 	return nil
 }
 
-func (c *Configuration) isValid() bool {
-	return true
+// ValidateConfiguration method validates the configuration
+func (c *Configuration) ValidateConfiguration() error {
+
+	errContext := "(Configuration::ValidateConfiguration)"
+
+	if c.fs == nil {
+		return errors.New(errContext, "File system must be provided to create a new configuration")
+	}
+
+	if c.BuildersPath == "" {
+		return errors.New(errContext, "Invalid configuration, builders path must be provided")
+	}
+
+	if c.ImagesPath == "" {
+		return errors.New(errContext, "Invalid configuration, images path must be provided")
+	}
+
+	if c.Concurrency < 1 {
+		return errors.New(errContext, "Invalid configuration, concurrency must be greater than 0")
+	}
+
+	if c.Credentials != nil {
+		if c.Credentials.StorageType == "" {
+			return errors.New(errContext, "Invalid configuration, credentials storage type must be provided")
+		}
+
+		if c.Credentials.Format == "" {
+			return errors.New(errContext, "Invalid configuration, credentials format must be provided")
+		}
+
+		if c.Credentials.StorageType == credentials.LocalStore {
+			if c.Credentials.LocalStoragePath == "" {
+				return errors.New(errContext, "Invalid configuration, credentials local storage path must be provided")
+			}
+		}
+	}
+
+	return nil
 }
-
-// func (c *Configuration) String() string {
-// 	str := ""
-
-// 	str = fmt.Sprintln()
-
-// 	str = fmt.Sprintln(str, BuildersPathKey, ": ", c.BuildersPath)
-// 	str = fmt.Sprintln(str, ConcurrencyKey, ": ", c.Concurrency)
-// 	str = fmt.Sprintln(str, DEPRECATEDDockerCredentialsDirKey, ": ", c.DEPRECATEDDockerCredentialsDir)
-// 	str = fmt.Sprintln(str, EnableSemanticVersionTagsKey, ":", c.EnableSemanticVersionTags)
-// 	str = fmt.Sprintln(str, ImagesPathKey, ": ", c.ImagesPath)
-// 	str = fmt.Sprintln(str, LogPathFileKey, ": ", c.LogPathFile)
-// 	str = fmt.Sprintln(str, PushImagesKey, ": ", c.PushImages)
-// 	str = fmt.Sprintln(str, SemanticVersionTagsTemplatesKey, ":", c.SemanticVersionTagsTemplates)
-
-// 	return str
-// }
-
-// func (c *Configuration) ToArray() ([][]string, error) {
-
-// 	if c == nil {
-// 		return nil, errors.New("(Configuration::ToArray)", "Configuration is nil")
-// 	}
-
-// 	arrayConfig := [][]string{}
-// 	semanticVersionTagsTemplatesValue := fmt.Sprint(c.SemanticVersionTagsTemplates)
-// 	arrayConfig = append(arrayConfig, []string{BuildersPathKey, c.BuildersPath})
-// 	arrayConfig = append(arrayConfig, []string{ConcurrencyKey, fmt.Sprint(c.Concurrency)})
-// 	arrayConfig = append(arrayConfig, []string{DEPRECATEDDockerCredentialsDirKey, fmt.Sprint(c.DEPRECATEDDockerCredentialsDir)})
-// 	arrayConfig = append(arrayConfig, []string{EnableSemanticVersionTagsKey, fmt.Sprint(c.EnableSemanticVersionTags)})
-// 	arrayConfig = append(arrayConfig, []string{ImagesPathKey, c.ImagesPath})
-// 	arrayConfig = append(arrayConfig, []string{LogPathFileKey, c.LogPathFile})
-// 	arrayConfig = append(arrayConfig, []string{PushImagesKey, fmt.Sprint(c.PushImages)})
-// 	arrayConfig = append(arrayConfig, []string{SemanticVersionTagsTemplatesKey, semanticVersionTagsTemplatesValue})
-
-// 	return arrayConfig, nil
-// }
-
-// func ConfigurationHeaders() []string {
-// 	h := []string{
-// 		"PARAMETER",
-// 		"VALUE",
-// 	}
-
-// 	return h
-// }
 
 // CheckCompatibility
 func (c *Configuration) CheckCompatibility() error {
@@ -364,6 +457,9 @@ func (c *Configuration) CheckCompatibility() error {
 
 		if c.Credentials.StorageType == "" {
 			c.Credentials.StorageType = DefaultCredentialsStorage
+		}
+
+		if c.Credentials.LocalStoragePath == "" {
 			c.Credentials.LocalStoragePath = c.DEPRECATEDDockerCredentialsDir
 		} else {
 			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and 'credentials' block are both defined, local credentials storage on '%s' will be used", DEPRECATEDDockerCredentialsDirKey, c.DEPRECATEDDockerCredentialsDir))
