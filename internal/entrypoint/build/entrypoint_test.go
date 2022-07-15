@@ -323,7 +323,7 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 			err:        errors.New(errContext, "To create credentials store, credentials configuration is required"),
 		},
 		{
-			desc:       "Testing error when create credentials local store with not defined configuration",
+			desc:       "Testing error when create credentials local store with undefined format",
 			entrypoint: NewEntrypoint(),
 			conf: &configuration.CredentialsConfiguration{
 				StorageType: credentials.LocalStore,
