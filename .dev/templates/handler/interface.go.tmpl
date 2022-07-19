@@ -1,0 +1,12 @@
+package {{ .PackageName }}
+
+import (
+	"context"
+
+	"{{ .ApplicationPackageURL }}"
+)
+
+// {{ .ApplicationObject }}er is the service for build commands
+type {{ .ApplicationObject }}er interface {
+	Run(ctx context.Context, optionsFunc ...credentials.OptionsFunc) error
+}

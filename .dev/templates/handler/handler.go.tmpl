@@ -1,0 +1,33 @@
+package {{ .PackageName }}
+
+import (
+	"context"
+
+	errors "github.com/apenella/go-common-utils/error"
+)
+
+// {{ .HandlerObject }} is a handler for get credentials commands
+type {{ .HandlerObject }} struct {
+	app {{ .ApplicationObject}}er
+}
+
+// New{{ .HandlerObject }} creates a new handler for build commands
+func New{{ .HandlerObject }}(a {{ .ApplicationObject}}er) *{{ .HandlerObject }} {
+	return &{{ .HandlerObject }}{
+		app: a,
+	}
+}
+
+// {{ .HandlerObject }} handles build commands
+func (h *{{ .HandlerObject }}) Handler(ctx context.Context) error {
+	var err error
+
+	errContext := "({{ .UseCase }}::Handler)"
+
+	err = h.app.Run(ctx)
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
+
+	return nil
+}

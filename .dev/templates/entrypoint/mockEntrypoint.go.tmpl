@@ -1,0 +1,24 @@
+package {{ .PackageName }}
+
+import (
+	"context"
+
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
+	"github.com/stretchr/testify/mock"
+)
+
+// Mock{{ .EntrypointObject }} is a mock of Entrypoint interface
+type Mock{{ .EntrypointObject }} struct {
+	mock.Mock
+}
+
+// NewMock{{ .EntrypointObject }} provides an implementation Entrypoint interface
+func NewMock{{ .EntrypointObject }}() *Mock{{ .EntrypointObject }} {
+	return &Mock{{ .EntrypointObject }}{}
+}
+
+// Execute provides a mock function
+func (e *Mock{{ .EntrypointObject }}) Execute(ctx context.Context, args []string, conf *configuration.Configuration) error {
+	res := e.Called(ctx, args, conf)
+	return res.Error(0)
+}
