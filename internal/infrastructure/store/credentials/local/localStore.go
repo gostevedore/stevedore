@@ -58,6 +58,10 @@ func (s *LocalStore) Store(id string, badge *credentials.Badge) error {
 		return errors.New(errContext, "", err)
 	}
 
+	if badge.ID == "" {
+		badge.ID = hashedID
+	}
+
 	err = s.fs.MkdirAll(s.path, 0755)
 	if err != nil {
 		return errors.New(errContext, fmt.Sprintf("Error creating directory '%s'", s.path), err)
@@ -81,9 +85,7 @@ func (s *LocalStore) Store(id string, badge *credentials.Badge) error {
 
 // Get returns a auth for the badge id
 func (s *LocalStore) Get(id string) (*credentials.Badge, error) {
-
 	var err error
-	var fileData []byte
 	var badge *credentials.Badge
 
 	errContext := "(store::credentials::local::Get)"
@@ -97,17 +99,53 @@ func (s *LocalStore) Get(id string) (*credentials.Badge, error) {
 		return nil, errors.New(errContext, "", err)
 	}
 
-	fileData, err = afero.ReadFile(s.fs, filepath.Join(s.path, hashedID))
+	badge, err = s.get(filepath.Join(s.path, hashedID))
+
+	return badge, nil
+}
+
+func (s *LocalStore) get(id string) (*credentials.Badge, error) {
+	var err error
+	var fileData []byte
+	var badge *credentials.Badge
+
+	errContext := "(store::credentials::local::get)"
+
+	fileData, err = afero.ReadFile(s.fs, id)
 	if err != nil {
-		return nil, errors.New(errContext, fmt.Sprintf("Error reading credentials file '%s'", filepath.Join(s.path, hashedID)), err)
+		return nil, errors.New(errContext, fmt.Sprintf("Error reading credentials file '%s'", filepath.Join(s.path, id)), err)
 	}
 
 	badge, err = s.formater.Unmarshal(fileData)
 	if err != nil {
-		return nil, errors.New(errContext, fmt.Sprintf("Error unmarshaling credentials from file '%s'", filepath.Join(s.path, hashedID)), err)
+		return nil, errors.New(errContext, fmt.Sprintf("Error unmarshaling credentials from file '%s'", filepath.Join(s.path, id)), err)
 	}
 
 	return badge, nil
+}
+
+func (s *LocalStore) All() []*credentials.Badge {
+	var badge *credentials.Badge
+	badges := []*credentials.Badge{}
+
+	afero.Walk(s.fs, s.path, func(path string, info os.FileInfo, err error) error {
+
+		errContext := "(store::credentials::local::get::walk)"
+
+		_, err = s.fs.Stat(path)
+		if err != nil {
+			return errors.New(errContext, fmt.Sprintf("Error reading credentials file '%s'", path), err)
+		}
+
+		if !info.IsDir() {
+			badge, _ = s.get(path)
+			badges = append(badges, badge)
+		}
+
+		return nil
+	})
+
+	return badges
 }
 
 // hashID

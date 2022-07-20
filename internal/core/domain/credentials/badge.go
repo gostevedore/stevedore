@@ -2,6 +2,8 @@ package credentials
 
 // Badge containes information to access to a credentials
 type Badge struct {
+	// Badge id
+	ID string
 	// AWSAccessKeyID is the access key ID for the AWS account
 	AWSAccessKeyID string `json:"aws_access_key_id" yaml:"aws_access_key_id"`
 	// AWSRegion is the region for the AWS account

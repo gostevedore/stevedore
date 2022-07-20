@@ -24,6 +24,7 @@ func NewCredentialsFactory(store repository.CredentialsStorer, auth ...repositor
 	return factory
 }
 
+// Get returns a new auth provider
 func (f *CredentialsFactory) Get(id string) (repository.AuthMethodReader, error) {
 
 	var err error
@@ -54,54 +55,3 @@ func (f *CredentialsFactory) Get(id string) (repository.AuthMethodReader, error)
 
 	return nil, nil
 }
-
-// func (f *CredentialsFactory) GetBasicAuthMethod(m repository.AuthMethodReader) (*basic.BasicAuthMethod, error) {
-// 	var correct bool
-// 	var method *basic.BasicAuthMethod
-// 	errContext := "(factory::CredentialsFactory::GetBasicAuthMethod)"
-
-// 	if m == nil {
-// 		return nil, errors.New(errContext, "Basic auth method could not be created because the given method is nil")
-// 	}
-
-// 	method, correct = m.(*basic.BasicAuthMethod)
-// 	if !correct {
-// 		return nil, nil
-// 	}
-
-// 	return method, nil
-// }
-
-// func (f *CredentialsFactory) GetKeyFileAuthMethod(m repository.AuthMethodReader) (*keyfile.KeyFileAuthMethod, error) {
-// 	var correct bool
-// 	var method *keyfile.KeyFileAuthMethod
-// 	errContext := "(factory::CredentialsFactory::GetKeyFileAuthMethod)"
-
-// 	if m == nil {
-// 		return nil, errors.New(errContext, "Key file auth method could not be created because the given method is nil")
-// 	}
-
-// 	method, correct = m.(*keyfile.KeyFileAuthMethod)
-// 	if !correct {
-// 		return nil, nil
-// 	}
-
-// 	return method, nil
-// }
-
-// func (f *CredentialsFactory) GetSSHAgentAuthMethod(m repository.AuthMethodReader) (*sshagent.SSHAgentAuthMethod, error) {
-// 	var correct bool
-// 	var method *sshagent.SSHAgentAuthMethod
-// 	errContext := "(factory::CredentialsFactory::GetSSHAgentAuthMethod)"
-
-// 	if m == nil {
-// 		return nil, errors.New(errContext, "Key file auth method could not be created because the given method is nil")
-// 	}
-
-// 	method, correct = m.(*sshagent.SSHAgentAuthMethod)
-// 	if !correct {
-// 		return nil, nil
-// 	}
-
-// 	return method, nil
-// }

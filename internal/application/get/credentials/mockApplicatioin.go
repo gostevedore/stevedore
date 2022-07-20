@@ -16,8 +16,8 @@ func NewMockApplication() *MockApplication {
 	return &MockApplication{}
 }
 
-// Build provides a mock function with given fields: ctx, buildPlan, name, version, options, optionsFunc
-func (m *MockApplication) Build(ctx context.Context, optionsFunc ...OptionsFunc) error {
+// Run provides a mock function with given fields: ctx, optionsFunc
+func (m *MockApplication) Run(ctx context.Context, optionsFunc ...OptionsFunc) error {
 	args := m.Called(ctx, optionsFunc)
 	return args.Error(0)
 }

@@ -24,7 +24,7 @@ func TestMarshal(t *testing.T) {
 			err:      errors.New(errContext, "Badge to be formatted must be provided"),
 		},
 		{
-			desc:     "Testing formating a badge",
+			desc:     "Testing formating a badge to JSON",
 			formater: NewJSONFormater(),
 			badge: &credentials.Badge{
 				AWSAccessKeyID:                "awsaccesskeyid",
@@ -45,6 +45,7 @@ func TestMarshal(t *testing.T) {
 				AllowUseSSHAgent:              true,
 			},
 			res: `{
+  "ID": "",
   "aws_access_key_id": "awsaccesskeyid",
   "aws_region": "awsregion",
   "aws_role_arn": "awsrolearn",

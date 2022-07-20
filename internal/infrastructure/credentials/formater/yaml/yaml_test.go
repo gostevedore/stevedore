@@ -44,7 +44,8 @@ func TestMarshal(t *testing.T) {
 				GitSSHUser:                    "gitsshuser",
 				AllowUseSSHAgent:              true,
 			},
-			res: `aws_access_key_id: awsaccesskeyid
+			res: `id: ""
+aws_access_key_id: awsaccesskeyid
 aws_region: awsregion
 aws_role_arn: awsrolearn
 aws_secret_access_key: awssecretaccesskey

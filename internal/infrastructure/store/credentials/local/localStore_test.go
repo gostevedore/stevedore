@@ -53,6 +53,7 @@ func TestStore(t *testing.T) {
 			prepareAssertFunc: func(s *LocalStore) {
 				s.formater.(*mock.MockFormater).On("Marshal",
 					&credentials.Badge{
+						ID:       "b80bb7740288fda1f201890375a60c8f",
 						Username: "username",
 						Password: "password",
 					}).Return("formated", nil)
@@ -138,6 +139,58 @@ func TestGet(t *testing.T) {
 			} else {
 				assert.Equal(t, test.res, badge)
 			}
+		})
+	}
+}
+
+func TestAll(t *testing.T) {
+
+	var err error
+
+	credentialsPath := filepath.Join("credentials")
+	testFs := afero.NewMemMapFs()
+	testFs.MkdirAll(credentialsPath, 0755)
+	emptyPath := filepath.Join("empty")
+	testFs.MkdirAll(emptyPath, 0755)
+
+	err = afero.WriteFile(testFs, filepath.Join("credentials", "b80bb7740288fda1f201890375a60c8f"), []byte(`
+{
+	  "username": "username",
+	  "password": "password"
+}
+`), 0666)
+	if err != nil {
+		t.Log(err)
+	}
+
+	tests := []struct {
+		desc  string
+		store *LocalStore
+		res   []*credentials.Badge
+	}{
+		{
+			desc:  "Testing get all credentials badges from local store",
+			store: NewLocalStore(testFs, credentialsPath, json.NewJSONFormater()),
+			res: []*credentials.Badge{
+				{
+					Username: "username",
+					Password: "password",
+				},
+			},
+		},
+		{
+			desc:  "Testing get all credentials badges from an empty local store",
+			store: NewLocalStore(testFs, emptyPath, json.NewJSONFormater()),
+			res:   []*credentials.Badge{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			badges := test.store.All()
+			assert.Equal(t, test.res, badges)
 		})
 	}
 }

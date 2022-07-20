@@ -30,5 +30,10 @@ func (m *MockStore) Get(id string) (*credentials.Badge, error) {
 	} else {
 		return args.Get(0).(*credentials.Badge), args.Error(1)
 	}
+}
 
+// All returns all badges
+func (m *MockStore) All() []*credentials.Badge {
+	args := m.Mock.Called()
+	return args.Get(0).([]*credentials.Badge)
 }

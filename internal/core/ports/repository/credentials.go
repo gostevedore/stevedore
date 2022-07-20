@@ -43,3 +43,14 @@ type Marshaler interface {
 type Unmarshaler interface {
 	Unmarshal(data []byte) (*credentials.Badge, error)
 }
+
+// CredentialsFilterer is an interface for filtering credentials content output
+type CredentialsFilterer interface {
+	All() []*credentials.Badge
+	Get(id string) (*credentials.Badge, error)
+}
+
+// CredentialsPrinter is an interface for printing credentials content output
+type CredentialsPrinter interface {
+	Print(badges []*credentials.Badge) error
+}

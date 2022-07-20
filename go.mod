@@ -9,11 +9,9 @@ require (
 	github.com/apenella/go-common-utils/error v0.0.0-20210528133155-34ba915e28c8
 	github.com/apenella/go-common-utils/transformer/string v0.0.0-20210528133155-34ba915e28c8
 	github.com/apenella/go-docker-builder v0.6.1-0.20211211151612-6c83c74727af
-	github.com/aws/aws-sdk-go v1.15.11
 	github.com/aws/aws-sdk-go-v2 v1.16.5
 	github.com/aws/aws-sdk-go-v2/config v1.15.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.6
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.6
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.17.6
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.7
 	github.com/docker/distribution v2.7.1+incompatible
@@ -28,5 +26,4 @@ require (
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0
 	gopkg.in/yaml.v2 v2.4.0
-	gotest.tools v2.2.0+incompatible
 )
