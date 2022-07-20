@@ -23,7 +23,7 @@ const (
 	DeprecatedFlagMessageSet              = "[DEPRECATED FLAG] use 'variable' instead of 'set'"
 	DeprecatedFlagMessageCascade          = "[DEPRECATED FLAG] use 'build-on-cascade' instead of 'cascade'"
 	DeprecatedFlagMessageNumWorkers       = "[DEPRECATED FLAG] use 'concurrency' instead of 'num-workers'"
-	DeprecatedFlagMessagePushImages       = "[DEPRECATED FLAG] 'no-push' is the stevedore default behavior, use --push to push image"
+	DeprecatedFlagMessagePushImages       = "[DEPRECATED FLAG] 'no-push' is the stevedore default behavior, use --push-after-build to push image"
 )
 
 // NewCommand returns a new command to build images
