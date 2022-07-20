@@ -6,7 +6,7 @@ import (
 	"{{ .ApplicationPackageURL }}"
 )
 
-// {{ .ApplicationObject }}er is the service for build commands
-type {{ .ApplicationObject }}er interface {
+// Applicationer is the service for build commands
+type Applicationer interface {
 	Run(ctx context.Context, optionsFunc ...credentials.OptionsFunc) error
 }
