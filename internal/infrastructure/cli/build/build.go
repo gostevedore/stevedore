@@ -37,7 +37,6 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 		Long:    "Stevedore command to build images",
 		Example: "stevedore build ubuntu-base --image-version impish --tag 21.10 --pull-parent-image --push-after-build --remove-local-images-after-push",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -132,7 +131,7 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 			handlerOptions.Tags = append([]string{}, buildFlagOptions.Tags...)
 			handlerOptions.Vars = append([]string{}, buildFlagOptions.Vars...)
 
-			err = build.Execute(ctx, cmd.Flags().Args(), conf, compatibility, entrypointOptions, handlerOptions)
+			err = build.Execute(ctx, cmd.Flags().Args(), conf, entrypointOptions, handlerOptions)
 			if err != nil {
 				return errors.New(errContext, "", err)
 			}

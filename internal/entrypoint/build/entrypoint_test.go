@@ -33,10 +33,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestOptions(t *testing.T) {
-
-}
-
 func TestPrepareEntrypointOptions(t *testing.T) {
 	errContext := "(build::entrypoint::prepareEntrypointOptions)"
 
@@ -49,18 +45,18 @@ func TestPrepareEntrypointOptions(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing error preparing entrypoint options when configuration is not provided",
+			desc:       "Testing error preparing build entrypoint options when configuration is not provided",
 			entrypoint: &Entrypoint{},
-			err:        errors.New(errContext, "To prepare entrypoint options, configuration is required"),
+			err:        errors.New(errContext, "To prepare build entrypoint options, configuration is required"),
 		},
 		{
-			desc:       "Testing error preparing entrypoint options when options are not provided",
+			desc:       "Testing error preparing build entrypoint options when options are not provided",
 			entrypoint: &Entrypoint{},
 			conf:       &configuration.Configuration{},
-			err:        errors.New(errContext, "To prepare entrypoint options, entrypoint options are required"),
+			err:        errors.New(errContext, "To prepare build entrypoint options, entrypoint options are required"),
 		},
 		{
-			desc:       "Testing prepare entrypoint options",
+			desc:       "Testing prepare build entrypoint options",
 			entrypoint: &Entrypoint{},
 			conf: &configuration.Configuration{
 				Concurrency: 5,
@@ -76,7 +72,7 @@ func TestPrepareEntrypointOptions(t *testing.T) {
 			err: &errors.Error{},
 		},
 		{
-			desc:       "Testing prepare entrypoint options using configuration concurrency",
+			desc:       "Testing prepare build entrypoint options using configuration concurrency",
 			entrypoint: &Entrypoint{},
 			conf: &configuration.Configuration{
 				Concurrency: 5,
@@ -119,18 +115,18 @@ func TestPrepareImageName(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing error preparing image name when no args is nil",
+			desc:       "Testing error preparing image name in build entrypoint when no args is nil",
 			entrypoint: &Entrypoint{},
 			err:        errors.New(errContext, "To execute the build entrypoint, arguments are required"),
 		},
 		{
-			desc:       "Testing error preparing image name when no args are provided",
+			desc:       "Testing error preparing image name in build entrypoint when no args are provided",
 			entrypoint: &Entrypoint{},
 			args:       []string{},
 			err:        errors.New(errContext, "To execute the build entrypoint, arguments are required"),
 		},
 		{
-			desc:       "Testing prepare image name",
+			desc:       "Testing prepare image name in build entrypoint",
 			entrypoint: &Entrypoint{},
 			args:       []string{"image"},
 			res:        "image",
@@ -164,18 +160,18 @@ func TestPrepareHandlerOptions(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing error preparing handler options when configuration is not provided",
+			desc:       "Testing error preparing handler options in build entrypoint when configuration is not provided",
 			entrypoint: &Entrypoint{},
-			err:        errors.New(errContext, "To prepare handler options, configuration is required"),
+			err:        errors.New(errContext, "To prepare handler options in build entrypoint, configuration is required"),
 		},
 		{
-			desc:       "Testing error preparing handler options when options are not provided",
+			desc:       "Testing error preparing handler options in build entrypoint when options are not provided",
 			entrypoint: &Entrypoint{},
 			conf:       &configuration.Configuration{},
-			err:        errors.New(errContext, "To prepare handler options, handler options are required"),
+			err:        errors.New(errContext, "To prepare handler options in build entrypoint, handler options are required"),
 		},
 		{
-			desc:       "Testing prepare handler options",
+			desc:       "Testing prepare handler options in build entrypoint",
 			entrypoint: &Entrypoint{},
 			conf:       &configuration.Configuration{},
 			options: &handler.Options{
@@ -312,27 +308,50 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 	errContext := "(build::entrypoint::createCredentialsStore)"
 
 	tests := []struct {
-		desc       string
-		entrypoint *Entrypoint
-		conf       *configuration.CredentialsConfiguration
-		err        error
+		desc          string
+		entrypoint    *Entrypoint
+		conf          *configuration.CredentialsConfiguration
+		compatibility Compatibilitier
+		err           error
 	}{
 		{
-			desc:       "Testing error when create credentials local store with not defined configuration",
+			desc:       "Testing error when creating credentials local store in build entrypoint with not defined configuration",
 			entrypoint: NewEntrypoint(),
-			err:        errors.New(errContext, "To create credentials store, credentials configuration is required"),
+			err:        errors.New(errContext, "To create credentials store in build entrypoint, credentials configuration is required"),
 		},
 		{
-			desc:       "Testing error when create credentials local store with undefined format",
+			desc:       "Testing error when creating credentials local store in build entrypoint with undefined format",
 			entrypoint: NewEntrypoint(),
 			conf: &configuration.CredentialsConfiguration{
 				StorageType: credentials.LocalStore,
 			},
-			err: errors.New(errContext, "To create credentials store, credentials format must be specified"),
+			err: errors.New(errContext, "To create credentials store in build entrypoint, credentials format must be specified"),
 		},
 		{
-			desc:       "Testing error when create credentials local store with unsupported storage type",
+			desc:       "Testing error when creating credentials local store in build entrypoint with undefined compatibilitier",
 			entrypoint: NewEntrypoint(),
+			conf: &configuration.CredentialsConfiguration{
+				StorageType: credentials.LocalStore,
+				Format:      credentials.JSONFormat,
+			},
+			err: errors.New(errContext, "To create credentials store in build entrypoint, compatibility is required"),
+		},
+		{
+			desc: "Testing error when creating credentials local store in build entrypoint with undefined storage path",
+			entrypoint: NewEntrypoint(
+				WithCompatibility(compatibility.NewMockCompatibility()),
+			),
+			conf: &configuration.CredentialsConfiguration{
+				StorageType: credentials.LocalStore,
+				Format:      credentials.JSONFormat,
+			},
+			err: errors.New(errContext, "To create credentials store in build entrypoint, local storage path is required"),
+		},
+		{
+			desc: "Testing error when creating credentials local store in build entrypoint with unsupported storage type",
+			entrypoint: NewEntrypoint(
+				WithCompatibility(compatibility.NewMockCompatibility()),
+			),
 			conf: &configuration.CredentialsConfiguration{
 				StorageType: "unsupported",
 				Format:      credentials.JSONFormat,
@@ -340,8 +359,10 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 			err: errors.New(errContext, "Unsupported credentials storage type 'unsupported'"),
 		},
 		{
-			desc:       "Testing create credentials local store",
-			entrypoint: NewEntrypoint(),
+			desc: "Testing create credentials local store",
+			entrypoint: NewEntrypoint(
+				WithCompatibility(compatibility.NewMockCompatibility()),
+			),
 			conf: &configuration.CredentialsConfiguration{
 				StorageType:      "local",
 				LocalStoragePath: "local-storage-path",
@@ -383,36 +404,38 @@ func TestCreateCredentialsFactory(t *testing.T) {
 	}
 
 	tests := []struct {
-		desc       string
-		entrypoint *Entrypoint
-		conf       *configuration.Configuration
-		res        repository.CredentialsFactorier
-		err        error
+		desc          string
+		entrypoint    *Entrypoint
+		conf          *configuration.Configuration
+		compatibility Compatibilitier
+		res           repository.CredentialsFactorier
+		err           error
 	}{
 		{
-			desc:       "Testing error creating credentials factory when file system is not defined",
+			desc:       "Testing error creating credentials factory in build entrypoint when file system is not defined",
 			entrypoint: NewEntrypoint(),
-			err:        errors.New(errContext, "To create the credentials store, a file system is required"),
+			err:        errors.New(errContext, "To create the credentials store in build entrypoint, a file system is required"),
 		},
 		{
-			desc: "Testing error creating credentials factory when configuration is not defined",
+			desc: "Testing error creating credentials factory in build entrypoint when configuration is not defined",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
-			err: errors.New(errContext, "To create the credentials store, configuration is required"),
+			err: errors.New(errContext, "To create the credentials store in build entrypoint, configuration is required"),
 		},
 		{
-			desc: "Testing error creating credentials factory when credentials configuration is not defined",
+			desc: "Testing error creating credentials factory in build entrypoint when credentials configuration is not defined",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
 			conf: &configuration.Configuration{},
-			err:  errors.New(errContext, "To create the credentials store, credentials configuration is required"),
+			err:  errors.New(errContext, "To create the credentials store in build entrypoint, credentials configuration is required"),
 		},
 		{
 			desc: "Testing create credentials factory",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
+				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
 			conf: &configuration.Configuration{
 				Credentials: &configuration.CredentialsConfiguration{
@@ -456,27 +479,27 @@ func TestCreateBuildersStore(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing error creating builder store when file system is not defined",
+			desc:       "Testing error creating builder store in build entrypoint when file system is not defined",
 			entrypoint: NewEntrypoint(),
-			err:        errors.New(errContext, "To create a builders store, a file system is required"),
+			err:        errors.New(errContext, "To create a builders store in build entrypoint, a file system is required"),
 		},
 		{
-			desc: "Testing error creating builder store when configuration is not defined",
+			desc: "Testing error creating builder store in build entrypoint when configuration is not defined",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
-			err: errors.New(errContext, "To create a builders store, configuration is required"),
+			err: errors.New(errContext, "To create a builders store in build entrypoint, configuration is required"),
 		},
 		{
-			desc: "Testing error creating builder store when builders path is not defined in configuration",
+			desc: "Testing error creating builder store in build entrypoint when builders path is not defined in configuration",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
 			conf: &configuration.Configuration{},
-			err:  errors.New(errContext, "To create a builders store, builders path must be provided in configuration"),
+			err:  errors.New(errContext, "To create a builders store in build entrypoint, builders path must be provided in configuration"),
 		},
 		{
-			desc: "Testing create builders store",
+			desc: "Testing create builders store in build entrypoint",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
@@ -511,7 +534,7 @@ func TestCreateCommandFactory(t *testing.T) {
 		err        error
 	}{
 		{
-			desc: "Testing create command factory",
+			desc: "Testing create command factory in build entrypoint",
 			res:  &command.BuildCommandFactory{},
 			err:  &errors.Error{},
 		},
@@ -540,7 +563,7 @@ func TestCreateJobFactory(t *testing.T) {
 		err        error
 	}{
 		{
-			desc: "Testing create job factory",
+			desc: "Testing create job factory in build entrypoint",
 			res:  &job.JobFactory{},
 			err:  &errors.Error{},
 		},
@@ -569,7 +592,7 @@ func TestCreateSemVerFactory(t *testing.T) {
 		err        error
 	}{
 		{
-			desc: "Testing create semver factory",
+			desc: "Testing create semver factory in build entrypoint",
 			res:  &semver.SemVerGenerator{},
 			err:  &errors.Error{},
 		},
@@ -601,12 +624,12 @@ func TestCreateImageRender(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing error creating image render when now is not defined",
+			desc:       "Testing error creating image render in build entrypoint when now is not defined",
 			entrypoint: NewEntrypoint(),
-			err:        errors.New(errContext, "To create an image render, a nower is required"),
+			err:        errors.New(errContext, "To create an image render in build entrypoint, a nower is required"),
 		},
 		{
-			desc: "Testing create image render",
+			desc: "Testing create image render in build entrypoint",
 			now:  now.NewNow(),
 			res:  &render.ImageRender{},
 			err:  &errors.Error{},
@@ -646,59 +669,61 @@ func TestCreateImagesStore(t *testing.T) {
 		err           error
 	}{
 		{
-			desc:       "Testing error creating images store when fs is not defined",
+			desc:       "Testing error creating images store in build entrypoint when fs is not defined",
 			entrypoint: NewEntrypoint(),
-			err:        errors.New(errContext, "To create an images store, a filesystem is required"),
+			err:        errors.New(errContext, "To create an images store in build entrypoint, a filesystem is required"),
 		},
 		{
-			desc: "Testing error creating images store when configuration is not defined",
+			desc: "Testing error creating images store in build entrypoint when configuration is not defined",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
-			err: errors.New(errContext, "To create an images store, configuration is required"),
+			err: errors.New(errContext, "To create an images store in build entrypoint, configuration is required"),
 		},
 		{
-			desc: "Testing error creating images store when render is not defined",
+			desc: "Testing error creating images store in build entrypoint when render is not defined",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
 			conf: &configuration.Configuration{},
-			err:  errors.New(errContext, "To create an images store, image render is required"),
+			err:  errors.New(errContext, "To create an images store in build entrypoint, image render is required"),
 		},
 		{
-			desc: "Testing error creating images store when graph is not defined",
+			desc: "Testing error creating images store in build entrypoint when graph is not defined",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
 			conf:   &configuration.Configuration{},
 			render: &render.ImageRender{},
-			err:    errors.New(errContext, "To create an images store, images graph templates storer is required"),
+			err:    errors.New(errContext, "To create an images store in build entrypoint, images graph templates storer is required"),
 		},
 		{
-			desc: "Testing error creating images store when compatibility is not defined",
+			desc: "Testing error creating images store in build entrypoint when compatibility is not defined",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 			),
 			conf:   &configuration.Configuration{},
 			render: &render.ImageRender{},
 			graph:  &imagesgraphtemplate.ImagesGraphTemplate{},
-			err:    errors.New(errContext, "To create an images store, compatibility is required"),
+			err:    errors.New(errContext, "To create an images store in build entrypoint, compatibility is required"),
 		},
 		{
-			desc: "Testing error creating images store when images path is not defined in configuration",
+			desc: "Testing error creating images store in build entrypoint when images path is not defined in configuration",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
+				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
 			conf:          &configuration.Configuration{},
 			render:        &render.ImageRender{},
 			graph:         &imagesgraphtemplate.ImagesGraphTemplate{},
 			compatibility: &compatibility.Compatibility{},
-			err:           errors.New(errContext, "To create an images store, images path must be provided in configuration"),
+			err:           errors.New(errContext, "To create an images store in build entrypoint, images path must be provided in configuration"),
 		},
 		{
 			desc: "Testing create images store",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
+				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
 			conf: &configuration.Configuration{
 				ImagesPath: baseDir,
@@ -717,7 +742,7 @@ func TestCreateImagesStore(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			store, err := test.entrypoint.createImagesStore(test.conf, test.render, test.graph, test.compatibility)
+			store, err := test.entrypoint.createImagesStore(test.conf, test.render, test.graph)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
@@ -740,12 +765,12 @@ func TestCreateImagesGraphTemplatesStorer(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing error creating images graph templates store when factory is not defined",
+			desc:       "Testing error creating images graph templates store in build entrypoint when factory is not defined",
 			entrypoint: NewEntrypoint(),
-			err:        errors.New(errContext, "To create an images graph templates storer, a graph template factory is required"),
+			err:        errors.New(errContext, "To create an images graph templates storer in build entrypoint, a graph template factory is required"),
 		},
 		{
-			desc:       "Testing create images graph templates storer",
+			desc:       "Testing create images graph templates storer in build entrypoint",
 			entrypoint: NewEntrypoint(),
 			factory:    graph.NewGraphTemplateFactory(false),
 			res:        &imagesgraphtemplate.ImagesGraphTemplate{},
@@ -776,7 +801,7 @@ func TestCreateGraphTemplateFactory(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing create graph template factory",
+			desc:       "Testing create graph template factory in build entrypoint",
 			entrypoint: NewEntrypoint(),
 			res:        &graph.GraphTemplateFactory{},
 			err:        &errors.Error{},
@@ -811,28 +836,28 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 		assertions  func(t *testing.T, driverFactory factory.BuildDriverFactory)
 	}{
 		{
-			desc:        "Testing create build driver factory with empty credentials",
+			desc:        "Testing create build driver factory in build entrypoint with empty credentials",
 			entrypoint:  NewEntrypoint(),
 			credentials: nil,
 			options:     nil,
-			err:         errors.New(errContext, "Register drivers requires a credentials store"),
+			err:         errors.New(errContext, "Register drivers requires a credentials store in build entrypoint"),
 		},
 		{
-			desc:        "Testing create build driver factory with empty options",
+			desc:        "Testing create build driver factory in build entrypoint with empty options",
 			entrypoint:  NewEntrypoint(),
 			credentials: credentialsfactory.NewMockCredentialsFactory(),
 			options:     nil,
-			err:         errors.New(errContext, "Register drivers requires options"),
+			err:         errors.New(errContext, "Register drivers requires options in build entrypoint"),
 		},
 		{
-			desc:        "Testing create build driver factory with nil writer",
+			desc:        "Testing create build driver factory in build entrypoint with nil writer",
 			entrypoint:  NewEntrypoint(),
 			credentials: credentialsfactory.NewMockCredentialsFactory(),
 			options:     &Options{},
-			err:         errors.New(errContext, "Register drivers requires a writer"),
+			err:         errors.New(errContext, "Register drivers requires a writer in build entrypoint"),
 		},
 		{
-			desc:        "Testing create build driver factory",
+			desc:        "Testing create build driver factory in build entrypoint",
 			entrypoint:  NewEntrypoint(WithWriter(ioutil.Discard)),
 			credentials: credentialsfactory.NewMockCredentialsFactory(),
 			options:     &Options{},
@@ -912,7 +937,7 @@ func TestCreateDefaultDriver(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing create default driver",
+			desc:       "Testing create default driver in build entrypoint",
 			entrypoint: NewEntrypoint(),
 			res:        &defaultdriver.DefaultDriver{},
 		},
@@ -945,13 +970,13 @@ func TestCreateAnsibleDriver(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing error creating ansible driver when creating ansible driver with nil options",
+			desc:       "Testing error creating ansible driver in build entrypoint when creating ansible driver with nil options",
 			entrypoint: NewEntrypoint(),
 			options:    nil,
-			err:        errors.New(errContext, "Entrypoint options are required to create ansible driver"),
+			err:        errors.New(errContext, "Build entrypoint options are required to create ansible driver"),
 		},
 		{
-			desc:       "Testing create ansible driver",
+			desc:       "Testing create ansible driver in build entrypoint",
 			entrypoint: NewEntrypoint(),
 			options:    &Options{},
 			res:        &ansible.AnsiblePlaybookDriver{},
@@ -960,6 +985,7 @@ func TestCreateAnsibleDriver(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
 
 			driver, err := test.entrypoint.createAnsibleDriver(test.options)
 			if err != nil {
@@ -985,20 +1011,20 @@ func TestCreateDockerDriver(t *testing.T) {
 		err         error
 	}{
 		{
-			desc:        "Testing error creating docker driver when credentials are empty",
+			desc:        "Testing error creating docker driver in build entrypoint when credentials are empty",
 			entrypoint:  NewEntrypoint(),
 			credentials: nil,
-			err:         errors.New(errContext, "Docker driver requires a credentials store"),
+			err:         errors.New(errContext, "Docker driver requires a credentials store in build entrypoint"),
 		},
 		{
-			desc:        "Testing error creating docker driver when options are empty",
+			desc:        "Testing error creating docker driver in build entrypoint when options are empty",
 			entrypoint:  NewEntrypoint(),
 			credentials: credentialsfactory.NewMockCredentialsFactory(),
 			options:     nil,
-			err:         errors.New(errContext, "Entrypoint options are required to create docker driver"),
+			err:         errors.New(errContext, "Build entrypoint options are required to create docker driver"),
 		},
 		{
-			desc:        "Testing create docker driver",
+			desc:        "Testing create docker driver in build entrypoint",
 			entrypoint:  NewEntrypoint(),
 			credentials: credentialsfactory.NewMockCredentialsFactory(),
 			options:     &Options{},
@@ -1025,7 +1051,7 @@ func TestCreateDockerDriver(t *testing.T) {
 }
 
 func TestCreateDispatcher(t *testing.T) {
-	desc := "Testing create dispatcher"
+	desc := "Testing create dispatcher in build entrypoint"
 
 	t.Run(desc, func(t *testing.T) {
 		e := NewEntrypoint()
@@ -1043,7 +1069,7 @@ func TestCreateDispatcher(t *testing.T) {
 }
 
 func TestCreatePlanFactory(t *testing.T) {
-	desc := "Testing create build plan factory"
+	desc := "Testing create build plan factory in build entrypoint"
 
 	t.Run(desc, func(t *testing.T) {
 		e := NewEntrypoint()

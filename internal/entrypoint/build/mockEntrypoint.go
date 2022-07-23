@@ -19,7 +19,7 @@ func NewMockEntrypoint() *MockEntrypoint {
 }
 
 // Execute provides a mock function
-func (e *MockEntrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, compatibility Compatibilitier, entrypointOptions *Options, handlerOptions *handler.Options) error {
-	res := e.Called(ctx, args, conf, compatibility, entrypointOptions, handlerOptions)
+func (e *MockEntrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, entrypointOptions *Options, handlerOptions *handler.Options) error {
+	res := e.Called(ctx, args, conf, entrypointOptions, handlerOptions)
 	return res.Error(0)
 }

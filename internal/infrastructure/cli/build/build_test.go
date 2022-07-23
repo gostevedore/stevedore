@@ -80,7 +80,6 @@ func TestNewCommand(t *testing.T) {
 					context.TODO(),
 					[]string{"my-image"},
 					config,
-					compatibility,
 					&entrypoint.Options{
 						Concurrency: 5,
 					},
@@ -192,7 +191,6 @@ func TestNewCommand(t *testing.T) {
 					context.TODO(),
 					[]string{"my-image"},
 					config,
-					comp,
 					&entrypoint.Options{
 						Concurrency: 5,
 					},
