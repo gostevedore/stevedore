@@ -16,19 +16,21 @@ import (
 
 // LocalStore is a local store for credentials
 type LocalStore struct {
-	fs       afero.Fs
-	path     string
-	mutex    sync.RWMutex
-	wg       sync.WaitGroup
-	formater repository.Formater
+	fs            afero.Fs
+	path          string
+	mutex         sync.RWMutex
+	wg            sync.WaitGroup
+	compatibility CredentialsCompatibilier
+	formater      repository.Formater
 }
 
 // NewLocalStore creates a new local store for credentials
-func NewLocalStore(fs afero.Fs, path string, f repository.Formater) *LocalStore {
+func NewLocalStore(fs afero.Fs, path string, f repository.Formater, compatibility CredentialsCompatibilier) *LocalStore {
 	return &LocalStore{
-		path:     path,
-		fs:       fs,
-		formater: f,
+		path:          path,
+		fs:            fs,
+		formater:      f,
+		compatibility: compatibility,
 	}
 }
 
@@ -58,10 +60,6 @@ func (s *LocalStore) Store(id string, badge *credentials.Badge) error {
 		return errors.New(errContext, "", err)
 	}
 
-	if badge.ID == "" {
-		badge.ID = hashedID
-	}
-
 	err = s.fs.MkdirAll(s.path, 0755)
 	if err != nil {
 		return errors.New(errContext, fmt.Sprintf("Error creating directory '%s'", s.path), err)
@@ -69,6 +67,11 @@ func (s *LocalStore) Store(id string, badge *credentials.Badge) error {
 
 	credentialFile, err = s.fs.OpenFile(filepath.Join(s.path, hashedID), os.O_RDWR|os.O_CREATE, 0600)
 	defer credentialFile.Close()
+
+	err = s.compatibility.CheckCompatibility(badge)
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
 
 	formatedBadge, err = s.formater.Marshal(badge)
 	if err != nil {
@@ -99,7 +102,7 @@ func (s *LocalStore) Get(id string) (*credentials.Badge, error) {
 		return nil, errors.New(errContext, "", err)
 	}
 
-	badge, err = s.get(filepath.Join(s.path, hashedID))
+	badge, err = s.get(hashedID)
 
 	return badge, nil
 }
@@ -111,7 +114,7 @@ func (s *LocalStore) get(id string) (*credentials.Badge, error) {
 
 	errContext := "(store::credentials::local::get)"
 
-	fileData, err = afero.ReadFile(s.fs, id)
+	fileData, err = afero.ReadFile(s.fs, filepath.Join(s.path, id))
 	if err != nil {
 		return nil, errors.New(errContext, fmt.Sprintf("Error reading credentials file '%s'", filepath.Join(s.path, id)), err)
 	}
@@ -119,6 +122,15 @@ func (s *LocalStore) get(id string) (*credentials.Badge, error) {
 	badge, err = s.formater.Unmarshal(fileData)
 	if err != nil {
 		return nil, errors.New(errContext, fmt.Sprintf("Error unmarshaling credentials from file '%s'", filepath.Join(s.path, id)), err)
+	}
+
+	if badge.ID == "" {
+		badge.ID = id
+	}
+
+	err = s.compatibility.CheckCompatibility(badge)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return badge, nil
@@ -138,7 +150,7 @@ func (s *LocalStore) All() []*credentials.Badge {
 		}
 
 		if !info.IsDir() {
-			badge, _ = s.get(path)
+			badge, _ = s.get(info.Name())
 			badges = append(badges, badge)
 		}
 
