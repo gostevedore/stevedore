@@ -392,7 +392,7 @@ semantic_version_tags_templates:
 				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' is deprecated and will be removed on v0.12.0, please use 'builders_path' instead"})
 				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' is deprecated and will be removed on v0.12.0, please use 'concurrency' instead"})
 				c.(*compatibility.MockCompatibility).On("AddChanged", []string{"'build_on_cascade' is not available anymore as a configuration parameter. Cascade execution plan is only enabled by '--cascade' flag on build command"})
-				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'docker_registry_credentials_dir' is deprecated and will be removed on v0.12.0, please use 'credentials' block to configure credentials. Credentials local storage located in 'credentials' is going to be used as default"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'docker_registry_credentials_dir' is deprecated and will be removed on v0.12.0, please use 'credentials' block to configure credentials. Credentials local storage located in 'mycredentials' has precedence over 'credentials' block and is going to be used as default credentials store"})
 			},
 		},
 	}
@@ -555,6 +555,7 @@ func TestCheckCompatibility(t *testing.T) {
 				Credentials: &CredentialsConfiguration{
 					StorageType:      "local",
 					LocalStoragePath: "mycredentials",
+					Format:           "json",
 				},
 				LogPathFile:                  "mystevedore.log",
 				PushImages:                   true,
@@ -567,7 +568,7 @@ func TestCheckCompatibility(t *testing.T) {
 				c.compatibility.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' is deprecated and will be removed on v0.12.0, please use 'builders_path' instead"})
 				c.compatibility.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' is deprecated and will be removed on v0.12.0, please use 'concurrency' instead"})
 				c.compatibility.(*compatibility.MockCompatibility).On("AddChanged", []string{"'build_on_cascade' is not available anymore as a configuration parameter. Cascade execution plan is only enabled by '--cascade' flag on build command"})
-				c.compatibility.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'docker_registry_credentials_dir' is deprecated and will be removed on v0.12.0, please use 'credentials' block to configure credentials. Credentials local storage located in 'credentials' is going to be used as default"})
+				c.compatibility.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'docker_registry_credentials_dir' is deprecated and will be removed on v0.12.0, please use 'credentials' block to configure credentials. Credentials local storage located in 'mycredentials' has precedence over 'credentials' block and is going to be used as default credentials store"})
 			},
 			err: &errors.Error{},
 		},

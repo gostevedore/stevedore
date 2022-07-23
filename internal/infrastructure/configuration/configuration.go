@@ -449,21 +449,15 @@ func (c *Configuration) CheckCompatibility() error {
 	}
 
 	if c.DEPRECATEDDockerCredentialsDir != "" {
-		c.compatibility.AddDeprecated(fmt.Sprintf("'%s' is deprecated and will be removed on v0.12.0, please use '%s' block to configure credentials. Credentials local storage located in '%s' is going to be used as default", DEPRECATEDDockerCredentialsDirKey, CredentialsKey, DefaultCredentialsLocalStoragePath))
+		c.compatibility.AddDeprecated(fmt.Sprintf("'%s' is deprecated and will be removed on v0.12.0, please use '%s' block to configure credentials. Credentials local storage located in '%s' has precedence over '%s' block and is going to be used as default credentials store", DEPRECATEDDockerCredentialsDirKey, CredentialsKey, c.DEPRECATEDDockerCredentialsDir, CredentialsKey))
 
 		if c.Credentials == nil {
 			c.Credentials = &CredentialsConfiguration{}
 		}
 
-		if c.Credentials.StorageType == "" {
-			c.Credentials.StorageType = DefaultCredentialsStorage
-		}
-
-		if c.Credentials.LocalStoragePath == "" {
-			c.Credentials.LocalStoragePath = c.DEPRECATEDDockerCredentialsDir
-		} else {
-			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and 'credentials' block are both defined, local credentials storage on '%s' will be used", DEPRECATEDDockerCredentialsDirKey, c.DEPRECATEDDockerCredentialsDir))
-		}
+		c.Credentials.StorageType = DefaultCredentialsStorage
+		c.Credentials.Format = DefaultCredentialsFormat
+		c.Credentials.LocalStoragePath = c.DEPRECATEDDockerCredentialsDir
 
 	}
 
