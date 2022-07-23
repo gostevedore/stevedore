@@ -12,6 +12,7 @@ import (
 	handler "github.com/gostevedore/stevedore/internal/handler/get/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	"github.com/gostevedore/stevedore/internal/infrastructure/console"
+	credentialscompatibility "github.com/gostevedore/stevedore/internal/infrastructure/credentials/compatibility"
 	credentialsformatfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/formater/factory"
 	outputcredentials "github.com/gostevedore/stevedore/internal/infrastructure/output/credentials"
 	awsdefaultchain "github.com/gostevedore/stevedore/internal/infrastructure/output/credentials/types/AWSDefaultCredentialsChain"
@@ -29,8 +30,9 @@ type OptionsFunc func(opts *Entrypoint)
 
 // Entrypoint defines the entrypoint for the application
 type Entrypoint struct {
-	fs     afero.Fs
-	writer io.Writer
+	fs            afero.Fs
+	writer        io.Writer
+	compatibility Compatibilitier
 }
 
 // NewEntrypoint returns a new entrypoint
@@ -52,6 +54,13 @@ func WithWriter(w io.Writer) OptionsFunc {
 func WithFileSystem(fs afero.Fs) OptionsFunc {
 	return func(e *Entrypoint) {
 		e.fs = fs
+	}
+}
+
+// WithCompatibilitier set the
+func WithCompatibilitier(c Compatibilitier) OptionsFunc {
+	return func(e *Entrypoint) {
+		e.compatibility = c
 	}
 }
 
@@ -108,25 +117,30 @@ func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.Credentials
 	errContext := "(get::credentials::entrypoint::createCredentialsLocalStore)"
 
 	if conf == nil {
-		return nil, errors.New(errContext, "To create credentials local store, credentials configuration is required")
+		return nil, errors.New(errContext, "To create credentials local store in the entrypoint, credentials configuration is required")
 	}
 
 	if conf.Format == "" {
-		return nil, errors.New(errContext, "To create credentials local store, credentials format must be specified")
+		return nil, errors.New(errContext, "To create credentials local store in the entrypoint, credentials format must be specified")
+	}
+
+	if e.compatibility == nil {
+		return nil, errors.New(errContext, "To create credentials local store in the entrypoint, compatibilitier is required")
 	}
 
 	switch conf.StorageType {
 	case credentials.LocalStore:
 		if conf.LocalStoragePath == "" {
-			return nil, errors.New(errContext, "To create credentials local store, local storage path is required")
+			return nil, errors.New(errContext, "To create credentials local store in the entrypoint, local storage path is required")
 		}
 
+		credentialsCompatibility := credentialscompatibility.NewCredentialsCompatibility(e.compatibility)
 		credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
 		credentialsFormat, err := credentialsFormatFactory.Get(credentials.JSONFormat)
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}
-		store := credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat)
+		store := credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
 
 		return store, nil
 	default:
@@ -138,15 +152,15 @@ func (e *Entrypoint) createCredentialsFilter(conf *configuration.Configuration) 
 	errContext := "(get::credentials::entrypoint::createCredentialsFilter)"
 
 	if e.fs == nil {
-		return nil, errors.New(errContext, "To create the credentials filter, a file system is required")
+		return nil, errors.New(errContext, "To create the credentials filter in the entrypoint, a file system is required")
 	}
 
 	if conf == nil {
-		return nil, errors.New(errContext, "To create the credentials filter, configuration is required")
+		return nil, errors.New(errContext, "To create the credentials filter in the entrypoint, configuration is required")
 	}
 
 	if conf.Credentials == nil {
-		return nil, errors.New(errContext, "To create the credentials filter, credentials configuration is required")
+		return nil, errors.New(errContext, "To create the credentials filter in the entrypoint, credentials configuration is required")
 	}
 
 	// create credentials store

@@ -29,6 +29,8 @@ func TestNewCommand(t *testing.T) {
 
 		})
 	}
+
+	assert.True(t, false)
 }
 
 // import (

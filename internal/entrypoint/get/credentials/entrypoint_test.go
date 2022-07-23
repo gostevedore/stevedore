@@ -7,6 +7,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
+	"github.com/gostevedore/stevedore/internal/infrastructure/compatibility"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/spf13/afero"
@@ -34,6 +35,7 @@ func TestExecute(t *testing.T) {
 			entrypoint: NewEntrypoint(
 				WithWriter(ioutil.Discard),
 				WithFileSystem(afero.NewMemMapFs()),
+				WithCompatibilitier(compatibility.NewMockCompatibility()),
 			),
 			conf: &configuration.Configuration{
 				Credentials: &configuration.CredentialsConfiguration{
@@ -69,30 +71,41 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing error creating credentials local storage on get credentials when configuration is not defined",
-			entrypoint: &Entrypoint{},
-			err:        errors.New(errContext, "To create credentials local store, credentials configuration is required"),
+			desc:       "Testing error creating credentials local storage on get credentials entrypoint when configuration is not defined",
+			entrypoint: NewEntrypoint(),
+			err:        errors.New(errContext, "To create credentials local store in the entrypoint, credentials configuration is required"),
 		},
 		{
-			desc:       "Testing error creating credentials local storage on get credentials when credentials format is not defined",
-			entrypoint: &Entrypoint{},
+			desc:       "Testing error creating credentials local storage on get credentials entrypoint when credentials format is not defined",
+			entrypoint: NewEntrypoint(),
 			conf:       &configuration.CredentialsConfiguration{},
-			err:        errors.New(errContext, "To create credentials local store, credentials format must be specified"),
+			err:        errors.New(errContext, "To create credentials local store in the entrypoint, credentials format must be specified"),
 		},
 		{
-			desc:       "Testing error creating credentials local storage on get credentials when local storage path is not defined",
-			entrypoint: &Entrypoint{},
+			desc:       "Testing error creating credentials local storage on get credentials entrypoint when credentials format is not defined",
+			entrypoint: NewEntrypoint(),
+			conf: &configuration.CredentialsConfiguration{
+				Format: "json",
+			},
+			err: errors.New(errContext, "To create credentials local store in the entrypoint, compatibilitier is required"),
+		},
+		{
+			desc: "Testing error creating credentials local storage on get credentials entrypoint when local storage path is not defined",
+			entrypoint: NewEntrypoint(
+				WithCompatibilitier(compatibility.NewMockCompatibility()),
+			),
 			conf: &configuration.CredentialsConfiguration{
 				StorageType: credentials.LocalStore,
 				Format:      "json",
 			},
-			err: errors.New(errContext, "To create credentials local store, local storage path is required"),
+			err: errors.New(errContext, "To create credentials local store in the entrypoint, local storage path is required"),
 		},
 		{
-			desc: "Testing error creating credentials filter on get credentials when storage type in not defined",
-			entrypoint: &Entrypoint{
-				fs: afero.NewMemMapFs(),
-			},
+			desc: "Testing error creating credentials filter on get credentials entrypoint when storage type in not defined",
+			entrypoint: NewEntrypoint(
+				WithFileSystem(afero.NewMemMapFs()),
+				WithCompatibilitier(compatibility.NewMockCompatibility()),
+			),
 			conf: &configuration.CredentialsConfiguration{
 				Format:      "json",
 				StorageType: "unknown",
@@ -100,8 +113,11 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 			err: errors.New(errContext, "Unsupported credentials storage type 'unknown'"),
 		},
 		{
-			desc:       "Testing create credentials local storage on get credentials",
-			entrypoint: &Entrypoint{},
+			desc: "Testing create credentials local storage on get credentials",
+			entrypoint: NewEntrypoint(
+				WithFileSystem(afero.NewMemMapFs()),
+				WithCompatibilitier(compatibility.NewMockCompatibility()),
+			),
 			conf: &configuration.CredentialsConfiguration{
 				StorageType:      credentials.LocalStore,
 				LocalStoragePath: "./test/credentials",
@@ -138,29 +154,30 @@ func TestCredentialsFilter(t *testing.T) {
 	}{
 		{
 			desc:       "Testing error creating credentials filter on get credentials when file system is not defined",
-			entrypoint: &Entrypoint{},
-			err:        errors.New(errContext, "To create the credentials filter, a file system is required"),
+			entrypoint: NewEntrypoint(),
+			err:        errors.New(errContext, "To create the credentials filter in the entrypoint, a file system is required"),
 		},
 		{
 			desc: "Testing error creating credentials filter on get credentials when configuration is not defined",
-			entrypoint: &Entrypoint{
-				fs: afero.NewMemMapFs(),
-			},
-			err: errors.New(errContext, "To create the credentials filter, configuration is required"),
+			entrypoint: NewEntrypoint(
+				WithFileSystem(afero.NewMemMapFs()),
+			),
+			err: errors.New(errContext, "To create the credentials filter in the entrypoint, configuration is required"),
 		},
 		{
 			desc: "Testing error creating credentials filter on get credentials when credentials configuration is not defined",
-			entrypoint: &Entrypoint{
-				fs: afero.NewMemMapFs(),
-			},
+			entrypoint: NewEntrypoint(
+				WithFileSystem(afero.NewMemMapFs()),
+			),
 			conf: &configuration.Configuration{},
-			err:  errors.New(errContext, "To create the credentials filter, credentials configuration is required"),
+			err:  errors.New(errContext, "To create the credentials filter in the entrypoint, credentials configuration is required"),
 		},
 		{
 			desc: "Testing create credentials filter on get credentials",
-			entrypoint: &Entrypoint{
-				fs: afero.NewMemMapFs(),
-			},
+			entrypoint: NewEntrypoint(
+				WithFileSystem(afero.NewMemMapFs()),
+				WithCompatibilitier(compatibility.NewMockCompatibility()),
+			),
 			conf: &configuration.Configuration{
 				Credentials: &configuration.CredentialsConfiguration{
 					StorageType:      credentials.LocalStore,
