@@ -22,4 +22,5 @@ func TestExecute(t *testing.T) {
 			assert.Equal(t, test.err, test.entrypoint.Execute(context.TODO(), test.args, test.conf))
 		})
 	}
+	assert.True(t, false)
 }
