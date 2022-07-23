@@ -17,6 +17,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
+	credentialscompatibility "github.com/gostevedore/stevedore/internal/infrastructure/credentials/compatibility"
 	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
 	credentialsformatfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/formater/factory"
 	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
@@ -41,8 +42,9 @@ type OptionsFunc func(opts *Entrypoint)
 
 // Entrypoint defines the entrypoint for the build application
 type Entrypoint struct {
-	fs     afero.Fs
-	writer io.Writer
+	fs            afero.Fs
+	writer        io.Writer
+	compatibility Compatibilitier
 }
 
 // NewEntrypoint returns a new entrypoint
@@ -64,6 +66,13 @@ func WithWriter(w io.Writer) OptionsFunc {
 func WithFileSystem(fs afero.Fs) OptionsFunc {
 	return func(e *Entrypoint) {
 		e.fs = fs
+	}
+}
+
+// WithCompatibility sets the compatibility for the entrypoint
+func WithCompatibility(compatibility Compatibilitier) OptionsFunc {
+	return func(e *Entrypoint) {
+		e.compatibility = compatibility
 	}
 }
 
@@ -163,25 +172,31 @@ func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.Credentials
 	errContext := "(build::entrypoint::createCredentialsStore)"
 
 	if conf == nil {
-		return nil, errors.New(errContext, "To create credentials store, credentials configuration is required")
+		return nil, errors.New(errContext, "To create credentials store in promote entrypoint, credentials configuration is required")
 	}
 
 	if conf.Format == "" {
-		return nil, errors.New(errContext, "To create credentials store, credentials format must be specified")
+		return nil, errors.New(errContext, "To create credentials store in promote entrypoint, credentials format must be specified")
+	}
+
+	if e.compatibility == nil {
+		return nil, errors.New(errContext, "To create credentials store in promote entrypoint, compatibility is required")
 	}
 
 	switch conf.StorageType {
 	case credentials.LocalStore:
 		if conf.LocalStoragePath == "" {
-			return nil, errors.New(errContext, "To create credentials store, local storage path is required")
+			return nil, errors.New(errContext, "To create credentials store in promote entrypoint, local storage path is required")
 		}
+
+		credentialsCompatibility := credentialscompatibility.NewCredentialsCompatibility(e.compatibility)
 
 		credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
 		credentialsFormat, err := credentialsFormatFactory.Get(credentials.JSONFormat)
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}
-		store := credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat)
+		store := credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
 
 		return store, nil
 	default:
@@ -193,15 +208,15 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 	errContext := "(promote::entrypoint::createCredentialsFactory)"
 
 	if e.fs == nil {
-		return nil, errors.New(errContext, "To create the credentials store, a file system is required")
+		return nil, errors.New(errContext, "To create the credentials store in promote entrypoint, a file system is required")
 	}
 
 	if conf == nil {
-		return nil, errors.New(errContext, "To create the credentials store, configuration is required")
+		return nil, errors.New(errContext, "To create the credentials store in promote entrypoint, configuration is required")
 	}
 
 	if conf.Credentials == nil {
-		return nil, errors.New(errContext, "To create the credentials store, credentials configuration is required")
+		return nil, errors.New(errContext, "To create the credentials store in promote entrypoint, credentials configuration is required")
 	}
 
 	// create credentials store

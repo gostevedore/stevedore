@@ -10,6 +10,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
+	"github.com/gostevedore/stevedore/internal/infrastructure/compatibility"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
@@ -41,7 +42,7 @@ func TestPrepareHandlerOptions(t *testing.T) {
 		err            error
 	}{
 		{
-			desc: "Testing error when args are nil",
+			desc: "Testing error preparing handler option in promote entrypoint when args are nil",
 			args: nil,
 			err:  errors.New(errContext, "To execute the promote entrypoint, promote image argument is required"),
 		},
@@ -124,21 +125,42 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing error when create credentials local store with not defined configuration",
+			desc:       "Testing error creating local store in promote entrypoint when configuration is not defined in credentials local store",
 			entrypoint: NewEntrypoint(),
-			err:        errors.New(errContext, "To create credentials store, credentials configuration is required"),
+			err:        errors.New(errContext, "To create credentials store in promote entrypoint, credentials configuration is required"),
 		},
 		{
-			desc:       "Testing error when create credentials local store with undefined format",
+			desc:       "Testing error creating local store in promote entrypoint when format is undefined in credentials local store",
 			entrypoint: NewEntrypoint(),
 			conf: &configuration.CredentialsConfiguration{
 				StorageType: credentials.LocalStore,
 			},
-			err: errors.New(errContext, "To create credentials store, credentials format must be specified"),
+			err: errors.New(errContext, "To create credentials store in promote entrypoint, credentials format must be specified"),
 		},
 		{
-			desc:       "Testing error when create credentials local store with unsupported storage type",
+			desc:       "Testing error creating local store in promote entrypoint when compatibilitier is undefined in the entrypoint",
 			entrypoint: NewEntrypoint(),
+			conf: &configuration.CredentialsConfiguration{
+				Format: credentials.JSONFormat,
+			},
+			err: errors.New(errContext, "To create credentials store in promote entrypoint, compatibility is required"),
+		},
+		{
+			desc: "Testing error creating local store in promote entrypoint when local storage is used and local storage path is undefined",
+			entrypoint: NewEntrypoint(
+				WithCompatibility(compatibility.NewMockCompatibility()),
+			),
+			conf: &configuration.CredentialsConfiguration{
+				StorageType: credentials.LocalStore,
+				Format:      credentials.JSONFormat,
+			},
+			err: errors.New(errContext, "To create credentials store in promote entrypoint, local storage path is required"),
+		},
+		{
+			desc: "Testing error creating local store in promote entrypoint when storage type is not supported in credentials local store",
+			entrypoint: NewEntrypoint(
+				WithCompatibility(compatibility.NewMockCompatibility()),
+			),
 			conf: &configuration.CredentialsConfiguration{
 				StorageType: "unsupported",
 				Format:      credentials.JSONFormat,
@@ -146,8 +168,10 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 			err: errors.New(errContext, "Unsupported credentials storage type 'unsupported'"),
 		},
 		{
-			desc:       "Testing create credentials local store",
-			entrypoint: NewEntrypoint(),
+			desc: "Testing create credentials local store in promote entrypoint",
+			entrypoint: NewEntrypoint(
+				WithCompatibility(compatibility.NewMockCompatibility()),
+			),
 			conf: &configuration.CredentialsConfiguration{
 				StorageType:      "local",
 				LocalStoragePath: "local-storage-path",
@@ -190,39 +214,41 @@ func TestCreateCredentialsFactory(t *testing.T) {
 	}
 
 	tests := []struct {
-		desc       string
-		entrypoint *Entrypoint
-		conf       *configuration.Configuration
-		err        error
+		desc          string
+		entrypoint    *Entrypoint
+		conf          *configuration.Configuration
+		compatibility Compatibilitier
+		err           error
 	}{
 		{
-			desc:       "Testing error when fs is not provided",
+			desc:       "Testing error creating credentials factory when file system is not provided",
 			entrypoint: &Entrypoint{},
-			err:        errors.New(errContext, "To create the credentials store, a file system is required"),
+			err:        errors.New(errContext, "To create the credentials store in promote entrypoint, a file system is required"),
 		},
 		{
-			desc: "Testing error when conf is not provided",
+			desc: "Testing error creating credentials factory when configuration is not provided",
 			entrypoint: NewEntrypoint(
 				WithWriter(ioutil.Discard),
 				WithFileSystem(testFs),
 			),
 			conf: nil,
-			err:  errors.New(errContext, "To create the credentials store, configuration is required"),
+			err:  errors.New(errContext, "To create the credentials store in promote entrypoint, configuration is required"),
 		},
 		{
-			desc: "Testing error when credentials dir is not provided",
+			desc: "Testing error creating credentials factory when credentials dir is not provided",
 			entrypoint: NewEntrypoint(
 				WithWriter(ioutil.Discard),
 				WithFileSystem(testFs),
 			),
 			conf: &configuration.Configuration{},
-			err:  errors.New(errContext, "To create the credentials store, credentials configuration is required"),
+			err:  errors.New(errContext, "To create the credentials store in promote entrypoint, credentials configuration is required"),
 		},
 		{
-			desc: "Testing create credentials store",
+			desc: "Testing create credentials store in promote entrypoint",
 			entrypoint: NewEntrypoint(
 				WithWriter(ioutil.Discard),
 				WithFileSystem(testFs),
+				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
 			conf: &configuration.Configuration{
 				Credentials: &configuration.CredentialsConfiguration{
@@ -258,18 +284,18 @@ func TestCreatePromoteFactory(t *testing.T) {
 	e := NewEntrypoint()
 	promoteRepoFactory, err = e.createPromoteFactory()
 
-	t.Run("Testing not error is returned", func(t *testing.T) {
+	t.Run("Testing create promote factory and not error is returned in promote entrypoint", func(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, promoteRepoFactory)
 	})
 
-	t.Run("Testing docker promote repository is returned", func(t *testing.T) {
+	t.Run("Testing create promote factory and docker promote repository is returned in promote entrypoint", func(t *testing.T) {
 		promoteRepoDocker, err = promoteRepoFactory.Get(image.DockerPromoterName)
 		assert.Nil(t, err)
 		assert.IsType(t, &docker.DockerPromete{}, promoteRepoDocker)
 	})
 
-	t.Run("Testing dry run promote repository is returned", func(t *testing.T) {
+	t.Run("Testing create promote factory and dry run promote repository is returned in promote entrypoint", func(t *testing.T) {
 		promoteRepoDryRun, err = promoteRepoFactory.Get(image.DryRunPromoterName)
 		assert.Nil(t, err)
 		assert.IsType(t, &dryrun.DryRunPromote{}, promoteRepoDryRun)
@@ -278,7 +304,7 @@ func TestCreatePromoteFactory(t *testing.T) {
 
 func TestCreateSemanticVersionFactory(t *testing.T) {
 
-	t.Run("Testing create semantic version factory", func(t *testing.T) {
+	t.Run("Testing create semantic version factory in promote entrypoint", func(t *testing.T) {
 		e := NewEntrypoint()
 
 		sv, err := e.createSemanticVersionFactory()
