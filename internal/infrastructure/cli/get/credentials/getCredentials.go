@@ -9,16 +9,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// const (
-// 	columnSeparator = " | "
-// )
-
-// type getCredentialsCmdFlags struct {
-// 	Wide bool
-// }
-
-// var getCredentialsCmdFlagsVar *getCredentialsCmdFlags
-
 //  NewCommand return an stevedore command object for get builders
 func NewCommand(ctx context.Context, config *configuration.Configuration, entrypoint Entrypointer) *command.StevedoreCommand {
 
@@ -37,7 +27,7 @@ func NewCommand(ctx context.Context, config *configuration.Configuration, entryp
 		Long: `Stevedore subcommand to get credentials information
 
   Example:
-    stevedore get credentials --wide
+    stevedore get credentials
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
@@ -57,30 +47,5 @@ func NewCommand(ctx context.Context, config *configuration.Configuration, entryp
 		Command: getCredentialsCmd,
 	}
 
-	// 	getCredentialsCmd.Flags().BoolVarP(&getCredentialsCmdFlagsVar.Wide, "wide", "w", false, "Show wide docker registry credentials information")
-
 	return command
 }
-
-// func getCredentialssHandler(ctx context.Context, config *configuration.Configuration) command.CobraRunEFunc {
-
-// 	return func(cmd *cobra.Command, args []string) error {
-
-// 		var err error
-// 		var creds [][]string
-// 		var table [][]string
-
-// 		creds, err = credentials.ListRegistryCredentials(getCredentialsCmdFlagsVar.Wide)
-// 		if err != nil {
-// 			return errors.New("(command::getCredentialssHandler)", "Error listing registry credentials", err)
-// 		}
-
-// 		table = make([][]string, len(creds)+1)
-// 		table[0] = credentials.ListRegistryCredentialsHeader(getCredentialsCmdFlagsVar.Wide)
-// 		copy(table[1:], creds)
-
-// 		console.PrintTable(table)
-
-// 		return nil
-// 	}
-// }
