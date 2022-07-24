@@ -24,4 +24,5 @@ type ConfigurationLoader interface {
 	SetDefault(key string, value interface{})
 	SetEnvPrefix(in string)
 	SetFs(fs afero.Fs)
+	ConfigFileUsed() string
 }

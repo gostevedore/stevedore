@@ -82,3 +82,9 @@ func (c *MockConfigurationLoader) SetEnvPrefix(in string) {
 func (c *MockConfigurationLoader) SetFs(fs afero.Fs) {
 	c.Called(fs)
 }
+
+// ConfigFileUsed sets the filesystem to use to read configuration
+func (c *MockConfigurationLoader) ConfigFileUsed() string {
+	args := c.Called()
+	return args.String(0)
+}

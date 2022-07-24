@@ -98,7 +98,7 @@ num_workers: 5
 }
 
 func TestNew(t *testing.T) {
-
+	var err error
 	errContext := "(Configuration::New)"
 
 	comp := &compatibility.MockCompatibility{}
@@ -174,6 +174,14 @@ func TestNew(t *testing.T) {
 				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsStorageTypeKey}, ".")).Return(DefaultCredentialsStorage)
 				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsLocalStoragePathKey}, ".")).Return(DefaultCredentialsLocalStoragePath)
 				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsFormatKey}, ".")).Return(DefaultCredentialsFormat)
+
+				// DEPRECIATED
+				l.(*loader.MockConfigurationLoader).On("GetInt", DEPRECATEDNumWorkerKey).Return(0)
+				l.(*loader.MockConfigurationLoader).On("GetString", DEPRECATEDTreePathFileKey).Return("")
+				l.(*loader.MockConfigurationLoader).On("GetString", DEPRECATEDBuilderPathKey).Return("")
+				l.(*loader.MockConfigurationLoader).On("GetString", DEPRECATEDDockerCredentialsDirKey).Return("")
+				l.(*loader.MockConfigurationLoader).On("GetBool", DEPRECATEDBuildOnCascadeKey).Return(false)
+
 			},
 			res: &Configuration{
 				ImagesPath:                   filepath.Join(".", "stevedore.yaml"),
@@ -187,6 +195,84 @@ func TestNew(t *testing.T) {
 				Credentials: &CredentialsConfiguration{
 					StorageType:      "local",
 					LocalStoragePath: "credentials",
+					Format:           "json",
+				},
+			},
+			err: &errors.Error{},
+		},
+		{
+			desc:          "Testing create new configuration reading from configuration file",
+			fs:            afero.NewMemMapFs(),
+			loader:        loader.NewMockConfigurationLoader(),
+			compatibility: comp,
+			prepareAssertFunc: func(l ConfigurationLoader, c Compatibilitier) {
+
+				l.(*loader.MockConfigurationLoader).On("SetFs", afero.NewMemMapFs()).Return()
+				l.(*loader.MockConfigurationLoader).On("AutomaticEnv").Return()
+				l.(*loader.MockConfigurationLoader).On("SetEnvPrefix", "stevedore").Return()
+				l.(*loader.MockConfigurationLoader).On("SetConfigName", DefaultConfigFile).Return()
+				l.(*loader.MockConfigurationLoader).On("SetConfigType", DefaultConfigFileExtention).Return()
+
+				l.(*loader.MockConfigurationLoader).On("SetDefault", BuildersPathKey, filepath.Join(DefaultConfigFolder, DefaultBuildersPath)).Return()
+				l.(*loader.MockConfigurationLoader).On("SetDefault", ConcurrencyKey, concurrencyValue()).Return()
+				l.(*loader.MockConfigurationLoader).On("SetDefault", EnableSemanticVersionTagsKey, DefaultEnableSemanticVersionTags).Return()
+
+				l.(*loader.MockConfigurationLoader).On("SetDefault", ImagesPathKey, filepath.Join(DefaultConfigFolder, DefaultImagesPath)).Return()
+				l.(*loader.MockConfigurationLoader).On("SetDefault", LogPathFileKey, DefaultLogPathFile).Return()
+				l.(*loader.MockConfigurationLoader).On("SetDefault", PushImagesKey, DefaultPushImages).Return()
+				l.(*loader.MockConfigurationLoader).On("SetDefault", SemanticVersionTagsTemplatesKey, []string{DefaultSemanticVersionTagsTemplates}).Return()
+				l.(*loader.MockConfigurationLoader).On("SetDefault", strings.Join([]string{CredentialsKey, CredentialsStorageTypeKey}, "."), DefaultCredentialsStorage).Return()
+				l.(*loader.MockConfigurationLoader).On("SetDefault", strings.Join([]string{CredentialsKey, CredentialsLocalStoragePathKey}, "."), DefaultCredentialsLocalStoragePath).Return()
+				l.(*loader.MockConfigurationLoader).On("SetDefault", strings.Join([]string{CredentialsKey, CredentialsFormatKey}, "."), DefaultCredentialsFormat).Return()
+
+				l.(*loader.MockConfigurationLoader).On("AddConfigPath", filepath.Join(user.HomeDir, ".config", "stevedore")).Return()
+				l.(*loader.MockConfigurationLoader).On("AddConfigPath", user.HomeDir).Return()
+				l.(*loader.MockConfigurationLoader).On("AddConfigPath", DefaultConfigFolder).Return()
+
+				l.(*loader.MockConfigurationLoader).On("ReadInConfig").Return(nil)
+
+				l.(*loader.MockConfigurationLoader).On("GetString", LogPathFileKey).Return(DefaultLogPathFile)
+
+				l.(*loader.MockConfigurationLoader).On("GetString", BuildersPathKey).Return(filepath.Join(DefaultConfigFolder, DefaultBuildersPath))
+				l.(*loader.MockConfigurationLoader).On("GetInt", ConcurrencyKey).Return(concurrencyValue())
+				l.(*loader.MockConfigurationLoader).On("GetBool", EnableSemanticVersionTagsKey).Return(DefaultEnableSemanticVersionTags)
+				l.(*loader.MockConfigurationLoader).On("GetString", ImagesPathKey).Return(filepath.Join(DefaultConfigFolder, DefaultImagesPath))
+				l.(*loader.MockConfigurationLoader).On("GetBool", PushImagesKey).Return(DefaultPushImages)
+				l.(*loader.MockConfigurationLoader).On("GetStringSlice", SemanticVersionTagsTemplatesKey).Return([]string{DefaultSemanticVersionTagsTemplates})
+				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsStorageTypeKey}, ".")).Return(DefaultCredentialsStorage)
+				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsLocalStoragePathKey}, ".")).Return(DefaultCredentialsLocalStoragePath)
+				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsFormatKey}, ".")).Return(DefaultCredentialsFormat)
+
+				// DEPRECIATED
+				l.(*loader.MockConfigurationLoader).On("GetInt", DEPRECATEDNumWorkerKey).Return(8)
+				l.(*loader.MockConfigurationLoader).On("GetString", DEPRECATEDTreePathFileKey).Return("images.yaml")
+				l.(*loader.MockConfigurationLoader).On("GetString", DEPRECATEDBuilderPathKey).Return("builders.yaml")
+				l.(*loader.MockConfigurationLoader).On("GetString", DEPRECATEDDockerCredentialsDirKey).Return("/credentials")
+				l.(*loader.MockConfigurationLoader).On("GetBool", DEPRECATEDBuildOnCascadeKey).Return(true)
+
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'tree_path' is deprecated and will be removed on v0.12.0, please use 'images_path' instead"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' is deprecated and will be removed on v0.12.0, please use 'builders_path' instead"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' is deprecated and will be removed on v0.12.0, please use 'concurrency' instead"})
+				c.(*compatibility.MockCompatibility).On("AddChanged", []string{"'build_on_cascade' is not available anymore as a configuration parameter. Cascade execution plan is only enabled by '--cascade' flag on build command"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'docker_registry_credentials_dir' is deprecated and will be removed on v0.12.0, please use 'credentials' block to configure credentials. Credentials local storage located in '/credentials' has precedence over 'credentials' block and is going to be used as default credentials store"})
+
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'tree_path' and 'images_path' are both defined, 'tree_path' will be used"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' and 'builders_path' are both defined, 'builder_path' will be used"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' and 'concurrency' are both defined, 'num_workers' will be used"})
+
+			},
+			res: &Configuration{
+				ImagesPath:                   filepath.Join("images.yaml"),
+				BuildersPath:                 filepath.Join("builders.yaml"),
+				LogPathFile:                  "",
+				Concurrency:                  8,
+				PushImages:                   false,
+				LogWriter:                    ioutil.Discard,
+				EnableSemanticVersionTags:    false,
+				SemanticVersionTagsTemplates: []string{"{{ .Major }}.{{ .Minor }}.{{ .Patch }}"},
+				Credentials: &CredentialsConfiguration{
+					StorageType:      "local",
+					LocalStoragePath: "/credentials",
 					Format:           "json",
 				},
 			},
@@ -219,6 +305,7 @@ func TestNew(t *testing.T) {
 				assert.Equal(t, test.res.SemanticVersionTagsTemplates, c.SemanticVersionTagsTemplates, "assert SemanticVersionTagsTemplates")
 
 				c.loader.(*loader.MockConfigurationLoader).AssertExpectations(t)
+				c.compatibility.(*compatibility.MockCompatibility).AssertExpectations(t)
 			}
 		})
 	}
@@ -393,6 +480,10 @@ semantic_version_tags_templates:
 				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' is deprecated and will be removed on v0.12.0, please use 'concurrency' instead"})
 				c.(*compatibility.MockCompatibility).On("AddChanged", []string{"'build_on_cascade' is not available anymore as a configuration parameter. Cascade execution plan is only enabled by '--cascade' flag on build command"})
 				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'docker_registry_credentials_dir' is deprecated and will be removed on v0.12.0, please use 'credentials' block to configure credentials. Credentials local storage located in 'mycredentials' has precedence over 'credentials' block and is going to be used as default credentials store"})
+
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'tree_path' and 'images_path' are both defined, 'tree_path' will be used"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' and 'builders_path' are both defined, 'builder_path' will be used"})
+				c.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' and 'concurrency' are both defined, 'num_workers' will be used"})
 			},
 		},
 	}
@@ -569,6 +660,10 @@ func TestCheckCompatibility(t *testing.T) {
 				c.compatibility.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' is deprecated and will be removed on v0.12.0, please use 'concurrency' instead"})
 				c.compatibility.(*compatibility.MockCompatibility).On("AddChanged", []string{"'build_on_cascade' is not available anymore as a configuration parameter. Cascade execution plan is only enabled by '--cascade' flag on build command"})
 				c.compatibility.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'docker_registry_credentials_dir' is deprecated and will be removed on v0.12.0, please use 'credentials' block to configure credentials. Credentials local storage located in 'mycredentials' has precedence over 'credentials' block and is going to be used as default credentials store"})
+
+				c.compatibility.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'tree_path' and 'images_path' are both defined, 'tree_path' will be used"})
+				c.compatibility.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'builder_path' and 'builders_path' are both defined, 'builder_path' will be used"})
+				c.compatibility.(*compatibility.MockCompatibility).On("AddDeprecated", []string{"'num_workers' and 'concurrency' are both defined, 'num_workers' will be used"})
 			},
 			err: &errors.Error{},
 		},

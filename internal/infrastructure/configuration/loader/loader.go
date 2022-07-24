@@ -77,3 +77,8 @@ func (c *ConfigurationLoader) SetEnvPrefix(in string) {
 func (c *ConfigurationLoader) SetFs(fs afero.Fs) {
 	c.viper.SetFs(fs)
 }
+
+// ConfigFileUsed sets the filesystem to use to read configuration
+func (c *ConfigurationLoader) ConfigFileUsed() string {
+	return c.viper.ConfigFileUsed()
+}

@@ -60,7 +60,7 @@ type Configuration struct {
 const (
 
 	// DefaultConfigFile is the name of the default configuration file
-	DefaultConfigFile = "stevedore"
+	DefaultConfigFile = "./stevedore"
 	// DefaultConfigFileExtention is the default configuration file extention
 	DefaultConfigFileExtention = "yaml"
 	// DefaultConfigFolder is the default configuration folder
@@ -201,6 +201,26 @@ func New(fs afero.Fs, loader ConfigurationLoader, compatibility Compatibilitier)
 	logWriter, err = createLogWriter(fs, loader.GetString(LogPathFileKey))
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
+	}
+
+	if loader.GetInt(DEPRECATEDNumWorkerKey) > 0 {
+		config.DEPRECATEDNumWorkers = loader.GetInt(DEPRECATEDNumWorkerKey)
+	}
+
+	if loader.GetString(DEPRECATEDTreePathFileKey) != "" {
+		config.DEPRECATEDTreePathFile = loader.GetString(DEPRECATEDTreePathFileKey)
+	}
+
+	if loader.GetString(DEPRECATEDBuilderPathKey) != "" {
+		config.DEPRECATEDBuilderPath = loader.GetString(DEPRECATEDBuilderPathKey)
+	}
+
+	if loader.GetBool(DEPRECATEDBuildOnCascadeKey) {
+		config.DEPRECATEDBuildOnCascade = loader.GetBool(DEPRECATEDBuildOnCascadeKey)
+	}
+
+	if loader.GetString(DEPRECATEDDockerCredentialsDirKey) != "" {
+		config.DEPRECATEDDockerCredentialsDir = loader.GetString(DEPRECATEDDockerCredentialsDirKey)
 	}
 
 	config.BuildersPath = loader.GetString(BuildersPathKey)
@@ -418,7 +438,7 @@ func (c *Configuration) CheckCompatibility() error {
 		c.compatibility.AddDeprecated(fmt.Sprintf("'%s' is deprecated and will be removed on v0.12.0, please use '%s' instead", DEPRECATEDTreePathFileKey, ImagesPathKey))
 
 		c.ImagesPath = c.DEPRECATEDTreePathFile
-		if c.ImagesPath == "" {
+		if c.ImagesPath != "" {
 			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and '%s' are both defined, '%s' will be used", DEPRECATEDTreePathFileKey, ImagesPathKey, DEPRECATEDTreePathFileKey))
 		}
 	}
@@ -428,7 +448,7 @@ func (c *Configuration) CheckCompatibility() error {
 
 		c.BuildersPath = c.DEPRECATEDBuilderPath
 
-		if c.BuildersPath == "" {
+		if c.BuildersPath != "" {
 			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and '%s' are both defined, '%s' will be used", DEPRECATEDBuilderPathKey, BuildersPathKey, DEPRECATEDBuilderPathKey))
 		}
 	}
@@ -438,7 +458,7 @@ func (c *Configuration) CheckCompatibility() error {
 
 		c.Concurrency = c.DEPRECATEDNumWorkers
 
-		if c.Concurrency <= 0 {
+		if c.Concurrency > 0 {
 			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and '%s' are both defined, '%s' will be used", DEPRECATEDNumWorkerKey, ConcurrencyKey, DEPRECATEDNumWorkerKey))
 		}
 	}
