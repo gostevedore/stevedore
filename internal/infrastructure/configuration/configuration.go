@@ -437,30 +437,31 @@ func (c *Configuration) CheckCompatibility() error {
 	if c.DEPRECATEDTreePathFile != "" {
 		c.compatibility.AddDeprecated(fmt.Sprintf("'%s' is deprecated and will be removed on v0.12.0, please use '%s' instead", DEPRECATEDTreePathFileKey, ImagesPathKey))
 
-		c.ImagesPath = c.DEPRECATEDTreePathFile
-		if c.ImagesPath != "" {
+		if c.ImagesPath != "" && c.ImagesPath != DefaultImagesPath {
 			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and '%s' are both defined, '%s' will be used", DEPRECATEDTreePathFileKey, ImagesPathKey, DEPRECATEDTreePathFileKey))
 		}
+
+		c.ImagesPath = c.DEPRECATEDTreePathFile
 	}
 
 	if c.DEPRECATEDBuilderPath != "" {
 		c.compatibility.AddDeprecated(fmt.Sprintf("'%s' is deprecated and will be removed on v0.12.0, please use '%s' instead", DEPRECATEDBuilderPathKey, BuildersPathKey))
 
-		c.BuildersPath = c.DEPRECATEDBuilderPath
-
-		if c.BuildersPath != "" {
+		if c.BuildersPath != "" && c.BuildersPath != DefaultBuildersPath {
 			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and '%s' are both defined, '%s' will be used", DEPRECATEDBuilderPathKey, BuildersPathKey, DEPRECATEDBuilderPathKey))
 		}
+
+		c.BuildersPath = c.DEPRECATEDBuilderPath
 	}
 
 	if c.DEPRECATEDNumWorkers > 0 {
 		c.compatibility.AddDeprecated(fmt.Sprintf("'%s' is deprecated and will be removed on v0.12.0, please use '%s' instead", DEPRECATEDNumWorkerKey, ConcurrencyKey))
 
-		c.Concurrency = c.DEPRECATEDNumWorkers
-
-		if c.Concurrency > 0 {
+		if c.Concurrency > 0 && c.Concurrency != concurrencyValue() {
 			c.compatibility.AddDeprecated(fmt.Sprintf("'%s' and '%s' are both defined, '%s' will be used", DEPRECATEDNumWorkerKey, ConcurrencyKey, DEPRECATEDNumWorkerKey))
 		}
+
+		c.Concurrency = c.DEPRECATEDNumWorkers
 	}
 
 	if c.DEPRECATEDBuildOnCascade == true {
