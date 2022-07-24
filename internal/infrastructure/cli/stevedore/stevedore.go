@@ -107,6 +107,7 @@ You just need to define how each image should be built and the relationship amon
 	promoteEntrypoint := promoteentrypoint.NewEntrypoint(
 		promoteentrypoint.WithWriter(console),
 		promoteentrypoint.WithFileSystem(fs),
+		promoteentrypoint.WithCompatibility(compatibilityStore),
 	)
 	command.AddCommand(
 		middleware.Command(ctx, promote.NewCommand(ctx, compatibilityStore, config, promoteEntrypoint), compatibilityReport, log, console),

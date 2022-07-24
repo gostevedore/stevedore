@@ -13,12 +13,18 @@ func TestNewCommand(t *testing.T) {
 		desc       string
 		config     *configuration.Configuration
 		entrypoint Entrypointer
+		prepareMockFunc func(Entrypointer, *configuration.Configuration)
 		args       []string
 		err        error
 	}{}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			if test.prepareMockFunc != nil {
+				test.prepareMockFunc(test.entrypoint, test.config)
+			}
 
 			cmd := NewCommand(context.TODO(), test.config, test.entrypoint)
 			cmd.Command.ParseFlags(test.args)

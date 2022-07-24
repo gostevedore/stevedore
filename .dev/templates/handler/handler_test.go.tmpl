@@ -17,10 +17,12 @@ func TestHandler(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-
 			t.Log(test.desc)
+
 			err := test.handler.Handler(context.TODO())
-			assert.Equal(t, test.err.Error(), err.Error())
+			if err != nil {
+				assert.Equal(t, test.err, err)
+			}
 		})
 	}
 	assert.True(t, false)

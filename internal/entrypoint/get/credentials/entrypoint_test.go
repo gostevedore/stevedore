@@ -50,6 +50,7 @@ func TestExecute(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
 
 			err := test.entrypoint.Execute(context.TODO(), test.args, test.conf)
 			if err != nil {
