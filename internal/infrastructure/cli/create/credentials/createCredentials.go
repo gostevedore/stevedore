@@ -14,9 +14,13 @@ func NewCommand(ctx context.Context, config *configuration.Configuration, entryp
 
 	createCredentialsCmd := &cobra.Command{
 		Use: "credentials",
-		Short: "Stevedore subcommand",
+		Aliases: []string{
+			"auth",
+			"badge",
+		},
+		Short: "Stevedore subcommand to add a new credentials badge into credentials store",
 		Long: `
-Stevedore subcommand
+		Stevedore subcommand to add a new credentials badge into credentials store
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
