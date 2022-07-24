@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	defaultProjectBaseDir = "test"
-	//defaultProjectBaseDir = ".."
+	//defaultProjectBaseDir = "test"
+	defaultProjectBaseDir    = ".."
 	defaultTemplatesDir      = "templates"
 	defaultTemplateExtension = ".tmpl"
 

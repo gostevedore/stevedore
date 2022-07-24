@@ -12,7 +12,7 @@ type {{ .ApplicationObject }} struct {
 // New{{ .ApplicationObject }} creats a new application service
 func New{{ .ApplicationObject }}(options ...OptionsFunc) *{{ .ApplicationObject }} {
 
-	service := &Application{}
+	service := &{{ .ApplicationObject }}{}
 	service.Options(options...)
 
 	return service

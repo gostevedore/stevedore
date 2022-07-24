@@ -15,7 +15,7 @@ type {{ .HandlerObject }} struct {
 }
 
 // New{{ .HandlerObject }} creates a new handler for build commands
-func New{{ .HandlerObject }}(a Applicationer) *{{ .HandlerObject }} {
+func New{{ .HandlerObject }}(options ...OptionsFunc) *{{ .HandlerObject }} {
 	handler := &{{ .HandlerObject }}{}
 	handler.Options(options...)
 

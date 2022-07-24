@@ -11,7 +11,7 @@ func TestHandler(t *testing.T) {
 
 	tests := []struct {
 		desc    string
-		handler *Handler
+		handler *{{ .HandlerObject }}
 		err     error
 	}{}
 
