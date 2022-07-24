@@ -103,6 +103,9 @@ func (s *LocalStore) Get(id string) (*credentials.Badge, error) {
 	}
 
 	badge, err = s.get(hashedID)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
 
 	return badge, nil
 }
