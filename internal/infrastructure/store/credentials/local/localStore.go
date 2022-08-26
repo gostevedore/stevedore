@@ -110,6 +110,7 @@ func (s *LocalStore) Get(id string) (*credentials.Badge, error) {
 	return badge, nil
 }
 
+// get return a badge from the store using the hashed id
 func (s *LocalStore) get(id string) (*credentials.Badge, error) {
 	var err error
 	var fileData []byte
@@ -139,6 +140,7 @@ func (s *LocalStore) get(id string) (*credentials.Badge, error) {
 	return badge, nil
 }
 
+// All returns all badges from the store
 func (s *LocalStore) All() []*credentials.Badge {
 	var badge *credentials.Badge
 	badges := []*credentials.Badge{}
@@ -163,7 +165,7 @@ func (s *LocalStore) All() []*credentials.Badge {
 	return badges
 }
 
-// hashID
+// hashID generates a hash for the id
 func hashID(id string) (string, error) {
 
 	errContext := "(store::credentials::local::hashID)"
