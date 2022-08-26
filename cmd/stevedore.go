@@ -19,7 +19,7 @@ func main() {
 	defer log.Sync()
 
 	fs := afero.NewOsFs()
-	cons := console.NewConsole(os.Stdout)
+	cons := console.NewConsole(os.Stdout, os.Stdin)
 	compatibility := compatibility.NewCompatibility(cons)
 	configLoader := loader.NewConfigurationLoader(viper.New())
 	conf, err := configuration.New(fs, configLoader, compatibility)

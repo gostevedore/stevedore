@@ -31,7 +31,7 @@ func versionHandler(ctx context.Context) command.CobraRunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		var r *domainrelease.Release
 		var p *release.Output
-		cons := console.NewConsole(os.Stdout)
+		cons := console.NewConsole(os.Stdout, nil)
 		r = domainrelease.NewRelease()
 		p = release.NewOutput(cons)
 		p.Print(r)
