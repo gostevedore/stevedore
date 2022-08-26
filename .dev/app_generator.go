@@ -34,7 +34,7 @@ func main() {
 	var err error
 
 	if os.Args == nil || len(os.Args) < 2 {
-		fmt.Println("Please provide a use case [get/images]")
+		fmt.Println("Please provide a use case [example: get/images]")
 		os.Exit(1)
 	}
 

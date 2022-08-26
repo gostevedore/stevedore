@@ -3,10 +3,10 @@ package {{ .PackageName }}
 import (
 	"context"
 
-	"{{ .ApplicationPackageURL }}"
+	application "{{ .ApplicationPackageURL }}"
 )
 
 // Applicationer is the service for build commands
 type Applicationer interface {
-	Run(ctx context.Context, optionsFunc ...credentials.OptionsFunc) error
+	Run(ctx context.Context, optionsFunc ...application.OptionsFunc) error
 }

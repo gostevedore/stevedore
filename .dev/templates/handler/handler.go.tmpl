@@ -9,12 +9,12 @@ import (
 // OptionsFunc is a function used to configure the handler
 type OptionsFunc func(*{{ .HandlerObject }})
 
-// {{ .HandlerObject }} is a handler for get credentials commands
+// {{ .HandlerObject }} is a handler for command
 type {{ .HandlerObject }} struct {
 	app Applicationer
 }
 
-// New{{ .HandlerObject }} creates a new handler for build commands
+// New{{ .HandlerObject }} creates a new handler for command
 func New{{ .HandlerObject }}(options ...OptionsFunc) *{{ .HandlerObject }} {
 	handler := &{{ .HandlerObject }}{}
 	handler.Options(options...)
