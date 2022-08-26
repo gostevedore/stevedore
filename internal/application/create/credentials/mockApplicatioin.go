@@ -3,6 +3,7 @@ package credentials
 import (
 	"context"
 
+	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -17,7 +18,7 @@ func NewMockCreateCredentialsApplication() *MockCreateCredentialsApplication {
 }
 
 // Build provides a mock function with given fields: ctx, buildPlan, name, version, options, optionsFunc
-func (m *MockCreateCredentialsApplication) Build(ctx context.Context, optionsFunc ...OptionsFunc) error {
-	args := m.Called(ctx, optionsFunc)
+func (m *MockCreateCredentialsApplication) Run(ctx context.Context, id string, badge *credentials.Badge, optionsFunc ...OptionsFunc) error {
+	args := m.Called(ctx, id, badge, optionsFunc)
 	return args.Error(0)
 }
