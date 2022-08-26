@@ -24,6 +24,75 @@ func TestWrite(t *testing.T) {
 
 }
 
+// TestRead tests function Read
+func TestRead(t *testing.T) {
+
+	tests := []struct {
+		desc string
+		buff *bytes.Buffer
+		res  string
+	}{
+		{
+			desc: "Testing read empty line",
+			buff: &bytes.Buffer{},
+			res:  "",
+		},
+		{
+			desc: "Testing read a line",
+			buff: bytes.NewBuffer([]byte("word")),
+			res:  "word",
+		},
+	}
+
+	for _, test := range tests {
+		t.Log(test.desc)
+		c := &Console{
+			read: io.Reader(test.buff),
+		}
+		res := c.Read()
+		assert.Equal(t, test.res, res)
+	}
+
+}
+
+// TestReadPassword tests function Read
+// func TestReadPassword(t *testing.T) {
+// 	var wbuff bytes.Buffer
+// 	var rbuff bytes.Buffer
+
+// 	tests := []struct {
+// 		desc   string
+// 		prompt string
+// 		res    string
+// 		err    error
+// 	}{
+// 		{
+// 			desc:   "Testing read password",
+// 			prompt: "Password: ",
+
+// 			res: "password",
+// 			err: &errors.Error{},
+// 		},
+// 	}
+
+// 	for _, test := range tests {
+// 		t.Log(test.desc)
+
+// 		rbuff.WriteString("password\r")
+// 		console := Console{
+// 			read:  io.Reader(&rbuff),
+// 			write: io.Writer(&wbuff),
+// 		}
+
+// 		res, err := console.ReadPassword(test.prompt)
+// 		if err != nil {
+// 			assert.Equal(t, test.err.Error(), err.Error())
+// 		} else {
+// 			assert.Equal(t, test.res, res)
+// 		}
+// 	}
+// }
+
 // TestColumnizeLine tests function TestColumnizeLine
 func TestColumnizeLine(t *testing.T) {
 	tests := []struct {
