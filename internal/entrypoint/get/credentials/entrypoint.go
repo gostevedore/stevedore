@@ -86,7 +86,7 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 		return errors.New(errContext, "", err)
 	}
 
-	writer := console.NewConsole(e.writer)
+	writer := console.NewConsole(e.writer, nil)
 	output := outputcredentials.NewOutput(writer,
 		usernamepassword.NewUsernamePasswordOutput(),
 		awsstaticcredentials.NewAWSStaticCredentialsOutput(),
@@ -128,24 +128,15 @@ func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.Credentials
 		return nil, errors.New(errContext, "To create credentials local store in the entrypoint, compatibilitier is required")
 	}
 
-	switch conf.StorageType {
-	case credentials.LocalStore:
-		if conf.LocalStoragePath == "" {
-			return nil, errors.New(errContext, "To create credentials local store in the entrypoint, local storage path is required")
-		}
-
-		credentialsCompatibility := credentialscompatibility.NewCredentialsCompatibility(e.compatibility)
-		credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
-		credentialsFormat, err := credentialsFormatFactory.Get(credentials.JSONFormat)
-		if err != nil {
-			return nil, errors.New(errContext, "", err)
-		}
-		store := credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
-
-		return store, nil
-	default:
-		return nil, errors.New(errContext, fmt.Sprintf("Unsupported credentials storage type '%s'", conf.StorageType))
+	credentialsCompatibility := credentialscompatibility.NewCredentialsCompatibility(e.compatibility)
+	credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
+	credentialsFormat, err := credentialsFormatFactory.Get(credentials.JSONFormat)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
 	}
+	store := credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
+
+	return store, nil
 }
 
 func (e *Entrypoint) createCredentialsFilter(conf *configuration.Configuration) (repository.CredentialsFilterer, error) {
@@ -163,11 +154,19 @@ func (e *Entrypoint) createCredentialsFilter(conf *configuration.Configuration) 
 		return nil, errors.New(errContext, "To create the credentials filter in the entrypoint, credentials configuration is required")
 	}
 
-	// create credentials store
-	localstore, err := e.createCredentialsLocalStore(conf.Credentials)
-	if err != nil {
-		return nil, errors.New(errContext, "", err)
-	} else {
+	switch conf.Credentials.StorageType {
+	case credentials.LocalStore:
+		if conf.Credentials.LocalStoragePath == "" {
+			return nil, errors.New(errContext, "To create credentials local store in the entrypoint, local storage path is required")
+		}
+
+		// create credentials store
+		localstore, err := e.createCredentialsLocalStore(conf.Credentials)
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
 		return localstore, nil
+	default:
+		return nil, errors.New(errContext, fmt.Sprintf("Unsupported credentials storage type '%s'", conf.Credentials.StorageType))
 	}
 }
