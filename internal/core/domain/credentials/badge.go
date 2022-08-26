@@ -1,5 +1,9 @@
 package credentials
 
+import (
+	errors "github.com/apenella/go-common-utils/error"
+)
+
 // Badge containes information to access to a credentials
 type Badge struct {
 	// Badge id
@@ -36,4 +40,36 @@ type Badge struct {
 	GitSSHUser string `json:"git_ssh_user" yaml:"git_ssh_user"`
 	// AllowUseSSHAgent must be set to true when you allow to use the ssh-agent to authenticate to the git server
 	AllowUseSSHAgent bool `json:"use_ssh_agent" yaml:"use_ssh_agent"`
+}
+
+// IsValid return whether a badge is valid, otherwise returns an error with the invalid reason
+func (badge *Badge) IsValid() (bool, error) {
+
+	errContext := "(core::domain::credentials::IsValid)"
+
+	if badge == nil {
+		return false, errors.New(errContext, "Invalid badge. Badge is nil")
+	}
+
+	if badge.Username != "" && badge.Password != "" {
+		return true, nil
+	}
+
+	if badge.AWSAccessKeyID != "" && badge.AWSSecretAccessKey != "" {
+		return true, nil
+	}
+
+	if badge.AWSUseDefaultCredentialsChain {
+		return true, nil
+	}
+
+	if badge.PrivateKeyFile != "" {
+		return true, nil
+	}
+
+	if badge.AllowUseSSHAgent {
+		return true, nil
+	}
+
+	return false, errors.New(errContext, "Invalid badge. Unknown reason")
 }
