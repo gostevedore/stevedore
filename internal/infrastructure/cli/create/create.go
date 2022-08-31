@@ -1,5 +1,12 @@
 package create
 
+import (
+	"context"
+
+	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command"
+	"github.com/spf13/cobra"
+)
+
 // import (
 // 	"context"
 
@@ -12,26 +19,31 @@ package create
 // 	"github.com/spf13/cobra"
 // )
 
-// //  NewCommand return an stevedore command object for get
-// func NewCommand(ctx context.Context, config *configuration.Configuration) *command.StevedoreCommand {
+//  NewCommand return an stevedore command object for get
+func NewCommand(ctx context.Context, subcommands ...*command.StevedoreCommand) *command.StevedoreCommand {
 
-// 	createCmd := &cobra.Command{
-// 		Use:     "create",
-// 		Aliases: []string{"generate"},
-// 		Short:   "Stevedore command to create configuration files",
-// 		Long:    "Stevedore command to create configuration files",
-// 		RunE:    createHandler(ctx),
-// 	}
+	createCmd := &cobra.Command{
+		Use:     "create",
+		Aliases: []string{"generate"},
+		Short:   "Stevedore command to create items",
+		Long:    "Stevedore command to create items",
+		Run: func(cmd *cobra.Command, args []string) {
+			cmd.HelpFunc()(cmd, args)
+		},
+	}
 
-// 	command := &command.StevedoreCommand{
-// 		Command: createCmd,
-// 	}
+	command := &command.StevedoreCommand{
+		Command: createCmd,
+	}
 
-// 	command.AddCommand(middleware.Middleware(credentials.NewCommand(ctx, config)))
-// 	command.AddCommand(middleware.Middleware(cmdconf.NewCommand(ctx, config)))
+	for _, subcommand := range subcommands {
+		command.AddCommand(subcommand)
+	}
+	// command.AddCommand(middleware.Middleware(credentials.NewCommand(ctx, config)))
+	// command.AddCommand(middleware.Middleware(cmdconf.NewCommand(ctx, config)))
 
-// 	return command
-// }
+	return command
+}
 
 // func createHandler(ctx context.Context) command.CobraRunEFunc {
 // 	return func(cmd *cobra.Command, args []string) error {

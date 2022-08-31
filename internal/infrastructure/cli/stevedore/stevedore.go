@@ -7,12 +7,15 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	buildentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/build"
+	createcredentialsentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/create/credentials"
 	getcredentialsentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/get/credentials"
 	promoteentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/build"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command/middleware"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/completion"
+	"github.com/gostevedore/stevedore/internal/infrastructure/cli/create"
+	createcredentials "github.com/gostevedore/stevedore/internal/infrastructure/cli/create/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/get"
 	getcredentials "github.com/gostevedore/stevedore/internal/infrastructure/cli/get/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/promote"
@@ -103,16 +106,18 @@ You just need to define how each image should be built and the relationship amon
 		middleware.Command(ctx, build.NewCommand(ctx, compatibilityStore, config, buildEntrypoint), compatibilityReport, log, console),
 	)
 
-	// Promote
-	promoteEntrypoint := promoteentrypoint.NewEntrypoint(
-		promoteentrypoint.WithWriter(console),
-		promoteentrypoint.WithFileSystem(fs),
-		promoteentrypoint.WithCompatibility(compatibilityStore),
-	)
-	command.AddCommand(
-		middleware.Command(ctx, promote.NewCommand(ctx, compatibilityStore, config, promoteEntrypoint), compatibilityReport, log, console),
-	)
+	// Create
 
+	// Create credentials
+	createCredentialsEntrypoint := createcredentialsentrypoint.NewCreateCredentialsEntrypoint(
+		createcredentialsentrypoint.WithConsole(console),
+		createcredentialsentrypoint.WithFileSystem(fs),
+		createcredentialsentrypoint.WithCompatibilitier(compatibilityStore),
+	)
+	createCredentialsCommand := middleware.Command(ctx, createcredentials.NewCommand(ctx, compatibilityStore, config, createCredentialsEntrypoint), compatibilityReport, log, console)
+
+	createCommand := create.NewCommand(ctx, createCredentialsCommand)
+	command.AddCommand(createCommand)
 	// Get
 
 	// Get credentials
@@ -132,6 +137,16 @@ You just need to define how each image should be built and the relationship amon
 	// command.AddCommand(middleware.Middleware(moo.NewCommand(ctx, config)))
 	// command.AddCommand(middleware.Middleware(promote.NewCommand(ctx, config)))
 	// command.AddCommand(middleware.Middleware(version.NewCommand(ctx, config)))
+
+	// Promote
+	promoteEntrypoint := promoteentrypoint.NewEntrypoint(
+		promoteentrypoint.WithWriter(console),
+		promoteentrypoint.WithFileSystem(fs),
+		promoteentrypoint.WithCompatibility(compatibilityStore),
+	)
+	command.AddCommand(
+		middleware.Command(ctx, promote.NewCommand(ctx, compatibilityStore, config, promoteEntrypoint), compatibilityReport, log, console),
+	)
 
 	return command
 }
