@@ -48,6 +48,9 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, config *conf
 			if createCredentialsFlagOptions.LocalStoragePath != "" {
 				entrypointOptions.LocalStoragePath = createCredentialsFlagOptions.LocalStoragePath
 			}
+			if createCredentialsFlagOptions.Force {
+				entrypointOptions.ForceCreate = createCredentialsFlagOptions.Force
+			}
 
 			if createCredentialsFlagOptions.AllowUseSSHAgent {
 				handlerOptions.AllowUseSSHAgent = createCredentialsFlagOptions.AllowUseSSHAgent
@@ -120,6 +123,7 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, config *conf
 	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.PrivateKeyFile, "private-key-file", "", "Private Key File")
 	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.PrivateKeyPassword, "private-key-password", "", "Private Key Password")
 	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.Username, "username", "", "Username for basic auth method")
+	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.Force, "force", false, "When is enabled the flag, credentials creation is forced. It overwrites the existing value")
 
 	createCredentialsCmd.Flags().StringVarP(&createCredentialsFlagOptions.DEPRECATEDDockerRegistryCredentialsDir, "credentials-dir", "d", "", DeprecatedFlagMessageDockerRegistryCredentialsDir)
 	createCredentialsCmd.Flags().StringVarP(&createCredentialsFlagOptions.DEPRECATEDRegistryHost, "registry-host", "r", "", DeprecatedFlagMessageRegistryHost)

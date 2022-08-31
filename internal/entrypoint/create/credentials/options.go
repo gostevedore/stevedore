@@ -9,4 +9,6 @@ type Options struct {
 	LocalStoragePath string
 	// DEPRECATEDRegistryHost is the registry host used as credentials id
 	DEPRECATEDRegistryHost string
+	// ForceCreate forces to create a credential
+	ForceCreate bool
 }

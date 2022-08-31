@@ -92,12 +92,12 @@ func (e *CreateCredentialsEntrypoint) Execute(
 		return errors.New(errContext, "", err)
 	}
 
-	conf, err = e.prepareConfiguration(inputEntrypointOptions, conf)
+	conf, err = e.prepareConfiguration(conf, inputEntrypointOptions)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
 
-	credentialsStore, err = e.createCredentialsStore(conf)
+	credentialsStore, err = e.createCredentialsStore(conf, inputEntrypointOptions)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -137,7 +137,7 @@ func (e *CreateCredentialsEntrypoint) prepareCredentialsId(args []string, option
 	return id, nil
 }
 
-func (e *CreateCredentialsEntrypoint) prepareConfiguration(options *Options, conf *configuration.Configuration) (*configuration.Configuration, error) {
+func (e *CreateCredentialsEntrypoint) prepareConfiguration(conf *configuration.Configuration, options *Options) (*configuration.Configuration, error) {
 
 	errContext := "(create::credentials::entrypoint::prepareConfiguration)"
 
@@ -266,8 +266,10 @@ func (e *CreateCredentialsEntrypoint) prepareHandlerOptions(inputEntrypointOptio
 }
 
 //
-func (e *CreateCredentialsEntrypoint) createCredentialsStore(conf *configuration.Configuration) (application.CredentialsStorer, error) {
+func (e *CreateCredentialsEntrypoint) createCredentialsStore(conf *configuration.Configuration, options *Options) (application.CredentialsStorer, error) {
 
+	var store application.CredentialsStorer
+	var err error
 	errContext := "(create::credentials::entrypoint:::createCredentialsLocalStore)"
 
 	if e.compatibility == nil {
@@ -290,6 +292,10 @@ func (e *CreateCredentialsEntrypoint) createCredentialsStore(conf *configuration
 		return nil, errors.New(errContext, "To create the credentials store, credentials storage type must be defined")
 	}
 
+	if options == nil {
+		return nil, errors.New(errContext, "To create the credentials store, options are required")
+	}
+
 	credentialsCompatibility := credentialscompatibility.NewCredentialsCompatibility(e.compatibility)
 	credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
 	credentialsFormat, err := credentialsFormatFactory.Get(conf.Credentials.Format)
@@ -299,9 +305,17 @@ func (e *CreateCredentialsEntrypoint) createCredentialsStore(conf *configuration
 
 	switch conf.Credentials.StorageType {
 	case credentials.LocalStore:
-		store, err := e.createCredentialsLocalStore(credentialsCompatibility, conf.Credentials, credentialsFormat)
-		if err != nil {
-			return nil, errors.New(errContext, "", err)
+
+		if options.ForceCreate {
+			store, err = e.createCredentialsLocalStore(credentialsCompatibility, conf.Credentials, credentialsFormat)
+			if err != nil {
+				return nil, errors.New(errContext, "", err)
+			}
+		} else {
+			store, err = e.createCredentialsLocalStoreWithSafeStore(credentialsCompatibility, conf.Credentials, credentialsFormat)
+			if err != nil {
+				return nil, errors.New(errContext, "", err)
+			}
 		}
 
 		return store, nil
@@ -336,6 +350,35 @@ func (e *CreateCredentialsEntrypoint) createCredentialsLocalStore(comp credentia
 	}
 
 	store := credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, format, comp)
+
+	return store, nil
+}
+
+func (e *CreateCredentialsEntrypoint) createCredentialsLocalStoreWithSafeStore(comp credentialslocalstore.CredentialsCompatibilier, conf *configuration.CredentialsConfiguration, format repository.Formater) (*local.LocalStoreWithSafeStore, error) {
+
+	errContext := "(create::credentials::entrypoint:::createCredentialsLocalStore)"
+
+	if comp == nil {
+		return nil, errors.New(errContext, "To create the credentials local store, credentials compatibilitier is required")
+	}
+
+	if conf == nil {
+		return nil, errors.New(errContext, "To create the credentials local store, credentials configuration is required")
+	}
+
+	if conf.LocalStoragePath == "" {
+		return nil, errors.New(errContext, "To create the credentials local store, local storage path is required")
+	}
+
+	if format == nil {
+		return nil, errors.New(errContext, "To create the credentials local store, formater is required")
+	}
+
+	if e.fs == nil {
+		return nil, errors.New(errContext, "To create the credentials local store, filesystem is required")
+	}
+
+	store := credentialslocalstore.NewLocalStoreWithSafeStore(e.fs, conf.LocalStoragePath, format, comp)
 
 	return store, nil
 }

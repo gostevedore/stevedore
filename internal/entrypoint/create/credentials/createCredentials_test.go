@@ -367,7 +367,7 @@ func TestPrepareConfiguration(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			conf, err := test.entrypoint.prepareConfiguration(test.options, test.configuration)
+			conf, err := test.entrypoint.prepareConfiguration(test.configuration, test.options)
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {
@@ -385,6 +385,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 		desc       string
 		entrypoint *CreateCredentialsEntrypoint
 		conf       *configuration.Configuration
+		options    *Options
 		err        error
 		res        application.CredentialsStorer
 	}{
@@ -431,6 +432,20 @@ func TestCreateCredentialsStore(t *testing.T) {
 			},
 			err: errors.New(errContext, "To create the credentials store, credentials storage type must be defined"),
 		},
+
+		{
+			desc: "Testing error creating credentials store on create credentials entrypoint when options are not provided",
+			entrypoint: NewCreateCredentialsEntrypoint(
+				WithCompatibilitier(compatibility.NewMockCompatibility()),
+			),
+			conf: &configuration.Configuration{
+				Credentials: &configuration.CredentialsConfiguration{
+					Format:      credentials.JSONFormat,
+					StorageType: credentials.LocalStore,
+				},
+			},
+			err: errors.New(errContext, "To create the credentials store, options are required"),
+		},
 		{
 			desc: "Testing create a local credentials store on create credentials entrypoint",
 			entrypoint: NewCreateCredentialsEntrypoint(
@@ -443,6 +458,9 @@ func TestCreateCredentialsStore(t *testing.T) {
 					StorageType:      credentials.LocalStore,
 					LocalStoragePath: "path",
 				},
+			},
+			options: &Options{
+				ForceCreate: true,
 			},
 			err: &errors.Error{},
 			res: local.NewLocalStore(
@@ -458,7 +476,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			res, err := test.entrypoint.createCredentialsStore(test.conf)
+			res, err := test.entrypoint.createCredentialsStore(test.conf, test.options)
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {

@@ -32,6 +32,8 @@ type createCredentialsFlagOptions struct {
 	PrivateKeyPassword string
 	// Username
 	Username string
+	// Force
+	Force bool
 
 	DEPRECATEDRegistryHost                 string
 	DEPRECATEDDockerRegistryCredentialsDir string

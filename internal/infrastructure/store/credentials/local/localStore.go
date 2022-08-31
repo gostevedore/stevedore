@@ -34,6 +34,30 @@ func NewLocalStore(fs afero.Fs, path string, f repository.Formater, compatibilit
 	}
 }
 
+func (s *LocalStore) SafeStore(id string, badge *credentials.Badge) error {
+	errContext := "(store::credentials::local::SafeStore)"
+	var err error
+	var credentialsStat os.FileInfo
+
+	hashedID, err := hashID(id)
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
+
+	credentialsStat, _ = s.fs.Stat(filepath.Join(s.path, hashedID))
+
+	if credentialsStat != nil && credentialsStat.Name() != "" {
+		return errors.New(errContext, fmt.Sprintf("Credentials '%s' already exist", id))
+	}
+
+	err = s.Store(id, badge)
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
+
+	return nil
+}
+
 // Store save a badge in the local store
 func (s *LocalStore) Store(id string, badge *credentials.Badge) error {
 

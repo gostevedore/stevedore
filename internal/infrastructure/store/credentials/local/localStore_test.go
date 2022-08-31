@@ -116,6 +116,98 @@ func TestStore(t *testing.T) {
 	}
 }
 
+func TestSafeStore(t *testing.T) {
+	var err error
+
+	errContext := "(store::credentials::local::StoreSafe)"
+
+	credentialsPath := filepath.Join("credentials")
+	testFs := afero.NewMemMapFs()
+	testFs.MkdirAll(credentialsPath, 0755)
+
+	err = afero.WriteFile(testFs, filepath.Join("credentials", "52a3dd11c26f43983739cec4b383af28"), []byte(`
+{
+	  "username": "username",
+	  "password": "password"
+}
+`), 0666)
+	if err != nil {
+		t.Log(err)
+	}
+
+	tests := []struct {
+		desc              string
+		store             *LocalStore
+		id                string
+		badge             *credentials.Badge
+		prepareAssertFunc func(*LocalStore)
+		res               string
+		err               error
+	}{
+		{
+			desc: "Testing error persisting a badge into local store that already exist",
+			id:   "existing_id",
+			store: NewLocalStore(
+				testFs,
+				credentialsPath,
+				mock.NewMockFormater(),
+				credentialscompatibility.NewCredentialsCompatibility(
+					compatibility.NewMockCompatibility(),
+				),
+			),
+			err: errors.New(errContext, "Credentials 'existing_id' already exist"),
+		},
+		{
+			desc: "Testing persist a badge into local store",
+			store: NewLocalStore(
+				testFs,
+				credentialsPath,
+				mock.NewMockFormater(),
+				credentialscompatibility.NewCredentialsCompatibility(
+					compatibility.NewMockCompatibility(),
+				),
+			),
+			id: "id",
+			badge: &credentials.Badge{
+				Username: "username",
+				Password: "password",
+			},
+			prepareAssertFunc: func(s *LocalStore) {
+				s.formater.(*mock.MockFormater).On("Marshal",
+					&credentials.Badge{
+						Username: "username",
+						Password: "password",
+					}).Return("formated", nil)
+			},
+			res: "formated",
+			err: &errors.Error{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.store)
+			}
+
+			err := test.store.SafeStore(test.id, test.badge)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				testFs := afero.Afero{Fs: test.store.fs}
+				content, err := testFs.ReadFile(filepath.Join(credentialsPath, "b80bb7740288fda1f201890375a60c8f"))
+				if err != nil {
+					t.Error(err)
+				}
+
+				assert.Equal(t, test.res, string(content))
+			}
+		})
+	}
+}
+
 func TestGet(t *testing.T) {
 	var err error
 
