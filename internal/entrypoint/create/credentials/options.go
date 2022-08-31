@@ -7,4 +7,6 @@ type Options struct {
 	AskAWSSecretAccessKey bool
 	// LocalStoragePath is the location of local storage
 	LocalStoragePath string
+	// DEPRECATEDRegistryHost is the registry host used as credentials id
+	DEPRECATEDRegistryHost string
 }

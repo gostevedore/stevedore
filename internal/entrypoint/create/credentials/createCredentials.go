@@ -60,8 +60,8 @@ func WithFileSystem(fs afero.Fs) OptionsFunc {
 	}
 }
 
-// WithCompatibility sets the compatibility for the entrypoint
-func WithCompatibility(c Compatibilitier) OptionsFunc {
+// WithCompatibilitier sets the compatibility for the entrypoint
+func WithCompatibilitier(c Compatibilitier) OptionsFunc {
 	return func(e *CreateCredentialsEntrypoint) {
 		e.compatibility = c
 	}
@@ -82,7 +82,7 @@ func (e *CreateCredentialsEntrypoint) Execute(
 
 	errContext := "(create::credentials::entrypoint::Execute)"
 
-	id, err = e.prepareCredentialsId(args)
+	id, err = e.prepareCredentialsId(args, inputEntrypointOptions)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -117,9 +117,13 @@ func (e *CreateCredentialsEntrypoint) Execute(
 	return nil
 }
 
-func (e *CreateCredentialsEntrypoint) prepareCredentialsId(args []string) (string, error) {
+func (e *CreateCredentialsEntrypoint) prepareCredentialsId(args []string, options *Options) (string, error) {
 
 	errContext := "(create::credentials::entrypoint:::prepareCredentialsId)"
+
+	if options != nil && options.DEPRECATEDRegistryHost != "" {
+		return options.DEPRECATEDRegistryHost, nil
+	}
 
 	if len(args) < 1 || args == nil {
 		return "", errors.New(errContext, "To execute the create credentials entrypoint, an argument with credential id is required")
@@ -134,8 +138,30 @@ func (e *CreateCredentialsEntrypoint) prepareCredentialsId(args []string) (strin
 }
 
 func (e *CreateCredentialsEntrypoint) prepareConfiguration(options *Options, conf *configuration.Configuration) (*configuration.Configuration, error) {
-	if options.LocalStoragePath != "" {
-		conf.Credentials.LocalStoragePath = options.LocalStoragePath
+
+	errContext := "(create::credentials::entrypoint::prepareConfiguration)"
+
+	if options == nil {
+		return nil, errors.New(errContext, "Entrypoint options must be provided to prepare configuration")
+	}
+
+	if conf == nil {
+		return nil, errors.New(errContext, "Configuration must be provided to prepare configuration")
+	}
+
+	if conf.Credentials == nil {
+		return nil, errors.New(errContext, "Configuration credentials must be provided to prepare configuration")
+	}
+
+	if conf.Credentials.StorageType == "" {
+		return nil, errors.New(errContext, "Credentials storage type must be provided to prepare configuration")
+	}
+
+	switch conf.Credentials.StorageType {
+	case credentials.LocalStore:
+		if options.LocalStoragePath != "" {
+			conf.Credentials.LocalStoragePath = options.LocalStoragePath
+		}
 	}
 
 	return conf, nil
@@ -158,6 +184,7 @@ func (e *CreateCredentialsEntrypoint) getPassword(options *Options) (string, err
 	if err != nil {
 		return "", errors.New(errContext, "", err)
 	}
+	fmt.Fprintln(e.console)
 
 	return password, nil
 
@@ -180,6 +207,7 @@ func (e *CreateCredentialsEntrypoint) getAWSSecretAccessKey(options *Options) (s
 	if err != nil {
 		return "", errors.New(errContext, "", err)
 	}
+	fmt.Fprintln(e.console)
 
 	return awsSecretAccessKey, nil
 
@@ -244,6 +272,10 @@ func (e *CreateCredentialsEntrypoint) createCredentialsStore(conf *configuration
 
 	if e.compatibility == nil {
 		return nil, errors.New(errContext, "To create the credentials store, compatibilitier is required")
+	}
+
+	if conf == nil {
+		return nil, errors.New(errContext, "To create the credentials store, configuration is required")
 	}
 
 	if conf.Credentials == nil {

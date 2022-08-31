@@ -1,10 +1,12 @@
 package credentials
 
 import (
+	"fmt"
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
 	application "github.com/gostevedore/stevedore/internal/application/create/credentials"
+	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	handler "github.com/gostevedore/stevedore/internal/handler/create/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/compatibility"
@@ -49,6 +51,7 @@ func TestPrepareCredentialsId(t *testing.T) {
 		desc              string
 		entrypoint        *CreateCredentialsEntrypoint
 		args              []string
+		options           *Options
 		res               string
 		prepareAssertFunc func(*CreateCredentialsEntrypoint)
 		err               error
@@ -75,6 +78,17 @@ func TestPrepareCredentialsId(t *testing.T) {
 				e.console.(*console.MockConsole).On("Warn", []interface{}{"Ignoring extra arguments: [ignored_id]\n"})
 			},
 		},
+		{
+			desc: "Testing prepare credentials id into create credentials using deprecated registry host",
+			entrypoint: NewCreateCredentialsEntrypoint(
+				WithConsole(console.NewMockConsole()),
+			),
+			args: []string{},
+			options: &Options{
+				DEPRECATEDRegistryHost: "registry-host",
+			},
+			res: "registry-host",
+		},
 	}
 
 	for _, test := range tests {
@@ -85,7 +99,7 @@ func TestPrepareCredentialsId(t *testing.T) {
 				test.prepareAssertFunc(test.entrypoint)
 			}
 
-			res, err := test.entrypoint.prepareCredentialsId(test.args)
+			res, err := test.entrypoint.prepareCredentialsId(test.args, test.options)
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {
@@ -125,6 +139,7 @@ func TestGetPassword(t *testing.T) {
 			options: &Options{},
 			prepareAssertFunc: func(e *CreateCredentialsEntrypoint) {
 				e.console.(*console.MockConsole).On("ReadPassword", getPasswordInputMessage).Return("p4ssw0rd", nil)
+				e.console.(*console.MockConsole).On("Write", []byte(fmt.Sprintln())).Return(0, nil)
 			},
 			res: "p4ssw0rd",
 			err: &errors.Error{},
@@ -178,6 +193,7 @@ func TestGetAWSSecretAccessKey(t *testing.T) {
 			options: &Options{},
 			prepareAssertFunc: func(e *CreateCredentialsEntrypoint) {
 				e.console.(*console.MockConsole).On("ReadPassword", getAWSSecretAccessKeyInputMessage).Return("s3cret", nil)
+				e.console.(*console.MockConsole).On("Write", []byte(fmt.Sprintln())).Return(0, nil)
 			},
 			res: "s3cret",
 			err: &errors.Error{},
@@ -241,6 +257,7 @@ func TestPrepareHandlerOptions(t *testing.T) {
 			},
 			prepareAssertFunc: func(e *CreateCredentialsEntrypoint) {
 				e.console.(*console.MockConsole).On("ReadPassword", getPasswordInputMessage).Return("password", nil)
+				e.console.(*console.MockConsole).On("Write", []byte(fmt.Sprintln())).Return(0, nil)
 			},
 			err: &errors.Error{},
 		},
@@ -265,6 +282,7 @@ func TestPrepareHandlerOptions(t *testing.T) {
 			},
 			prepareAssertFunc: func(e *CreateCredentialsEntrypoint) {
 				e.console.(*console.MockConsole).On("ReadPassword", getAWSSecretAccessKeyInputMessage).Return("AWSSecretAccessKey", nil)
+				e.console.(*console.MockConsole).On("Write", []byte(fmt.Sprintln())).Return(0, nil)
 			},
 			err: &errors.Error{},
 		},
@@ -288,17 +306,75 @@ func TestPrepareHandlerOptions(t *testing.T) {
 }
 
 func TestPrepareConfiguration(t *testing.T) {
+	errContext := "(create::credentials::entrypoint::prepareConfiguration)"
+
 	tests := []struct {
-		desc string
-	}{}
+		desc          string
+		entrypoint    *CreateCredentialsEntrypoint
+		options       *Options
+		configuration *configuration.Configuration
+		err           error
+		res           *configuration.Configuration
+	}{
+		{
+			desc:       "Testing error preparing configuration on create credentials entrypoint when options are not provided",
+			entrypoint: NewCreateCredentialsEntrypoint(),
+			err:        errors.New(errContext, "Entrypoint options must be provided to prepare configuration"),
+		},
+		{
+			desc:       "Testing error preparing configuration on create credentials entrypoint when configuration is not provided",
+			entrypoint: NewCreateCredentialsEntrypoint(),
+			options:    &Options{},
+			err:        errors.New(errContext, "Configuration must be provided to prepare configuration"),
+		},
+		{
+			desc:          "Testing error preparing configuration on create credentials entrypoint when configuration credentials are not provided",
+			entrypoint:    NewCreateCredentialsEntrypoint(),
+			options:       &Options{},
+			configuration: &configuration.Configuration{},
+			err:           errors.New(errContext, "Configuration credentials must be provided to prepare configuration"),
+		},
+		{
+			desc:       "Testing error preparing configuration on create credentials entrypoint when credentials storage type is not provided",
+			entrypoint: NewCreateCredentialsEntrypoint(),
+			options:    &Options{},
+			configuration: &configuration.Configuration{
+				Credentials: &configuration.CredentialsConfiguration{},
+			},
+			res: &configuration.Configuration{
+				Credentials: &configuration.CredentialsConfiguration{
+					LocalStoragePath: "path",
+				},
+			},
+			err: errors.New(errContext, "Credentials storage type must be provided to prepare configuration"),
+		},
+		{
+			desc:       "Testing prepare configuration on create credentials entrypoint",
+			entrypoint: NewCreateCredentialsEntrypoint(),
+			options: &Options{
+				LocalStoragePath: "path",
+			},
+			configuration: &configuration.Configuration{
+				Credentials: &configuration.CredentialsConfiguration{
+					StorageType: credentials.LocalStore,
+				},
+			},
+			err: &errors.Error{},
+		},
+	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
+
+			conf, err := test.entrypoint.prepareConfiguration(test.options, test.configuration)
+			if err != nil {
+				assert.Equal(t, test.err, err)
+			} else {
+				assert.Equal(t, test.configuration, conf)
+			}
 		})
 	}
-
-	assert.True(t, false)
 }
 
 func TestCreateCredentialsStore(t *testing.T) {
@@ -316,6 +392,65 @@ func TestCreateCredentialsStore(t *testing.T) {
 			desc:       "Testing error creating credentials store on create credentials entrypoint when compatibilitier is not provided",
 			entrypoint: NewCreateCredentialsEntrypoint(),
 			err:        errors.New(errContext, "To create the credentials store, compatibilitier is required"),
+		},
+		// {
+		// 	desc: "Testing error creating credentials store on create credentials entrypoint when configuration is not provided",
+		// 	entrypoint: NewCreateCredentialsEntrypoint(
+		// 		WithCompatibilitier(compatibility.NewMockCompatibility()),
+		// 	),
+		// 	conf: nil,
+		// 	err:  errors.New(errContext, "To create the credentials store, configuration is required"),
+		// },
+		{
+			desc: "Testing error creating credentials store on create credentials entrypoint when credentials configuration is not provided",
+			entrypoint: NewCreateCredentialsEntrypoint(
+				WithCompatibilitier(compatibility.NewMockCompatibility()),
+			),
+			conf: &configuration.Configuration{},
+			err:  errors.New(errContext, "To create the credentials store, credentials configuration is required"),
+		},
+		{
+			desc: "Testing error creating credentials store on create credentials entrypoint when credentials format is not provided",
+			entrypoint: NewCreateCredentialsEntrypoint(
+				WithCompatibilitier(compatibility.NewMockCompatibility()),
+			),
+			conf: &configuration.Configuration{
+				Credentials: &configuration.CredentialsConfiguration{},
+			},
+			err: errors.New(errContext, "To create the credentials store, credentials format must be defined"),
+		},
+		{
+			desc: "Testing error creating credentials store on create credentials entrypoint when credentials storage type is not provided",
+			entrypoint: NewCreateCredentialsEntrypoint(
+				WithCompatibilitier(compatibility.NewMockCompatibility()),
+			),
+			conf: &configuration.Configuration{
+				Credentials: &configuration.CredentialsConfiguration{
+					Format: credentials.JSONFormat,
+				},
+			},
+			err: errors.New(errContext, "To create the credentials store, credentials storage type must be defined"),
+		},
+		{
+			desc: "Testing create a local credentials store on create credentials entrypoint",
+			entrypoint: NewCreateCredentialsEntrypoint(
+				WithCompatibilitier(compatibility.NewMockCompatibility()),
+				WithFileSystem(afero.NewMemMapFs()),
+			),
+			conf: &configuration.Configuration{
+				Credentials: &configuration.CredentialsConfiguration{
+					Format:           credentials.JSONFormat,
+					StorageType:      credentials.LocalStore,
+					LocalStoragePath: "path",
+				},
+			},
+			err: &errors.Error{},
+			res: local.NewLocalStore(
+				afero.NewMemMapFs(),
+				"path",
+				credentialsformat.NewMockFormater(),
+				credentialscompatibilitiy.NewCredentialsCompatibility(compatibility.NewMockCompatibility()),
+			),
 		},
 	}
 
