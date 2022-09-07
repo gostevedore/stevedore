@@ -35,6 +35,6 @@ type ImagesStorerWriter interface {
 type ImagesStorerReader interface {
 	List() ([]*image.Image, error)
 	FindByName(name string) ([]*image.Image, error)
-	Find(name string, version string) (*image.Image, error)
-	FindGuaranteed(findName, findVersion, imageName, imageVersion string) (*image.Image, error)
+	Find(name string, version string) ([]*image.Image, error)
+	FindGuaranteed(findName, findVersion, imageName, imageVersion string) ([]*image.Image, error)
 }

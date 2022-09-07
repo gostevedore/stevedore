@@ -70,7 +70,6 @@ func (t *ImagesConfiguration) LoadImagesToStore(path string) error {
 
 	var err error
 	errContext := "(images::LoadImagesToStore)"
-	var nodeDomainImage, copyDomainImage *domainimage.Image
 
 	err = t.LoadImagesConfiguration(path)
 	if err != nil {
@@ -88,76 +87,99 @@ func (t *ImagesConfiguration) LoadImagesToStore(path string) error {
 			continue
 		}
 
-		name, version, err := graph.ParseNodeName(node)
+		err = t.storeNodeImages(node, storedNodes, pendingNodes)
 		if err != nil {
 			return errors.New(errContext, "", err)
 		}
 
-		pendingNodeName, exists := pendingNodes[name]
-		if exists {
-			_, exists := pendingNodeName[version]
-			if exists {
-				delete(pendingNodeName, version)
-			}
-			if len(pendingNodeName) == 0 {
-				delete(pendingNodes, name)
-			}
-		}
-
-		if node.Item() == nil {
-			return errors.New(errContext, fmt.Sprintf("Definition for the image '%s' has not been found", node.Name()))
-		}
-
-		nodeImage := node.Item().(*image.Image)
-
-		nodeDomainImage, err = nodeImage.CreateDomainImage()
-		if err != nil {
-			return errors.New(errContext, "", err)
-		}
-
-		if node.Parents() == nil || len(node.Parents()) <= 0 {
-
-			err = t.store.Store(name, version, nodeDomainImage)
-			if err != nil {
-				return errors.New(errContext, "", err)
-			}
-		} else {
-			for _, parent := range node.Parents() {
-
-				parentName, parentVersion, err := graph.ParseNodeName(parent.(graph.GraphNoder))
-				parentDomainImage, err := t.store.Find(parentName, parentVersion)
-				if err != nil {
-					return errors.New(errContext, "", err)
-				}
-
-				if parentDomainImage == nil {
-					pendingNodes[parentName] = map[string]struct{}{parentVersion: {}}
-					continue
-				}
-
-				copyDomainImage, err = nodeDomainImage.Copy()
-				if err != nil {
-					return errors.New(errContext, "", err)
-				}
-
-				copyDomainImage.Options(
-					domainimage.WithParent(parentDomainImage),
-				)
-
-				parentDomainImage.AddChild(copyDomainImage)
-
-				err = t.store.Store(name, version, copyDomainImage)
-				if err != nil {
-					return errors.New(errContext, "", err)
-				}
-
-				storedNodes[node.Name()] = struct{}{}
-			}
-		}
 	}
 
 	if len(pendingNodes) != 0 {
 		return errors.New(errContext, fmt.Sprintf("There are orphan references to images that have not been defined\n%+v", pendingNodes))
+	}
+
+	return nil
+}
+
+// storeImage stores image to images store
+func (t *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes map[string]struct{}, pendingNodes map[string]map[string]struct{}) error {
+	var err error
+	var nodeDomainImage, copyDomainImage *domainimage.Image
+	errContext := "(images::storeImage)"
+
+	name, version, err := graph.ParseNodeName(node)
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
+
+	if node.Item() == nil {
+		return errors.New(errContext, fmt.Sprintf("Definition for the image '%s' has not been found", node.Name()))
+	}
+
+	nodeImage := node.Item().(*image.Image)
+
+	nodeDomainImage, err = nodeImage.CreateDomainImage()
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
+
+	if node.Parents() == nil || len(node.Parents()) <= 0 {
+		err = t.store.Store(name, version, nodeDomainImage)
+		if err != nil {
+			return errors.New(errContext, "", err)
+		}
+	} else {
+		for _, parent := range node.Parents() {
+			// skip node if already stored
+			_, stored := storedNodes[strings.Join([]string{node.Name(), parent.Name()}, ":")]
+			if stored {
+				continue
+			}
+
+			copyDomainImage, err = nodeDomainImage.Copy()
+			if err != nil {
+				return errors.New(errContext, "", err)
+			}
+
+			parentName, parentVersion, err := graph.ParseNodeName(parent.(graph.GraphNoder))
+			parentDomainImageList, err := t.store.Find(parentName, parentVersion)
+			if err != nil {
+				return errors.New(errContext, "", err)
+			}
+
+			// if parent is not already created the node is skipped
+			// though the child is also related to parent, into the graph, it ensures to create the file
+			if len(parentDomainImageList) == 0 || parentDomainImageList == nil {
+				pendingNodes[parentName] = map[string]struct{}{parentVersion: {}}
+				continue
+			}
+
+			// it assign the first item as parent
+			parentDomainImage := parentDomainImageList[0]
+			copyDomainImage.Options(
+				domainimage.WithParent(parentDomainImage),
+			)
+
+			parentDomainImage.AddChild(copyDomainImage)
+
+			err = t.store.Store(name, version, copyDomainImage)
+			if err != nil {
+				return errors.New(errContext, "", err)
+			}
+
+			storedNodes[strings.Join([]string{node.Name(), parent.Name()}, ":")] = struct{}{}
+		}
+	}
+
+	pendingNodeName, exists := pendingNodes[name]
+	if exists {
+		_, exists := pendingNodeName[version]
+		if exists {
+			delete(pendingNodeName, version)
+		}
+		if len(pendingNodeName) == 0 {
+			delete(pendingNodes, name)
+		}
 	}
 
 	return nil

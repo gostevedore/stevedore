@@ -40,13 +40,17 @@ func TestSinglePlanPlan(t *testing.T) {
 			err:      &errors.Error{},
 			res:      2,
 			prepareAssertFunc: func(p *SinglePlan) {
-				p.images.(*images.MockStore).On("Find", "image", "version1").Return(&image.Image{
-					Name:    "image",
-					Version: "version1",
+				p.images.(*images.MockStore).On("Find", "image", "version1").Return([]*image.Image{
+					{
+						Name:    "image",
+						Version: "version1",
+					},
 				}, nil)
-				p.images.(*images.MockStore).On("Find", "image", "version2").Return(&image.Image{
-					Name:    "image",
-					Version: "version2",
+				p.images.(*images.MockStore).On("Find", "image", "version2").Return([]*image.Image{
+					{
+						Name:    "image",
+						Version: "version2",
+					},
 				}, nil)
 			},
 			assertFunc: func(p *SinglePlan) bool {

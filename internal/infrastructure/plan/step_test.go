@@ -44,6 +44,5 @@ func TestStepSecuence(t *testing.T) {
 
 		step1.sync <- struct{}{}
 		wg.Wait()
-
 	})
 }

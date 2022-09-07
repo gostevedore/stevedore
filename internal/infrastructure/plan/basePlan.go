@@ -15,7 +15,7 @@ type BasePlan struct {
 
 func (p *BasePlan) findImages(name string, versions []string) ([]*image.Image, error) {
 	var images []*image.Image
-	var imageAux *image.Image
+	var imageAux []*image.Image
 	var err error
 
 	errContext := "(plan::BasePlan::images)"
@@ -35,7 +35,7 @@ func (p *BasePlan) findImages(name string, versions []string) ([]*image.Image, e
 			if err != nil {
 				return nil, errors.New(errContext, "", err)
 			}
-			images = append(images, imageAux)
+			images = append(images, imageAux...)
 		}
 	}
 

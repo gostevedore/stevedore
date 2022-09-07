@@ -18,10 +18,19 @@ const (
 
 // Store is a store for images
 type Store struct {
-	render                repository.Renderer
-	store                 []*image.Image
-	imageNameVersionIndex map[string]map[string]*image.Image
-	imageWildcardIndex    map[string]*image.Image
+
+	// imageNameDefinitionVersionList is the list of versions defined for an image name
+	imageNameDefinitionVersionList map[string]map[string]struct{}
+	// imageNameRenderedVersionsList is the list of rendered versions for an image name and version
+	imageNameVersionRenderedVersionsList map[string]map[string]map[string]struct{}
+	// imagesIndex images referenced by its name and rendered version
+	imagesIndex map[string]map[string]*image.Image
+
+	// imageAlternativeNamesIndex map[string]map[string]*image.Image
+	// imageNameVersionIndex      map[string]map[string][]*image.Image
+	imageWildcardIndex map[string]*image.Image
+	render             repository.Renderer
+	store              []*image.Image
 
 	mutex sync.Mutex
 }
@@ -29,9 +38,14 @@ type Store struct {
 // NewStore returns a new instance of the Store
 func NewStore(render repository.Renderer) *Store {
 	return &Store{
-		render:                render,
-		store:                 []*image.Image{},
-		imageNameVersionIndex: make(map[string]map[string]*image.Image),
+		imageNameDefinitionVersionList:       make(map[string]map[string]struct{}),
+		imageNameVersionRenderedVersionsList: make(map[string]map[string]map[string]struct{}),
+		imagesIndex:                          make(map[string]map[string]*image.Image),
+		imageWildcardIndex:                   make(map[string]*image.Image),
+		// imageAlternativeNamesIndex: make(map[string]map[string]*image.Image),
+		// imageNameVersionIndex:      make(map[string]map[string][]*image.Image),
+		render: render,
+		store:  []*image.Image{},
 	}
 }
 
@@ -75,27 +89,19 @@ func (s *Store) Store(name string, version string, i *image.Image) error {
 		return errors.New(errContext, "", err)
 	}
 
-	// store the image
-	err = s.storeImage(name, version, renderedImage)
+	err = s.addImageNameDefinitionVersionList(name, version)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
 
-	if renderedImage.Version != version {
-		err = s.storeImage(name, renderedImage.Version, renderedImage)
-		if err != nil {
-			return errors.New(errContext, "", err)
-		}
+	err = s.addImageNameVersionRenderedVersionsList(name, version, renderedImage)
+	if err != nil {
+		return errors.New(errContext, "", err)
 	}
 
-	for _, tag := range renderedImage.Tags {
-
-		if version != tag && renderedImage.Version != tag {
-			err = s.storeImage(name, tag, renderedImage)
-			if err != nil {
-				return errors.New(errContext, "", err)
-			}
-		}
+	err = s.addImageToIndex(name, renderedImage)
+	if err != nil {
+		return errors.New(errContext, "", err)
 	}
 
 	s.store = append(s.store, renderedImage)
@@ -103,29 +109,107 @@ func (s *Store) Store(name string, version string, i *image.Image) error {
 	return nil
 }
 
-// storeImage stores the image in the store
-func (s *Store) storeImage(name string, version string, i *image.Image) error {
+func (s *Store) addImageNameDefinitionVersionList(name, version string) error {
 
-	errContext := "(store::storeImage)"
+	errContext := "(store::images::Store::addImageNameDefinitionVersionList)"
+
+	if name == "" {
+		return errors.New(errContext, "Image name must be provided to add to add a definition version into list")
+	}
+
+	if version == "" {
+		return errors.New(errContext, "Image version must be provided to add to add a definition version into list")
+	}
+
+	var exist bool
+	if s.imageNameDefinitionVersionList == nil {
+		s.imageNameDefinitionVersionList = make(map[string]map[string]struct{})
+	}
+
+	_, exist = s.imageNameDefinitionVersionList[name]
+	if !exist {
+		s.imageNameDefinitionVersionList[name] = map[string]struct{}{
+			version: {},
+		}
+	} else {
+		s.imageNameDefinitionVersionList[name][version] = struct{}{}
+	}
+
+	return nil
+}
+
+func (s *Store) addImageNameVersionRenderedVersionsList(name, version string, i *image.Image) error {
+	var exist bool
+
+	errContext := "(store::images::Store::addImageNameVersionRenderedVersionsList)"
+
+	if name == "" {
+		return errors.New(errContext, "Image name must be provided to add to add a rendered version into list")
+	}
+
+	if version == "" {
+		return errors.New(errContext, "Image version must be provided to add to add a rendered version into list")
+	}
 
 	if i == nil {
-		return errors.New(errContext, fmt.Sprintf("Provided image for '%s:%s' is nil", name, version))
+		return errors.New(errContext, "Image must be provided to add to add a rendered version into list")
 	}
 
-	if s.imageNameVersionIndex == nil {
-		s.imageNameVersionIndex = make(map[string]map[string]*image.Image)
+	if s.imageNameVersionRenderedVersionsList == nil {
+		s.imageNameVersionRenderedVersionsList = make(map[string]map[string]map[string]struct{})
 	}
 
-	if s.imageNameVersionIndex[name] == nil {
-		s.imageNameVersionIndex[name] = make(map[string]*image.Image)
+	_, exist = s.imageNameVersionRenderedVersionsList[name]
+	if !exist {
+		s.imageNameVersionRenderedVersionsList[name] = map[string]map[string]struct{}{
+			version: {
+				i.Version: struct{}{},
+			},
+		}
+	} else {
+		_, exist = s.imageNameVersionRenderedVersionsList[name][version]
+		if !exist {
+			s.imageNameVersionRenderedVersionsList[name][version] = map[string]struct{}{
+				i.Version: {},
+			}
+		} else {
+
+			s.imageNameVersionRenderedVersionsList[name][version][i.Version] = struct{}{}
+		}
 	}
 
-	_, exist := s.imageNameVersionIndex[name][version]
-	if exist {
-		return errors.New(errContext, fmt.Sprintf("Image '%s:%s' already exists", name, version))
+	return nil
+}
+
+func (s *Store) addImageToIndex(name string, i *image.Image) error {
+
+	var exist bool
+	errContext := "(store::images::Store::addImageToIndex)"
+
+	if name == "" {
+		return errors.New(errContext, "Image name must be provided to add to add image to index")
 	}
 
-	s.imageNameVersionIndex[name][version] = i
+	if i == nil {
+		return errors.New(errContext, "Image must be provided to add to add to add image to index")
+	}
+
+	if s.imagesIndex == nil {
+		s.imagesIndex = make(map[string]map[string]*image.Image)
+	}
+
+	_, exist = s.imagesIndex[name]
+	if !exist {
+		s.imagesIndex[name] = map[string]*image.Image{
+			i.Version: i,
+		}
+	} else {
+		s.imagesIndex[name][i.Version] = i
+	}
+
+	for _, tag := range i.Tags {
+		s.imagesIndex[name][tag] = i
+	}
 
 	return nil
 }
@@ -134,10 +218,14 @@ func (s *Store) storeImage(name string, version string, i *image.Image) error {
 // storeWildcardImage stores the image in the store
 func (s *Store) storeWildcardImage(name string, i *image.Image) error {
 
-	errContext := "(store::storeWildcardImage)"
+	errContext := "(store::images::Store::storeWildcardImage)"
+
+	if name == "" {
+		return errors.New(errContext, "Image name must be provided to store a wildcard image")
+	}
 
 	if i == nil {
-		return errors.New(errContext, fmt.Sprintf("Provided wildcard image for '%s' is nil", name))
+		return errors.New(errContext, fmt.Sprintf("Image must be provided to store '%s' wildcard image", name))
 	}
 
 	if s.imageWildcardIndex == nil {
@@ -157,75 +245,101 @@ func (s *Store) storeWildcardImage(name string, i *image.Image) error {
 // List returns a sorted list of all images
 func (s *Store) List() ([]*image.Image, error) {
 
-	errContext := "(store::List)"
+	errContext := "(store::images::Store::List)"
 
 	if s.store == nil {
-		return nil, errors.New(errContext, "Store has not been initialized")
+		return nil, errors.New(errContext, "To list images, store must be initialized")
 	}
 
 	sort.Sort(images.SortedImages(s.store))
 	return s.store, nil
 }
 
-// FindByName returns all the images asociated to the image name
+// FindByName returns all the images associated to the image name
 func (s *Store) FindByName(name string) ([]*image.Image, error) {
 
-	errContext := "(store::FindByName)"
+	errContext := "(store::images::Store::FindByName)"
+
+	if s.imageNameDefinitionVersionList == nil || s.imageNameVersionRenderedVersionsList == nil || s.imagesIndex == nil {
+		return nil, errors.New(errContext, "To find images by name into images store, list structures must be initialized")
+	}
+
 	list := []*image.Image{}
 
-	if s.store == nil {
-		return nil, errors.New(errContext, "Store has not been initialized")
+	//	definitioVersionList,_ := s.imageNameDefinitionVersionList[name]
+	for definitionVersion := range s.imageNameDefinitionVersionList[name] {
+		for renderedVersion := range s.imageNameVersionRenderedVersionsList[name][definitionVersion] {
+			i := s.imagesIndex[name][renderedVersion]
+			list = append(list, i)
+		}
 	}
 
-	listOfVersion, _ := s.imageNameVersionIndex[name]
-	for _, i := range listOfVersion {
-		list = append(list, i)
-	}
+	// nameDefinitionVersionList, _ := s.imageNameDefinitionVersionList[name]
+	// for _, version := range nameDefinitionVersionList {
+
+	// 	renderedVersionList, _ := s.imageNameVersionRenderedVersionsList[name][version]
+	// 	for _, renderedVersion := range renderedVersionList {
+	// 		i := s.imagesIndex[name][renderedVersion]
+	// 		list = append(list, i)
+	// 	}
+	// }
 
 	sort.Sort(images.SortedImages(list))
+
 	return list, nil
 }
 
 // Find returns the image associated to the image name and version
-func (s *Store) Find(name string, version string) (*image.Image, error) {
-	errContext := "(store::Find)"
+func (s *Store) Find(name string, version string) ([]*image.Image, error) {
 
-	if s.store == nil {
-		return nil, errors.New(errContext, "Store has not been initialized")
+	var i *image.Image
+	var exist bool
+
+	errContext := "(store::images::Store::Find)"
+	_ = errContext
+
+	if s.imageNameVersionRenderedVersionsList == nil || s.imagesIndex == nil || s.imageWildcardIndex == nil {
+		return nil, errors.New(errContext, "To find images into images store, list structures must be initialized")
 	}
+
+	list := []*image.Image{}
 
 	//  return the image associated to the image name and version
 	if version == ImageWildcardVersionSymbol {
-		i, _ := s.imageWildcardIndex[name]
-		return i, nil
+		i, _ = s.imageWildcardIndex[name]
+		return append(list, i), nil
 	}
 
-	i, exist := s.imageNameVersionIndex[name][version]
-	if !exist {
-		return nil, nil
+	i, exist = s.imagesIndex[name][version]
+	if exist {
+		return append(list, i), nil
 	}
 
-	return i, nil
+	renderedVersionList, _ := s.imageNameVersionRenderedVersionsList[name][version]
+	for renderedVersion, _ := range renderedVersionList {
+		i := s.imagesIndex[name][renderedVersion]
+		list = append(list, i)
+	}
+
+	return list, nil
 }
 
 // FindGuaranteed returns the image associated to the image name and version. In case of a wildcard image, it generates the image. Otherwise, it returns a nil image and an error
-func (s *Store) FindGuaranteed(findName, findVersion, imageName, imageVersion string) (*image.Image, error) {
+func (s *Store) FindGuaranteed(findName, findVersion, imageName, imageVersion string) ([]*image.Image, error) {
 
 	var err error
-	errContext := "(store::FindGuaranteed)"
+	errContext := "(store::images::Store::FindGuaranteed)"
+
+	var list []*image.Image
 	var image, imageWildcard *image.Image
 
-	if s.store == nil {
-		return nil, errors.New(errContext, "Store has not been initialized")
-	}
-
-	image, err = s.Find(findName, findVersion)
+	list, err = s.Find(findName, findVersion)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
 
-	if image != nil {
-		return image, nil
+	if len(list) > 0 {
+		return list, nil
 	}
 
 	imageWildcard, err = s.FindWildcardImage(findName)
@@ -242,19 +356,15 @@ func (s *Store) FindGuaranteed(findName, findVersion, imageName, imageVersion st
 		return nil, errors.New(errContext, "", err)
 	}
 
-	return image, nil
+	return append(list, image), nil
 }
 
 func (s *Store) FindWildcardImage(name string) (*image.Image, error) {
 
-	errContext := "(store::FindWildcardImage)"
-
-	if s.store == nil {
-		return nil, errors.New(errContext, "Store has not been initialized")
-	}
+	errContext := "(store::images::Store::FindWildcardImage)"
 
 	if s.imageWildcardIndex == nil {
-		return nil, errors.New(errContext, "Wildcard index has not been initialized")
+		return nil, errors.New(errContext, "To find a wildcard image, Wildcard index must be initialized")
 	}
 
 	i, exist := s.imageWildcardIndex[name]
@@ -269,7 +379,7 @@ func (s *Store) GenerateImageFromWildcard(i *image.Image, name string, version s
 
 	var err error
 	var parent, parentWildcard, renderedImage, imageToRender *image.Image
-	errContext := "(store::GenerateImageFromWildcard)"
+	errContext := "(store::images::Store::GenerateImageFromWildcard)"
 
 	if i == nil {
 		return nil, errors.New(errContext, "Provided wildcard image is nil")
