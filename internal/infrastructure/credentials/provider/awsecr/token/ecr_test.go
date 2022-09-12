@@ -58,7 +58,7 @@ func TestGet(t *testing.T) {
 				AWSSecretAccessKey: "secretKey",
 			},
 			prepareAssertFunc: func(ecr *AWSECRToken) {
-				ecr.staticCredentialsProvider.(*awscredprovider.MockStaticCredentialsProvider).On("Credentials", "accessKey", "secretKey", "").Return(
+				ecr.staticCredentialsProvider.(*awscredprovider.MockStaticCredentialsProvider).On("Credentials", "accessKey", "secretKey", "", []func(*config.LoadOptions) error{}).Return(
 					awscredentials.StaticCredentialsProvider{}, nil)
 			},
 			res: &ecr.GetAuthorizationTokenOutput{},
@@ -83,12 +83,14 @@ func TestGet(t *testing.T) {
 		})
 	}
 }
+
 func TestResolveCredentialsProvider(t *testing.T) {
 	tests := []struct {
 		desc              string
 		ecr               *AWSECRToken
 		config            aws.Config
 		badge             *credentials.Badge
+		options           []func(*config.LoadOptions) error
 		res               aws.CredentialsProvider
 		prepareAssertFunc func(*AWSECRToken)
 		err               error
@@ -104,8 +106,15 @@ func TestResolveCredentialsProvider(t *testing.T) {
 				AWSAccessKeyID:     "accessKey",
 				AWSSecretAccessKey: "secretKey",
 			},
+			options: []func(*config.LoadOptions) error{},
 			prepareAssertFunc: func(ecr *AWSECRToken) {
-				ecr.staticCredentialsProvider.(*awscredprovider.MockStaticCredentialsProvider).On("Credentials", "accessKey", "secretKey", "").Return(
+				ecr.staticCredentialsProvider.(*awscredprovider.MockStaticCredentialsProvider).On(
+					"Credentials",
+					"accessKey",
+					"secretKey",
+					"",
+					[]func(*config.LoadOptions) error{},
+				).Return(
 					awscredentials.StaticCredentialsProvider{}, nil)
 			},
 			res: awscredentials.StaticCredentialsProvider{},
@@ -118,10 +127,21 @@ func TestResolveCredentialsProvider(t *testing.T) {
 			),
 			config: aws.Config{},
 			badge: &credentials.Badge{
-				AWSRoleARN: "arn:aws:iam::1234567890:role/testing-role",
+				AWSRoleARN:         "arn:aws:iam::1234567890:role/testing-role",
+				AWSAccessKeyID:     "accessKey",
+				AWSSecretAccessKey: "secretKey",
 			},
+			options: []func(*config.LoadOptions) error{},
 			prepareAssertFunc: func(ecr *AWSECRToken) {
-				ecr.assumeRoleARNProvider.(*awscredprovider.MockAssumerRoleARNProvider).On("Credentials", aws.Config{}, "arn:aws:iam::1234567890:role/testing-role").Return(
+				ecr.assumeRoleARNProvider.(*awscredprovider.MockAssumerRoleARNProvider).On(
+					"Credentials",
+					aws.Config{},
+					"arn:aws:iam::1234567890:role/testing-role",
+					"accessKey",
+					"secretKey",
+					"",
+					[]func(*config.LoadOptions) error{},
+				).Return(
 					&stscreds.AssumeRoleProvider{}, nil)
 			},
 			res: &stscreds.AssumeRoleProvider{},
@@ -158,7 +178,7 @@ func TestResolveCredentialsProvider(t *testing.T) {
 				test.prepareAssertFunc(test.ecr)
 			}
 
-			res, err := test.ecr.resolveCredentialsProvider(test.config, test.badge)
+			res, err := test.ecr.resolveCredentialsProvider(test.config, test.badge, test.options...)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
