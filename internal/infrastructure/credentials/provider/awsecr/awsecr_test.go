@@ -11,7 +11,6 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
 	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr/token"
-	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr/token/awscredprovider"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -110,35 +109,5 @@ NTM2Ngp9`,
 				assert.Equal(t, test.res, pass)
 			}
 		})
-	}
-}
-
-// TestFunctional is kept as skiped to avoid running this test automatically
-func TestFunctional(t *testing.T) {
-
-	t.Skip()
-
-	credprov := NewAWSECRCredentialsProvider(token.NewAWSECRToken(
-		token.WithStaticCredentialsProvider(awscredprovider.NewStaticCredentialsProvider()),
-		token.WithAssumeRoleARNProvider(awscredprovider.NewAssumerRoleARNProvider()),
-		token.WithECRClientFactory(
-			token.NewECRClientFactory(
-				func(cfg aws.Config) token.ECRClienter {
-					c := ecr.NewFromConfig(cfg)
-
-					return c
-				}),
-		),
-	))
-
-	badge := &credentials.Badge{
-		AWSUseDefaultCredentialsChain: true,
-	}
-
-	auth, err := credprov.Get(badge)
-	if err != nil {
-		t.Error(err)
-	} else {
-		t.Log(auth)
 	}
 }
