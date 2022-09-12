@@ -242,13 +242,12 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 
 	// create authorization aws ecr provider
 	tokenProvider := token.NewAWSECRToken(
-		token.WithStaticCredentialsProvider(awscredprovider.NewStaticCredentialsProvider()),
 		token.WithAssumeRoleARNProvider(awscredprovider.NewAssumerRoleARNProvider()),
+		token.WithStaticCredentialsProvider(awscredprovider.NewStaticCredentialsProvider()),
 		token.WithECRClientFactory(
 			token.NewECRClientFactory(
 				func(cfg aws.Config) token.ECRClienter {
 					c := ecr.NewFromConfig(cfg)
-
 					return c
 				},
 			),
