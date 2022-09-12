@@ -87,7 +87,7 @@ func (t *AWSECRToken) Get(ctx context.Context, cfgFunc func(context.Context, ...
 		return nil, errors.New(errContext, "", err)
 	}
 
-	credentialsProvider, err := t.resolveCredentialsProvider(cfg, badge)
+	credentialsProvider, err := t.resolveCredentialsProvider(cfg, badge, options...)
 	if err != nil {
 		errors.New(errContext, "", err)
 	}
@@ -142,7 +142,7 @@ func (t *AWSECRToken) awsConfigLoadOptions(badge *credentials.Badge) ([]func(*co
 }
 
 // resolveCredentialsProvider returns the credentials provider to use for the given config. To use the default aws configuration, is returned a nil provider. When no provider is found it is returned an empty CredentialsCache.
-func (t *AWSECRToken) resolveCredentialsProvider(cfg aws.Config, badge *credentials.Badge) (aws.CredentialsProvider, error) {
+func (t *AWSECRToken) resolveCredentialsProvider(cfg aws.Config, badge *credentials.Badge, options ...func(*config.LoadOptions) error) (aws.CredentialsProvider, error) {
 	var provider aws.CredentialsProvider
 	var err error
 	errContext := "(token::AWSECRToken::resolveCredentialsProvider)"
@@ -151,22 +151,27 @@ func (t *AWSECRToken) resolveCredentialsProvider(cfg aws.Config, badge *credenti
 		return nil, errors.New(errContext, "To get an ECR authorization token, you must provide a badge")
 	}
 
-	if badge.AWSAccessKeyID != "" && badge.AWSSecretAccessKey != "" {
-		provider, err = t.staticCredentialsProvider.Credentials(badge.AWSAccessKeyID, badge.AWSSecretAccessKey, "")
-		if err != nil {
-			return nil, errors.New(errContext, "", err)
-		}
+	if badge.AWSRoleARN != "" {
+		if t.assumeRoleARNProvider != nil {
 
-		return provider, nil
+			provider, err = t.assumeRoleARNProvider.Credentials(cfg, badge.AWSRoleARN, badge.AWSAccessKeyID, badge.AWSSecretAccessKey, "", options...)
+			if err != nil {
+				return nil, errors.New(errContext, "", err)
+			}
+
+			return provider, nil
+		}
 	}
 
-	if badge.AWSRoleARN != "" {
-		provider, err = t.assumeRoleARNProvider.Credentials(cfg, badge.AWSRoleARN)
-		if err != nil {
-			return nil, errors.New(errContext, "", err)
-		}
+	if badge.AWSAccessKeyID != "" && badge.AWSSecretAccessKey != "" {
+		if t.staticCredentialsProvider != nil {
+			provider, err = t.staticCredentialsProvider.Credentials(badge.AWSAccessKeyID, badge.AWSSecretAccessKey, "", options...)
+			if err != nil {
+				return nil, errors.New(errContext, "", err)
+			}
 
-		return provider, nil
+			return provider, nil
+		}
 	}
 
 	if badge.AWSUseDefaultCredentialsChain {

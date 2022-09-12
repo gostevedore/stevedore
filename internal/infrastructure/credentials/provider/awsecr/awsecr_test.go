@@ -2,16 +2,21 @@ package ecr
 
 import (
 	"context"
+	"fmt"
 	"testing"
+
+	sdkcred "github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
 	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr/token"
-	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr/token/awscredprovider"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -118,27 +123,66 @@ func TestFunctional(t *testing.T) {
 
 	t.Skip()
 
-	credprov := NewAWSECRCredentialsProvider(token.NewAWSECRToken(
-		token.WithStaticCredentialsProvider(awscredprovider.NewStaticCredentialsProvider()),
-		token.WithAssumeRoleARNProvider(awscredprovider.NewAssumerRoleARNProvider()),
-		token.WithECRClientFactory(
-			token.NewECRClientFactory(
-				func(cfg aws.Config) token.ECRClienter {
-					c := ecr.NewFromConfig(cfg)
+	// credprov := NewAWSECRCredentialsProvider(token.NewAWSECRToken(
+	// 	token.WithStaticCredentialsProvider(awscredprovider.NewStaticCredentialsProvider()),
+	// 	token.WithAssumeRoleARNProvider(awscredprovider.NewAssumerRoleARNProvider()),
+	// 	token.WithECRClientFactory(
+	// 		token.NewECRClientFactory(
+	// 			func(cfg aws.Config) token.ECRClienter {
+	// 				c := ecr.NewFromConfig(cfg)
 
-					return c
-				}),
+	// 				return c
+	// 			}),
+	// 	),
+	// ))
+
+	// badge := &credentials.Badge{
+	// 	AWSUseDefaultCredentialsChain: true,
+	// }
+
+	// auth, err := credprov.Get(badge)
+	// if err != nil {
+	// 	t.Error(err)
+	// } else {
+	// 	t.Log(auth)
+	// }
+
+	assumecnf, err := config.LoadDefaultConfig(
+		context.TODO(), config.WithRegion("eu-west-1"),
+		config.WithCredentialsProvider(aws.NewCredentialsCache(
+			sdkcred.NewStaticCredentialsProvider(
+				"AKIASWM3KPCNAVF5AOM5",
+				"FbktdeFJLd7sVtM9laVTw9QvCqcJhTuKydcMm/m1",
+				"",
+			)),
 		),
-	))
-
-	badge := &credentials.Badge{
-		AWSUseDefaultCredentialsChain: true,
-	}
-
-	auth, err := credprov.Get(badge)
+	)
 	if err != nil {
 		t.Error(err)
-	} else {
-		t.Log(auth)
 	}
+
+	stsclient := sts.NewFromConfig(assumecnf)
+	cfg, err := config.LoadDefaultConfig(
+		context.TODO(), config.WithRegion("eu-west-1"),
+		config.WithCredentialsProvider(aws.NewCredentialsCache(
+			stscreds.NewAssumeRoleProvider(
+				stsclient,
+				// "arn:aws:iam::486857178526:role/role-admin-admin-access",
+				"arn:aws:iam::460972834675:role/role-lab01-admin-access",
+			)),
+		),
+	)
+	if err != nil {
+		t.Error(err)
+	}
+
+	client := ecr.NewFromConfig(cfg)
+
+	auth, err := client.GetAuthorizationToken(context.TODO(), &ecr.GetAuthorizationTokenInput{})
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Printf("%+v", auth.AuthorizationData)
+
 }
