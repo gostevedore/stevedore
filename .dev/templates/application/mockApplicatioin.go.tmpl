@@ -1,0 +1,23 @@
+package {{ .PackageName }}
+
+import (
+	"context"
+
+	"github.com/stretchr/testify/mock"
+)
+
+// Mock{{ .ApplicationObject }} is a mock of build application
+type Mock{{ .ApplicationObject }} struct {
+	mock.Mock
+}
+
+// NewMock{{ .ApplicationObject }} return a mock of build application
+func NewMock{{ .ApplicationObject }}() *Mock{{ .ApplicationObject }} {
+	return &Mock{{ .ApplicationObject }}{}
+}
+
+// Build provides a mock function with given fields: ctx, buildPlan, name, version, options, optionsFunc
+func (m *Mock{{ .ApplicationObject }}) Run(ctx context.Context, optionsFunc ...OptionsFunc) error {
+	args := m.Called(ctx, optionsFunc)
+	return args.Error(0)
+}

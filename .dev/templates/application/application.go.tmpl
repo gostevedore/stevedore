@@ -1,0 +1,31 @@
+package {{ .PackageName }}
+
+import "context"
+
+// OptionsFunc is a function used to configure the service
+type OptionsFunc func(*{{ .ApplicationObject }})
+
+// {{ .ApplicationObject }} is an application service
+type {{ .ApplicationObject }} struct {
+}
+
+// New{{ .ApplicationObject }} creats a new application service
+func New{{ .ApplicationObject }}(options ...OptionsFunc) *{{ .ApplicationObject }} {
+
+	service := &{{ .ApplicationObject }}{}
+	service.Options(options...)
+
+	return service
+}
+
+// Options configure the service
+func (a *{{ .ApplicationObject }}) Options(opts ...OptionsFunc) {
+	for _, opt := range opts {
+		opt(a)
+	}
+}
+
+// Build starts the building process
+func (a *{{ .ApplicationObject }}) Run(ctx context.Context, optionsFunc ...OptionsFunc) error {
+	return nil
+}

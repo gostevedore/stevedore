@@ -7,16 +7,24 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	buildentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/build"
+	createcredentialsentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/create/credentials"
+	getcredentialsentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/get/credentials"
 	promoteentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/build"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command/middleware"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/completion"
+	"github.com/gostevedore/stevedore/internal/infrastructure/cli/create"
+	createcredentials "github.com/gostevedore/stevedore/internal/infrastructure/cli/create/credentials"
+	"github.com/gostevedore/stevedore/internal/infrastructure/cli/get"
+	getcredentials "github.com/gostevedore/stevedore/internal/infrastructure/cli/get/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/version"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration/loader"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // stevedoreCmdFlags
@@ -36,7 +44,8 @@ func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore Compatibili
 	errContext := "(stevedore::NewCommand)"
 
 	if config == nil {
-		config, err = configuration.New(fs, compatibilityStore)
+		configLoader := loader.NewConfigurationLoader(viper.New())
+		config, err = configuration.New(fs, configLoader, compatibilityStore)
 		if err != nil {
 			console.Error(err.Error())
 			os.Exit(1)
@@ -54,7 +63,7 @@ You just need to define how each image should be built and the relationship amon
 			var err error
 
 			if len(stevedoreCmdFlagsVars.ConfigFile) > 0 {
-				err = config.ReloadConfigurationFromFile(fs, stevedoreCmdFlagsVars.ConfigFile, compatibilityStore)
+				err = config.ReloadConfigurationFromFile(stevedoreCmdFlagsVars.ConfigFile)
 				if err != nil {
 					console.Error(err.Error())
 					return errors.New(errContext, fmt.Sprintf("Error loading configuration from file '%s'", stevedoreCmdFlagsVars.ConfigFile), err)
@@ -77,22 +86,50 @@ You just need to define how each image should be built and the relationship amon
 		Command: stevedoreCmd,
 	}
 
-	// entrypoint is not created
+	// Completion
+	command.AddCommand(
+		middleware.Command(ctx, completion.NewCommand(ctx, config, command, console), compatibilityReport, log, console),
+	)
+
+	// Version
+	command.AddCommand(
+		middleware.Command(ctx, version.NewCommand(ctx, console), compatibilityReport, log, console),
+	)
+
+	// Build
 	buildEntrypoint := buildentrypoint.NewEntrypoint(
 		buildentrypoint.WithWriter(console),
 		buildentrypoint.WithFileSystem(fs),
+		buildentrypoint.WithCompatibility(compatibilityStore),
 	)
-	command.AddCommand(middleware.Command(ctx, build.NewCommand(ctx, compatibilityStore, config, buildEntrypoint), compatibilityReport, log, console))
-
-	promoteEntrypoint := promoteentrypoint.NewEntrypoint(
-		promoteentrypoint.WithWriter(console),
-		promoteentrypoint.WithFileSystem(fs),
+	command.AddCommand(
+		middleware.Command(ctx, build.NewCommand(ctx, compatibilityStore, config, buildEntrypoint), compatibilityReport, log, console),
 	)
-	command.AddCommand(middleware.Command(ctx, promote.NewCommand(ctx, compatibilityStore, config, promoteEntrypoint), compatibilityReport, log, console))
 
-	command.AddCommand(middleware.Command(ctx, completion.NewCommand(ctx, config, command, console), compatibilityReport, log, console))
+	// Create
 
-	command.AddCommand(middleware.Command(ctx, version.NewCommand(ctx, console), compatibilityReport, log, console))
+	// Create credentials
+	createCredentialsEntrypoint := createcredentialsentrypoint.NewCreateCredentialsEntrypoint(
+		createcredentialsentrypoint.WithConsole(console),
+		createcredentialsentrypoint.WithFileSystem(fs),
+		createcredentialsentrypoint.WithCompatibilitier(compatibilityStore),
+	)
+	createCredentialsCommand := middleware.Command(ctx, createcredentials.NewCommand(ctx, compatibilityStore, config, createCredentialsEntrypoint), compatibilityReport, log, console)
+
+	createCommand := create.NewCommand(ctx, createCredentialsCommand)
+	command.AddCommand(createCommand)
+	// Get
+
+	// Get credentials
+	getCredentialsEntrypoint := getcredentialsentrypoint.NewEntrypoint(
+		getcredentialsentrypoint.WithWriter(console),
+		getcredentialsentrypoint.WithFileSystem(fs),
+		getcredentialsentrypoint.WithCompatibilitier(compatibilityStore),
+	)
+	getCredentialsCommand := middleware.Command(ctx, getcredentials.NewCommand(ctx, config, getCredentialsEntrypoint), compatibilityReport, log, console)
+
+	getCommand := get.NewCommand(ctx, getCredentialsCommand)
+	command.AddCommand(getCommand)
 
 	// command.AddCommand(middleware.Middleware(create.NewCommand(ctx, config)))
 	// command.AddCommand(middleware.Middleware(get.NewCommand(ctx, config)))
@@ -100,6 +137,16 @@ You just need to define how each image should be built and the relationship amon
 	// command.AddCommand(middleware.Middleware(moo.NewCommand(ctx, config)))
 	// command.AddCommand(middleware.Middleware(promote.NewCommand(ctx, config)))
 	// command.AddCommand(middleware.Middleware(version.NewCommand(ctx, config)))
+
+	// Promote
+	promoteEntrypoint := promoteentrypoint.NewEntrypoint(
+		promoteentrypoint.WithWriter(console),
+		promoteentrypoint.WithFileSystem(fs),
+		promoteentrypoint.WithCompatibility(compatibilityStore),
+	)
+	command.AddCommand(
+		middleware.Command(ctx, promote.NewCommand(ctx, compatibilityStore, config, promoteEntrypoint), compatibilityReport, log, console),
+	)
 
 	return command
 }

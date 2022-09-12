@@ -41,17 +41,19 @@ func TestCascadePlanPlan(t *testing.T) {
 			err:      &errors.Error{},
 			res:      3,
 			prepareAssertFunc: func(p *CascadePlan) {
-				p.images.(*images.MockStore).On("Find", "image", "version1").Return(&image.Image{
-					Name:    "image",
-					Version: "version1",
-					Children: []*image.Image{
-						{
-							Name:    "image",
-							Version: "version2",
-							Children: []*image.Image{
-								{
-									Name:    "image",
-									Version: "version3",
+				p.images.(*images.MockStore).On("Find", "image", "version1").Return([]*image.Image{
+					{
+						Name:    "image",
+						Version: "version1",
+						Children: []*image.Image{
+							{
+								Name:    "image",
+								Version: "version2",
+								Children: []*image.Image{
+									{
+										Name:    "image",
+										Version: "version3",
+									},
 								},
 							},
 						},
@@ -76,17 +78,19 @@ func TestCascadePlanPlan(t *testing.T) {
 			err:      &errors.Error{},
 			res:      2,
 			prepareAssertFunc: func(p *CascadePlan) {
-				p.images.(*images.MockStore).On("Find", "image", "version1").Return(&image.Image{
-					Name:    "image",
-					Version: "version1",
-					Children: []*image.Image{
-						{
-							Name:    "image",
-							Version: "version2",
-							Children: []*image.Image{
-								{
-									Name:    "image",
-									Version: "version3",
+				p.images.(*images.MockStore).On("Find", "image", "version1").Return([]*image.Image{
+					{
+						Name:    "image",
+						Version: "version1",
+						Children: []*image.Image{
+							{
+								Name:    "image",
+								Version: "version2",
+								Children: []*image.Image{
+									{
+										Name:    "image",
+										Version: "version3",
+									},
 								},
 							},
 						},

@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/ryanuber/columnize"
+	"golang.org/x/term"
 )
 
 const (
@@ -26,12 +29,14 @@ const (
 // Console
 type Console struct {
 	write io.Writer
+	read  io.Reader
 }
 
 // NewConsole creates a new console
-func NewConsole(w io.Writer) *Console {
+func NewConsole(w io.Writer, r io.Reader) *Console {
 	return &Console{
 		write: w,
+		read:  r,
 	}
 }
 
@@ -141,4 +146,40 @@ func columnizeLine(items []string) string {
 		line = line + columnSeparator + item
 	}
 	return line
+}
+
+// Read read a line from console reader
+func (c *Console) Read() string {
+	var input string
+
+	fmt.Fscanln(c.read, &input)
+	//fmt.Fscanf(c.read, "%s", &input)
+	return input
+}
+
+// ReadPassword read a line from console reader without echo
+func (c *Console) ReadPassword(prompt string) (string, error) {
+	stdin := int(syscall.Stdin)
+	oldState, err := term.GetState(stdin)
+	if err != nil {
+		return "", err
+	}
+	defer term.Restore(stdin, oldState)
+
+	sigch := make(chan os.Signal, 1)
+	signal.Notify(sigch, os.Interrupt)
+	go func() {
+		for range sigch {
+			c.Warn("Interrupted")
+			term.Restore(stdin, oldState)
+			os.Exit(0)
+		}
+	}()
+
+	c.Write([]byte(prompt))
+	password, err := term.ReadPassword(stdin)
+	if err != nil {
+		return "", err
+	}
+	return string(password), nil
 }

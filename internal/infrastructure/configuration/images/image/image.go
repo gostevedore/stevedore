@@ -77,24 +77,6 @@ func (i *Image) Copy() (*Image, error) {
 // CreateDomainImage creates a domain image from the image
 func (i *Image) CreateDomainImage() (*domainimage.Image, error) {
 
-	//errContext := "(image::CreateDomainImage)"
-
-	// image, err := domainimage.NewImage(
-	// 	i.Name,
-	// 	i.Version,
-	// 	i.RegistryHost,
-	// 	i.RegistryNamespace,
-	// 	domainimage.WithBuilder(i.Builder),
-	// 	domainimage.WithPersistentLabels(i.PersistentLabels),
-	// 	domainimage.WithPersistentVars(i.PersistentVars),
-	// 	domainimage.WithLabels(i.Labels),
-	// 	domainimage.WithTags(i.Tags...),
-	// 	domainimage.WithVars(i.Vars),
-	// )
-	// if err != nil {
-	// 	return nil, errors.New(errContext, "", err)
-	// }
-
 	image := &domainimage.Image{
 		Name:              i.Name,
 		Version:           i.Version,
@@ -114,28 +96,7 @@ func (i *Image) CreateDomainImage() (*domainimage.Image, error) {
 }
 
 // CheckCompatibility checks that image compatibility
-func (i *Image) CheckCompatibility(compabilitiy Compatibilitier) {
-
-	// if i.Type != "" {
-	// 	compabilitiy.AddDeprecated(fmt.Sprintf("On '%s', 'type' attribute must be replaced by 'builder' before 0.11.0", i.Name))
-
-	// 	if i.Builder == "" {
-	// 		i.Builder = i.Type
-	// 	} else {
-	// 		compabilitiy.AddDeprecated(fmt.Sprintf("On '%s', 'builder' value will be used instead of 'type'", i.Name))
-	// 	}
-	// }
-
-	// if i.Childs != nil && len(i.Childs) > 0 {
-	// 	compabilitiy.AddDeprecated(fmt.Sprintf("On '%s', 'childs' attribute must be replaced by 'children' before 0.11.0", i.Name))
-
-	// 	if i.Children != nil && len(i.Children) > 0 {
-	// 		compabilitiy.AddDeprecated(fmt.Sprintf("On '%s', 'children' value will be used instead of 'childs'", i.Name))
-	// 	} else {
-	// 		i.Children = i.Childs
-	// 	}
-	// }
-}
+func (i *Image) CheckCompatibility(compabilitiy Compatibilitier) {}
 
 // YAMLMarshal marshals the image to YAML
 func (i *Image) YAMLMarshal() ([]byte, error) {

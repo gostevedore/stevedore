@@ -5,19 +5,21 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
+	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
+	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
+	authmethodkeyfile "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/keyfile"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/mock"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
-	credentialsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPromote(t *testing.T) {
+	errContext := "(Application::Promote)"
 
 	tests := []struct {
 		desc            string
@@ -30,7 +32,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote source image from local",
 			service: NewApplication(
-				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
+				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
 			),
@@ -55,15 +57,15 @@ func TestPromote(t *testing.T) {
 					RemoveTargetImageTags: false,
 					RemoteSourceImage:     false,
 					SourceImageName:       "registry.test/namespace/image:tag",
-					PullAuthUsername:      "name",
-					PullAuthPassword:      "pass",
-					PushAuthUsername:      "name",
-					PushAuthPassword:      "pass",
+					PullAuthUsername:      "username",
+					PullAuthPassword:      "password",
+					PushAuthUsername:      "username",
+					PushAuthPassword:      "password",
 				}
 
-				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
-					Username: "name",
-					Password: "pass",
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username",
+					Password: "password",
 				}, nil)
 
 				mock := mock.NewMockPromote()
@@ -75,7 +77,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote source image from remote",
 			service: NewApplication(
-				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
+				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
 			),
@@ -99,10 +101,10 @@ func TestPromote(t *testing.T) {
 					RemoveTargetImageTags: false,
 					RemoteSourceImage:     true,
 					SourceImageName:       "registry.test/namespace/image:tag",
-					PullAuthUsername:      "name",
-					PullAuthPassword:      "pass",
-					PushAuthUsername:      "name",
-					PushAuthPassword:      "pass",
+					PullAuthUsername:      "username",
+					PullAuthPassword:      "password",
+					PushAuthUsername:      "username",
+					PushAuthPassword:      "password",
 				}
 
 				mock := mock.NewMockPromote()
@@ -112,9 +114,9 @@ func TestPromote(t *testing.T) {
 				factory.Register(image.DockerPromoterName, mock)
 				p.factory = factory
 
-				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
-					Username: "name",
-					Password: "pass",
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username",
+					Password: "password",
 				}, nil)
 			},
 			err: &errors.Error{},
@@ -122,7 +124,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote source image with all options",
 			service: NewApplication(
-				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
+				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
 			),
@@ -146,20 +148,20 @@ func TestPromote(t *testing.T) {
 					RemoveTargetImageTags: true,
 					RemoteSourceImage:     true,
 					SourceImageName:       "registry.test/namespace/image:tag",
-					PullAuthUsername:      "pullname",
-					PullAuthPassword:      "pullpass",
-					PushAuthUsername:      "pushname",
-					PushAuthPassword:      "pushpass",
+					PullAuthUsername:      "username_pull",
+					PullAuthPassword:      "password_pull",
+					PushAuthUsername:      "username_push",
+					PushAuthPassword:      "password_push",
 				}
 
-				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
-					Username: "pullname",
-					Password: "pullpass",
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username_pull",
+					Password: "password_pull",
 				}, nil)
 
-				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{
-					Username: "pushname",
-					Password: "pushpass",
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "targetregistry.test").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username_push",
+					Password: "password_push",
 				}, nil)
 
 				mock := mock.NewMockPromote()
@@ -174,7 +176,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote source image with no credentials",
 			service: NewApplication(
-				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
+				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
 			),
@@ -204,8 +206,8 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "",
 				}
 
-				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{}, nil)
-				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{}, nil)
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{}, nil)
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "targetregistry.test").Return(&authmethodbasic.BasicAuthMethod{}, nil)
 
 				mock := mock.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
@@ -219,7 +221,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote source image with all options and using semver configuration parameters",
 			service: NewApplication(
-				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
+				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
 			),
@@ -243,20 +245,20 @@ func TestPromote(t *testing.T) {
 					RemoveTargetImageTags: true,
 					RemoteSourceImage:     true,
 					SourceImageName:       "registry.test/namespace/image:tag",
-					PullAuthUsername:      "pullname",
-					PullAuthPassword:      "pullpass",
-					PushAuthUsername:      "pushname",
-					PushAuthPassword:      "pushpass",
+					PullAuthUsername:      "username_pull",
+					PullAuthPassword:      "password_pull",
+					PushAuthUsername:      "username_push",
+					PushAuthPassword:      "password_push",
 				}
 
-				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
-					Username: "pullname",
-					Password: "pullpass",
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username_pull",
+					Password: "password_pull",
 				}, nil)
 
-				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{
-					Username: "pushname",
-					Password: "pushpass",
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "targetregistry.test").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username_push",
+					Password: "password_push",
 				}, nil)
 
 				mock := mock.NewMockPromote()
@@ -271,7 +273,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote source image with all options, using semver configuration parameters overridden by service options",
 			service: &Application{
-				credentials: credentialsstore.NewCredentialsStoreMock(),
+				credentials: credentialsfactory.NewMockCredentialsFactory(),
 				semver:      semver.NewSemVerGenerator(),
 			},
 			context: context.TODO(),
@@ -294,20 +296,20 @@ func TestPromote(t *testing.T) {
 					RemoveTargetImageTags: true,
 					RemoteSourceImage:     true,
 					SourceImageName:       "registry.test/namespace/image:tag",
-					PullAuthUsername:      "pullname",
-					PullAuthPassword:      "pullpass",
-					PushAuthUsername:      "pushname",
-					PushAuthPassword:      "pushpass",
+					PullAuthUsername:      "username_pull",
+					PullAuthPassword:      "password_pull",
+					PushAuthUsername:      "username_push",
+					PushAuthPassword:      "password_push",
 				}
 
-				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
-					Username: "pullname",
-					Password: "pullpass",
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username_pull",
+					Password: "password_pull",
 				}, nil)
 
-				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "targetregistry.test").Return(&credentials.UserPasswordAuth{
-					Username: "pushname",
-					Password: "pushpass",
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "targetregistry.test").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username_push",
+					Password: "password_push",
 				}, nil)
 
 				mock := mock.NewMockPromote()
@@ -318,6 +320,102 @@ func TestPromote(t *testing.T) {
 				p.factory = factory
 			},
 			err: &errors.Error{},
+		},
+		{
+			desc: "Testing error promote when push credentials are invalid",
+			service: &Application{
+				credentials: credentialsfactory.NewMockCredentialsFactory(),
+				semver:      semver.NewSemVerGenerator(),
+			},
+			context: context.TODO(),
+			options: &Options{
+				SourceImageName:              "registry.test/namespace/image:tag",
+				EnableSemanticVersionTags:    true,
+				TargetImageName:              "targetimage",
+				TargetImageRegistryNamespace: "targetnamespace",
+				TargetImageRegistryHost:      "targetregistry.test",
+				TargetImageTags:              []string{"1.2.3", "tag1", "tag2"},
+				PromoteSourceImageTag:        true,
+				RemoveTargetImageTags:        true,
+				RemoteSourceImage:            true,
+				SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
+			},
+			prepareMockFunc: func(p *Application) {
+				options := &image.PromoteOptions{
+					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
+					TargetImageTags:       []string{"tag", "tag1", "tag2", "1"},
+					RemoveTargetImageTags: true,
+					RemoteSourceImage:     true,
+					SourceImageName:       "registry.test/namespace/image:tag",
+					PullAuthUsername:      "username_pull",
+					PullAuthPassword:      "password_pull",
+					PushAuthUsername:      "username_push",
+					PushAuthPassword:      "password_push",
+				}
+
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username_pull",
+					Password: "password_pull",
+				}, nil)
+
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "targetregistry.test").Return(&authmethodkeyfile.KeyFileAuthMethod{}, nil)
+
+				mock := mock.NewMockPromote()
+				mock.On("Promote", context.TODO(), options).Return(nil)
+
+				factory := factory.NewPromoteFactory()
+				factory.Register(image.DockerPromoterName, mock)
+				p.factory = factory
+			},
+			err: errors.New(errContext, "Invalid credentials method for 'targetregistry.test'. Found 'keyfile' when is expected basic auth method"),
+		},
+		{
+			desc: "Testing error promote when pull credentials are invalid",
+			service: &Application{
+				credentials: credentialsfactory.NewMockCredentialsFactory(),
+				semver:      semver.NewSemVerGenerator(),
+			},
+			context: context.TODO(),
+			options: &Options{
+				SourceImageName:              "registry.test/namespace/image:tag",
+				EnableSemanticVersionTags:    true,
+				TargetImageName:              "targetimage",
+				TargetImageRegistryNamespace: "targetnamespace",
+				TargetImageRegistryHost:      "targetregistry.test",
+				TargetImageTags:              []string{"1.2.3", "tag1", "tag2"},
+				PromoteSourceImageTag:        true,
+				RemoveTargetImageTags:        true,
+				RemoteSourceImage:            true,
+				SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
+			},
+			prepareMockFunc: func(p *Application) {
+				options := &image.PromoteOptions{
+					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
+					TargetImageTags:       []string{"tag", "tag1", "tag2", "1"},
+					RemoveTargetImageTags: true,
+					RemoteSourceImage:     true,
+					SourceImageName:       "registry.test/namespace/image:tag",
+					PullAuthUsername:      "username_pull",
+					PullAuthPassword:      "password_pull",
+					PushAuthUsername:      "username_push",
+					PushAuthPassword:      "password_push",
+				}
+
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "targetregistry.test").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username_push",
+					Password: "password_push",
+				}, nil)
+
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodkeyfile.KeyFileAuthMethod{}, nil)
+
+				mock := mock.NewMockPromote()
+				mock.On("Promote", context.TODO(), options).Return(nil)
+
+				factory := factory.NewPromoteFactory()
+				factory.Register(image.DockerPromoterName, mock)
+				p.factory = factory
+			},
+			err: errors.New(errContext, "Invalid credentials method for 'registry.test'. Found 'keyfile' when is expected basic auth method"),
 		},
 	}
 
@@ -348,7 +446,7 @@ func TestGetCredentials(t *testing.T) {
 		service         *Application
 		registry        string
 		prepareMockFunc func(*Application)
-		res             *credentials.UserPasswordAuth
+		res             repository.AuthMethodReader
 		err             error
 	}{
 		{
@@ -359,19 +457,19 @@ func TestGetCredentials(t *testing.T) {
 		{
 			desc: "Testing get credentials",
 			service: &Application{
-				credentials: credentialsstore.NewCredentialsStoreMock(),
+				credentials: credentialsfactory.NewMockCredentialsFactory(),
 			},
 			registry: "myregistry",
 			prepareMockFunc: func(p *Application) {
-				p.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "myregistry").Return(&credentials.UserPasswordAuth{
-					Username: "name",
-					Password: "pass",
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "myregistry").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username",
+					Password: "password",
 				}, nil)
 
 			},
-			res: &credentials.UserPasswordAuth{
-				Username: "name",
-				Password: "pass",
+			res: &authmethodbasic.BasicAuthMethod{
+				Username: "username",
+				Password: "password",
 			},
 		},
 	}

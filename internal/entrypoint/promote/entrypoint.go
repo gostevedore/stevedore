@@ -8,17 +8,32 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/apenella/go-docker-builder/pkg/copy"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	dockerclient "github.com/docker/docker/client"
 	application "github.com/gostevedore/stevedore/internal/application/promote"
+	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
+	credentialscompatibility "github.com/gostevedore/stevedore/internal/infrastructure/credentials/compatibility"
+	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
+	credentialsformatfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/formater/factory"
+	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
+	authmethodkeyfile "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/keyfile"
+	authmethodsshagent "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/sshagent"
+	authproviderawsecr "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr"
+	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr/token"
+	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr/token/awscredprovider"
+	authproviderbadge "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/badge"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker/godockerbuilder"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
-	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials"
+	credentialsstorefactory "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/factory"
+	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/spf13/afero"
 )
 
@@ -27,8 +42,9 @@ type OptionsFunc func(opts *Entrypoint)
 
 // Entrypoint defines the entrypoint for the build application
 type Entrypoint struct {
-	fs     afero.Fs
-	writer io.Writer
+	fs            afero.Fs
+	writer        io.Writer
+	compatibility Compatibilitier
 }
 
 // NewEntrypoint returns a new entrypoint
@@ -53,6 +69,13 @@ func WithFileSystem(fs afero.Fs) OptionsFunc {
 	}
 }
 
+// WithCompatibility sets the compatibility for the entrypoint
+func WithCompatibility(compatibility Compatibilitier) OptionsFunc {
+	return func(e *Entrypoint) {
+		e.compatibility = compatibility
+	}
+}
+
 // Options provides the options for the entrypoint
 func (e *Entrypoint) Options(opts ...OptionsFunc) {
 	for _, opt := range opts {
@@ -64,11 +87,11 @@ func (e *Entrypoint) Options(opts ...OptionsFunc) {
 func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, handlerOptions *handler.Options) error {
 	var err error
 	var promoteRepoFactory factory.PromoteFactory
-	var credentialsStore *credentials.CredentialsStore
+	var credentialsFactory repository.CredentialsFactorier
 	var semverGenerator *semver.SemVerGenerator
 	var options *handler.Options
 
-	errContext := "(Entrypoint::Execute)"
+	errContext := "(promote::entrypoint::Execute)"
 
 	options, err = e.prepareHandlerOptions(args, conf, handlerOptions)
 	if err != nil {
@@ -80,7 +103,7 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 		return errors.New(errContext, "", err)
 	}
 
-	credentialsStore, err = e.createCredentialsStore(conf)
+	credentialsFactory, err = e.createCredentialsFactory(conf)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -92,7 +115,7 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 
 	promoteService := application.NewApplication(
 		application.WithPromoteFactory(promoteRepoFactory),
-		application.WithCredentials(credentialsStore),
+		application.WithCredentials(credentialsFactory),
 		application.WithSemver(semverGenerator),
 	)
 
@@ -106,7 +129,7 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 }
 
 func (e *Entrypoint) prepareHandlerOptions(args []string, conf *configuration.Configuration, inputOptions *handler.Options) (*handler.Options, error) {
-	errContext := "(Entrypoint::prepareHandlerOptions)"
+	errContext := "(promote::entrypoint::prepareHandlerOptions)"
 
 	if len(args) < 1 || args == nil {
 		return nil, errors.New(errContext, "To execute the promote entrypoint, promote image argument is required")
@@ -144,33 +167,104 @@ func (e *Entrypoint) prepareHandlerOptions(args []string, conf *configuration.Co
 	return options, nil
 }
 
-func (e *Entrypoint) createCredentialsStore(conf *configuration.Configuration) (*credentials.CredentialsStore, error) {
-	errContext := "(Entrypoint::createCredentialsStore)"
+func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.CredentialsConfiguration) (*credentialslocalstore.LocalStore, error) {
+
+	errContext := "(build::entrypoint::createCredentialsStore)"
+
+	if conf == nil {
+		return nil, errors.New(errContext, "To create credentials store in promote entrypoint, credentials configuration is required")
+	}
+
+	if conf.Format == "" {
+		return nil, errors.New(errContext, "To create credentials store in promote entrypoint, credentials format must be specified")
+	}
+
+	if e.compatibility == nil {
+		return nil, errors.New(errContext, "To create credentials store in promote entrypoint, compatibility is required")
+	}
+
+	switch conf.StorageType {
+	case credentials.LocalStore:
+		if conf.LocalStoragePath == "" {
+			return nil, errors.New(errContext, "To create credentials store in promote entrypoint, local storage path is required")
+		}
+
+		credentialsCompatibility := credentialscompatibility.NewCredentialsCompatibility(e.compatibility)
+
+		credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
+		credentialsFormat, err := credentialsFormatFactory.Get(credentials.JSONFormat)
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
+		store := credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
+
+		return store, nil
+	default:
+		return nil, errors.New(errContext, fmt.Sprintf("Unsupported credentials storage type '%s'", conf.StorageType))
+	}
+}
+
+func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration) (repository.CredentialsFactorier, error) {
+	errContext := "(promote::entrypoint::createCredentialsFactory)"
 
 	if e.fs == nil {
-		return nil, errors.New(errContext, "To create the credentials store, a file system is required")
+		return nil, errors.New(errContext, "To create the credentials store in promote entrypoint, a file system is required")
 	}
 
 	if conf == nil {
-		return nil, errors.New(errContext, "To execute the promote entrypoint, configuration is required")
+		return nil, errors.New(errContext, "To create the credentials store in promote entrypoint, configuration is required")
 	}
 
-	if conf.DockerCredentialsDir == "" {
-		return nil, errors.New(errContext, "Docker credentials path must be provided in the configuration")
+	if conf.Credentials == nil {
+		return nil, errors.New(errContext, "To create the credentials store in promote entrypoint, credentials configuration is required")
 	}
 
-	credentialsStore := credentials.NewCredentialsStore(e.fs)
-	err := credentialsStore.LoadCredentials(conf.DockerCredentialsDir)
+	// create credentials store
+	localstore, err := e.createCredentialsLocalStore(conf.Credentials)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+	storefactory := credentialsstorefactory.NewCredentialsStoreFactory()
+	storefactory.Register(credentials.LocalStore, localstore)
+	// since there is only one store, we can just use it directly
+	store, err := storefactory.Get(credentials.LocalStore)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
 
-	return credentialsStore, nil
+	// create auth methods
+	basic := authmethodbasic.NewBasicAuthMethod()
+	keyfile := authmethodkeyfile.NewKeyFileAuthMethod()
+	sshagent := authmethodsshagent.NewSSHAgentAuthMethod()
+
+	// create auth providers
+	badge := authproviderbadge.NewBadgeCredentialsProvider(basic, keyfile, sshagent)
+
+	// create authorization aws ecr provider
+	tokenProvider := token.NewAWSECRToken(
+		token.WithAssumeRoleARNProvider(awscredprovider.NewAssumerRoleARNProvider()),
+		token.WithStaticCredentialsProvider(awscredprovider.NewStaticCredentialsProvider()),
+		token.WithECRClientFactory(
+			token.NewECRClientFactory(
+				func(cfg aws.Config) token.ECRClienter {
+					c := ecr.NewFromConfig(cfg)
+					return c
+				},
+			),
+		),
+	)
+
+	awsecr := authproviderawsecr.NewAWSECRCredentialsProvider(tokenProvider)
+
+	// create credentials factory
+	factory := credentialsfactory.NewCredentialsFactory(store, badge, awsecr)
+
+	return factory, nil
 }
 
 func (e *Entrypoint) createPromoteFactory() (factory.PromoteFactory, error) {
 
-	errContext := "(Entrypoint::createPromoteFactory)"
+	errContext := "(promote::entrypoint::createPromoteFactory)"
 
 	dockerClient, err := dockerclient.NewClientWithOpts(dockerclient.FromEnv)
 	if err != nil {

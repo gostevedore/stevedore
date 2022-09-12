@@ -1,57 +1,136 @@
 package credentials
 
-// import (
-// 	"context"
-// 	"fmt"
+import (
+	"context"
 
-// 	errors "github.com/apenella/go-common-utils/error"
-// 	"github.com/gostevedore/stevedore/internal/command"
-// 	"github.com/gostevedore/stevedore/internal/configuration"
-// 	"github.com/gostevedore/stevedore/internal/credentials"
-// 	"github.com/spf13/cobra"
-// )
+	errors "github.com/apenella/go-common-utils/error"
+	entrypoint "github.com/gostevedore/stevedore/internal/entrypoint/create/credentials"
+	handler "github.com/gostevedore/stevedore/internal/handler/create/credentials"
+	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command"
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
+	"github.com/spf13/cobra"
+)
 
-// type createCredentialsCmdFlags struct {
-// 	DockerRegistryCredentialsDir string
-// 	RegistryHost                 string
-// 	Username                     string
-// 	Password                     string
-// }
+const (
+	DeprecatedFlagMessageRegistryHost                 = "[DEPRECATED FLAG] credentials id must be passed as command argument instead of using 'registry-host' flag"
+	DeprecatedFlagMessageDockerRegistryCredentialsDir = "[DEPRECATED FLAG] 'credentials-dir' is deprecated and will be ignored. Credentials parameters are set through the 'credentials' section of the configuration file or using the flag 'local-storage-path'"
+)
 
-// var createCredentialsCmdFlagsVar *createCredentialsCmdFlags
+//  NewCommand return an stevedore command object for get builders
+func NewCommand(ctx context.Context, compatibility Compatibilitier, config *configuration.Configuration, e Entrypointer) *command.StevedoreCommand {
 
-// //  NewCommand return an stevedore command object for get
-// func NewCommand(ctx context.Context, config *configuration.Configuration) *command.StevedoreCommand {
+	createCredentialsFlagOptions := &createCredentialsFlagOptions{}
 
-// 	createCredentialsCmdFlagsVar = &createCredentialsCmdFlags{}
+	createCredentialsCmd := &cobra.Command{
+		Use: "credentials",
+		Aliases: []string{
+			"auth",
+			"badge",
+		},
+		Short: "Stevedore subcommand to add a new credentials badge into credentials store",
+		Long: `
+		Stevedore subcommand to add a new credentials badge into credentials store
+`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var err error
 
-// 	createCredentialsCmd := &cobra.Command{
-// 		Use:     "credentials",
-// 		Aliases: []string{"auth"},
-// 		Short:   "Create stevedore docker registry credentials",
-// 		Long:    "",
-// 		RunE:    createCredentialsHandler(ctx, config),
-// 	}
+			errContext := "(cli::create::credentials::RunE)"
 
-// 	createCredentialsCmd.Flags().StringVarP(&createCredentialsCmdFlagsVar.RegistryHost, "registry-host", "r", "", "Docker registry host to register credentials")
-// 	createCredentialsCmd.Flags().StringVarP(&createCredentialsCmdFlagsVar.Username, "username", "u", "", "Docker registry username")
-// 	createCredentialsCmd.Flags().StringVarP(&createCredentialsCmdFlagsVar.Password, "password", "p", "", "Docker registry password")
-// 	createCredentialsCmd.Flags().StringVarP(&createCredentialsCmdFlagsVar.DockerRegistryCredentialsDir, "credentials-dir", "d", config.DockerCredentialsDir, "Location path to store docker registry credentials")
+			handlerOptions := &handler.Options{}
+			entrypointOptions := &entrypoint.Options{}
 
-// 	command := &command.StevedoreCommand{
-// 		Command: createCredentialsCmd,
-// 	}
+			if createCredentialsFlagOptions.AskAWSSecretAccessKey {
+				entrypointOptions.AskAWSSecretAccessKey = createCredentialsFlagOptions.AskAWSSecretAccessKey
+			}
+			if createCredentialsFlagOptions.AskPassword {
+				entrypointOptions.AskPassword = createCredentialsFlagOptions.AskPassword
+			}
+			if createCredentialsFlagOptions.LocalStoragePath != "" {
+				entrypointOptions.LocalStoragePath = createCredentialsFlagOptions.LocalStoragePath
+			}
+			if createCredentialsFlagOptions.Force {
+				entrypointOptions.ForceCreate = createCredentialsFlagOptions.Force
+			}
 
-// 	return command
-// }
+			if createCredentialsFlagOptions.AllowUseSSHAgent {
+				handlerOptions.AllowUseSSHAgent = createCredentialsFlagOptions.AllowUseSSHAgent
+			}
+			if createCredentialsFlagOptions.AWSAccessKeyID != "" {
+				handlerOptions.AWSAccessKeyID = createCredentialsFlagOptions.AWSAccessKeyID
+			}
+			if createCredentialsFlagOptions.AWSProfile != "" {
+				handlerOptions.AWSProfile = createCredentialsFlagOptions.AWSProfile
+			}
+			if createCredentialsFlagOptions.AWSRegion != "" {
+				handlerOptions.AWSRegion = createCredentialsFlagOptions.AWSRegion
+			}
+			if createCredentialsFlagOptions.AWSRoleARN != "" {
+				handlerOptions.AWSRoleARN = createCredentialsFlagOptions.AWSRoleARN
+			}
+			if len(createCredentialsFlagOptions.AWSSharedConfigFiles) > 0 {
+				handlerOptions.AWSSharedConfigFiles = append([]string{}, createCredentialsFlagOptions.AWSSharedConfigFiles...)
+			}
+			if len(createCredentialsFlagOptions.AWSSharedCredentialsFiles) > 0 {
+				handlerOptions.AWSSharedCredentialsFiles = append([]string{}, createCredentialsFlagOptions.AWSSharedCredentialsFiles...)
+			}
+			if createCredentialsFlagOptions.AWSUseDefaultCredentialsChain {
+				handlerOptions.AWSUseDefaultCredentialsChain = createCredentialsFlagOptions.AWSUseDefaultCredentialsChain
+			}
+			if createCredentialsFlagOptions.GitSSHUser != "" {
+				handlerOptions.GitSSHUser = createCredentialsFlagOptions.GitSSHUser
+			}
+			if createCredentialsFlagOptions.PrivateKeyFile != "" {
+				handlerOptions.PrivateKeyFile = createCredentialsFlagOptions.PrivateKeyFile
+			}
+			if createCredentialsFlagOptions.PrivateKeyPassword != "" {
+				handlerOptions.PrivateKeyPassword = createCredentialsFlagOptions.PrivateKeyPassword
+			}
+			if createCredentialsFlagOptions.Username != "" {
+				handlerOptions.Username = createCredentialsFlagOptions.Username
+			}
 
-// func createCredentialsHandler(ctx context.Context, config *configuration.Configuration) command.CobraRunEFunc {
-// 	return func(cmd *cobra.Command, args []string) error {
+			if createCredentialsFlagOptions.DEPRECATEDRegistryHost != "" {
+				compatibility.AddDeprecated(DeprecatedFlagMessageRegistryHost)
+				entrypointOptions.DEPRECATEDRegistryHost = createCredentialsFlagOptions.DEPRECATEDRegistryHost
+			}
 
-// 		err := credentials.CreateCredential(createCredentialsCmdFlagsVar.DockerRegistryCredentialsDir, createCredentialsCmdFlagsVar.Username, createCredentialsCmdFlagsVar.Password, createCredentialsCmdFlagsVar.RegistryHost)
-// 		if err != nil {
-// 			return errors.New("(command::createCredentialsHandler)", fmt.Sprintf("Error creating credentials for '%s' on '%s'", createCredentialsCmdFlagsVar.RegistryHost, createCredentialsCmdFlagsVar.DockerRegistryCredentialsDir), err)
-// 		}
-// 		return nil
-// 	}
-// }
+			if createCredentialsFlagOptions.DEPRECATEDDockerRegistryCredentialsDir != "" {
+				compatibility.AddDeprecated(DeprecatedFlagMessageDockerRegistryCredentialsDir)
+				entrypointOptions.LocalStoragePath = createCredentialsFlagOptions.DEPRECATEDDockerRegistryCredentialsDir
+			}
+
+			err = e.Execute(ctx, cmd.Flags().Args(), config, entrypointOptions, handlerOptions)
+			if err != nil {
+				return errors.New(errContext, "", err)
+			}
+
+			return nil
+		},
+	}
+
+	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.AllowUseSSHAgent, "allow-use-ssh-agent", false, "When is used that flag, is allowed to use ssh-agent")
+	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.AskAWSSecretAccessKey, "aws-secret-access-key", false, "When is used that flag, the user is asked for an AWS Secret Access Key to achieve credentials from AWS")
+	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.AskPassword, "password", false, "When is used that flag, the user is asked for basic auth method password")
+	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.AWSUseDefaultCredentialsChain, "aws-use-default-credentials-chain", false, "When is used that flag, AWS default credentials chain is used to achieve credentials from AWS")
+	createCredentialsCmd.Flags().StringSliceVar(&createCredentialsFlagOptions.AWSSharedConfigFiles, "aws-shared-config-files", []string{}, "List of AWS shared config files to achieve credentials from AWS")
+	createCredentialsCmd.Flags().StringSliceVar(&createCredentialsFlagOptions.AWSSharedCredentialsFiles, "aws-shared-credentials-files", []string{}, "List AWS shared credentials files to achieve credentials from AWS")
+	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.AWSAccessKeyID, "aws-access-key-id", "", "AWS Access Key ID to achieve credentials from AWS to achieve credentials from AWS")
+	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.AWSProfile, "aws-profile", "", "AWS Profile to achieve credentials from AWS")
+	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.AWSRegion, "aws-region", "", "AWS Region to achieve credentials from AWS")
+	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.AWSRoleARN, "aws-role-arn", "", "AWS Role ARN to achieve credentials from AWS")
+	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.GitSSHUser, "git-ssh-user", "", "Git SSH User")
+	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.LocalStoragePath, "local-storage-path", "", "Path where credentials are stored locally, using local storage type")
+	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.PrivateKeyFile, "private-key-file", "", "Private Key File")
+	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.PrivateKeyPassword, "private-key-password", "", "Private Key Password")
+	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.Username, "username", "", "Username for basic auth method")
+	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.Force, "force", false, "When is enabled the flag, credentials creation is forced. It overwrites the existing value")
+
+	createCredentialsCmd.Flags().StringVarP(&createCredentialsFlagOptions.DEPRECATEDDockerRegistryCredentialsDir, "credentials-dir", "d", "", DeprecatedFlagMessageDockerRegistryCredentialsDir)
+	createCredentialsCmd.Flags().StringVarP(&createCredentialsFlagOptions.DEPRECATEDRegistryHost, "registry-host", "r", "", DeprecatedFlagMessageRegistryHost)
+
+	command := &command.StevedoreCommand{
+		Command: createCredentialsCmd,
+	}
+
+	return command
+}

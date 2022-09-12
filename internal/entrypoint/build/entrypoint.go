@@ -7,8 +7,11 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	godockerbuild "github.com/apenella/go-docker-builder/pkg/build"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	dockerclient "github.com/docker/docker/client"
 	application "github.com/gostevedore/stevedore/internal/application/build"
+	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	buildhandler "github.com/gostevedore/stevedore/internal/handler/build"
@@ -17,6 +20,16 @@ import (
 	buildersconfiguration "github.com/gostevedore/stevedore/internal/infrastructure/configuration/builders"
 	imagesconfiguration "github.com/gostevedore/stevedore/internal/infrastructure/configuration/images"
 	imagesgraphtemplate "github.com/gostevedore/stevedore/internal/infrastructure/configuration/images/graph"
+	credentialscompatibility "github.com/gostevedore/stevedore/internal/infrastructure/credentials/compatibility"
+	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
+	credentialsformatfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/formater/factory"
+	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
+	authmethodkeyfile "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/keyfile"
+	authmethodsshagent "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/sshagent"
+	authproviderawsecr "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr"
+	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr/token"
+	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr/token/awscredprovider"
+	authproviderbadge "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/badge"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible/goansible"
 	driverdefault "github.com/gostevedore/stevedore/internal/infrastructure/driver/default"
@@ -36,7 +49,8 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/worker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
-	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials"
+	credentialsstorefactory "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/factory"
+	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/spf13/afero"
 )
@@ -46,8 +60,9 @@ type OptionsFunc func(opts *Entrypoint)
 
 // Entrypoint defines the entrypoint for the build application
 type Entrypoint struct {
-	fs     afero.Fs
-	writer io.Writer
+	fs            afero.Fs
+	writer        io.Writer
+	compatibility Compatibilitier
 }
 
 // NewEntrypoint returns a new entrypoint
@@ -72,6 +87,13 @@ func WithFileSystem(fs afero.Fs) OptionsFunc {
 	}
 }
 
+// WithCompatibility sets the compatibility for the entrypoint
+func WithCompatibility(c Compatibilitier) OptionsFunc {
+	return func(e *Entrypoint) {
+		e.compatibility = c
+	}
+}
+
 // Options provides the options for the entrypoint
 func (e *Entrypoint) Options(opts ...OptionsFunc) {
 	for _, opt := range opts {
@@ -84,7 +106,6 @@ func (e *Entrypoint) Execute(
 	ctx context.Context,
 	args []string,
 	conf *configuration.Configuration,
-	compatibility Compatibilitier,
 	inputEntrypointOptions *Options,
 	inputHandlerOptions *handler.Options) error {
 
@@ -93,7 +114,7 @@ func (e *Entrypoint) Execute(
 	var buildHandler *buildhandler.Handler
 	var buildService *application.Application
 	var commandFactory *command.BuildCommandFactory
-	var credentialsStore *credentials.CredentialsStore
+	var credentialsFactory repository.CredentialsFactorier
 	var dispatcher *dispatch.Dispatch
 	var entrypointOptions *Options
 	var err error
@@ -107,7 +128,7 @@ func (e *Entrypoint) Execute(
 	var semVerFactory *semver.SemVerGenerator
 	var graphTemplateFactory *graph.GraphTemplateFactory
 
-	errContext := "(Entrypoint::Execute)"
+	errContext := "(build::entrypoint::Execute)"
 
 	imageName, err = e.prepareImageName(args)
 	if err != nil {
@@ -124,7 +145,7 @@ func (e *Entrypoint) Execute(
 		return errors.New(errContext, "", err)
 	}
 
-	credentialsStore, err = e.createCredentialsStore(conf)
+	credentialsFactory, err = e.createCredentialsFactory(conf)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -149,7 +170,7 @@ func (e *Entrypoint) Execute(
 		return errors.New(errContext, "", err)
 	}
 
-	buildDriverFactory, err = e.createBuildDriverFactory(credentialsStore, entrypointOptions)
+	buildDriverFactory, err = e.createBuildDriverFactory(credentialsFactory, entrypointOptions)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -171,7 +192,7 @@ func (e *Entrypoint) Execute(
 		application.WithJobFactory(jobFactory),
 		application.WithDispatch(dispatcher),
 		application.WithSemver(semVerFactory),
-		application.WithCredentials(credentialsStore),
+		application.WithCredentials(credentialsFactory),
 	)
 
 	imageRender, err = e.createImageRender(now.NewNow())
@@ -189,7 +210,7 @@ func (e *Entrypoint) Execute(
 		return errors.New(errContext, "", err)
 	}
 
-	imagesStore, err = e.createImagesStore(conf, imageRender, imagesGraphTemplatesStore, compatibility)
+	imagesStore, err = e.createImagesStore(conf, imageRender, imagesGraphTemplatesStore)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -210,16 +231,16 @@ func (e *Entrypoint) Execute(
 
 func (e *Entrypoint) prepareEntrypointOptions(conf *configuration.Configuration, inputEntrypointOptions *Options) (*Options, error) {
 
-	errContext := "(Entrypoint::prepareEntrypointOptions)"
+	errContext := "(build::entrypoint::prepareEntrypointOptions)"
 
 	options := &Options{}
 
 	if conf == nil {
-		return nil, errors.New(errContext, "To prepare entrypoint options, configuration is required")
+		return nil, errors.New(errContext, "To prepare build entrypoint options, configuration is required")
 	}
 
 	if inputEntrypointOptions == nil {
-		return nil, errors.New(errContext, "To prepare entrypoint options, entrypoint options are required")
+		return nil, errors.New(errContext, "To prepare build entrypoint options, entrypoint options are required")
 	}
 
 	options.Concurrency = inputEntrypointOptions.Concurrency
@@ -233,7 +254,7 @@ func (e *Entrypoint) prepareEntrypointOptions(conf *configuration.Configuration,
 
 func (e *Entrypoint) prepareImageName(args []string) (string, error) {
 
-	errContext := "(Entrypoint::prepareImageName)"
+	errContext := "(build::entrypoint::prepareImageName)"
 
 	if len(args) < 1 || args == nil {
 		return "", errors.New(errContext, "To execute the build entrypoint, arguments are required")
@@ -249,15 +270,15 @@ func (e *Entrypoint) prepareImageName(args []string) (string, error) {
 
 func (e *Entrypoint) prepareHandlerOptions(conf *configuration.Configuration, inputHandlerOptions *handler.Options) (*handler.Options, error) {
 
-	errContext := "(Entrypoint::prepareHandlerOptions)"
+	errContext := "(build::entrypoint::prepareHandlerOptions)"
 	options := &handler.Options{}
 
 	if conf == nil {
-		return nil, errors.New(errContext, "To prepare handler options, configuration is required")
+		return nil, errors.New(errContext, "To prepare handler options in build entrypoint, configuration is required")
 	}
 
 	if inputHandlerOptions == nil {
-		return nil, errors.New(errContext, "To prepare handler options, handler options are required")
+		return nil, errors.New(errContext, "To prepare handler options in build entrypoint, handler options are required")
 	}
 
 	options.AnsibleConnectionLocal = inputHandlerOptions.AnsibleConnectionLocal
@@ -292,44 +313,116 @@ func (e *Entrypoint) prepareHandlerOptions(conf *configuration.Configuration, in
 	return options, nil
 }
 
-func (e *Entrypoint) createCredentialsStore(conf *configuration.Configuration) (*credentials.CredentialsStore, error) {
-	errContext := "(Entrypoint::createCredentialsStore)"
+func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.CredentialsConfiguration) (*credentialslocalstore.LocalStore, error) {
+
+	errContext := "(build::entrypoint::createCredentialsStore)"
+
+	if conf == nil {
+		return nil, errors.New(errContext, "To create credentials store in build entrypoint, credentials configuration is required")
+	}
+
+	if conf.Format == "" {
+		return nil, errors.New(errContext, "To create credentials store in build entrypoint, credentials format must be specified")
+	}
+
+	if e.compatibility == nil {
+		return nil, errors.New(errContext, "To create credentials store in build entrypoint, compatibility is required")
+	}
+
+	switch conf.StorageType {
+	case credentials.LocalStore:
+		if conf.LocalStoragePath == "" {
+			return nil, errors.New(errContext, "To create credentials store in build entrypoint, local storage path is required")
+		}
+
+		credentialsCompatibility := credentialscompatibility.NewCredentialsCompatibility(e.compatibility)
+
+		credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
+		credentialsFormat, err := credentialsFormatFactory.Get(conf.Format)
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
+		store := credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
+
+		return store, nil
+	default:
+		return nil, errors.New(errContext, fmt.Sprintf("Unsupported credentials storage type '%s'", conf.StorageType))
+	}
+}
+
+func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration) (repository.CredentialsFactorier, error) {
+	errContext := "(build::entrypoint::createCredentialsFactory)"
 
 	if e.fs == nil {
-		return nil, errors.New(errContext, "To create the credentials store, a file system is required")
+		return nil, errors.New(errContext, "To create the credentials store in build entrypoint, a file system is required")
 	}
 
 	if conf == nil {
-		return nil, errors.New(errContext, "To create the credentials store, configuration is required")
+		return nil, errors.New(errContext, "To create the credentials store in build entrypoint, configuration is required")
 	}
 
-	if conf.DockerCredentialsDir == "" {
-		return nil, errors.New(errContext, "To create the credentials store, credentials path must be provided in configuration")
+	if conf.Credentials == nil {
+		return nil, errors.New(errContext, "To create the credentials store in build entrypoint, credentials configuration is required")
 	}
 
-	credentialsStore := credentials.NewCredentialsStore(e.fs)
-	err := credentialsStore.LoadCredentials(conf.DockerCredentialsDir)
+	// create credentials store
+	localstore, err := e.createCredentialsLocalStore(conf.Credentials)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+	storefactory := credentialsstorefactory.NewCredentialsStoreFactory()
+	storefactory.Register(credentials.LocalStore, localstore)
+	// since there is only one store, we can use it directly
+	store, err := storefactory.Get(credentials.LocalStore)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
 
-	return credentialsStore, nil
+	// create authorization methods
+	basic := authmethodbasic.NewBasicAuthMethod()
+	keyfile := authmethodkeyfile.NewKeyFileAuthMethod()
+	sshagent := authmethodsshagent.NewSSHAgentAuthMethod()
+
+	// create authorization badge provider
+	badge := authproviderbadge.NewBadgeCredentialsProvider(basic, keyfile, sshagent)
+
+	// create authorization aws ecr provider
+	tokenProvider := token.NewAWSECRToken(
+		token.WithStaticCredentialsProvider(awscredprovider.NewStaticCredentialsProvider()),
+		token.WithAssumeRoleARNProvider(awscredprovider.NewAssumerRoleARNProvider()),
+		token.WithECRClientFactory(
+			token.NewECRClientFactory(
+				func(cfg aws.Config) token.ECRClienter {
+					c := ecr.NewFromConfig(cfg)
+
+					return c
+				},
+			),
+		),
+	)
+
+	awsecr := authproviderawsecr.NewAWSECRCredentialsProvider(tokenProvider)
+
+	// create credentials factory
+	factory := credentialsfactory.NewCredentialsFactory(store, badge, awsecr)
+
+	return factory, nil
 }
 
 func (e *Entrypoint) createBuildersStore(conf *configuration.Configuration) (*builders.Store, error) {
 
-	errContext := "(Entrypoint::createBuildersStore)"
+	errContext := "(build::entrypoint::createBuildersStore)"
 
 	if e.fs == nil {
-		return nil, errors.New(errContext, "To create a builders store, a file system is required")
+		return nil, errors.New(errContext, "To create a builders store in build entrypoint, a file system is required")
 	}
 
 	if conf == nil {
-		return nil, errors.New(errContext, "To create a builders store, configuration is required")
+		return nil, errors.New(errContext, "To create a builders store in build entrypoint, configuration is required")
 	}
 
 	if conf.BuildersPath == "" {
-		return nil, errors.New(errContext, "To create a builders store, builders path must be provided in configuration")
+		return nil, errors.New(errContext, "To create a builders store in build entrypoint, builders path must be provided in configuration")
 	}
 
 	buildersStore := builders.NewStore()
@@ -355,45 +448,45 @@ func (e *Entrypoint) createSemVerFactory() (*semver.SemVerGenerator, error) {
 }
 
 func (e *Entrypoint) createImageRender(now render.Nower) (*render.ImageRender, error) {
-	errContext := "(Entrypoint::createImageRender)"
+	errContext := "(build::entrypoint::createImageRender)"
 
 	if now == nil {
-		return nil, errors.New(errContext, "To create an image render, a nower is required")
+		return nil, errors.New(errContext, "To create an image render in build entrypoint, a nower is required")
 	}
 
 	return render.NewImageRender(now), nil
 }
 
-func (e *Entrypoint) createImagesStore(conf *configuration.Configuration, render repository.Renderer, graph imagesconfiguration.ImagesGraphTemplatesStorer, compatibility Compatibilitier) (*images.Store, error) {
+func (e *Entrypoint) createImagesStore(conf *configuration.Configuration, render repository.Renderer, graph imagesconfiguration.ImagesGraphTemplatesStorer) (*images.Store, error) {
 
-	errContext := "(Entrypoint::createImagesStore)"
+	errContext := "(build::entrypoint::createImagesStore)"
 
 	if e.fs == nil {
-		return nil, errors.New(errContext, "To create an images store, a filesystem is required")
+		return nil, errors.New(errContext, "To create an images store in build entrypoint, a filesystem is required")
 	}
 
 	if conf == nil {
-		return nil, errors.New(errContext, "To create an images store, configuration is required")
+		return nil, errors.New(errContext, "To create an images store in build entrypoint, configuration is required")
 	}
 
 	if render == nil {
-		return nil, errors.New(errContext, "To create an images store, image render is required")
+		return nil, errors.New(errContext, "To create an images store in build entrypoint, image render is required")
 	}
 
 	if graph == nil {
-		return nil, errors.New(errContext, "To create an images store, images graph templates storer is required")
+		return nil, errors.New(errContext, "To create an images store in build entrypoint, images graph templates storer is required")
 	}
 
-	if compatibility == nil {
-		return nil, errors.New(errContext, "To create an images store, compatibility is required")
+	if e.compatibility == nil {
+		return nil, errors.New(errContext, "To create an images store in build entrypoint, compatibility is required")
 	}
 
 	if conf.ImagesPath == "" {
-		return nil, errors.New(errContext, "To create an images store, images path must be provided in configuration")
+		return nil, errors.New(errContext, "To create an images store in build entrypoint, images path must be provided in configuration")
 	}
 
 	store := images.NewStore(render)
-	imagesConfiguration := imagesconfiguration.NewImagesConfiguration(e.fs, graph, store, compatibility)
+	imagesConfiguration := imagesconfiguration.NewImagesConfiguration(e.fs, graph, store, e.compatibility)
 	err := imagesConfiguration.LoadImagesToStore(conf.ImagesPath)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
@@ -403,10 +496,10 @@ func (e *Entrypoint) createImagesStore(conf *configuration.Configuration, render
 }
 
 func (e *Entrypoint) createImagesGraphTemplatesStorer(factory *graph.GraphTemplateFactory) (*imagesgraphtemplate.ImagesGraphTemplate, error) {
-	errContext := "(Entrypoint::createImagesGraphTemplatesStorer)"
+	errContext := "(build::entrypoint::createImagesGraphTemplatesStorer)"
 
 	if factory == nil {
-		return nil, errors.New(errContext, "To create an images graph templates storer, a graph template factory is required")
+		return nil, errors.New(errContext, "To create an images graph templates storer in build entrypoint, a graph template factory is required")
 	}
 
 	graphtemplate := imagesgraphtemplate.NewImagesGraphTemplate(factory)
@@ -418,7 +511,7 @@ func (e *Entrypoint) createGraphTemplateFactory() (*graph.GraphTemplateFactory, 
 	return graph.NewGraphTemplateFactory(false), nil
 }
 
-func (e *Entrypoint) createBuildDriverFactory(credentialsStore *credentials.CredentialsStore, options *Options) (factory.BuildDriverFactory, error) {
+func (e *Entrypoint) createBuildDriverFactory(credentialsFactory repository.CredentialsFactorier, options *Options) (factory.BuildDriverFactory, error) {
 
 	var ansiblePlaybookDriver repository.BuildDriverer
 	var defaultDriver repository.BuildDriverer
@@ -428,16 +521,16 @@ func (e *Entrypoint) createBuildDriverFactory(credentialsStore *credentials.Cred
 
 	errContext := "(entrypoint::createBuildDriverFactory)"
 
-	if credentialsStore == nil {
-		return nil, errors.New(errContext, "Register drivers requires a credentials store")
+	if credentialsFactory == nil {
+		return nil, errors.New(errContext, "Register drivers requires a credentials store in build entrypoint")
 	}
 
 	if options == nil {
-		return nil, errors.New(errContext, "Register drivers requires options")
+		return nil, errors.New(errContext, "Register drivers requires options in build entrypoint")
 	}
 
 	if e.writer == nil {
-		return nil, errors.New(errContext, "Register drivers requires a writer")
+		return nil, errors.New(errContext, "Register drivers requires a writer in build entrypoint")
 	}
 
 	factory := factory.NewBuildDriverFactory()
@@ -446,7 +539,7 @@ func (e *Entrypoint) createBuildDriverFactory(credentialsStore *credentials.Cred
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
-	dockerDriver, err = e.createDockerDriver(credentialsStore, options)
+	dockerDriver, err = e.createDockerDriver(credentialsFactory, options)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
@@ -481,7 +574,7 @@ func (e *Entrypoint) createAnsibleDriver(options *Options) (repository.BuildDriv
 	errContext := "(entrypoint::createAnsibleDriver)"
 
 	if options == nil {
-		return nil, errors.New(errContext, "Entrypoint options are required to create ansible driver")
+		return nil, errors.New(errContext, "Build entrypoint options are required to create ansible driver")
 	}
 
 	ansiblePlaybookDriver, err := ansible.NewAnsiblePlaybookDriver(goansible.NewGoAnsibleDriver(), e.writer)
@@ -492,7 +585,7 @@ func (e *Entrypoint) createAnsibleDriver(options *Options) (repository.BuildDriv
 	return ansiblePlaybookDriver, nil
 }
 
-func (e *Entrypoint) createDockerDriver(credentialsStore *credentials.CredentialsStore, options *Options) (repository.BuildDriverer, error) {
+func (e *Entrypoint) createDockerDriver(credentialsFactory repository.CredentialsFactorier, options *Options) (repository.BuildDriverer, error) {
 	var dockerClient *dockerclient.Client
 	var dockerDriver *docker.DockerDriver
 	var dockerDriverBuldContext *dockercontext.DockerBuildContextFactory
@@ -502,12 +595,12 @@ func (e *Entrypoint) createDockerDriver(credentialsStore *credentials.Credential
 
 	errContext := "(entrypoint::createDockerDriver)"
 
-	if credentialsStore == nil {
-		return nil, errors.New(errContext, "Docker driver requires a credentials store")
+	if credentialsFactory == nil {
+		return nil, errors.New(errContext, "Docker driver requires a credentials store in build entrypoint")
 	}
 
 	if options == nil {
-		return nil, errors.New(errContext, "Entrypoint options are required to create docker driver")
+		return nil, errors.New(errContext, "Build entrypoint options are required to create docker driver")
 	}
 
 	dockerClient, err = dockerclient.NewClientWithOpts(dockerclient.FromEnv)
@@ -516,7 +609,7 @@ func (e *Entrypoint) createDockerDriver(credentialsStore *credentials.Credential
 	}
 
 	goDockerBuild := godockerbuild.NewDockerBuildCmd(dockerClient)
-	gitAuth = gitauth.NewGitAuthFactory(credentialsStore)
+	gitAuth = gitauth.NewGitAuthFactory(credentialsFactory)
 	dockerDriverBuldContext = dockercontext.NewDockerBuildContextFactory(gitAuth)
 	goDockerBuildDriver = godockerbuilder.NewGoDockerBuildDriver(goDockerBuild, dockerDriverBuldContext)
 	dockerDriver, err = docker.NewDockerDriver(goDockerBuildDriver, e.writer)

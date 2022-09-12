@@ -1,76 +1,51 @@
-package getcredentials
+package credentials
 
-// import (
-// 	"context"
+import (
+	"context"
 
-// 	"github.com/gostevedore/stevedore/internal/command"
-// 	"github.com/gostevedore/stevedore/internal/configuration"
-// 	"github.com/gostevedore/stevedore/internal/credentials"
-// 	"github.com/gostevedore/stevedore/internal/ui/console"
+	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command"
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
+	"github.com/spf13/cobra"
+)
 
-// 	errors "github.com/apenella/go-common-utils/error"
-// 	"github.com/spf13/cobra"
-// )
+//  NewCommand return an stevedore command object for get builders
+func NewCommand(ctx context.Context, config *configuration.Configuration, entrypoint Entrypointer) *command.StevedoreCommand {
 
-// const (
-// 	columnSeparator = " | "
-// )
+	// 	getCredentialsCmdFlagsVar = &getCredentialsCmdFlags{}
 
-// type getCredentialsCmdFlags struct {
-// 	Wide bool
-// }
+	getCredentialsCmd := &cobra.Command{
+		Use: "credentials",
+		Aliases: []string{
+			"auth",
+			"auths",
+			"badge",
+			"badges",
+			"credential",
+		},
+		Short: "Stevedore subcommand to get credentials information",
+		Long: `Stevedore subcommand to get credentials information
 
-// var getCredentialsCmdFlagsVar *getCredentialsCmdFlags
+  Example:
+    stevedore get credentials
+`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var err error
 
-// //  NewCommand return an stevedore command object for get builders
-// func NewCommand(ctx context.Context, config *configuration.Configuration) *command.StevedoreCommand {
+			errContext := "(cli::get::credentials::RunE)"
 
-// 	getCredentialsCmdFlagsVar = &getCredentialsCmdFlags{}
+			err = entrypoint.Execute(ctx, cmd.Flags().Args(), config)
+			if err != nil {
+				return errors.New(errContext, "", err)
+			}
 
-// 	getCredentialsCmd := &cobra.Command{
-// 		Use: "credentials",
-// 		Aliases: []string{
-// 			"auth",
-// 			"auths",
-// 			"credential",
-// 		},
-// 		Short: "Stevedore subcommand to get credentials information",
-// 		Long: `Stevedore subcommand to get credentials information
+			return nil
+		},
+	}
 
-//   Example:
-//     stevedore get credentials --wide
-// `,
-// 		RunE: getCredentialssHandler(ctx, config),
-// 	}
+	command := &command.StevedoreCommand{
+		Command: getCredentialsCmd,
+	}
 
-// 	command := &command.StevedoreCommand{
-// 		Command: getCredentialsCmd,
-// 	}
-
-// 	getCredentialsCmd.Flags().BoolVarP(&getCredentialsCmdFlagsVar.Wide, "wide", "w", false, "Show wide docker registry credentials information")
-
-// 	return command
-// }
-
-// func getCredentialssHandler(ctx context.Context, config *configuration.Configuration) command.CobraRunEFunc {
-
-// 	return func(cmd *cobra.Command, args []string) error {
-
-// 		var err error
-// 		var creds [][]string
-// 		var table [][]string
-
-// 		creds, err = credentials.ListRegistryCredentials(getCredentialsCmdFlagsVar.Wide)
-// 		if err != nil {
-// 			return errors.New("(command::getCredentialssHandler)", "Error listing registry credentials", err)
-// 		}
-
-// 		table = make([][]string, len(creds)+1)
-// 		table[0] = credentials.ListRegistryCredentialsHeader(getCredentialsCmdFlagsVar.Wide)
-// 		copy(table[1:], creds)
-
-// 		console.PrintTable(table)
-
-// 		return nil
-// 	}
-// }
+	return command
+}

@@ -23,7 +23,7 @@ const (
 	DeprecatedFlagMessageSet              = "[DEPRECATED FLAG] use 'variable' instead of 'set'"
 	DeprecatedFlagMessageCascade          = "[DEPRECATED FLAG] use 'build-on-cascade' instead of 'cascade'"
 	DeprecatedFlagMessageNumWorkers       = "[DEPRECATED FLAG] use 'concurrency' instead of 'num-workers'"
-	DeprecatedFlagMessagePushImages       = "[DEPRECATED FLAG] 'no-push' is the stevedore default behavior, use --push to push image"
+	DeprecatedFlagMessagePushImages       = "[DEPRECATED FLAG] 'no-push' is the stevedore default behavior, use --push-after-build to push image"
 )
 
 // NewCommand returns a new command to build images
@@ -37,13 +37,12 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 		Long:    "Stevedore command to build images",
 		Example: "stevedore build ubuntu-base --image-version impish --tag 21.10 --pull-parent-image --push-after-build --remove-local-images-after-push",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
-			errContext := "(build::RunE)"
+			errContext := "(cli::build::RunE)"
 			handlerOptions := &handler.Options{}
 			entrypointOptions := &entrypoint.Options{}
 
@@ -132,7 +131,7 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 			handlerOptions.Tags = append([]string{}, buildFlagOptions.Tags...)
 			handlerOptions.Vars = append([]string{}, buildFlagOptions.Vars...)
 
-			err = build.Execute(ctx, cmd.Flags().Args(), conf, compatibility, entrypointOptions, handlerOptions)
+			err = build.Execute(ctx, cmd.Flags().Args(), conf, entrypointOptions, handlerOptions)
 			if err != nil {
 				return errors.New(errContext, "", err)
 			}

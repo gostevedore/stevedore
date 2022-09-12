@@ -1,0 +1,50 @@
+package {{ .PackageName }}
+
+import (
+	"context"
+
+	errors "github.com/apenella/go-common-utils/error"
+)
+
+// OptionsFunc is a function used to configure the handler
+type OptionsFunc func(*{{ .HandlerObject }})
+
+// {{ .HandlerObject }} is a handler for command
+type {{ .HandlerObject }} struct {
+	app Applicationer
+}
+
+// New{{ .HandlerObject }} creates a new handler for command
+func New{{ .HandlerObject }}(options ...OptionsFunc) *{{ .HandlerObject }} {
+	handler := &{{ .HandlerObject }}{}
+	handler.Options(options...)
+
+	return handler
+}
+
+func WithApplication(app Applicationer) OptionsFunc {
+	return func(h *{{ .HandlerObject }}) {
+		h.app = app
+	}
+}
+
+// Options configure the service
+func (h *{{ .HandlerObject }}) Options(opts ...OptionsFunc) {
+	for _, opt := range opts {
+		opt(h)
+	}
+}
+
+// {{ .HandlerObject }} handles build commands
+func (h *{{ .HandlerObject }}) Handler(ctx context.Context) error {
+	var err error
+
+	errContext := "({{ .UseCase }}::Handler)"
+
+	err = h.app.Run(ctx)
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
+
+	return nil
+}

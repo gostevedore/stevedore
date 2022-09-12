@@ -7,10 +7,12 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
-	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
+	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
+	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
+	authmethodkeyfile "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/keyfile"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
@@ -22,7 +24,6 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/worker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
-	credentialsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -65,7 +66,7 @@ func TestBuild(t *testing.T) {
 				WithJobFactory(job.NewMockJobFactory()),
 				WithDispatch(dispatch.NewMockDispatch()),
 				WithSemver(semver.NewSemVerGenerator()),
-				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
+				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 			),
 			buildPlan: plan.NewMockPlan(),
 			name:      "parent",
@@ -83,7 +84,7 @@ func TestBuild(t *testing.T) {
 			},
 			err: &errors.Error{},
 			assertFunc: func(service *Application) bool {
-				return service.credentials.(*credentialsstore.CredentialsStoreMock).AssertExpectations(t) &&
+				return service.credentials.(*credentialsfactory.MockCredentialsFactory).AssertExpectations(t) &&
 					service.commandFactory.(*command.MockBuildCommandFactory).AssertExpectations(t) &&
 					service.dispatch.(*dispatch.MockDispatch).AssertExpectations(t) &&
 					service.jobFactory.(*job.MockJobFactory).AssertExpectations(t)
@@ -125,9 +126,9 @@ func TestBuild(t *testing.T) {
 					stepChild,
 				}, nil)
 
-				service.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry").Return(&credentials.UserPasswordAuth{
-					Username: "user",
-					Password: "pass",
+				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username",
+					Password: "password",
 				}, nil)
 				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
 					mock.NewMockDriver(),
@@ -138,8 +139,8 @@ func TestBuild(t *testing.T) {
 						AnsibleInventoryPath:             "inventory",
 						AnsibleLimit:                     "limit",
 						PullParentImage:                  true,
-						PushAuthUsername:                 "user",
-						PushAuthPassword:                 "pass",
+						PushAuthUsername:                 "username",
+						PushAuthPassword:                 "password",
 						PushImageAfterBuild:              true,
 						RemoveImageAfterBuild:            true,
 						BuilderVarMappings:               varsmap.New(),
@@ -155,8 +156,8 @@ func TestBuild(t *testing.T) {
 						AnsibleInventoryPath:             "inventory",
 						AnsibleLimit:                     "limit",
 						PullParentImage:                  true,
-						PushAuthUsername:                 "user",
-						PushAuthPassword:                 "pass",
+						PushAuthUsername:                 "username",
+						PushAuthPassword:                 "password",
 						PushImageAfterBuild:              true,
 						RemoveImageAfterBuild:            true,
 						BuilderVarMappings:               varsmap.New(),
@@ -263,7 +264,7 @@ func TestBuildWorker(t *testing.T) {
 				WithJobFactory(job.NewMockJobFactory()),
 				WithDispatch(dispatch.NewMockDispatch()),
 				WithSemver(semver.NewSemVerGenerator()),
-				WithCredentials(credentialsstore.NewCredentialsStoreMock()),
+				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 			),
 			options: &Options{
 				EnableSemanticVersionTags:    true,
@@ -302,7 +303,7 @@ func TestBuildWorker(t *testing.T) {
 			},
 			err: &errors.Error{},
 			assertFunc: func(service *Application) bool {
-				return service.credentials.(*credentialsstore.CredentialsStoreMock).AssertExpectations(t) &&
+				return service.credentials.(*credentialsfactory.MockCredentialsFactory).AssertExpectations(t) &&
 					service.commandFactory.(*command.MockBuildCommandFactory).AssertExpectations(t) &&
 					service.dispatch.(*dispatch.MockDispatch).AssertExpectations(t) &&
 					service.jobFactory.(*job.MockJobFactory).AssertExpectations(t)
@@ -312,14 +313,14 @@ func TestBuildWorker(t *testing.T) {
 				mockJob := job.NewMockJob()
 				mockJob.On("Wait").Return(nil)
 
-				service.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry").Return(&credentials.UserPasswordAuth{
-					Username: "user",
-					Password: "pass",
+				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username",
+					Password: "password",
 				}, nil)
 
-				service.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "parent_registry").Return(&credentials.UserPasswordAuth{
-					Username: "parent_user",
-					Password: "parent_pass",
+				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "parent_registry").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username_parent",
+					Password: "password_parent",
 				}, nil)
 				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
 					mock.NewMockDriver(),
@@ -328,11 +329,11 @@ func TestBuildWorker(t *testing.T) {
 						AnsibleConnectionLocal:           false,
 						AnsibleIntermediateContainerName: "builder_mock_namespace_image_0.0.0",
 						OutputPrefix:                     "",
-						PullAuthUsername:                 "parent_user",
-						PullAuthPassword:                 "parent_pass",
+						PullAuthUsername:                 "username_parent",
+						PullAuthPassword:                 "password_parent",
 						PullParentImage:                  true,
-						PushAuthUsername:                 "user",
-						PushAuthPassword:                 "pass",
+						PushAuthUsername:                 "username",
+						PushAuthPassword:                 "password",
 						PushImageAfterBuild:              true,
 						RemoveImageAfterBuild:            true,
 						BuilderVarMappings:               varsmap.New(),
@@ -340,6 +341,135 @@ func TestBuildWorker(t *testing.T) {
 					}).Return(command.NewMockBuildCommand(), nil)
 				service.jobFactory.(*job.MockJobFactory).On("New", command.NewMockBuildCommand()).Return(mockJob, nil)
 				service.dispatch.(*dispatch.MockDispatch).On("Enqueue", mockJob)
+			},
+		},
+
+		{
+			desc: "Testing error build when image credentials are invalid",
+			service: NewApplication(
+				WithBuilders(builders.NewMockStore()),
+				WithCommandFactory(command.NewMockBuildCommandFactory()),
+				WithDriverFactory(
+					&factory.BuildDriverFactory{
+						"mock": mock.NewMockDriver(),
+					},
+				),
+				WithJobFactory(job.NewMockJobFactory()),
+				WithDispatch(dispatch.NewMockDispatch()),
+				WithSemver(semver.NewSemVerGenerator()),
+				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
+			),
+			options: &Options{
+				EnableSemanticVersionTags:    true,
+				PushImageAfterBuild:          true,
+				PullParentImage:              true,
+				SemanticVersionTagsTemplates: []string{"{{.Major}}"},
+				RemoveImagesAfterPush:        true,
+				PersistentVars:               map[string]interface{}{"optpvar": "value"},
+				Vars:                         map[string]interface{}{"optvar": "value"},
+				Labels:                       map[string]string{"optlabel": "value"},
+				Tags:                         []string{"opttag"},
+			},
+			image: &image.Image{
+				Name:              "image",
+				Version:           "0.0.0",
+				RegistryHost:      "registry",
+				RegistryNamespace: "namespace",
+				Builder: &builder.Builder{
+					Name:   "builder",
+					Driver: "mock",
+				},
+				PersistentVars: map[string]interface{}{"imagepvar": "value"},
+				Vars:           map[string]interface{}{"imagevar": "value"},
+				Labels:         map[string]string{"imagelabel": "value"},
+				Tags:           []string{"imagetag"},
+				Parent: &image.Image{
+					Name:              "parent",
+					Version:           "parent_version",
+					RegistryHost:      "parent_registry",
+					RegistryNamespace: "parent_namespace",
+					Builder:           "builder",
+					PersistentVars:    map[string]interface{}{"parentpvar": "value"},
+					Vars:              map[string]interface{}{"parentvar": "value"},
+					Labels:            map[string]string{"parentlabel": "value"},
+				},
+			},
+			err: errors.New(errContext, "Invalid credentials method for 'registry'. Found 'keyfile' when is expected basic auth method"),
+			prepareAssertFunc: func(service *Application, i *image.Image) {
+
+				mockJob := job.NewMockJob()
+				mockJob.On("Wait").Return(nil)
+
+				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "parent_registry").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username",
+					Password: "password",
+				}, nil)
+
+				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry").Return(&authmethodkeyfile.KeyFileAuthMethod{}, nil)
+			},
+		},
+		{
+			desc: "Testing error build when parent credentials are invalid",
+			service: NewApplication(
+				WithBuilders(builders.NewMockStore()),
+				WithCommandFactory(command.NewMockBuildCommandFactory()),
+				WithDriverFactory(
+					&factory.BuildDriverFactory{
+						"mock": mock.NewMockDriver(),
+					},
+				),
+				WithJobFactory(job.NewMockJobFactory()),
+				WithDispatch(dispatch.NewMockDispatch()),
+				WithSemver(semver.NewSemVerGenerator()),
+				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
+			),
+			options: &Options{
+				EnableSemanticVersionTags:    true,
+				PushImageAfterBuild:          true,
+				PullParentImage:              true,
+				SemanticVersionTagsTemplates: []string{"{{.Major}}"},
+				RemoveImagesAfterPush:        true,
+				PersistentVars:               map[string]interface{}{"optpvar": "value"},
+				Vars:                         map[string]interface{}{"optvar": "value"},
+				Labels:                       map[string]string{"optlabel": "value"},
+				Tags:                         []string{"opttag"},
+			},
+			image: &image.Image{
+				Name:              "image",
+				Version:           "0.0.0",
+				RegistryHost:      "registry",
+				RegistryNamespace: "namespace",
+				Builder: &builder.Builder{
+					Name:   "builder",
+					Driver: "mock",
+				},
+				PersistentVars: map[string]interface{}{"imagepvar": "value"},
+				Vars:           map[string]interface{}{"imagevar": "value"},
+				Labels:         map[string]string{"imagelabel": "value"},
+				Tags:           []string{"imagetag"},
+				Parent: &image.Image{
+					Name:              "parent",
+					Version:           "parent_version",
+					RegistryHost:      "parent_registry",
+					RegistryNamespace: "parent_namespace",
+					Builder:           "builder",
+					PersistentVars:    map[string]interface{}{"parentpvar": "value"},
+					Vars:              map[string]interface{}{"parentvar": "value"},
+					Labels:            map[string]string{"parentlabel": "value"},
+				},
+			},
+			err: errors.New(errContext, "Invalid credentials method for 'parent_registry'. Found 'keyfile' when is expected basic auth method"),
+			prepareAssertFunc: func(service *Application, i *image.Image) {
+
+				mockJob := job.NewMockJob()
+				mockJob.On("Wait").Return(nil)
+
+				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username",
+					Password: "password",
+				}, nil)
+
+				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "parent_registry").Return(&authmethodkeyfile.KeyFileAuthMethod{}, nil)
 			},
 		},
 	}
@@ -620,7 +750,7 @@ func TestGetCredentials(t *testing.T) {
 		desc              string
 		service           *Application
 		registry          string
-		res               *credentials.UserPasswordAuth
+		res               repository.AuthMethodReader
 		err               error
 		prepareAssertFunc func(*Application)
 	}{
@@ -633,18 +763,18 @@ func TestGetCredentials(t *testing.T) {
 			desc: "Testing get credentials",
 			service: NewApplication(
 				WithCredentials(
-					credentialsstore.NewCredentialsStoreMock(),
+					credentialsfactory.NewMockCredentialsFactory(),
 				),
 			),
 			registry: "registry.test",
-			res: &credentials.UserPasswordAuth{
-				Username: "user",
-				Password: "pass",
+			res: &authmethodbasic.BasicAuthMethod{
+				Username: "username",
+				Password: "password",
 			},
 			prepareAssertFunc: func(service *Application) {
-				service.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(&credentials.UserPasswordAuth{
-					Username: "user",
-					Password: "pass",
+				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username",
+					Password: "password",
 				}, nil)
 			},
 			err: &errors.Error{},
@@ -653,13 +783,13 @@ func TestGetCredentials(t *testing.T) {
 			desc: "Testing get unexisting credentials",
 			service: NewApplication(
 				WithCredentials(
-					credentialsstore.NewCredentialsStoreMock(),
+					credentialsfactory.NewMockCredentialsFactory(),
 				),
 			),
 			registry: "registry.test",
 			res:      nil,
 			prepareAssertFunc: func(service *Application) {
-				service.credentials.(*credentialsstore.CredentialsStoreMock).On("Get", "registry.test").Return(nil, errors.New(errContext, "Credentials not found"))
+				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(nil, errors.New(errContext, "Credentials not found"))
 			},
 			err: errors.New(errContext, "Credentials not found"),
 		},

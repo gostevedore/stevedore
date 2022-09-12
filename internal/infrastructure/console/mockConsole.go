@@ -44,3 +44,15 @@ func (c *MockConsole) Error(msg ...interface{}) {
 func (c *MockConsole) Debug(msg ...interface{}) {
 	c.Mock.Called(msg)
 }
+
+// Read read a line from console reader
+func (c *MockConsole) Read() string {
+	args := c.Mock.Called()
+	return args.String(0)
+}
+
+// ReadPassword read password from console reader
+func (c *MockConsole) ReadPassword(prompt string) (string, error) {
+	args := c.Mock.Called(prompt)
+	return args.String(0), args.Error(1)
+}

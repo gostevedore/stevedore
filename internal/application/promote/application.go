@@ -2,11 +2,12 @@ package promote
 
 import (
 	"context"
+	"fmt"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
+	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
 )
 
 // OptionsFunc is a function used to configure the application
@@ -14,7 +15,7 @@ type OptionsFunc func(*Application)
 
 // Application is the application used to promote images
 type Application struct {
-	credentials repository.CredentialsStorer
+	credentials repository.CredentialsFactorier
 	factory     PromoteFactorier
 	semver      Semverser
 }
@@ -28,7 +29,7 @@ func NewApplication(options ...OptionsFunc) *Application {
 }
 
 // WitCredentials sets credentials for the service
-func WithCredentials(c repository.CredentialsStorer) OptionsFunc {
+func WithCredentials(c repository.CredentialsFactorier) OptionsFunc {
 	return func(a *Application) {
 		a.credentials = c
 	}
@@ -62,7 +63,7 @@ func (a *Application) Promote(ctx context.Context, options *Options) error {
 	var sourceImage, targetImage *image.Image
 
 	promoteOptions := &image.PromoteOptions{}
-	errContext := "(Service::Promote)"
+	errContext := "(Application::Promote)"
 
 	if a.factory == nil {
 		return errors.New(errContext, "Promote factory has not been initialized")
@@ -94,11 +95,17 @@ func (a *Application) Promote(ctx context.Context, options *Options) error {
 		return errors.New(errContext, "", err)
 	}
 
-	pullAuth, err := a.getCredentials(sourceImage.RegistryHost)
+	auth, err := a.getCredentials(sourceImage.RegistryHost)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
-	if pullAuth != nil {
+
+	if auth != nil {
+		pullAuth, isBasicAuth := auth.(*authmethodbasic.BasicAuthMethod)
+		if !isBasicAuth {
+			return errors.New(errContext, fmt.Sprintf("Invalid credentials method for '%s'. Found '%s' when is expected basic auth method", sourceImage.RegistryHost, auth.Name()))
+		}
+
 		promoteOptions.PullAuthUsername = pullAuth.Username
 		promoteOptions.PullAuthPassword = pullAuth.Password
 	}
@@ -136,11 +143,17 @@ func (a *Application) Promote(ctx context.Context, options *Options) error {
 		return errors.New(errContext, "", err)
 	}
 
-	pushAuth, err := a.getCredentials(targetImage.RegistryHost)
+	auth, err = a.getCredentials(targetImage.RegistryHost)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
-	if pushAuth != nil {
+
+	if auth != nil {
+		pushAuth, isBasicAuth := auth.(*authmethodbasic.BasicAuthMethod)
+		if !isBasicAuth {
+			return errors.New(errContext, fmt.Sprintf("Invalid credentials method for '%s'. Found '%s' when is expected basic auth method", targetImage.RegistryHost, auth.Name()))
+		}
+
 		promoteOptions.PushAuthUsername = pushAuth.Username
 		promoteOptions.PushAuthPassword = pushAuth.Password
 	}
@@ -161,7 +174,7 @@ func (a *Application) Promote(ctx context.Context, options *Options) error {
 	return nil
 }
 
-func (a *Application) getCredentials(registry string) (*credentials.UserPasswordAuth, error) {
+func (a *Application) getCredentials(registry string) (repository.AuthMethodReader, error) {
 	errContext := "(Service::getCredentials)"
 
 	if a.credentials == nil {

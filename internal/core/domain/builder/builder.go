@@ -62,7 +62,7 @@ type DockerDriverGitContextAuthOptions struct {
 	PrivateKeyFile string `yaml:"private_key_file"`
 	// PrivateKeyPassword is the password to use for the private key
 	PrivateKeyPassword string `yaml:"private_key_password"`
-	// CredentialsID is the id of the credentials to use for docker registry authentication
+	// CredentialsID is the id of the credentials on credentials store to use to authenticate to the git repository
 	CredentialsID string `yaml:"credentials_id"`
 }
 
