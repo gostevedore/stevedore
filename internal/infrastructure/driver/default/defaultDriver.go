@@ -2,11 +2,11 @@ package driver
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/dryrun"
 )
 
 // DefaultDriver is a driver that just simulates the build process
@@ -28,6 +28,7 @@ func NewDefaultDriver(w io.Writer) *DefaultDriver {
 
 // Build simulate a new image build
 func (d *DefaultDriver) Build(ctx context.Context, i *image.Image, options *image.BuildDriverOptions) error {
-	fmt.Fprintln(d.write, fmt.Sprintf("%+v", *options))
-	return nil
+	driver := dryrun.NewDryRunDriver(d.write)
+
+	return driver.Build(ctx, i, options)
 }

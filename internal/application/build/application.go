@@ -416,12 +416,16 @@ func (a *Application) getDriver(builder *builder.Builder, options *Options) (rep
 
 	driverName := builder.Driver
 	if options.DryRun {
-		driverName = "dry-run"
+		driverName = image.DryRunDriverName
 	}
 
 	driver, err := a.driverFactory.Get(driverName)
 	if err != nil {
-		return nil, errors.New(errContext, "", err)
+
+		driver, err = a.driverFactory.Get(image.DefaultDriverName)
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
 	}
 
 	return driver, nil
