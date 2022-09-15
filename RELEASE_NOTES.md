@@ -15,7 +15,7 @@
 
 ### Changed
 - Bump to go1.19 
-- Use go-ansible master version
+- Use go-ansible v1.1.7 version
 - Use go-docker-builder v0.7.0 version
 - Drivers has been adapted to use go-ansible and go-docker-builder version
 - Promote uses copy package for go-docker-builder
