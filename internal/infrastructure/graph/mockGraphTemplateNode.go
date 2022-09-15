@@ -1,8 +1,7 @@
 package graph
 
 import (
-	// gdsexttree "github.com/apenella/go-data-structures/extendedTree"
-	gdsexttree "github.com/gostevedore/stevedore/pkg/extendedTree"
+	gdsexttree "github.com/apenella/go-data-structures/extendedTree"
 	"github.com/stretchr/testify/mock"
 )
 
