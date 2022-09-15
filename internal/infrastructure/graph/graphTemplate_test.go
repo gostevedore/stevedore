@@ -4,8 +4,7 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
-	// gdsexttree "github.com/apenella/go-data-structures/extendedTree"
-	gdsexttree "github.com/gostevedore/stevedore/pkg/extendedTree"
+	gdsexttree "github.com/apenella/go-data-structures/extendedTree"
 	"github.com/stretchr/testify/assert"
 )
 
