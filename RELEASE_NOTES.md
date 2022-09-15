@@ -14,8 +14,9 @@
 - Struct to render images accepts dates through `DateRFC3339` and `DateRFC3339Nano` attributes
 
 ### Changed
+- Bump to go1.19 
 - Use go-ansible master version
-- Use go-docker-builder master version
+- Use go-docker-builder v0.7.0 version
 - Drivers has been adapted to use go-ansible and go-docker-builder version
 - Promote uses copy package for go-docker-builder
 - Promote Cobra subcommand initializes all required repositories, services and handlers on its prerun function
