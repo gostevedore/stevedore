@@ -214,7 +214,8 @@ func (s *Store) addImageToIndex(name string, i *image.Image) error {
 	return nil
 }
 
-//  wildcard images are those images that have * on its version. Wildcard images are used to generate a default image definition, and accepts any version value
+// wildcard images are those images that have * on its version. Wildcard images are used to generate a default image definition, and accepts any version value
+//
 // storeWildcardImage stores the image in the store
 func (s *Store) storeWildcardImage(name string, i *image.Image) error {
 
@@ -274,16 +275,6 @@ func (s *Store) FindByName(name string) ([]*image.Image, error) {
 		}
 	}
 
-	// nameDefinitionVersionList, _ := s.imageNameDefinitionVersionList[name]
-	// for _, version := range nameDefinitionVersionList {
-
-	// 	renderedVersionList, _ := s.imageNameVersionRenderedVersionsList[name][version]
-	// 	for _, renderedVersion := range renderedVersionList {
-	// 		i := s.imagesIndex[name][renderedVersion]
-	// 		list = append(list, i)
-	// 	}
-	// }
-
 	sort.Sort(images.SortedImages(list))
 
 	return list, nil
@@ -321,6 +312,8 @@ func (s *Store) Find(name string, version string) ([]*image.Image, error) {
 		list = append(list, i)
 	}
 
+	sort.Sort(images.SortedImages(list))
+
 	return list, nil
 }
 
@@ -355,6 +348,8 @@ func (s *Store) FindGuaranteed(findName, findVersion, imageName, imageVersion st
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
+
+	sort.Sort(images.SortedImages(list))
 
 	return append(list, image), nil
 }

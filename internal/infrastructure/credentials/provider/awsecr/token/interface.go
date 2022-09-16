@@ -10,12 +10,12 @@ import (
 
 // StaticCredentialsProvider is an interface that provides static credentials credentials provider.
 type StaticCredentialsProviderer interface {
-	Credentials(key, secret, session string, options ...func(*config.LoadOptions) error) (aws.CredentialsProvider, error)
+	CredentialsProvider(key, secret, session string, options ...func(*config.LoadOptions) error) (aws.CredentialsProvider, error)
 }
 
 // AssumerRoleARNProviderer is an interface that provides AssumerRoleARN credendials provider.
 type AssumerRoleARNProviderer interface {
-	Credentials(cfg aws.Config, roleARN, awsAccessKeyID, awsSecretAccessKey, session string, options ...func(*config.LoadOptions) error) (aws.CredentialsProvider, error)
+	CredentialsProvider(cfg aws.Config, roleARN, awsAccessKeyID, awsSecretAccessKey, session string, options ...func(*config.LoadOptions) error) (aws.CredentialsProvider, error)
 }
 
 // ECRClienter is an interface that provides ECR client.

@@ -16,7 +16,7 @@ func NewAssumerRoleARNProvider() *AssumerRoleARNProvider {
 	return &AssumerRoleARNProvider{}
 }
 
-func (p *AssumerRoleARNProvider) Credentials(cfg aws.Config, roleARN, awsAccessKeyID, awsSecretAccessKey, session string, options ...func(*config.LoadOptions) error) (aws.CredentialsProvider, error) {
+func (p *AssumerRoleARNProvider) CredentialsProvider(cfg aws.Config, roleARN, awsAccessKeyID, awsSecretAccessKey, session string, options ...func(*config.LoadOptions) error) (aws.CredentialsProvider, error) {
 
 	var stsclient *sts.Client
 

@@ -12,7 +12,7 @@ func NewStaticCredentialsProvider() *StaticCredentialsProvider {
 	return &StaticCredentialsProvider{}
 }
 
-func (p *StaticCredentialsProvider) Credentials(key, secret, session string, options ...func(*config.LoadOptions) error) (aws.CredentialsProvider, error) {
+func (p *StaticCredentialsProvider) CredentialsProvider(key, secret, session string, options ...func(*config.LoadOptions) error) (aws.CredentialsProvider, error) {
 	provider := credentials.NewStaticCredentialsProvider(key, secret, session)
 	return provider, nil
 }
