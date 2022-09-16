@@ -15,7 +15,7 @@ func NewMockStaticCredentialsProvider() *MockStaticCredentialsProvider {
 	return &MockStaticCredentialsProvider{}
 }
 
-func (p *MockStaticCredentialsProvider) Credentials(key, secret, session string, options ...func(*config.LoadOptions) error) (aws.CredentialsProvider, error) {
+func (p *MockStaticCredentialsProvider) CredentialsProvider(key, secret, session string, options ...func(*config.LoadOptions) error) (aws.CredentialsProvider, error) {
 
 	args := p.Called(key, secret, session, options)
 

@@ -15,7 +15,7 @@ func NewMockAssumerRoleARNProvider() *MockAssumerRoleARNProvider {
 	return &MockAssumerRoleARNProvider{}
 }
 
-func (p *MockAssumerRoleARNProvider) Credentials(cfg aws.Config, roleARN, awsAccessKeyID, awsSecretAccessKey, session string, options ...func(*config.LoadOptions) error) (aws.CredentialsProvider, error) {
+func (p *MockAssumerRoleARNProvider) CredentialsProvider(cfg aws.Config, roleARN, awsAccessKeyID, awsSecretAccessKey, session string, options ...func(*config.LoadOptions) error) (aws.CredentialsProvider, error) {
 
 	args := p.Called(cfg, roleARN, awsAccessKeyID, awsSecretAccessKey, session, options)
 

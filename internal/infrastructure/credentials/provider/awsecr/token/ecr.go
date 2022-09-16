@@ -154,7 +154,7 @@ func (t *AWSECRToken) resolveCredentialsProvider(cfg aws.Config, badge *credenti
 	if badge.AWSRoleARN != "" {
 		if t.assumeRoleARNProvider != nil {
 
-			provider, err = t.assumeRoleARNProvider.Credentials(cfg, badge.AWSRoleARN, badge.AWSAccessKeyID, badge.AWSSecretAccessKey, "", options...)
+			provider, err = t.assumeRoleARNProvider.CredentialsProvider(cfg, badge.AWSRoleARN, badge.AWSAccessKeyID, badge.AWSSecretAccessKey, "", options...)
 			if err != nil {
 				return nil, errors.New(errContext, "", err)
 			}
@@ -165,7 +165,7 @@ func (t *AWSECRToken) resolveCredentialsProvider(cfg aws.Config, badge *credenti
 
 	if badge.AWSAccessKeyID != "" && badge.AWSSecretAccessKey != "" {
 		if t.staticCredentialsProvider != nil {
-			provider, err = t.staticCredentialsProvider.Credentials(badge.AWSAccessKeyID, badge.AWSSecretAccessKey, "", options...)
+			provider, err = t.staticCredentialsProvider.CredentialsProvider(badge.AWSAccessKeyID, badge.AWSSecretAccessKey, "", options...)
 			if err != nil {
 				return nil, errors.New(errContext, "", err)
 			}
