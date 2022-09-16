@@ -214,7 +214,8 @@ func (s *Store) addImageToIndex(name string, i *image.Image) error {
 	return nil
 }
 
-//  wildcard images are those images that have * on its version. Wildcard images are used to generate a default image definition, and accepts any version value
+// wildcard images are those images that have * on its version. Wildcard images are used to generate a default image definition, and accepts any version value
+//
 // storeWildcardImage stores the image in the store
 func (s *Store) storeWildcardImage(name string, i *image.Image) error {
 
