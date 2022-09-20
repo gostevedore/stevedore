@@ -1,6 +1,7 @@
 package image
 
 import (
+	"github.com/apenella/go-common-utils/data"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 )
 
@@ -23,13 +24,13 @@ type BuildDriverOptions struct {
 	// PullAuthUsername is the username to use for pulling the image
 	PullAuthUsername string `yaml:"pull_auth_username"`
 	// PullAuthPassword is the password to use for pulling the image
-	PullAuthPassword string `yaml:"pull_auth_password"`
+	PullAuthPassword string `yaml:"-"`
 	// PullParentImage indicates whether to pull the parent image
 	PullParentImage bool `yaml:"pull_parent_image"`
 	// PushAuthUsername is the username to use for pushing the image
 	PushAuthUsername string `yaml:"push_auth_username"`
 	// PushAuthPassword is the password to use for pushing the image
-	PushAuthPassword string `yaml:"push_auth_password"`
+	PushAuthPassword string `yaml:"-"`
 	// PushImageAfterBuild flag indicate whether to push the image to the registry once it has been built
 	PushImageAfterBuild bool `yaml:"push_image_after_build"`
 	// RemoveImageAfterBuild flag indicate whether to remove the image after build
@@ -39,7 +40,7 @@ type BuildDriverOptions struct {
 // String TODO
 func (o *BuildDriverOptions) String() string {
 
-	str := ""
+	str, _ := data.ObjectToYamlString(o)
 
 	return str
 }
