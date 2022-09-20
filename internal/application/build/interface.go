@@ -3,6 +3,7 @@ package build
 import (
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
+	driverfactory "github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/command"
@@ -38,8 +39,8 @@ type Dispatcher interface {
 
 // DriverFactorier interface defines the factory to create a build driver
 type DriverFactorier interface {
-	Get(id string) (repository.BuildDriverer, error)
-	Register(id string, driver repository.BuildDriverer) error
+	Get(id string) (driverfactory.BuildDriverFactoryFunc, error)
+	Register(id string, driver driverfactory.BuildDriverFactoryFunc) error
 }
 
 // Semverser

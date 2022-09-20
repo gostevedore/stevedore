@@ -60,7 +60,9 @@ func TestBuild(t *testing.T) {
 				WithCommandFactory(command.NewMockBuildCommandFactory()),
 				WithDriverFactory(
 					&factory.BuildDriverFactory{
-						"mock": mock.NewMockDriver(),
+						"mock": func() (repository.BuildDriverer, error) {
+							return mock.NewMockDriver(), nil
+						},
 					},
 				),
 				WithJobFactory(job.NewMockJobFactory()),
@@ -258,7 +260,9 @@ func TestBuildWorker(t *testing.T) {
 				WithCommandFactory(command.NewMockBuildCommandFactory()),
 				WithDriverFactory(
 					&factory.BuildDriverFactory{
-						"mock": mock.NewMockDriver(),
+						"mock": func() (repository.BuildDriverer, error) {
+							return mock.NewMockDriver(), nil
+						},
 					},
 				),
 				WithJobFactory(job.NewMockJobFactory()),
@@ -351,7 +355,9 @@ func TestBuildWorker(t *testing.T) {
 				WithCommandFactory(command.NewMockBuildCommandFactory()),
 				WithDriverFactory(
 					&factory.BuildDriverFactory{
-						"mock": mock.NewMockDriver(),
+						"mock": func() (repository.BuildDriverer, error) {
+							return mock.NewMockDriver(), nil
+						},
 					},
 				),
 				WithJobFactory(job.NewMockJobFactory()),
@@ -415,7 +421,9 @@ func TestBuildWorker(t *testing.T) {
 				WithCommandFactory(command.NewMockBuildCommandFactory()),
 				WithDriverFactory(
 					&factory.BuildDriverFactory{
-						"mock": mock.NewMockDriver(),
+						"mock": func() (repository.BuildDriverer, error) {
+							return mock.NewMockDriver(), nil
+						},
 					},
 				),
 				WithJobFactory(job.NewMockJobFactory()),
@@ -544,7 +552,11 @@ func TestCommand(t *testing.T) {
 	errContext := "(build::command)"
 
 	driverFactory := factory.NewBuildDriverFactory()
-	driverFactory.Register("mock", mock.NewMockDriver())
+	driverFactory.Register("mock",
+		func() (repository.BuildDriverer, error) {
+			return mock.NewMockDriver(), nil
+		},
+	)
 
 	tests := []struct {
 		desc              string
@@ -839,7 +851,9 @@ func TestGetDriver(t *testing.T) {
 			service: NewApplication(
 				WithDriverFactory(
 					&factory.BuildDriverFactory{
-						"docker": mock.NewMockDriver(),
+						"docker": func() (repository.BuildDriverer, error) {
+							return mock.NewMockDriver(), nil
+						},
 					},
 				),
 			),
@@ -855,8 +869,12 @@ func TestGetDriver(t *testing.T) {
 			service: NewApplication(
 				WithDriverFactory(
 					&factory.BuildDriverFactory{
-						"docker":  mock.NewMockDriver(),
-						"dry-run": dryrun.NewDryRunDriver(ioutil.Discard),
+						"docker": func() (repository.BuildDriverer, error) {
+							return mock.NewMockDriver(), nil
+						},
+						"dry-run": func() (repository.BuildDriverer, error) {
+							return dryrun.NewDryRunDriver(ioutil.Discard), nil
+						},
 					},
 				),
 			),

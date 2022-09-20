@@ -6,7 +6,9 @@ import (
 	"io"
 
 	errors "github.com/apenella/go-common-utils/error"
-	godockerbuild "github.com/apenella/go-docker-builder/pkg/build"
+	godockerbuild "github.com/gostevedore/stevedore/pkg/go-docker-builder/pkg/build"
+
+	// godockerbuild "github.com/apenella/go-docker-builder/pkg/build"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	dockerclient "github.com/docker/docker/client"
@@ -513,10 +515,10 @@ func (e *Entrypoint) createGraphTemplateFactory() (*graph.GraphTemplateFactory, 
 
 func (e *Entrypoint) createBuildDriverFactory(credentialsFactory repository.CredentialsFactorier, options *Options) (factory.BuildDriverFactory, error) {
 
-	var ansiblePlaybookDriver repository.BuildDriverer
-	var defaultDriver repository.BuildDriverer
-	var dockerDriver repository.BuildDriverer
-	var dryRunDriver repository.BuildDriverer
+	var ansiblePlaybookDriver factory.BuildDriverFactoryFunc
+	var defaultDriver factory.BuildDriverFactoryFunc
+	var dockerDriver factory.BuildDriverFactoryFunc
+	var dryRunDriver factory.BuildDriverFactoryFunc
 	var err error
 
 	errContext := "(entrypoint::createBuildDriverFactory)"
@@ -561,15 +563,25 @@ func (e *Entrypoint) createBuildDriverFactory(credentialsFactory repository.Cred
 	return factory, nil
 }
 
-func (e *Entrypoint) createDefaultDriver() (repository.BuildDriverer, error) {
-	return driverdefault.NewDefaultDriver(e.writer), nil
+func (e *Entrypoint) createDefaultDriver() (factory.BuildDriverFactoryFunc, error) {
+
+	f := func() (repository.BuildDriverer, error) {
+		return driverdefault.NewDefaultDriver(e.writer), nil
+	}
+
+	return f, nil
 }
 
-func (e *Entrypoint) createDryRunDriver() (repository.BuildDriverer, error) {
-	return dryrun.NewDryRunDriver(e.writer), nil
+func (e *Entrypoint) createDryRunDriver() (factory.BuildDriverFactoryFunc, error) {
+
+	f := func() (repository.BuildDriverer, error) {
+		return dryrun.NewDryRunDriver(e.writer), nil
+	}
+
+	return f, nil
 }
 
-func (e *Entrypoint) createAnsibleDriver(options *Options) (repository.BuildDriverer, error) {
+func (e *Entrypoint) createAnsibleDriver(options *Options) (factory.BuildDriverFactoryFunc, error) {
 
 	errContext := "(entrypoint::createAnsibleDriver)"
 
@@ -577,15 +589,22 @@ func (e *Entrypoint) createAnsibleDriver(options *Options) (repository.BuildDriv
 		return nil, errors.New(errContext, "Build entrypoint options are required to create ansible driver")
 	}
 
-	ansiblePlaybookDriver, err := ansible.NewAnsiblePlaybookDriver(goansible.NewGoAnsibleDriver(), e.writer)
-	if err != nil {
-		return nil, errors.New(errContext, "", err)
+	f := func() (repository.BuildDriverer, error) {
+
+		errContext := "(entrypoint::build::createAnsibleDriver::BuildDriverFactoryFunc)"
+
+		ansiblePlaybookDriver, err := ansible.NewAnsiblePlaybookDriver(goansible.NewGoAnsibleDriver(), e.writer)
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
+
+		return ansiblePlaybookDriver, nil
 	}
 
-	return ansiblePlaybookDriver, nil
+	return f, nil
 }
 
-func (e *Entrypoint) createDockerDriver(credentialsFactory repository.CredentialsFactorier, options *Options) (repository.BuildDriverer, error) {
+func (e *Entrypoint) createDockerDriver(credentialsFactory repository.CredentialsFactorier, options *Options) (factory.BuildDriverFactoryFunc, error) {
 	var dockerClient *dockerclient.Client
 	var dockerDriver *docker.DockerDriver
 	var dockerDriverBuldContext *dockercontext.DockerBuildContextFactory
@@ -603,21 +622,28 @@ func (e *Entrypoint) createDockerDriver(credentialsFactory repository.Credential
 		return nil, errors.New(errContext, "Build entrypoint options are required to create docker driver")
 	}
 
-	dockerClient, err = dockerclient.NewClientWithOpts(dockerclient.FromEnv)
-	if err != nil {
-		return nil, errors.New(errContext, "", err)
+	f := func() (repository.BuildDriverer, error) {
+
+		errContext := "(entrypoint::build::createDockerDriver::BuildDriverFactoryFunc)"
+
+		dockerClient, err = dockerclient.NewClientWithOpts(dockerclient.FromEnv)
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
+
+		goDockerBuild := godockerbuild.NewDockerBuildCmd(dockerClient)
+		gitAuth = gitauth.NewGitAuthFactory(credentialsFactory)
+		dockerDriverBuldContext = dockercontext.NewDockerBuildContextFactory(gitAuth)
+		goDockerBuildDriver = godockerbuilder.NewGoDockerBuildDriver(goDockerBuild, dockerDriverBuldContext)
+		dockerDriver, err = docker.NewDockerDriver(goDockerBuildDriver, e.writer)
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
+
+		return dockerDriver, nil
 	}
 
-	goDockerBuild := godockerbuild.NewDockerBuildCmd(dockerClient)
-	gitAuth = gitauth.NewGitAuthFactory(credentialsFactory)
-	dockerDriverBuldContext = dockercontext.NewDockerBuildContextFactory(gitAuth)
-	goDockerBuildDriver = godockerbuilder.NewGoDockerBuildDriver(goDockerBuild, dockerDriverBuldContext)
-	dockerDriver, err = docker.NewDockerDriver(goDockerBuildDriver, e.writer)
-	if err != nil {
-		return nil, errors.New(errContext, "", err)
-	}
-
-	return dockerDriver, nil
+	return f, nil
 }
 
 func (e *Entrypoint) createDispatcher(options *Options) (*dispatch.Dispatch, error) {

@@ -11,6 +11,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
+	"github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/job"
@@ -410,6 +411,10 @@ func (a *Application) getCredentials(registry string) (repository.AuthMethodRead
 func (a *Application) getDriver(builder *builder.Builder, options *Options) (repository.BuildDriverer, error) {
 	errContext := "(build::getDriver)"
 
+	var factoryFunc factory.BuildDriverFactoryFunc
+	var err error
+	var driver repository.BuildDriverer
+
 	if a.driverFactory == nil {
 		return nil, errors.New(errContext, "To create a build driver, is required a driver factory")
 	}
@@ -419,13 +424,17 @@ func (a *Application) getDriver(builder *builder.Builder, options *Options) (rep
 		driverName = image.DryRunDriverName
 	}
 
-	driver, err := a.driverFactory.Get(driverName)
+	factoryFunc, err = a.driverFactory.Get(driverName)
 	if err != nil {
-
-		driver, err = a.driverFactory.Get(image.DefaultDriverName)
+		factoryFunc, err = a.driverFactory.Get(image.DefaultDriverName)
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}
+	}
+
+	driver, err = factoryFunc()
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
 	}
 
 	return driver, nil

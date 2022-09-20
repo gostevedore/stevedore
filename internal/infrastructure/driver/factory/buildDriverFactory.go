@@ -7,8 +7,10 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
 
+type BuildDriverFactoryFunc func() (repository.BuildDriverer, error)
+
 // BuildDriverFactory type define a map of BuildDriverer
-type BuildDriverFactory map[string]repository.BuildDriverer
+type BuildDriverFactory map[string]BuildDriverFactoryFunc
 
 // NewBuildDriverFactory returns a new BuildDriverFactory
 func NewBuildDriverFactory() BuildDriverFactory {
@@ -16,7 +18,7 @@ func NewBuildDriverFactory() BuildDriverFactory {
 }
 
 // Get returns a BuildDriverer
-func (f BuildDriverFactory) Get(id string) (repository.BuildDriverer, error) {
+func (f BuildDriverFactory) Get(id string) (BuildDriverFactoryFunc, error) {
 	errContext := "(BuildDriverFactory::Get)"
 
 	driver, exist := f[id]
@@ -28,7 +30,7 @@ func (f BuildDriverFactory) Get(id string) (repository.BuildDriverer, error) {
 }
 
 // Register registers a BuildDriverer
-func (f BuildDriverFactory) Register(id string, driver repository.BuildDriverer) error {
+func (f BuildDriverFactory) Register(id string, driver BuildDriverFactoryFunc) error {
 
 	errContext := "(BuildDriverFactory::Register)"
 
