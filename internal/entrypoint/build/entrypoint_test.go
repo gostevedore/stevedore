@@ -863,19 +863,28 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 			options:     &Options{},
 			err:         &errors.Error{},
 			assertions: func(t *testing.T, f factory.BuildDriverFactory) {
-				dDocker, eDocker := f.Get("docker")
+				dDockerFunc, eDocker := f.Get("docker")
 				assert.Nil(t, eDocker)
-				assert.NotNil(t, dDocker)
+				assert.NotNil(t, dDockerFunc)
+
+				dDocker, eDocker := dDockerFunc()
+				assert.Nil(t, eDocker)
 				assert.IsType(t, &docker.DockerDriver{}, dDocker)
 
-				dAnsible, eAnsible := f.Get("ansible-playbook")
+				dAnsibleFunc, eAnsible := f.Get("ansible-playbook")
 				assert.Nil(t, eAnsible)
-				assert.NotNil(t, dAnsible)
+				assert.NotNil(t, dAnsibleFunc)
+
+				dAnsible, eAnsible := dAnsibleFunc()
+				assert.Nil(t, eAnsible)
 				assert.IsType(t, &ansible.AnsiblePlaybookDriver{}, dAnsible)
 
-				dDefault, eDefault := f.Get("default")
+				dDefaultFunc, eDefault := f.Get("default")
 				assert.Nil(t, eDefault)
-				assert.NotNil(t, dDefault)
+				assert.NotNil(t, dDefaultFunc)
+
+				dDefault, eDefault := dDefaultFunc()
+				assert.Nil(t, eDefault)
 				assert.IsType(t, &defaultdriver.DefaultDriver{}, dDefault)
 			},
 		},
@@ -914,11 +923,12 @@ func TestCreateDryRunDriver(t *testing.T) {
 	for _, test := range tests {
 		t.Run(desc, func(t *testing.T) {
 
-			driver, err := test.entrypoint.createDryRunDriver()
-
+			driverFunc, err := test.entrypoint.createDryRunDriver()
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
+				assert.NotNil(t, driverFunc)
+				driver, err := driverFunc()
 				assert.Nil(t, err)
 				assert.NotNil(t, driver)
 				assert.IsType(t, test.res, driver)
@@ -945,11 +955,12 @@ func TestCreateDefaultDriver(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-			driver, err := test.entrypoint.createDefaultDriver()
-
+			driverFunc, err := test.entrypoint.createDefaultDriver()
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
+				assert.NotNil(t, driverFunc)
+				driver, err := driverFunc()
 				assert.Nil(t, err)
 				assert.NotNil(t, driver)
 				assert.IsType(t, test.res, driver)
@@ -987,10 +998,12 @@ func TestCreateAnsibleDriver(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			driver, err := test.entrypoint.createAnsibleDriver(test.options)
+			driverFunc, err := test.entrypoint.createAnsibleDriver(test.options)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
+				assert.NotNil(t, driverFunc)
+				driver, err := driverFunc()
 				assert.Nil(t, err)
 				assert.NotNil(t, driver)
 				assert.IsType(t, test.res, driver)
@@ -1037,10 +1050,12 @@ func TestCreateDockerDriver(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			driver, err := test.entrypoint.createDockerDriver(test.credentials, test.options)
+			driverFunc, err := test.entrypoint.createDockerDriver(test.credentials, test.options)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
+				assert.NotNil(t, driverFunc)
+				driver, err := driverFunc()
 				assert.Nil(t, err)
 				assert.NotNil(t, driver)
 				assert.IsType(t, test.res, driver)
