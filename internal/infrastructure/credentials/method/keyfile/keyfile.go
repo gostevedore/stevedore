@@ -20,8 +20,8 @@ func NewKeyFileAuthMethod() *KeyFileAuthMethod {
 	return &KeyFileAuthMethod{}
 }
 
-// AuthMethod creates a new KeyFileAuthMethod from the given badge
-func (a *KeyFileAuthMethod) AuthMethod(badge *credentials.Badge) (repository.AuthMethodReader, error) {
+// AuthMethodConstructor creates a new KeyFileAuthMethod from the given badge
+func (a *KeyFileAuthMethod) AuthMethodConstructor(badge *credentials.Badge) (repository.AuthMethodReader, error) {
 
 	if badge == nil {
 		return nil, nil

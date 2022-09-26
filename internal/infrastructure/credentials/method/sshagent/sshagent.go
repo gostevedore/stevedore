@@ -14,7 +14,8 @@ func NewSSHAgentAuthMethod() *SSHAgentAuthMethod {
 	return &SSHAgentAuthMethod{}
 }
 
-func (a *SSHAgentAuthMethod) AuthMethod(badge *credentials.Badge) (repository.AuthMethodReader, error) {
+// AuthMethodConstructor return a SSHAgentAuthMethod
+func (a *SSHAgentAuthMethod) AuthMethodConstructor(badge *credentials.Badge) (repository.AuthMethodReader, error) {
 
 	if badge == nil {
 		return nil, nil
