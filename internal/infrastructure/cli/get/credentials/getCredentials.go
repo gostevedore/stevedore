@@ -9,18 +9,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//  NewCommand return an stevedore command object for get builders
+// NewCommand return an stevedore command object to get credentials
 func NewCommand(ctx context.Context, config *configuration.Configuration, entrypoint Entrypointer) *command.StevedoreCommand {
-
-	// 	getCredentialsCmdFlagsVar = &getCredentialsCmdFlags{}
 
 	getCredentialsCmd := &cobra.Command{
 		Use: "credentials",
 		Aliases: []string{
 			"auth",
 			"auths",
-			"badge",
-			"badges",
+			"cred",
+			"creds",
 			"credential",
 		},
 		Short: "Stevedore subcommand to get credentials information",

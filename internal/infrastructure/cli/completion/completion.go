@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//  NewCommand return an stevedore command object for dev
+// NewCommand return an stevedore command object for completion
 func NewCommand(ctx context.Context, config *configuration.Configuration, rootCmd *command.StevedoreCommand, cons Consoler) *command.StevedoreCommand {
 
 	completionCmd := &cobra.Command{

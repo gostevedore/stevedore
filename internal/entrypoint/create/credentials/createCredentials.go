@@ -265,7 +265,6 @@ func (e *CreateCredentialsEntrypoint) prepareHandlerOptions(inputEntrypointOptio
 	return options, nil
 }
 
-//
 func (e *CreateCredentialsEntrypoint) createCredentialsStore(conf *configuration.Configuration, options *Options) (application.CredentialsStorer, error) {
 
 	var store application.CredentialsStorer

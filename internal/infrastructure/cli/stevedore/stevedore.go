@@ -36,7 +36,7 @@ var stevedoreCmdFlagsVars *stevedoreCmdFlags
 
 // var conf *configuration.Configuration
 
-//  NewCommand return an stevedore
+// NewCommand return an stevedore
 func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore CompatibilityStorer, compatibilityReport CompatibilityReporter, console Consoler, log Logger, config *configuration.Configuration) *command.StevedoreCommand {
 	var err error
 	//	var log *logger.Logger

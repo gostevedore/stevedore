@@ -6,7 +6,7 @@ import (
 	"io"
 
 	errors "github.com/apenella/go-common-utils/error"
-	godockerbuild "github.com/gostevedore/stevedore/pkg/go-docker-builder/pkg/build"
+	godockerbuild "github.com/apenella/go-docker-builder/pkg/build"
 
 	// godockerbuild "github.com/apenella/go-docker-builder/pkg/build"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -488,7 +488,7 @@ func (e *Entrypoint) createImagesStore(conf *configuration.Configuration, render
 	}
 
 	store := images.NewStore(render)
-	imagesConfiguration := imagesconfiguration.NewImagesConfiguration(e.fs, graph, store, e.compatibility)
+	imagesConfiguration := imagesconfiguration.NewImagesConfiguration(e.fs, graph, store, render, e.compatibility)
 	err := imagesConfiguration.LoadImagesToStore(conf.ImagesPath)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
