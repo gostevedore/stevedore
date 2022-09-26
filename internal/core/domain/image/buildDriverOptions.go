@@ -40,7 +40,10 @@ type BuildDriverOptions struct {
 // String TODO
 func (o *BuildDriverOptions) String() string {
 
-	str, _ := data.ObjectToYamlString(o)
+	str, err := data.ObjectToYamlString(o)
+	if err != nil {
+		return ""
+	}
 
 	return str
 }
