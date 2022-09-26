@@ -11,10 +11,10 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/filters/images"
 )
 
-const (
-	// ImageWildcardVersionSymbol is the wildcard version
-	ImageWildcardVersionSymbol = "*"
-)
+// const (
+// 	// ImageWildcardVersionSymbol is the wildcard version
+// 	ImageWildcardVersionSymbol = "*"
+// )
 
 // Store is a store for images
 type Store struct {
@@ -26,8 +26,6 @@ type Store struct {
 	// imagesIndex images referenced by its name and rendered version
 	imagesIndex map[string]map[string]*image.Image
 
-	// imageAlternativeNamesIndex map[string]map[string]*image.Image
-	// imageNameVersionIndex      map[string]map[string][]*image.Image
 	imageWildcardIndex map[string]*image.Image
 	render             repository.Renderer
 	store              []*image.Image
@@ -42,8 +40,7 @@ func NewStore(render repository.Renderer) *Store {
 		imageNameVersionRenderedVersionsList: make(map[string]map[string]map[string]struct{}),
 		imagesIndex:                          make(map[string]map[string]*image.Image),
 		imageWildcardIndex:                   make(map[string]*image.Image),
-		// imageAlternativeNamesIndex: make(map[string]map[string]*image.Image),
-		// imageNameVersionIndex:      make(map[string]map[string][]*image.Image),
+
 		render: render,
 		store:  []*image.Image{},
 	}
@@ -52,7 +49,7 @@ func NewStore(render repository.Renderer) *Store {
 // Store adds an image to the store
 func (s *Store) Store(name string, version string, i *image.Image) error {
 	var err error
-	var renderedImage *image.Image
+	//var renderedImage *image.Image
 	errContext := "(store::Store)"
 
 	if s.render == nil {
@@ -74,7 +71,7 @@ func (s *Store) Store(name string, version string, i *image.Image) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	if version == ImageWildcardVersionSymbol {
+	if version == image.ImageWildcardVersionSymbol {
 		err = s.storeWildcardImage(name, i)
 		if err != nil {
 			return errors.New(errContext, "", err)
@@ -83,28 +80,30 @@ func (s *Store) Store(name string, version string, i *image.Image) error {
 		return nil
 	}
 
-	// render the image
-	renderedImage, err = s.render.Render(name, version, i)
-	if err != nil {
-		return errors.New(errContext, "", err)
-	}
+	// Commented because store does not render images anymore it is done by imagesConfiguration
+	//
+	// // render the image
+	// renderedImage, err = s.render.Render(name, version, i)
+	// if err != nil {
+	// 	return errors.New(errContext, "", err)
+	// }
 
 	err = s.addImageNameDefinitionVersionList(name, version)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
 
-	err = s.addImageNameVersionRenderedVersionsList(name, version, renderedImage)
+	err = s.addImageNameVersionRenderedVersionsList(name, version, i)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
 
-	err = s.addImageToIndex(name, renderedImage)
+	err = s.addImageToIndex(name, i)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
 
-	s.store = append(s.store, renderedImage)
+	s.store = append(s.store, i)
 
 	return nil
 }
@@ -296,7 +295,7 @@ func (s *Store) Find(name string, version string) ([]*image.Image, error) {
 	list := []*image.Image{}
 
 	//  return the image associated to the image name and version
-	if version == ImageWildcardVersionSymbol {
+	if version == image.ImageWildcardVersionSymbol {
 		i, _ = s.imageWildcardIndex[name]
 		return append(list, i), nil
 	}
@@ -307,7 +306,7 @@ func (s *Store) Find(name string, version string) ([]*image.Image, error) {
 	}
 
 	renderedVersionList, _ := s.imageNameVersionRenderedVersionsList[name][version]
-	for renderedVersion, _ := range renderedVersionList {
+	for renderedVersion := range renderedVersionList {
 		i := s.imagesIndex[name][renderedVersion]
 		list = append(list, i)
 	}
