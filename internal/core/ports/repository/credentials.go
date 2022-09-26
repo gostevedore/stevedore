@@ -23,9 +23,9 @@ type AuthMethodReader interface {
 	Name() string
 }
 
-//AuthMethodConstructor interface that creates authentication method data
+// AuthMethodConstructor interface that creates authentication method data
 type AuthMethodConstructor interface {
-	AuthMethod(badge *credentials.Badge) (AuthMethodReader, error)
+	AuthMethodConstructor(badge *credentials.Badge) (AuthMethodReader, error)
 }
 
 // Formater interface to marshal or unmarshal bagde data

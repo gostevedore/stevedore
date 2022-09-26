@@ -16,8 +16,8 @@ func NewBasicAuthMethod() *BasicAuthMethod {
 	return &BasicAuthMethod{}
 }
 
-// AuthMethod return BasicAuthMethod from the given badge
-func (a *BasicAuthMethod) AuthMethod(badge *credentials.Badge) (repository.AuthMethodReader, error) {
+// AuthMethodConstructor return BasicAuthMethod from the given badge
+func (a *BasicAuthMethod) AuthMethodConstructor(badge *credentials.Badge) (repository.AuthMethodReader, error) {
 
 	if badge == nil {
 		return nil, nil

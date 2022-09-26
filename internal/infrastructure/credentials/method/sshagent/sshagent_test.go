@@ -40,7 +40,7 @@ func TestAuthMethod(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			auth, err := test.method.AuthMethod(test.badge)
+			auth, err := test.method.AuthMethodConstructor(test.badge)
 			if err != nil {
 				assert.Equal(t, test.res, err)
 			} else {
