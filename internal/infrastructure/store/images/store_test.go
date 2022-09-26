@@ -313,15 +313,76 @@ func TestStore(t *testing.T) {
 			version: "image_version",
 			err:     errors.New(errContext, "To add an image to the store an image is required"),
 		},
+
+		// Commented because store does not render images anymore it is done by imagesConfiguration
+		//
+		// {
+		// 	desc:    "Testing add a image to an empty store",
+		// 	store:   NewStore(render.NewMockImageRender()),
+		// 	name:    "image_name",
+		// 	version: "image_version",
+		// 	image: &image.Image{
+		// 		Name:              "{{.Name}}-{{.Parent.Name}}",
+		// 		Version:           "{{.Version}}-{{.Parent.Version}}",
+		// 		RegistryNamespace: "{{.Parent.RegistryNamespace}}",
+		// 		Parent: &image.Image{
+		// 			Name:              "parent_name",
+		// 			Version:           "parent_version",
+		// 			RegistryNamespace: "parent_registry_namespace",
+		// 		},
+		// 		Tags: []string{"tag1", "tag2"},
+		// 	},
+		// 	prepareAssertFunc: func(s *Store, i *image.Image) {
+		// 		s.render.(*render.MockImageRender).On("Render", "image_name", "image_version", i).Return(
+		// 			&image.Image{
+		// 				Name:              "image_name-parent_name",
+		// 				Version:           "image_version-parent_version",
+		// 				RegistryNamespace: "parent_registry_namespace",
+		// 				Parent: &image.Image{
+		// 					Name:              "parent_name",
+		// 					Version:           "parent_version",
+		// 					RegistryNamespace: "parent_registry_namespace",
+		// 				},
+		// 				Tags: []string{"tag1", "tag2"},
+		// 			},
+		// 			nil,
+		// 		)
+		// 	},
+		// 	assertFunc: func(t *testing.T, s *Store) {
+		// 		assert.Equal(t, 1, len(s.store), "Unexpected number of images in the store")
+		// 		assert.Equal(t,
+		// 			map[string]map[string]struct{}{
+		// 				"image_name": {"image_version": struct{}{}},
+		// 			},
+		// 			s.imageNameDefinitionVersionList)
+		// 		assert.Equal(t,
+		// 			map[string]map[string]map[string]struct{}{
+		// 				"image_name": {
+		// 					"image_version": {"image_version-parent_version": struct{}{}},
+		// 				},
+		// 			},
+		// 			s.imageNameVersionRenderedVersionsList)
+		// 		assert.Equal(t,
+		// 			map[string]map[string]map[string]struct{}{
+		// 				"image_name": {
+		// 					"image_version": {"image_version-parent_version": struct{}{}},
+		// 				},
+		// 			},
+		// 			s.imageNameVersionRenderedVersionsList)
+
+		// 	},
+		// 	err: &errors.Error{},
+		// },
+
 		{
 			desc:    "Testing add a image to an empty store",
 			store:   NewStore(render.NewMockImageRender()),
 			name:    "image_name",
 			version: "image_version",
 			image: &image.Image{
-				Name:              "{{.Name}}-{{.Parent.Name}}",
-				Version:           "{{.Version}}-{{.Parent.Version}}",
-				RegistryNamespace: "{{.Parent.RegistryNamespace}}",
+				Name:              "image_name",
+				Version:           "image_version",
+				RegistryNamespace: "image_namespace",
 				Parent: &image.Image{
 					Name:              "parent_name",
 					Version:           "parent_version",
@@ -332,9 +393,9 @@ func TestStore(t *testing.T) {
 			prepareAssertFunc: func(s *Store, i *image.Image) {
 				s.render.(*render.MockImageRender).On("Render", "image_name", "image_version", i).Return(
 					&image.Image{
-						Name:              "image_name-parent_name",
-						Version:           "image_version-parent_version",
-						RegistryNamespace: "parent_registry_namespace",
+						Name:              "image_name",
+						Version:           "image_version",
+						RegistryNamespace: "image_namespace",
 						Parent: &image.Image{
 							Name:              "parent_name",
 							Version:           "parent_version",
@@ -355,21 +416,14 @@ func TestStore(t *testing.T) {
 				assert.Equal(t,
 					map[string]map[string]map[string]struct{}{
 						"image_name": {
-							"image_version": {"image_version-parent_version": struct{}{}},
+							"image_version": {"image_version": struct{}{}},
 						},
 					},
 					s.imageNameVersionRenderedVersionsList)
-				assert.Equal(t,
-					map[string]map[string]map[string]struct{}{
-						"image_name": {
-							"image_version": {"image_version-parent_version": struct{}{}},
-						},
-					},
-					s.imageNameVersionRenderedVersionsList)
-
 			},
 			err: &errors.Error{},
 		},
+
 		{
 			desc:    "Testing add a wildcard image to an empty store",
 			store:   NewStore(render.NewMockImageRender()),

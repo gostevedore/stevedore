@@ -77,12 +77,14 @@ func (i *Image) Copy() (*Image, error) {
 // CreateDomainImage creates a domain image from the image
 func (i *Image) CreateDomainImage() (*domainimage.Image, error) {
 
+	// NewImage from domain could not be used because in that stage some values are still a template
 	image := &domainimage.Image{
 		Name:              i.Name,
 		Version:           i.Version,
 		RegistryHost:      i.RegistryHost,
 		RegistryNamespace: i.RegistryNamespace,
 	}
+
 	image.Options(
 		domainimage.WithBuilder(i.Builder),
 		domainimage.WithPersistentLabels(i.PersistentLabels),

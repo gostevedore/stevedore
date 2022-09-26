@@ -10,10 +10,10 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration/images/graph"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration/images/image"
 	imagesgraph "github.com/gostevedore/stevedore/internal/infrastructure/graph"
+	"github.com/gostevedore/stevedore/internal/infrastructure/render"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestCheckCompatibility(t *testing.T) {
@@ -70,42 +70,26 @@ func TestLoadImagesToStore(t *testing.T) {
 	testFs := afero.NewMemMapFs()
 	testFs.MkdirAll(baseDir, 0755)
 
-	err = afero.WriteFile(testFs, filepath.Join(baseDir, "file1.yaml"), []byte(`
+	err = afero.WriteFile(testFs, filepath.Join(baseDir, "images.yaml"), []byte(`
 images:
   parent1:
     parent1_version:
       registry: registry.test
       namespace: namespace
+      version: "v{{ .Version }}"
       builder: builder
       persistent_labels:
         plabel: plabelvalue
-  parent2:
-    parent2_version:
-      registry: registry.test
-      namespace: namespace
-      builder: builder
-      children:
-        other_child:
-        - other_child_version
   child:
     version:
       registry: registry.test
       namespace: namespace
       name: child
-      version: version
+      version: "{{ .Parent.Version }}"
       builder: builder
       parents:
         parent1:
         - parent1_version
-        parent2:
-        - parent2_version
-  other_child:
-    other_child_version:
-      registry: registry.test
-      namespace: namespace
-      name: other_child
-      version: other_child_version
-      builder: builder
 `), 0644)
 	if err != nil {
 		t.Log(err)
@@ -139,93 +123,141 @@ image:
 					imagesgraph.NewGraphTemplateFactory(false),
 				),
 				images.NewMockStore(),
+				render.NewMockImageRender(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(i *ImagesConfiguration) {
 
+				// Create parent1:parent1_version
+				i.render.(*render.MockImageRender).On("Render", "parent1", "parent1_version",
+					&domainimage.Image{
+						RegistryHost:      "registry.test",
+						RegistryNamespace: "namespace",
+						Name:              "parent1",
+						Version:           "v{{ .Version }}",
+						Builder:           "builder",
+						PersistentLabels: map[string]string{
+							"plabel": "plabelvalue",
+						},
+					},
+				).Return(
+					&domainimage.Image{
+						RegistryHost:      "registry.test",
+						RegistryNamespace: "namespace",
+						Name:              "parent1",
+						Version:           "vparent1_version",
+						Builder:           "builder",
+						PersistentLabels: map[string]string{
+							"plabel": "plabelvalue",
+						},
+					}, nil)
+
+				i.store.(*images.MockStore).On("Store", "parent1", "parent1_version",
+					&domainimage.Image{
+						RegistryHost:      "registry.test",
+						RegistryNamespace: "namespace",
+						Name:              "parent1",
+						Version:           "vparent1_version",
+						Builder:           "builder",
+						PersistentLabels: map[string]string{
+							"plabel": "plabelvalue",
+						},
+					},
+				).Return(nil)
+
+				// Create child:version
 				i.store.(*images.MockStore).On("Find", "parent1", "parent1_version").Return([]*domainimage.Image{
 					{
 						RegistryHost:      "registry.test",
 						RegistryNamespace: "namespace",
 						Name:              "parent1",
-						Version:           "parent1_version",
+						Version:           "vparent1_version",
 						Builder:           "builder",
+						PersistentLabels: map[string]string{
+							"plabel": "plabelvalue",
+						},
 					},
 				}, nil)
-				i.store.(*images.MockStore).On("Find", "parent2", "parent2_version").Return([]*domainimage.Image{
-					{
+
+				i.render.(*render.MockImageRender).On("Render", "child", "version",
+					&domainimage.Image{
 						RegistryHost:      "registry.test",
 						RegistryNamespace: "namespace",
-						Name:              "parent2",
-						Version:           "parent2_version",
+						Name:              "child",
+						Version:           "{{ .Parent.Version }}",
 						Builder:           "builder",
+						Children:          []*domainimage.Image{},
+						Labels:            map[string]string{},
+						PersistentLabels:  map[string]string{},
+						PersistentVars:    map[string]interface{}{},
+						Tags:              []string{},
+						Vars:              map[string]interface{}{},
+						Parent: &domainimage.Image{
+							RegistryHost:      "registry.test",
+							RegistryNamespace: "namespace",
+							Name:              "parent1",
+							Version:           "vparent1_version",
+							Builder:           "builder",
+							PersistentLabels: map[string]string{
+								"plabel": "plabelvalue",
+							},
+						},
 					},
-				}, nil)
+				).Return(
+					&domainimage.Image{
+						RegistryHost:      "registry.test",
+						RegistryNamespace: "namespace",
+						Name:              "child",
+						Version:           "vparent_version",
+						Builder:           "builder",
+						Children:          []*domainimage.Image{},
+						Labels:            map[string]string{},
+						PersistentLabels:  map[string]string{},
+						PersistentVars:    map[string]interface{}{},
+						Tags:              []string{},
+						Vars:              map[string]interface{}{},
+						Parent: &domainimage.Image{
+							RegistryHost:      "registry.test",
+							RegistryNamespace: "namespace",
+							Name:              "parent1",
+							Version:           "v{{ .Version }}",
+							Builder:           "builder",
+							PersistentLabels: map[string]string{
+								"plabel": "plabelvalue",
+							},
+						},
+					}, nil)
 
-				parent1 := &domainimage.Image{
-					RegistryHost:      "registry.test",
-					RegistryNamespace: "namespace",
-					Name:              "parent1",
-					Version:           "parent1_version",
-					Builder:           "builder",
-				}
-				parent2 := &domainimage.Image{
-					RegistryHost:      "registry.test",
-					RegistryNamespace: "namespace",
-					Name:              "parent2",
-					Version:           "parent2_version",
-					Builder:           "builder",
-				}
-				childParent1 := &domainimage.Image{
-					RegistryHost:      "registry.test",
-					RegistryNamespace: "namespace",
-					Name:              "child",
-					Version:           "version",
-					Builder:           "builder",
-					Labels:            map[string]string{},
-					Tags:              []string{},
-					Vars:              map[string]interface{}{},
-				}
-				childParent2 := &domainimage.Image{
-					RegistryHost:      "registry.test",
-					RegistryNamespace: "namespace",
-					Name:              "child",
-					Version:           "version",
-					Builder:           "builder",
-					Labels:            map[string]string{},
-					Tags:              []string{},
-					Vars:              map[string]interface{}{},
-				}
-				addOtherChild := &domainimage.Image{
-					RegistryHost:      "registry.test",
-					RegistryNamespace: "namespace",
-					Name:              "other_child",
-					Version:           "other_child_version",
-					Builder:           "builder",
-				}
+				i.store.(*images.MockStore).On("Store", "child", "version",
+					&domainimage.Image{
+						RegistryHost:      "registry.test",
+						RegistryNamespace: "namespace",
+						Name:              "child",
+						Version:           "vparent_version",
+						Builder:           "builder",
+						Children:          []*domainimage.Image{},
+						Labels:            map[string]string{},
+						PersistentLabels:  map[string]string{},
+						PersistentVars:    map[string]interface{}{},
+						Tags:              []string{},
+						Vars:              map[string]interface{}{},
+						Parent: &domainimage.Image{
+							RegistryHost:      "registry.test",
+							RegistryNamespace: "namespace",
+							Name:              "parent1",
+							Version:           "v{{ .Version }}",
+							Builder:           "builder",
+							PersistentLabels: map[string]string{
+								"plabel": "plabelvalue",
+							},
+						},
+					},
+				).Return(nil)
 
-				addOtherChild.Options(
-					domainimage.WithParent(parent2),
-				)
-				// parent2.AddChild(addOtherChild)
-				childParent1.Options(
-					domainimage.WithParent(parent1),
-				)
-				// parent1.AddChild(childParent1)
-				childParent2.Options(
-					domainimage.WithParent(parent2),
-				)
-				// parent2.AddChild(childParent2)
-
-				i.store.(*images.MockStore).On("Store", "parent1", "parent1_version", mock.AnythingOfType("*image.Image")).Return(nil)
-				i.store.(*images.MockStore).On("Store", "parent2", "parent2_version", mock.AnythingOfType("*image.Image")).Return(nil)
-				i.store.(*images.MockStore).On("Store", "child", "version", mock.AnythingOfType("*image.Image")).Return(nil)
-				i.store.(*images.MockStore).On("Store", "child", "version", mock.AnythingOfType("*image.Image")).Return(nil)
-				i.store.(*images.MockStore).On("Store", "other_child", "other_child_version", mock.AnythingOfType("*image.Image")).Return(nil)
 			},
 			assertFunc: func(t *testing.T, i *ImagesConfiguration) {
 				i.store.(*images.MockStore).AssertExpectations(t)
-				i.store.(*images.MockStore).AssertNumberOfCalls(t, "Store", 5)
+				i.render.(*render.MockImageRender).AssertExpectations(t)
 			},
 			err: &errors.Error{},
 		},
@@ -371,16 +403,14 @@ images:
 
 	err = afero.WriteFile(testFs, filepath.Join(baseDir, "multiple_parents.yaml"), []byte(`
 images:
-parent1:
-  parent1_version:
-    registry: registry.test
-    namespace: namespace
-    name: parent1
-    version: parent1_version
-    builder: builder
-    children:
-      child:
-        - child_version
+  parent1:
+    parent1_version:
+      registry: registry.test
+      namespace: namespace
+      name: parent1
+      version: parent1_version
+      builder: builder
+
   parent2:
     parent2_version:
       registry: registry.test
@@ -388,16 +418,19 @@ parent1:
       name: parent2
       version: parent2_version
       builder: builder
-      children:
-        child:
-        - child_version
+
   child:
     child_version:
       registry: registry.test
       namespace: namespace
       name: child
-      version: {{ .Parent.Version }}
+      version: "{{ .Parent.Version }}"
       builder: builder
+      parents:
+        parent1:
+          - parent1_version
+        parent2:
+          - parent2_version
 `), 0644)
 	if err != nil {
 		t.Log(err)
@@ -417,6 +450,7 @@ parent1:
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				images.NewMockStore(),
+				render.NewMockImageRender(),
 				compatibility.NewMockCompatibility(),
 			),
 			err: errors.New(errContext, "Error loading images tree from file '/imagestree/tab_error_file.yaml'\nfound:\n\nimages:\nimage:\n  version:\n\tregistry: registry\n\tnamespace: namespace\n\n\tyaml: line 5: found character that cannot start any token"),
@@ -428,6 +462,7 @@ parent1:
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				images.NewMockStore(),
+				render.NewMockImageRender(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
@@ -464,6 +499,7 @@ parent1:
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				images.NewMockStore(),
+				render.NewMockImageRender(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
@@ -505,7 +541,6 @@ parent1:
 			},
 			err: &errors.Error{},
 		},
-
 		{
 			desc: "Testing load images with one child and multiple parents",
 			path: filepath.Join(baseDir, "multiple_parents.yaml"),
@@ -513,48 +548,38 @@ parent1:
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				images.NewMockStore(),
+				render.NewMockImageRender(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
-				// tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "parent1", "parent1_version", &image.Image{
-				// 	Name:              "parent1",
-				// 	Version:           "parent1_version",
-				// 	RegistryHost:      "registry.test",
-				// 	RegistryNamespace: "namespace",
-				// 	Builder:           "builder",
-				// }).Return(nil)
-				// tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "parent2", "parent2_version", &image.Image{
-				// 	Name:              "parent2",
-				// 	Version:           "parent2_version",
-				// 	RegistryHost:      "registry.test",
-				// 	RegistryNamespace: "namespace",
-				// 	Builder:           "builder",
-				// 	Children: map[string][]string{
-				// 		"other_child": {"other_child_version"},
-				// 	},
-				// }).Return(nil)
-				// tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "child", "version", &image.Image{
-				// 	Name:              "child",
-				// 	Version:           "version",
-				// 	RegistryHost:      "registry.test",
-				// 	RegistryNamespace: "namespace",
-				// 	Builder:           "builder",
-				// 	Parents: map[string][]string{
-				// 		"parent1": {"parent1_version"},
-				// 		"parent2": {"parent2_version"},
-				// 	},
-				// }).Return(nil)
-				// tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "other_child", "other_child_version", &image.Image{
-				// 	Name:              "other_child",
-				// 	Version:           "other_child_version",
-				// 	RegistryHost:      "registry.test",
-				// 	RegistryNamespace: "namespace",
-				// 	Builder:           "builder",
-				// }).Return(nil)
+				tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "parent1", "parent1_version", &image.Image{
+					Name:              "parent1",
+					Version:           "parent1_version",
+					RegistryHost:      "registry.test",
+					RegistryNamespace: "namespace",
+					Builder:           "builder",
+				}).Return(nil)
+				tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "parent2", "parent2_version", &image.Image{
+					Name:              "parent2",
+					Version:           "parent2_version",
+					RegistryHost:      "registry.test",
+					RegistryNamespace: "namespace",
+					Builder:           "builder",
+				}).Return(nil)
+				tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "child", "child_version", &image.Image{
+					Name:              "child",
+					Version:           "{{ .Parent.Version }}",
+					RegistryHost:      "registry.test",
+					RegistryNamespace: "namespace",
+					Builder:           "builder",
+					Parents: map[string][]string{
+						"parent1": {"parent1_version"},
+						"parent2": {"parent2_version"},
+					},
+				}).Return(nil)
 			},
 			err: &errors.Error{},
 		},
-
 		{
 			desc: "Testing load images tree from file with deprecated definition",
 			path: filepath.Join(baseDir, "deprecated_definition.yaml"),
@@ -562,6 +587,7 @@ parent1:
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				images.NewMockStore(),
+				render.NewMockImageRender(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
@@ -599,6 +625,7 @@ parent1:
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				images.NewMockStore(),
+				render.NewMockImageRender(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
@@ -732,6 +759,7 @@ image:
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				images.NewMockStore(),
+				render.NewMockImageRender(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
@@ -777,6 +805,7 @@ image:
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				images.NewMockStore(),
+				render.NewMockImageRender(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
@@ -874,6 +903,7 @@ images:
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				images.NewMockStore(),
+				render.NewMockImageRender(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
@@ -894,6 +924,7 @@ images:
 				testFs,
 				graph.NewMockImagesGraphTemplate(),
 				images.NewMockStore(),
+				render.NewMockImageRender(),
 				compatibility.NewMockCompatibility(),
 			),
 			prepareAssertFunc: func(tree *ImagesConfiguration) {
@@ -977,6 +1008,120 @@ func TestIsAValidVersion(t *testing.T) {
 			t.Log(test.desc)
 
 			assert.Equal(t, test.res, isAValidVersion(test.version))
+		})
+	}
+}
+
+func TestRenderImage(t *testing.T) {
+
+	errContext := "(images::renderImage)"
+
+	tests := []struct {
+		desc              string
+		name              string
+		version           string
+		image             *domainimage.Image
+		err               error
+		images            *ImagesConfiguration
+		res               *domainimage.Image
+		prepareAssertFunc func(*ImagesConfiguration)
+		assertFunc        func(*testing.T, *ImagesConfiguration)
+	}{
+		{
+			desc:    "Testing render image on image configuration when version is a wildcard symbol",
+			name:    "image",
+			version: domainimage.ImageWildcardVersionSymbol,
+			image: &domainimage.Image{
+				Name:    "image",
+				Version: "{{ .Version }}",
+			},
+			res: &domainimage.Image{
+				Name:    "image",
+				Version: "{{ .Version }}",
+			},
+		},
+		{
+			desc: "Testing error rendering an image on image configuration when name is not provided",
+			err:  errors.New(errContext, "Image name must be provided to render an image"),
+		},
+		{
+			desc: "Testing error rendering an image on image configuration when renderer is not provided",
+			name: "image",
+			err:  errors.New(errContext, "Image version must be provided to render an image"),
+		},
+		{
+			desc:    "Testing error rendering an image on image configuration when renderer is not provided",
+			name:    "image",
+			version: "version",
+			images: NewImagesConfiguration(
+				afero.NewMemMapFs(),
+				graph.NewMockImagesGraphTemplate(),
+				images.NewMockStore(),
+				nil,
+				compatibility.NewMockCompatibility(),
+			),
+			err: errors.New(errContext, "Image 'image:version' could not be rendered because renderer must by provided"),
+		},
+		{
+			desc:    "Testing render an image on image configuration",
+			name:    "image",
+			version: "version",
+			images: NewImagesConfiguration(
+				afero.NewMemMapFs(),
+				graph.NewMockImagesGraphTemplate(),
+				images.NewMockStore(),
+				render.NewMockImageRender(),
+				compatibility.NewMockCompatibility(),
+			),
+			err: &errors.Error{},
+			image: &domainimage.Image{
+				Name:    "image",
+				Version: "{{ .Version }}",
+			},
+			prepareAssertFunc: func(i *ImagesConfiguration) {
+				i.render.(*render.MockImageRender).On("Render", "image", "version",
+					&domainimage.Image{
+						Name:    "image",
+						Version: "{{ .Version }}",
+					},
+				).Return(
+					&domainimage.Image{
+						Name:    "image",
+						Version: "version",
+					},
+					nil,
+				)
+			},
+			assertFunc: func(t *testing.T, i *ImagesConfiguration) {
+				i.render.(*render.MockImageRender).AssertExpectations(t)
+			},
+			res: &domainimage.Image{
+				Name:              "image",
+				Version:           "version",
+				RegistryHost:      "docker.io",
+				RegistryNamespace: "library",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			if test.prepareAssertFunc != nil {
+				test.prepareAssertFunc(test.images)
+			}
+
+			res, err := test.images.renderImage(test.name, test.version, test.image)
+			if err != nil {
+				assert.Equal(t, test.err, err)
+			} else {
+				assert.Equal(t, test.res, res)
+
+				if test.assertFunc != nil {
+					test.assertFunc(t, test.images)
+				}
+			}
 		})
 	}
 }

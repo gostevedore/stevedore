@@ -22,7 +22,8 @@ import (
 //
 // Image structure
 // image_tree:
-// 	image_name:
+//
+//	image_name:
 //		image_tag1:
 //			<Image>
 //		image_tag2:
@@ -34,6 +35,7 @@ type ImagesConfiguration struct {
 	mutex         sync.RWMutex
 	wg            sync.WaitGroup
 	store         repository.ImagesStorer
+	render        repository.Renderer
 
 	// DEPRECATEDImagesTree is replaced by Images
 	DEPRECATEDImagesTree map[string]map[string]*image.Image `yaml:"images_tree"`
@@ -41,12 +43,13 @@ type ImagesConfiguration struct {
 }
 
 // NewImagesConfiguration method create a new ImagesConfiguration struct
-func NewImagesConfiguration(fs afero.Fs, graph ImagesGraphTemplatesStorer, store repository.ImagesStorer, compatibility Compatibilitier) *ImagesConfiguration {
+func NewImagesConfiguration(fs afero.Fs, graph ImagesGraphTemplatesStorer, store repository.ImagesStorer, render repository.Renderer, compatibility Compatibilitier) *ImagesConfiguration {
 	return &ImagesConfiguration{
 		fs:            fs,
 		compatibility: compatibility,
 		graph:         graph,
 		store:         store,
+		render:        render,
 
 		DEPRECATEDImagesTree: make(map[string]map[string]*image.Image),
 		Images:               make(map[string]map[string]*image.Image),
@@ -104,7 +107,7 @@ func (t *ImagesConfiguration) LoadImagesToStore(path string) error {
 // storeImage stores image to images store
 func (t *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes map[string]struct{}, pendingNodes map[string]map[string]struct{}) error {
 	var err error
-	var nodeDomainImage, copyDomainImage *domainimage.Image
+	var nodeDomainImage *domainimage.Image
 	errContext := "(images::storeImage)"
 
 	name, version, err := graph.ParseNodeName(node)
@@ -124,7 +127,13 @@ func (t *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes
 	}
 
 	if node.Parents() == nil || len(node.Parents()) <= 0 {
-		err = t.store.Store(name, version, nodeDomainImage)
+
+		imageToStore, err := t.renderImage(name, version, nodeDomainImage)
+		if err != nil {
+			return errors.New(errContext, "", err)
+		}
+
+		err = t.store.Store(name, version, imageToStore)
 		if err != nil {
 			return errors.New(errContext, "", err)
 		}
@@ -136,7 +145,7 @@ func (t *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes
 				continue
 			}
 
-			copyDomainImage, err = nodeDomainImage.Copy()
+			copyDomainImage, err := nodeDomainImage.Copy()
 			if err != nil {
 				return errors.New(errContext, "", err)
 			}
@@ -160,9 +169,14 @@ func (t *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes
 				domainimage.WithParent(parentDomainImage),
 			)
 
-			parentDomainImage.AddChild(copyDomainImage)
+			imageToStore, err := t.renderImage(name, version, copyDomainImage)
+			if err != nil {
+				return errors.New(errContext, "", err)
+			}
 
-			err = t.store.Store(name, version, copyDomainImage)
+			parentDomainImage.AddChild(imageToStore)
+
+			err = t.store.Store(name, version, imageToStore)
 			if err != nil {
 				return errors.New(errContext, "", err)
 			}
@@ -183,6 +197,45 @@ func (t *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes
 	}
 
 	return nil
+}
+
+// renderImage return a renderized image base on the input image. The input image is not rendered when the version value is ImageWildcardSymbol
+func (t *ImagesConfiguration) renderImage(name, version string, i *domainimage.Image) (*domainimage.Image, error) {
+
+	errContext := "(images::renderImage)"
+
+	if version == domainimage.ImageWildcardVersionSymbol {
+		return i, nil
+	}
+
+	if name == "" {
+		return nil, errors.New(errContext, "Image name must be provided to render an image")
+	}
+
+	if version == "" {
+		return nil, errors.New(errContext, "Image version must be provided to render an image")
+	}
+
+	if t.render == nil {
+		return nil, errors.New(errContext, fmt.Sprintf("Image '%s:%s' could not be rendered because renderer must by provided", name, version))
+	}
+
+	renderedImage, err := t.render.Render(name, version, i)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
+	normalizeImage, err := domainimage.NewImage(renderedImage.Name, renderedImage.Version, renderedImage.RegistryHost, renderedImage.RegistryNamespace)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
+	renderedImage.Name = normalizeImage.Name
+	renderedImage.Version = normalizeImage.Version
+	renderedImage.RegistryHost = normalizeImage.RegistryHost
+	renderedImage.RegistryNamespace = normalizeImage.RegistryNamespace
+
+	return renderedImage, nil
 }
 
 // LoadImagesConfiguration method generate and return an ImagesConfiguration struct from a file
@@ -273,7 +326,7 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 		return errors.New(errContext, "Builders is nil")
 	}
 
-	imageTreeAux := NewImagesConfiguration(t.fs, t.graph, t.store, t.compatibility)
+	imageTreeAux := NewImagesConfiguration(t.fs, t.graph, t.store, t.render, t.compatibility)
 
 	fileData, err = afero.ReadFile(t.fs, path)
 	if err != nil {
@@ -290,6 +343,7 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 		return errors.New(errContext, "", err)
 	}
 
+	fmt.Println(">>>", imageTreeAux.Images)
 	for name, images := range imageTreeAux.Images {
 
 		if !isAValidName(name) {
