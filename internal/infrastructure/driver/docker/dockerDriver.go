@@ -101,7 +101,6 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *image
 	// add docker tags
 	if len(i.Tags) > 0 {
 		for _, tag := range i.Tags {
-
 			imageTaggedAux, err := image.NewImage(i.Name, tag, i.RegistryHost, i.RegistryNamespace)
 			if err != nil {
 				return errors.New(errContext, "", err)

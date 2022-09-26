@@ -30,7 +30,7 @@ func (a *BadgeCredentialsProvider) Get(badge *credentials.Badge) (repository.Aut
 	errContext := "(credentials::provider::BadgeCredentialsProvider::Get)"
 
 	for _, m := range a.methods {
-		method, err = m.AuthMethod(badge)
+		method, err = m.AuthMethodConstructor(badge)
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}

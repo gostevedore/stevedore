@@ -16,7 +16,7 @@ const (
 	DeprecatedFlagMessageDockerRegistryCredentialsDir = "[DEPRECATED FLAG] 'credentials-dir' is deprecated and will be ignored. Credentials parameters are set through the 'credentials' section of the configuration file or using the flag 'local-storage-path'"
 )
 
-//  NewCommand return an stevedore command object for get builders
+// NewCommand return an stevedore command object to create credentials
 func NewCommand(ctx context.Context, compatibility Compatibilitier, config *configuration.Configuration, e Entrypointer) *command.StevedoreCommand {
 
 	createCredentialsFlagOptions := &createCredentialsFlagOptions{}

@@ -20,7 +20,6 @@ func NewLocalStoreWithSafeStore(fs afero.Fs, path string, f repository.Formater,
 	}
 }
 
-//
 func (s *LocalStoreWithSafeStore) Store(id string, badge *credentials.Badge) error {
 	errContext := "(store::credentials::local::LocalStoreWithSafeStore)"
 
