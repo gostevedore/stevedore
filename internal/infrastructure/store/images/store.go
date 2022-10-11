@@ -11,11 +11,6 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/filters/images"
 )
 
-// const (
-// 	// ImageWildcardVersionSymbol is the wildcard version
-// 	ImageWildcardVersionSymbol = "*"
-// )
-
 // Store is a store for images
 type Store struct {
 
