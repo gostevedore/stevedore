@@ -154,8 +154,9 @@ func Parse(name string) (*Image, error) {
 	referenceName = reference.TagNameOnly(referenceName)
 
 	return &Image{
-		Name:              reference.Path(referenceName)[strings.LastIndex(reference.Path(referenceName), "/")+1:],
-		Version:           referenceName.String()[strings.IndexRune(referenceName.String(), ':')+1:],
+		Name: reference.Path(referenceName)[strings.LastIndex(reference.Path(referenceName), "/")+1:],
+		//Version:           referenceName.String()[strings.IndexRune(referenceName.String(), ':')+1:],
+		Version:           referenceName.String()[strings.LastIndex(referenceName.String(), ":")+1:],
 		RegistryHost:      reference.Domain(referenceName),
 		RegistryNamespace: reference.Path(referenceName)[:strings.LastIndex(reference.Path(referenceName), "/")],
 	}, nil
