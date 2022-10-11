@@ -1,0 +1,45 @@
+images:
+  app1:
+    "v1":
+      registry: registry.stevedore.test
+      namespace: stable
+      version: "{{ .Version }}-{{ .Parent.Name }}-{{ .Parent.Version }}"
+      builder:
+        driver: docker
+        options:
+          context:
+            - path: app1
+      parents:
+        ubuntu:
+          - latest
+          - "20.04"
+        scratch:
+          - latest
+        alpine:
+          - "3.16"
+
+  app2:
+    "v1":
+      registry: registry.stevedore.test
+      version: "{{ .Version }}-{{ .Parent.Name }}-{{ .Parent.Version }}"
+      namespace: stable
+      vars:
+        # it set imaga_from build argument to git@gitserver:/git/repos/app2.git Dockerfile
+        image_from: "docker-hub.stevedore.test:5000/library/alpine:3.16"
+      builder:
+        driver: docker
+        options:
+          context:
+            - git:
+                repository: git@gitserver:/git/repos/app2.git
+                reference: master
+                auth:
+                  # /app/test/client/stevedore # stevedore create credentials gitserver --private-key-file /root/.ssh/id_rsa --private-key-password password
+                  # /app/test/client/stevedore # stevedore get credentials
+                  # ID                               TYPE              CRENDENTIALS
+                  # 82e99d42ee1191bb42fbfb444920104d username-password username=admin
+                  # bb0876e6bbd033a93e5242ec916a9c03 Private key file  private_key_file=/root/.ssh/id_rsa, protected by password
+                  credentials_id: gitserver
+      parents:
+        alpine:
+          - "3.16"

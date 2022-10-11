@@ -1,0 +1,43 @@
+<div class="contact-form-container">
+  <img class='contact-form-back' src='{{ site.baseurl}}/assets/img/contact/right.svg' alt='contact-form-back' />
+  <div id="error-message"></div>
+  <form id="contact-form" method="post" target="_blank" action="https://api.formbucket.com/f/buk_eldvLHDisTrizpsFPDfOm7fY">
+    <label>Name</label>
+    <input required type="text" name="name" id="name" value="" placeholder="Jon Doe" />
+    <label>Email</label>
+    <input required type="email" name="email" value="" placeholder="John@acme.com" />
+    <label>Company</label>
+    <input type="text" name="company" placeholder="Acme, Inc." />
+    <span>Which plans are you interested in?</span>
+    <div class='radio-element'>
+        <label class="radio-label" for="pro">
+          <input class="radio-btn-contact" type="radio" id="pro" name="terratest-plan" value="terratest-pro">
+          <span class="checkmark"></span>
+        </label>
+        <label for="pro">Terratest pro</label><br>
+    </div>
+    <div class='radio-element'>
+      <label class="radio-label" for="enterprise">
+        <input class="radio-btn-contact" type="radio" id="enterprise" name="terratest-plan" value="terratest-enterprise">
+        <span class="checkmark"></span>
+      </label>
+      <label for="enterprise">Terratest enterprise</label><br>
+    </div>
+    <label>How can we help?</label>
+    <textarea id="message" name="message" rows="4" cols="50" required placeholder="Your message"></textarea>
+
+    <div class="text-center">
+      <br />
+      <button
+        type="submit"
+        id="submit-button"
+        class="btn btn-primary"
+        ga-on="click"
+        ga-event-category="contact"
+        ga-event-action="submit"
+      >
+        Submit
+      </button>
+    </div>
+  </form>
+</div>
