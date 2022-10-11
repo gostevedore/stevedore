@@ -3,8 +3,8 @@ services:
 
   docker-hub:
     image: registry:2
-    ports:
-      - 5000:5000
+    # ports:
+    #   - 5000:5000
     restart: always
     volumes:
       - ssl:/ssl:ro
@@ -20,8 +20,8 @@ services:
             
   registry:
     image: registry:2
-    ports:
-      - 443:443
+    # ports:
+    #   - 443:443
     restart: always
     environment:
       - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/data
@@ -50,8 +50,8 @@ services:
   dockerauth:
     image: cesanta/docker_auth:1
     restart: always
-    ports:
-      - "5001:5001"
+    # ports:
+    #   - "5001:5001"
     volumes:
       - ../stack/docker_auth:/config:ro
       - ssl:/ssl:ro
