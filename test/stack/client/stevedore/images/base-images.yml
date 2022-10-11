@@ -1,0 +1,32 @@
+
+images:
+  scratch:
+    latest:
+      version: "{{ .Version }}"
+      builder:
+        options:
+      persistent_vars:
+        image_from: "{{ .Name }}"
+
+  alpine:
+    "3.16":
+      registry: docker-hub.stevedore.test:5000
+      namespace: library
+      builder:
+        options:
+      persistent_vars:
+        image_from: "{{ .Name }}:{{ .Version }}"
+
+  ubuntu:
+    latest:
+      version: "{{ .Version }}"
+      builder:
+        options:
+      persistent_vars:
+        image_from: "{{ .Name }}:{{ .Version }}"
+    "20.04":
+      version: "{{ .Version }}"
+      builder:
+        options:
+      persistent_vars:
+        image_from: "{{ .Name }}:{{ .Version }}"

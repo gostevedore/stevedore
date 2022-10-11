@@ -1,0 +1,14 @@
+images:
+  app3:
+    "1.2.3":
+      registry: registry.stevedore.test
+      namespace: stable
+      version: "{{ .Version }}"
+      builder:
+        driver: docker
+        options:
+          context:
+            - path: app3
+      parents:
+        alpine:
+          - "3.16"

@@ -25,7 +25,7 @@ WORKING_DIR=`pwd`
 
 #
 # Go options
-GO_TEST_OPTS=-count=1 -parallel=4 -v
+GO_TEST_OPTS=-count=1 -parallel=4 -v -cover
 
 #
 # checksum
@@ -110,8 +110,13 @@ tar: checksum ## generate and artifact (it is recommend to use 'snapshot' target
 	tar cvzf ${ARTIFACTS_DIR}/${BINARY}-${VERSION}.tar.gz bin/${BINARY} bin/${BINARY}.${CHECKSUM_EXT}
 	rm -rf bin/${BINARY} bin/${BINARY}.${CHECKSUM_EXT}
 
-test: ## execute all tests
-	go test ${GO_TEST_OPTS} ./...
+unit-test: ## execute unit tests
+	go test ${GO_TEST_OPTS} ./internal/...
+
+functional-test: ## execute functional tests
+	go test ${GO_TEST_OPTS} ./test/functional/...
+
+tests: unit-tests functional-test ## execute all tests
 
 vet: ## execute go vet
 	go vet ${LDFLAGS} ./...
