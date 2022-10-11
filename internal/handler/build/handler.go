@@ -61,6 +61,7 @@ func (h *Handler) Handler(ctx context.Context, imageName string, options *Option
 	buildServiceOptions.ImageRegistryHost = options.ImageRegistryHost
 	buildServiceOptions.ImageRegistryNamespace = options.ImageRegistryNamespace
 	buildServiceOptions.ImageVersions = append([]string{}, options.Versions...)
+	buildServiceOptions.SemanticVersionTagsTemplates = append([]string{}, options.SemanticVersionTagsTemplates...)
 
 	buildServiceOptions.Labels = make(map[string]string)
 	for _, label := range options.Labels {
