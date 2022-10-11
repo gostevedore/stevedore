@@ -1,12 +1,15 @@
 package dryrun
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
+	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
 )
 
 // DryRunDriver is a driver that just simulates the build process
@@ -53,7 +56,31 @@ func (d *DryRunDriver) Build(ctx context.Context, i *image.Image, options *image
 	fmt.Fprintln(d.write, fmt.Sprintf(" version: %v", i.Version))
 	if options != nil {
 		fmt.Fprintln(d.write, " options:")
-		fmt.Fprintln(d.write, options)
+
+		scanner := bufio.NewScanner(strings.NewReader(options.String()))
+		for scanner.Scan() {
+			fmt.Fprintln(d.write, fmt.Sprintf("  %s", scanner.Text()))
+		}
+	}
+
+	if i.Parent != nil {
+		fmt.Fprintln(d.write, " parent builder vars mapping:")
+
+		if i.Parent.RegistryNamespace != "" {
+			fmt.Fprintln(d.write, fmt.Sprintf("  %s: %s", options.BuilderVarMappings[varsmap.VarMappingImageFromRegistryNamespaceKey], i.Parent.RegistryNamespace))
+		}
+
+		if i.Parent.Name != "" {
+			fmt.Fprintln(d.write, fmt.Sprintf("  %s: %s", options.BuilderVarMappings[varsmap.VarMappingImageFromNameKey], i.Parent.Name))
+		}
+
+		if i.Parent.Version != "" {
+			fmt.Fprintln(d.write, fmt.Sprintf("  %s: %s", options.BuilderVarMappings[varsmap.VarMappingImageFromTagKey], i.Parent.Version))
+		}
+
+		if i.Parent.RegistryHost != "" {
+			fmt.Fprintln(d.write, fmt.Sprintf("  %s: %s", options.BuilderVarMappings[varsmap.VarMappingImageFromRegistryHostKey], i.Parent.RegistryHost))
+		}
 	}
 
 	fmt.Fprintln(d.write)
