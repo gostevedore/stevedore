@@ -310,3 +310,45 @@ func TestIsWildcardImage(t *testing.T) {
 		})
 	}
 }
+
+func TestParse(t *testing.T) {
+	tests := []struct {
+		desc string
+		name string
+		res  *Image
+		err  error
+	}{
+		{
+			desc: "Testing parse image name with colom on its name",
+			name: "myregistry.test:5000/stable/image:version",
+			err:  &errors.Error{},
+			res: &Image{
+				Name:              "image",
+				Version:           "version",
+				RegistryNamespace: "stable",
+				RegistryHost:      "myregistry.test:5000",
+			},
+		},
+		{
+			desc: "Testing parse image name with colom on its name",
+			name: "image:version",
+			err:  &errors.Error{},
+			res: &Image{
+				Name:              "image",
+				Version:           "version",
+				RegistryNamespace: "library",
+				RegistryHost:      "docker.io",
+			},
+		},
+	}
+
+	for _, test := range tests {
+
+		res, err := Parse(test.name)
+		if err != nil {
+			assert.Equal(t, test.err, err)
+		} else {
+			assert.Equal(t, test.res, res)
+		}
+	}
+}
