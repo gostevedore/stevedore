@@ -343,7 +343,6 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 		return errors.New(errContext, "", err)
 	}
 
-	fmt.Println(">>>", imageTreeAux.Images)
 	for name, images := range imageTreeAux.Images {
 
 		if !isAValidName(name) {
