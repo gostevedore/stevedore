@@ -4,9 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	// "github.com/gruntwork-io/terratest/modules/docker"
 	"github.com/gostevedore/stevedore/pkg/terratest/modules/docker"
-
 	"github.com/stretchr/testify/suite"
 )
 

@@ -44,7 +44,6 @@ func NewStore(render repository.Renderer) *Store {
 // Store adds an image to the store
 func (s *Store) Store(name string, version string, i *image.Image) error {
 	var err error
-	//var renderedImage *image.Image
 	errContext := "(store::Store)"
 
 	if s.render == nil {
