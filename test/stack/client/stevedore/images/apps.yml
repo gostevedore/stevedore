@@ -4,6 +4,8 @@ images:
       registry: registry.stevedore.test
       namespace: stable
       version: "{{ .Version }}-{{ .Parent.Name }}-{{ .Parent.Version }}"
+      vars:
+        golang_version: "1.19"
       builder:
         driver: docker
         options:

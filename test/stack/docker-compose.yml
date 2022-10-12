@@ -8,7 +8,6 @@ services:
     restart: always
     volumes:
       - ssl:/ssl:ro
-      - ./files/docker-hub-storage:/var/lib/registry
     networks:
       default:
         aliases:
@@ -70,6 +69,7 @@ services:
       - ssh:/root/.ssh
       - ./client/docker/daemon.json:/etc/docker/daemon.json
       - ./client/stevedore:/stevedore
+      - ./client/prepare-images.sh:/prepare-images.sh
     depends_on:
       - gitserver
 

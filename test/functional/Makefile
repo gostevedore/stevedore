@@ -4,6 +4,7 @@ help: ## list allowed targets
 
 start: cleanup generate-keys generate-certs ## start docker registry
 	docker compose -p stevedore-functional-test-manual up -d --build registry docker-hub gitserver stevedore
+	docker compose -p stevedore-functional-test-manual run stevedore /prepare-images.sh
 
 cleanup: cleanup-certs ## cleanup example environment
 	docker compose -p stevedore-functional-test-manual down -v --remove-orphans

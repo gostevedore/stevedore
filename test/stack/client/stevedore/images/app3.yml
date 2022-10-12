@@ -10,5 +10,5 @@ images:
           context:
             - path: app3
       parents:
-        alpine:
-          - "3.16"
+        busybox:
+          - latest

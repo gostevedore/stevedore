@@ -2,4 +2,4 @@ ARG image_from
 
 FROM ${image_from}
 
-CMD ["echo","app3"]
+CMD ["echo","app3!"]

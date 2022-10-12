@@ -8,6 +8,15 @@ images:
       persistent_vars:
         image_from: "{{ .Name }}"
 
+  busybox:
+    latest:
+      registry: docker-hub.stevedore.test:5000
+      namespace: library
+      builder:
+        options:
+      persistent_vars:
+        image_from: "docker-hub.stevedore.test:5000/library/{{ .Name }}:{{ .Version }}"
+
   alpine:
     "3.16":
       registry: docker-hub.stevedore.test:5000
@@ -15,18 +24,22 @@ images:
       builder:
         options:
       persistent_vars:
-        image_from: "{{ .Name }}:{{ .Version }}"
+        image_from: "docker-hub.stevedore.test:5000/library/{{ .Name }}:{{ .Version }}"
 
   ubuntu:
     latest:
       version: "{{ .Version }}"
+      registry: docker-hub.stevedore.test:5000
+      namespace: library
       builder:
         options:
       persistent_vars:
-        image_from: "{{ .Name }}:{{ .Version }}"
+        image_from: "docker-hub.stevedore.test:5000/library/{{ .Name }}:{{ .Version }}"
     "20.04":
       version: "{{ .Version }}"
+      registry: docker-hub.stevedore.test:5000
+      namespace: library
       builder:
         options:
       persistent_vars:
-        image_from: "{{ .Name }}:{{ .Version }}"
+        image_from: "docker-hub.stevedore.test:5000/library/{{ .Name }}:{{ .Version }}"
