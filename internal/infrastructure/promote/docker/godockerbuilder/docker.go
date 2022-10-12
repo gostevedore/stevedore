@@ -7,8 +7,6 @@ import (
 	transformer "github.com/apenella/go-common-utils/transformer/string"
 	"github.com/apenella/go-docker-builder/pkg/copy"
 	"github.com/apenella/go-docker-builder/pkg/response"
-	// "github.com/apenella/go-docker-builder/pkg/copy"
-	// "github.com/apenella/go-docker-builder/pkg/response"
 )
 
 // DockerCopier

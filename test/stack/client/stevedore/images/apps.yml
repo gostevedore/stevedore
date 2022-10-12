@@ -24,7 +24,7 @@ images:
       version: "{{ .Version }}-{{ .Parent.Name }}-{{ .Parent.Version }}"
       namespace: stable
       vars:
-        # it set imaga_from build argument to git@gitserver:/git/repos/app2.git Dockerfile
+        # it sets imaga_from build argument to git@gitserver:/git/repos/app2.git Dockerfile
         image_from: "docker-hub.stevedore.test:5000/library/alpine:3.16"
       builder:
         driver: docker
