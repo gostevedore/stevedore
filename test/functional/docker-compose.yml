@@ -8,7 +8,6 @@ services:
     restart: always
     volumes:
       - ssl:/ssl:ro
-      - ../stack/files/docker-hub-storage:/var/lib/registry
     networks:
       default:
         aliases:
@@ -16,7 +15,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 10M
+          memory: 60M
             
   registry:
     image: registry:2
@@ -45,7 +44,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 50M
+          memory: 60M
 
   dockerauth:
     image: cesanta/docker_auth:1
@@ -83,6 +82,7 @@ services:
       - ../stack/client/docker/daemon.json:/etc/docker/daemon.json
       - ../stack/client/docker/config.json:/root/.docker/config.json
       - ../stack/client/stevedore:/stevedore
+      - ../stack/client/prepare-images.sh:/prepare-images.sh
     depends_on:
       - gitserver
     deploy:

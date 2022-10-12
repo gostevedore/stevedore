@@ -1,6 +1,7 @@
 ARG image_from
+ARG golang_version
 
-FROM golang:alpine AS build
+FROM docker-hub.stevedore.test:5000/library/golang:${golang_version}-alpine AS build
 
 WORKDIR /usr/src/app
 COPY . ./
