@@ -20,30 +20,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// func TestExecute(t *testing.T) {
-// 	tests := []struct {
-// 		desc              string
-// 		entrypoint        *CreateCredentialsEntrypoint
-// 		entrypointOptions *Options
-// 		handlerOptions    *handler.Options
-// 		args              []string
-// 		conf              *configuration.Configuration
-// 		err               error
-// 	}{}
-
-// 	for _, test := range tests {
-// 		t.Run(test.desc, func(t *testing.T) {
-// 			t.Log(test.desc)
-
-// 			err := test.entrypoint.Execute(context.TODO(), test.args, test.conf, test.entrypointOptions, test.handlerOptions)
-// 			if err != nil {
-// 				assert.Equal(t, test.err, err)
-// 			}
-// 		})
-// 	}
-// 	assert.True(t, false)
-// }
-
 func TestPrepareCredentialsId(t *testing.T) {
 	errContext := "(create::credentials::entrypoint:::prepareCredentialsId)"
 
@@ -121,14 +97,8 @@ func TestGetPassword(t *testing.T) {
 		err               error
 	}{
 		{
-			desc:       "Testing error on create credentials entrypoint get password method when options is not provided",
-			entrypoint: NewCreateCredentialsEntrypoint(),
-			err:        errors.New(errContext, "Entrypoint options must be provided to execute create credentials entrypoint"),
-		},
-		{
 			desc:       "Testing error on create credentials entrypoint get password method when console is not provided",
 			entrypoint: NewCreateCredentialsEntrypoint(),
-			options:    &Options{},
 			err:        errors.New(errContext, "Console must be provided to execute create credentials entrypoint"),
 		},
 		{
@@ -136,7 +106,6 @@ func TestGetPassword(t *testing.T) {
 			entrypoint: NewCreateCredentialsEntrypoint(
 				WithConsole(console.NewMockConsole()),
 			),
-			options: &Options{},
 			prepareAssertFunc: func(e *CreateCredentialsEntrypoint) {
 				e.console.(*console.MockConsole).On("ReadPassword", getPasswordInputMessage).Return("p4ssw0rd", nil)
 				e.console.(*console.MockConsole).On("Write", []byte(fmt.Sprintln())).Return(0, nil)
@@ -153,7 +122,7 @@ func TestGetPassword(t *testing.T) {
 				test.prepareAssertFunc(test.entrypoint)
 			}
 
-			res, err := test.entrypoint.getPassword(test.options)
+			res, err := test.entrypoint.getPassword()
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {
@@ -169,20 +138,13 @@ func TestGetAWSSecretAccessKey(t *testing.T) {
 	tests := []struct {
 		desc              string
 		entrypoint        *CreateCredentialsEntrypoint
-		options           *Options
 		prepareAssertFunc func(*CreateCredentialsEntrypoint)
 		res               string
 		err               error
 	}{
 		{
-			desc:       "Testing error on create credentials entrypoint get aws secret access key method when options is not provided",
-			entrypoint: NewCreateCredentialsEntrypoint(),
-			err:        errors.New(errContext, "Entrypoint options must be provided to execute create credentials entrypoint"),
-		},
-		{
 			desc:       "Testing error on create credentials entrypoint get aws secret access key method when console is not provided",
 			entrypoint: NewCreateCredentialsEntrypoint(),
-			options:    &Options{},
 			err:        errors.New(errContext, "Console must be provided to execute create credentials entrypoint"),
 		},
 		{
@@ -190,7 +152,6 @@ func TestGetAWSSecretAccessKey(t *testing.T) {
 			entrypoint: NewCreateCredentialsEntrypoint(
 				WithConsole(console.NewMockConsole()),
 			),
-			options: &Options{},
 			prepareAssertFunc: func(e *CreateCredentialsEntrypoint) {
 				e.console.(*console.MockConsole).On("ReadPassword", getAWSSecretAccessKeyInputMessage).Return("s3cret", nil)
 				e.console.(*console.MockConsole).On("Write", []byte(fmt.Sprintln())).Return(0, nil)
@@ -207,7 +168,7 @@ func TestGetAWSSecretAccessKey(t *testing.T) {
 				test.prepareAssertFunc(test.entrypoint)
 			}
 
-			res, err := test.entrypoint.getAWSSecretAccessKey(test.options)
+			res, err := test.entrypoint.getAWSSecretAccessKey()
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {
@@ -223,31 +184,21 @@ func TestPrepareHandlerOptions(t *testing.T) {
 	tests := []struct {
 		desc              string
 		entrypoint        *CreateCredentialsEntrypoint
-		entrypointOptions *Options
 		handlerOptions    *handler.Options
 		prepareAssertFunc func(*CreateCredentialsEntrypoint)
 		res               *handler.Options
 		err               error
 	}{
 		{
-			desc:       "Testing error on create credentials entrypoint prepare handler options method when entrypoint options are not provided",
+			desc:       "Testing error on create credentials entrypoint prepare handler options method when handler options are not provided",
 			entrypoint: NewCreateCredentialsEntrypoint(),
-			err:        errors.New(errContext, "Entrypoint options must be provided to execute create credentials entrypoint"),
+			err:        errors.New(errContext, "Handler options must be provided to execute create credentials entrypoint"),
 		},
 		{
-			desc:              "Testing error on create credentials entrypoint prepare handler options method when handler options are not provided",
-			entrypoint:        NewCreateCredentialsEntrypoint(),
-			entrypointOptions: &Options{},
-			err:               errors.New(errContext, "Handler options must be provided to execute create credentials entrypoint"),
-		},
-		{
-			desc: "Testing create credentials entrypoint prepare handler options method when ask for password is enable",
+			desc: "Testing create credentials entrypoint prepare handler options method when ask for password is enabled",
 			entrypoint: NewCreateCredentialsEntrypoint(
 				WithConsole(console.NewMockConsole()),
 			),
-			entrypointOptions: &Options{
-				AskPassword: true,
-			},
 			handlerOptions: &handler.Options{
 				Username: "username",
 			},
@@ -262,13 +213,10 @@ func TestPrepareHandlerOptions(t *testing.T) {
 			err: &errors.Error{},
 		},
 		{
-			desc: "Testing create credentials entrypoint prepare handler options method when ask for aws secret access key is enable",
+			desc: "Testing create credentials entrypoint prepare handler options method when ask for aws secret access key is enabled",
 			entrypoint: NewCreateCredentialsEntrypoint(
 				WithConsole(console.NewMockConsole()),
 			),
-			entrypointOptions: &Options{
-				AskAWSSecretAccessKey: true,
-			},
 			handlerOptions: &handler.Options{
 				AWSAccessKeyID:            "AWSAccessKeyID",
 				AWSSharedConfigFiles:      []string{"file"},
@@ -295,7 +243,7 @@ func TestPrepareHandlerOptions(t *testing.T) {
 				test.prepareAssertFunc(test.entrypoint)
 			}
 
-			res, err := test.entrypoint.prepareHandlerOptions(test.entrypointOptions, test.handlerOptions)
+			res, err := test.entrypoint.prepareHandlerOptions(test.handlerOptions)
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {

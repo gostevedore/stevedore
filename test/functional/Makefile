@@ -4,6 +4,8 @@ help: ## list allowed targets
 
 start: cleanup generate-keys generate-certs ## start docker registry
 	docker compose -p stevedore-functional-test-manual up -d --build registry docker-hub gitserver stevedore
+
+prepare-images:
 	docker compose -p stevedore-functional-test-manual run stevedore /prepare-images.sh
 
 cleanup: cleanup-certs ## cleanup example environment
@@ -22,7 +24,11 @@ generate-certs: cleanup-certs ## generate certificate for stevedore.test
 cleanup-certs: ## cleanup certificates
 	@docker compose -p stevedore-functional-test-manual run --rm --entrypoint /bin/sh openssl -c 'rm -rf $$(ls)'
 
-attach-client: start ## attach to client container
+attach-client: start prepare-images ## attach to client container preloading docker images
+	docker compose -p stevedore-functional-test-manual build stevedore
+	docker compose -p stevedore-functional-test-manual run -w /app/test/stack/client/stevedore stevedore sh
+
+attach-client-no-images: start ## attach to client container
 #attach-client: ## attach to client container
 	docker compose -p stevedore-functional-test-manual build stevedore
 	docker compose -p stevedore-functional-test-manual run -w /app/test/stack/client/stevedore stevedore sh

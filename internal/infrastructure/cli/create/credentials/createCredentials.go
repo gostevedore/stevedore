@@ -39,12 +39,6 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, config *conf
 			handlerOptions := &handler.Options{}
 			entrypointOptions := &entrypoint.Options{}
 
-			if createCredentialsFlagOptions.AskAWSSecretAccessKey {
-				entrypointOptions.AskAWSSecretAccessKey = createCredentialsFlagOptions.AskAWSSecretAccessKey
-			}
-			if createCredentialsFlagOptions.AskPassword {
-				entrypointOptions.AskPassword = createCredentialsFlagOptions.AskPassword
-			}
 			if createCredentialsFlagOptions.LocalStoragePath != "" {
 				entrypointOptions.LocalStoragePath = createCredentialsFlagOptions.LocalStoragePath
 			}
@@ -109,12 +103,10 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, config *conf
 	}
 
 	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.AllowUseSSHAgent, "allow-use-ssh-agent", false, "When is used that flag, is allowed to use ssh-agent")
-	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.AskAWSSecretAccessKey, "aws-secret-access-key", false, "When is used that flag, the user is asked for an AWS Secret Access Key to achieve credentials from AWS")
-	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.AskPassword, "password", false, "When is used that flag, the user is asked for basic auth method password")
 	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.AWSUseDefaultCredentialsChain, "aws-use-default-credentials-chain", false, "When is used that flag, AWS default credentials chain is used to achieve credentials from AWS")
 	createCredentialsCmd.Flags().StringSliceVar(&createCredentialsFlagOptions.AWSSharedConfigFiles, "aws-shared-config-files", []string{}, "List of AWS shared config files to achieve credentials from AWS")
 	createCredentialsCmd.Flags().StringSliceVar(&createCredentialsFlagOptions.AWSSharedCredentialsFiles, "aws-shared-credentials-files", []string{}, "List AWS shared credentials files to achieve credentials from AWS")
-	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.AWSAccessKeyID, "aws-access-key-id", "", "AWS Access Key ID to achieve credentials from AWS to achieve credentials from AWS")
+	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.AWSAccessKeyID, "aws-access-key-id", "", "AWS Access Key ID to achieve credentials from AWS to achieve credentials from AWS. AWS Secret asked key is going to be requested")
 	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.AWSProfile, "aws-profile", "", "AWS Profile to achieve credentials from AWS")
 	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.AWSRegion, "aws-region", "", "AWS Region to achieve credentials from AWS")
 	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.AWSRoleARN, "aws-role-arn", "", "AWS Role ARN to achieve credentials from AWS")
@@ -122,7 +114,7 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, config *conf
 	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.LocalStoragePath, "local-storage-path", "", "Path where credentials are stored locally, using local storage type")
 	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.PrivateKeyFile, "private-key-file", "", "Private Key File")
 	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.PrivateKeyPassword, "private-key-password", "", "Private Key Password")
-	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.Username, "username", "", "Username for basic auth method")
+	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.Username, "username", "", "Username for basic auth method. Password is going to be requested")
 	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.Force, "force", false, "When is enabled the flag, credentials creation is forced. It overwrites the existing value")
 
 	createCredentialsCmd.Flags().StringVarP(&createCredentialsFlagOptions.DEPRECATEDDockerRegistryCredentialsDir, "credentials-dir", "d", "", DeprecatedFlagMessageDockerRegistryCredentialsDir)
