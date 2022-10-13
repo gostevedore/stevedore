@@ -185,6 +185,7 @@ func TestPrepareHandlerOptions(t *testing.T) {
 		desc              string
 		entrypoint        *CreateCredentialsEntrypoint
 		handlerOptions    *handler.Options
+		entrypointOptions *Options
 		prepareAssertFunc func(*CreateCredentialsEntrypoint)
 		res               *handler.Options
 		err               error
@@ -195,10 +196,17 @@ func TestPrepareHandlerOptions(t *testing.T) {
 			err:        errors.New(errContext, "Handler options must be provided to execute create credentials entrypoint"),
 		},
 		{
+			desc:           "Testing error on create credentials entrypoint prepare handler options method when entrypoint options are not provided",
+			entrypoint:     NewCreateCredentialsEntrypoint(),
+			handlerOptions: &handler.Options{},
+			err:            errors.New(errContext, "Entrypoint options must be provided to execute create credentials entrypoint"),
+		},
+		{
 			desc: "Testing create credentials entrypoint prepare handler options method when ask for password is enabled",
 			entrypoint: NewCreateCredentialsEntrypoint(
 				WithConsole(console.NewMockConsole()),
 			),
+			entrypointOptions: &Options{},
 			handlerOptions: &handler.Options{
 				Username: "username",
 			},
@@ -217,6 +225,7 @@ func TestPrepareHandlerOptions(t *testing.T) {
 			entrypoint: NewCreateCredentialsEntrypoint(
 				WithConsole(console.NewMockConsole()),
 			),
+			entrypointOptions: &Options{},
 			handlerOptions: &handler.Options{
 				AWSAccessKeyID:            "AWSAccessKeyID",
 				AWSSharedConfigFiles:      []string{"file"},
@@ -234,6 +243,27 @@ func TestPrepareHandlerOptions(t *testing.T) {
 			},
 			err: &errors.Error{},
 		},
+		{
+			desc: "Testing create credentials entrypoint prepare handler options method when ask for private key password is enabled",
+			entrypoint: NewCreateCredentialsEntrypoint(
+				WithConsole(console.NewMockConsole()),
+			),
+			entrypointOptions: &Options{
+				AskPrivateKeyPassword: true,
+			},
+			handlerOptions: &handler.Options{
+				PrivateKeyFile: "file",
+			},
+			res: &handler.Options{
+				PrivateKeyFile:     "file",
+				PrivateKeyPassword: "password",
+			},
+			prepareAssertFunc: func(e *CreateCredentialsEntrypoint) {
+				e.console.(*console.MockConsole).On("ReadPassword", getPrivateKeyPasswordInputMessage).Return("password", nil)
+				e.console.(*console.MockConsole).On("Write", []byte(fmt.Sprintln())).Return(0, nil)
+			},
+			err: &errors.Error{},
+		},
 	}
 
 	for _, test := range tests {
@@ -243,7 +273,7 @@ func TestPrepareHandlerOptions(t *testing.T) {
 				test.prepareAssertFunc(test.entrypoint)
 			}
 
-			res, err := test.entrypoint.prepareHandlerOptions(test.handlerOptions)
+			res, err := test.entrypoint.prepareHandlerOptions(test.entrypointOptions, test.handlerOptions)
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {

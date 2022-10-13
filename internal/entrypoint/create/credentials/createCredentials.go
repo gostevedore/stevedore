@@ -20,6 +20,7 @@ import (
 const (
 	getPasswordInputMessage           = "Password: "
 	getAWSSecretAccessKeyInputMessage = "AWS Secret Access Key: "
+	getPrivateKeyPasswordInputMessage = "Password: "
 )
 
 // OptionsFunc defines the signature for an option function to set entrypoint attributes
@@ -87,7 +88,7 @@ func (e *CreateCredentialsEntrypoint) Execute(
 		return errors.New(errContext, "", err)
 	}
 
-	handlerOptions, err = e.prepareHandlerOptions(inputHandlerOptions)
+	handlerOptions, err = e.prepareHandlerOptions(inputEntrypointOptions, inputHandlerOptions)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -202,18 +203,39 @@ func (e *CreateCredentialsEntrypoint) getAWSSecretAccessKey() (string, error) {
 	fmt.Fprintln(e.console)
 
 	return awsSecretAccessKey, nil
+}
 
+// getPrivateKeyPassword ask for private key password
+func (e *CreateCredentialsEntrypoint) getPrivateKeyPassword() (string, error) {
+
+	errContext := "(create::credentials::entrypoint::getPrivateKeyPassword)"
+
+	if e.console == nil {
+		return "", errors.New(errContext, "Console must be provided to execute create credentials entrypoint")
+	}
+
+	privateKeyPassword, err := e.console.ReadPassword(getPrivateKeyPasswordInputMessage)
+	if err != nil {
+		return "", errors.New(errContext, "Error reading private key password", err)
+	}
+	fmt.Fprintln(e.console)
+
+	return privateKeyPassword, nil
 }
 
 // prepareHandlerOptions set handler options before execute the handler
-func (e *CreateCredentialsEntrypoint) prepareHandlerOptions(inputHandlerOptions *handler.Options) (*handler.Options, error) {
-	var password, awsSecretAccessKey string
+func (e *CreateCredentialsEntrypoint) prepareHandlerOptions(inputEntrypointOptions *Options, inputHandlerOptions *handler.Options) (*handler.Options, error) {
+	var password, awsSecretAccessKey, privateKeyPassword string
 	var err error
 
 	errContext := "(create::credentials::entrypoint::prepareHandlerOptions)"
 
 	if inputHandlerOptions == nil {
 		return nil, errors.New(errContext, "Handler options must be provided to execute create credentials entrypoint")
+	}
+
+	if inputEntrypointOptions == nil {
+		return nil, errors.New(errContext, "Entrypoint options must be provided to execute create credentials entrypoint")
 	}
 
 	options := &handler.Options{}
@@ -248,6 +270,14 @@ func (e *CreateCredentialsEntrypoint) prepareHandlerOptions(inputHandlerOptions 
 			return nil, errors.New(errContext, "", err)
 		}
 		options.AWSSecretAccessKey = awsSecretAccessKey
+	}
+
+	if inputEntrypointOptions.AskPrivateKeyPassword {
+		privateKeyPassword, err = e.getPrivateKeyPassword()
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
+		options.PrivateKeyPassword = privateKeyPassword
 	}
 
 	return options, nil

@@ -140,54 +140,51 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 		},
 	}
 
+	buildCmd.Flags().BoolVar(&buildFlagOptions.DEPRECATEDCascade, "cascade", false, DeprecatedFlagMessageCascade)
 	buildCmd.Flags().BoolVar(&buildFlagOptions.DEPRECATEDConnectionLocal, "connection-local", false, DeprecatedFlagMessageConnectionLocal)
+	buildCmd.Flags().IntVar(&buildFlagOptions.DEPRECATEDNumWorkers, "num-workers", 0, DeprecatedFlagMessageNumWorkers)
+	buildCmd.Flags().StringSliceVar(&buildFlagOptions.DEPRECATEDSet, "set", []string{}, DeprecatedFlagMessageSet)
+	buildCmd.Flags().StringSliceVar(&buildFlagOptions.DEPRECATEDSetPersistent, "set-persistent", []string{}, DeprecatedFlagMessageSetPersistent)
 	buildCmd.Flags().StringVar(&buildFlagOptions.DEPRECATEDBuildBuilderName, "builder-name", "", DeprecatedFlagMessageBuildBuilderName)
+	buildCmd.Flags().StringVar(&buildFlagOptions.DEPRECATEDImageFrom, "image-from", "", DeprecatedFlagMessageImageFrom)
 	buildCmd.Flags().StringVar(&buildFlagOptions.DEPRECATEDInventory, "inventory", "", DeprecatedFlagMessageInventory)
 	buildCmd.Flags().StringVar(&buildFlagOptions.DEPRECATEDLimit, "limit", "", DeprecatedFlagMessageLimit)
-	buildCmd.Flags().StringVar(&buildFlagOptions.DEPRECATEDImageFrom, "image-from", "", DeprecatedFlagMessageImageFrom)
-	buildCmd.Flags().StringVar(&buildFlagOptions.DEPRECATEDRegistry, "registry", "", DeprecatedFlagMessageRegistry)
 	buildCmd.Flags().StringVar(&buildFlagOptions.DEPRECATEDNamespace, "namespace", "", DeprecatedFlagMessageNamespace)
-	buildCmd.Flags().StringSliceVar(&buildFlagOptions.DEPRECATEDSetPersistent, "set-persistent", []string{}, DeprecatedFlagMessageSetPersistent)
-	buildCmd.Flags().StringSliceVar(&buildFlagOptions.DEPRECATEDSet, "set", []string{}, DeprecatedFlagMessageSet)
-	buildCmd.Flags().BoolVar(&buildFlagOptions.DEPRECATEDCascade, "cascade", false, DeprecatedFlagMessageCascade)
-	buildCmd.Flags().IntVar(&buildFlagOptions.DEPRECATEDNumWorkers, "num-workers", 0, DeprecatedFlagMessageNumWorkers)
+	buildCmd.Flags().StringVar(&buildFlagOptions.DEPRECATEDRegistry, "registry", "", DeprecatedFlagMessageRegistry)
 
 	// ansible driver flags
-	buildCmd.Flags().BoolVar(&buildFlagOptions.AnsibleConnectionLocal, "ansible-connection-local", false, "Use ansible local connection [only applies to ansible-playbook driver]")
+	buildCmd.Flags().BoolVar(&buildFlagOptions.AnsibleConnectionLocal, "ansible-connection-local", false, "When this flag is enabled, ansible uses local connection [only applies to ansible-playbook driver]")
 	buildCmd.Flags().StringVar(&buildFlagOptions.AnsibleIntermediateContainerName, "ansible-intermediate-container-name", "", "Name of an intermediate container that can be used during ansible build process [only applies to ansible-playbook driver]")
 	buildCmd.Flags().StringVar(&buildFlagOptions.AnsibleInventoryPath, "ansible-inventory-path", "", "Specify inventory hosts' path or comma separated list of hosts [only applies to ansible-playbook driver]")
 	buildCmd.Flags().StringVar(&buildFlagOptions.AnsibleLimit, "ansible-limit", "", "Further limit selected hosts to an additional pattern [only applies to ansible-playbook driver]")
 
 	// image definition flags
+	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.ImageVersions, "image-version", "v", []string{}, "List of versions to build")
+	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.Labels, "label", "l", []string{}, "List of labels to assign to the image")
+	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.PersistentVars, "persistent-variable", "p", []string{}, "List of persistent variables to set during the build process. Persistent variable that child image inherits from its parent and could not be override. The format of each variable must be <key>=<value>")
+	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.SemanticVersionTagsTemplates, "semver-tags-template", "T", []string{}, "List of templates to generate tags following semantic version expression")
+	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.Tags, "tag", "t", []string{}, "List of extra tags to generate")
+	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.Vars, "variable", "x", []string{}, "Variables to set during the build process. The format of each variable must be <key>=<value>")
 	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageFromName, "image-from-name", "I", "", "Image parent's name")
-	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageFromRegistryNamespace, "image-from-namespace", "N", "", "Image parent's registry namespace")
 	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageFromRegistryHost, "image-from-registry", "R", "", "Image parent's registry host")
+	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageFromRegistryNamespace, "image-from-namespace", "N", "", "Image parent's registry namespace")
 	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageFromVersion, "image-from-version", "V", "", "Image parent's version")
-
 	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageName, "image-name", "i", "", "Image name. Its value overrides the name on the images tree definition")
 	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageRegistryHost, "image-registry-host", "r", "", "Image registry host")
 	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageRegistryNamespace, "image-registry-namespace", "n", "", "Image namespace")
-	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.ImageVersions, "image-version", "v", []string{}, "List of versions to build")
-
-	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.PersistentVars, "persistent-variable", "p", []string{}, "List of persistent variables to set during the build process. Persistent variable that child image inherits from its parent and could not be override. The format of each variable must be <key>=<value>")
-	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.Vars, "variable", "x", []string{}, "Variables to set during the build process. The format of each variable must be <key>=<value>")
-	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.Tags, "tag", "t", []string{}, "List of extra tags to generate")
-	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.Labels, "label", "l", []string{}, "List of labels to assign to the image")
-	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.SemanticVersionTagsTemplates, "semver-tags-template", "T", []string{}, "List of templates to generate tags following semantic version expression")
 
 	// behavior flags
-	buildCmd.Flags().BoolVar(&buildFlagOptions.BuildOnCascade, "build-on-cascade", false, "Build images on cascade. Children's image build is started once the image build finishes")
-	buildCmd.Flags().IntVar(&buildFlagOptions.CascadeDepth, "cascade-depth", -1, "Number images levels to build when build on cascade is executed")
+	buildCmd.Flags().BoolVar(&buildFlagOptions.BuildOnCascade, "build-on-cascade", false, "When this flag is enabled, children images are also built")
+	buildCmd.Flags().IntVar(&buildFlagOptions.CascadeDepth, "cascade-depth", -1, "Number children levels to build when build on cascade is executed")
 	buildCmd.Flags().IntVar(&buildFlagOptions.Concurrency, "concurrency", 0, "Number of images builds that can be excuted at the same time")
 
 	// buildCmd.Flags().BoolVar(&buildFlagOptions.Debug, "debug", false, "Enable debug mode to show build options")
-	buildCmd.Flags().BoolVar(&buildFlagOptions.DryRun, "dry-run", false, "Run build on dry-run mode")
-	buildCmd.Flags().BoolVar(&buildFlagOptions.EnableSemanticVersionTags, "enable-semver-tags", false, "Generate a set of tags for the image based on the semantic version tree when main version is semver 2.0.0 compliance")
-	buildCmd.Flags().BoolVar(&buildFlagOptions.PullParentImage, "pull-parent-image", false, "When is defined parent image is pulled from docker registry")
-	buildCmd.Flags().BoolVar(&buildFlagOptions.PushImagesAfterBuild, "push-after-build", false, "When is defined the image is pushed to docker registry after the build")
-
 	buildCmd.Flags().BoolVar(&buildFlagOptions.DEPRECATEDPushImages, "no-push", false, DeprecatedFlagMessagePushImages)
-	buildCmd.Flags().BoolVar(&buildFlagOptions.RemoveImagesAfterPush, "remove-local-images-after-push", false, "When is defined images are removed from local after push")
+	buildCmd.Flags().BoolVar(&buildFlagOptions.DryRun, "dry-run", false, "When this flag is enabled, the built is executed in dry-run mode")
+	buildCmd.Flags().BoolVar(&buildFlagOptions.EnableSemanticVersionTags, "enable-semver-tags", false, "When this flag is enabled, and main version is semver 2.0.0 compliance extra tag are created based on the semantic version tree")
+	buildCmd.Flags().BoolVar(&buildFlagOptions.PullParentImage, "pull-parent-image", false, "When this flag is enabled, parent image is pulled from docker registry")
+	buildCmd.Flags().BoolVar(&buildFlagOptions.PushImagesAfterBuild, "push-after-build", false, "When this flag is enabled, the image is pushed to docker registry after the build")
+	buildCmd.Flags().BoolVar(&buildFlagOptions.RemoveImagesAfterPush, "remove-local-images-after-push", false, "When this flag is enabled, images are removed from local after push")
 
 	command := &command.StevedoreCommand{
 		Command: buildCmd,
