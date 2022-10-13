@@ -45,6 +45,9 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, config *conf
 			if createCredentialsFlagOptions.Force {
 				entrypointOptions.ForceCreate = createCredentialsFlagOptions.Force
 			}
+			if createCredentialsFlagOptions.AskPrivateKeyPassword {
+				entrypointOptions.AskPrivateKeyPassword = createCredentialsFlagOptions.AskPrivateKeyPassword
+			}
 
 			if createCredentialsFlagOptions.AllowUseSSHAgent {
 				handlerOptions.AllowUseSSHAgent = createCredentialsFlagOptions.AllowUseSSHAgent
@@ -76,9 +79,6 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, config *conf
 			if createCredentialsFlagOptions.PrivateKeyFile != "" {
 				handlerOptions.PrivateKeyFile = createCredentialsFlagOptions.PrivateKeyFile
 			}
-			if createCredentialsFlagOptions.PrivateKeyPassword != "" {
-				handlerOptions.PrivateKeyPassword = createCredentialsFlagOptions.PrivateKeyPassword
-			}
 			if createCredentialsFlagOptions.Username != "" {
 				handlerOptions.Username = createCredentialsFlagOptions.Username
 			}
@@ -102,8 +102,10 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, config *conf
 		},
 	}
 
-	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.AllowUseSSHAgent, "allow-use-ssh-agent", false, "When is used that flag, is allowed to use ssh-agent")
+	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.AllowUseSSHAgent, "allow-use-ssh-agent", false, "When this flag is enabled, is allowed to use ssh-agent")
+	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.AskPrivateKeyPassword, "ask-private-key-password", false, "When this flag is enabled, you will be asked for a private key password")
 	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.AWSUseDefaultCredentialsChain, "aws-use-default-credentials-chain", false, "When is used that flag, AWS default credentials chain is used to achieve credentials from AWS")
+	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.Force, "force", false, "When this flag is enabled, credentials creation is forced. It overwrites the existing value")
 	createCredentialsCmd.Flags().StringSliceVar(&createCredentialsFlagOptions.AWSSharedConfigFiles, "aws-shared-config-files", []string{}, "List of AWS shared config files to achieve credentials from AWS")
 	createCredentialsCmd.Flags().StringSliceVar(&createCredentialsFlagOptions.AWSSharedCredentialsFiles, "aws-shared-credentials-files", []string{}, "List AWS shared credentials files to achieve credentials from AWS")
 	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.AWSAccessKeyID, "aws-access-key-id", "", "AWS Access Key ID to achieve credentials from AWS to achieve credentials from AWS. AWS Secret asked key is going to be requested")
@@ -113,9 +115,7 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, config *conf
 	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.GitSSHUser, "git-ssh-user", "", "Git SSH User")
 	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.LocalStoragePath, "local-storage-path", "", "Path where credentials are stored locally, using local storage type")
 	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.PrivateKeyFile, "private-key-file", "", "Private Key File")
-	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.PrivateKeyPassword, "private-key-password", "", "Private Key Password")
 	createCredentialsCmd.Flags().StringVar(&createCredentialsFlagOptions.Username, "username", "", "Username for basic auth method. Password is going to be requested")
-	createCredentialsCmd.Flags().BoolVar(&createCredentialsFlagOptions.Force, "force", false, "When is enabled the flag, credentials creation is forced. It overwrites the existing value")
 
 	createCredentialsCmd.Flags().StringVarP(&createCredentialsFlagOptions.DEPRECATEDDockerRegistryCredentialsDir, "credentials-dir", "d", "", DeprecatedFlagMessageDockerRegistryCredentialsDir)
 	createCredentialsCmd.Flags().StringVarP(&createCredentialsFlagOptions.DEPRECATEDRegistryHost, "registry-host", "r", "", DeprecatedFlagMessageRegistryHost)

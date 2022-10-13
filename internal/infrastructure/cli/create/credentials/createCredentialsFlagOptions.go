@@ -4,6 +4,8 @@ package credentials
 type createCredentialsFlagOptions struct {
 	// AllowUseSSHAgent
 	AllowUseSSHAgent bool
+	// AskPrivateKeyPassword
+	AskPrivateKeyPassword bool
 	// AWSAccessKeyID
 	AWSAccessKeyID string
 	// AWSProfile
@@ -24,8 +26,6 @@ type createCredentialsFlagOptions struct {
 	LocalStoragePath string
 	// PrivateKeyFile
 	PrivateKeyFile string
-	// PrivateKeyPassword
-	PrivateKeyPassword string
 	// Username
 	Username string
 	// Force
