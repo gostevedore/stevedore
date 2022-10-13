@@ -4,10 +4,6 @@ package credentials
 type createCredentialsFlagOptions struct {
 	// AllowUseSSHAgent
 	AllowUseSSHAgent bool
-	// AskAWSSecretAccessKey
-	AskAWSSecretAccessKey bool
-	// AskPassword
-	AskPassword bool
 	// AWSAccessKeyID
 	AWSAccessKeyID string
 	// AWSProfile

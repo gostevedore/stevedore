@@ -51,6 +51,7 @@ func (badge *Badge) IsValid() (bool, error) {
 		return false, errors.New(errContext, "Invalid badge. Badge is nil")
 	}
 
+	// valid badges
 	if badge.Username != "" && badge.Password != "" {
 		return true, nil
 	}
@@ -69,6 +70,23 @@ func (badge *Badge) IsValid() (bool, error) {
 
 	if badge.AllowUseSSHAgent {
 		return true, nil
+	}
+
+	// invalid badges
+	if badge.Username != "" && badge.Password == "" {
+		return false, errors.New(errContext, "Invalid badge. Missing password")
+	}
+
+	if badge.AWSAccessKeyID != "" && badge.AWSSecretAccessKey == "" {
+		return false, errors.New(errContext, "Invalid badge. Missing AWS secret access key")
+	}
+
+	if badge.Password != "" && badge.Username == "" {
+		return false, errors.New(errContext, "Invalid badge. Missing username")
+	}
+
+	if badge.AWSSecretAccessKey != "" && badge.AWSAccessKeyID == "" {
+		return false, errors.New(errContext, "Invalid badge. Missing AWS access key")
 	}
 
 	return false, errors.New(errContext, "Invalid badge. Unknown reason")

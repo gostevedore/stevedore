@@ -87,7 +87,7 @@ func (e *CreateCredentialsEntrypoint) Execute(
 		return errors.New(errContext, "", err)
 	}
 
-	handlerOptions, err = e.prepareHandlerOptions(inputEntrypointOptions, inputHandlerOptions)
+	handlerOptions, err = e.prepareHandlerOptions(inputHandlerOptions)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -168,13 +168,9 @@ func (e *CreateCredentialsEntrypoint) prepareConfiguration(conf *configuration.C
 }
 
 // getPassword ask for password
-func (e *CreateCredentialsEntrypoint) getPassword(options *Options) (string, error) {
+func (e *CreateCredentialsEntrypoint) getPassword() (string, error) {
 
 	errContext := "(create::credentials::entrypoint::getPassword)"
-
-	if options == nil {
-		return "", errors.New(errContext, "Entrypoint options must be provided to execute create credentials entrypoint")
-	}
 
 	if e.console == nil {
 		return "", errors.New(errContext, "Console must be provided to execute create credentials entrypoint")
@@ -182,7 +178,7 @@ func (e *CreateCredentialsEntrypoint) getPassword(options *Options) (string, err
 
 	password, err := e.console.ReadPassword(getPasswordInputMessage)
 	if err != nil {
-		return "", errors.New(errContext, "", err)
+		return "", errors.New(errContext, "Error reading password", err)
 	}
 	fmt.Fprintln(e.console)
 
@@ -191,13 +187,9 @@ func (e *CreateCredentialsEntrypoint) getPassword(options *Options) (string, err
 }
 
 // getAWSSecretAccessKey ask for aws secret access key
-func (e *CreateCredentialsEntrypoint) getAWSSecretAccessKey(options *Options) (string, error) {
+func (e *CreateCredentialsEntrypoint) getAWSSecretAccessKey() (string, error) {
 
 	errContext := "(create::credentials::entrypoint::getAWSSecretAccessKey)"
-
-	if options == nil {
-		return "", errors.New(errContext, "Entrypoint options must be provided to execute create credentials entrypoint")
-	}
 
 	if e.console == nil {
 		return "", errors.New(errContext, "Console must be provided to execute create credentials entrypoint")
@@ -205,7 +197,7 @@ func (e *CreateCredentialsEntrypoint) getAWSSecretAccessKey(options *Options) (s
 
 	awsSecretAccessKey, err := e.console.ReadPassword(getAWSSecretAccessKeyInputMessage)
 	if err != nil {
-		return "", errors.New(errContext, "", err)
+		return "", errors.New(errContext, "Error reading AWS secret access key", err)
 	}
 	fmt.Fprintln(e.console)
 
@@ -214,15 +206,11 @@ func (e *CreateCredentialsEntrypoint) getAWSSecretAccessKey(options *Options) (s
 }
 
 // prepareHandlerOptions set handler options before execute the handler
-func (e *CreateCredentialsEntrypoint) prepareHandlerOptions(inputEntrypointOptions *Options, inputHandlerOptions *handler.Options) (*handler.Options, error) {
+func (e *CreateCredentialsEntrypoint) prepareHandlerOptions(inputHandlerOptions *handler.Options) (*handler.Options, error) {
 	var password, awsSecretAccessKey string
 	var err error
 
 	errContext := "(create::credentials::entrypoint::prepareHandlerOptions)"
-
-	if inputEntrypointOptions == nil {
-		return nil, errors.New(errContext, "Entrypoint options must be provided to execute create credentials entrypoint")
-	}
 
 	if inputHandlerOptions == nil {
 		return nil, errors.New(errContext, "Handler options must be provided to execute create credentials entrypoint")
@@ -246,16 +234,16 @@ func (e *CreateCredentialsEntrypoint) prepareHandlerOptions(inputEntrypointOptio
 	options.PrivateKeyPassword = inputHandlerOptions.PrivateKeyPassword
 	options.Username = inputHandlerOptions.Username
 
-	if inputEntrypointOptions.AskPassword {
-		password, err = e.getPassword(inputEntrypointOptions)
+	if inputHandlerOptions.Username != "" {
+		password, err = e.getPassword()
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}
 		options.Password = password
 	}
 
-	if inputEntrypointOptions.AskAWSSecretAccessKey {
-		awsSecretAccessKey, err = e.getAWSSecretAccessKey(inputEntrypointOptions)
+	if inputHandlerOptions.AWSAccessKeyID != "" {
+		awsSecretAccessKey, err = e.getAWSSecretAccessKey()
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}

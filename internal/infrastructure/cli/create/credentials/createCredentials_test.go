@@ -30,8 +30,6 @@ func TestNewCommand(t *testing.T) {
 			args: []string{
 				"credential-id",
 				"--allow-use-ssh-agent",
-				"--aws-secret-access-key",
-				"--password",
 				"--aws-shared-config-files",
 				"aws-shared-config-file1",
 				"--aws-shared-config-files",
@@ -66,9 +64,7 @@ func TestNewCommand(t *testing.T) {
 					[]string{"credential-id"},
 					conf,
 					&entrypoint.Options{
-						AskAWSSecretAccessKey: true,
-						AskPassword:           true,
-						LocalStoragePath:      "local-storage-path",
+						LocalStoragePath: "local-storage-path",
 					},
 					&handler.Options{
 						AllowUseSSHAgent: true,
