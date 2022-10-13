@@ -47,10 +47,6 @@ func plan(image *image.Image, parent *Step, depth int) []*Step {
 	steps := []*Step{}
 	var sync chan struct{}
 
-	if depth == 0 {
-		return steps
-	}
-
 	// root images does not require to sync
 	if parent != nil {
 		sync = make(chan struct{})
@@ -59,6 +55,10 @@ func plan(image *image.Image, parent *Step, depth int) []*Step {
 
 	step := NewStep(image, image.Name, sync)
 	steps = append(steps, step)
+
+	if depth == 0 {
+		return steps
+	}
 
 	for _, child := range image.Children {
 		steps = append(steps, plan(child, step, depth-1)...)

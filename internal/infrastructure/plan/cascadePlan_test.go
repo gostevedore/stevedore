@@ -71,7 +71,7 @@ func TestCascadePlanPlan(t *testing.T) {
 					images: images.NewMockStore(),
 				},
 				// Depth
-				2,
+				1,
 			},
 			name:     "image",
 			versions: []string{"version1"},
