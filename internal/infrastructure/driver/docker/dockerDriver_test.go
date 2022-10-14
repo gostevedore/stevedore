@@ -138,8 +138,9 @@ func TestBuild(t *testing.T) {
 				Vars: map[string]interface{}{
 					"var1": "value1",
 				},
-				Tags:   []string{"tag1", "tag2"},
-				Labels: map[string]string{"label1": "value1", "label2": "value2"},
+				Tags:             []string{"tag1", "tag2"},
+				Labels:           map[string]string{"label1": "value1", "label2": "value2"},
+				PersistentLabels: map[string]string{"plabel": "pvalue1"},
 			},
 			options: &image.BuildDriverOptions{
 				PushImageAfterBuild:   true,
@@ -190,6 +191,7 @@ func TestBuild(t *testing.T) {
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddTags", []string{"myregistry.test/namespace/image:tag1"}).Return(nil)
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddTags", []string{"myregistry.test/namespace/image:tag2"}).Return(nil)
 
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddLabel", "plabel", "pvalue1").Return(nil)
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddLabel", "label1", "value1").Return(nil)
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddLabel", "label2", "value2").Return(nil)
 

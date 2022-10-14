@@ -25,6 +25,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
 	"github.com/stretchr/testify/assert"
+	testmock "github.com/stretchr/testify/mock"
 )
 
 func TestBuild(t *testing.T) {
@@ -276,9 +277,9 @@ func TestBuildWorker(t *testing.T) {
 				PullParentImage:              true,
 				SemanticVersionTagsTemplates: []string{"{{.Major}}"},
 				RemoveImagesAfterPush:        true,
-				PersistentVars:               map[string]interface{}{"optpvar": "value"},
-				Vars:                         map[string]interface{}{"optvar": "value"},
-				Labels:                       map[string]string{"optlabel": "value"},
+				PersistentVars:               map[string]interface{}{"optpvar": "value", "imagepvar_overwritten": "overwritten_value"},
+				Vars:                         map[string]interface{}{"optvar": "optvalue", "imagevar_overwritten": "overwritten_value"},
+				Labels:                       map[string]string{"optlabel": "value", "imagelabel_overwritten": "overwritten_value"},
 				Tags:                         []string{"opttag"},
 			},
 			image: &image.Image{
@@ -290,9 +291,9 @@ func TestBuildWorker(t *testing.T) {
 					Name:   "builder",
 					Driver: "mock",
 				},
-				PersistentVars: map[string]interface{}{"imagepvar": "value"},
-				Vars:           map[string]interface{}{"imagevar": "value"},
-				Labels:         map[string]string{"imagelabel": "value"},
+				PersistentVars: map[string]interface{}{"imagepvar": "value", "imagepvar_overwritten": "value"},
+				Vars:           map[string]interface{}{"imagevar": "value", "imagevar_overwritten": "value"},
+				Labels:         map[string]string{"imagelabel": "value", "imagelabel_overwritten": "value"},
 				Tags:           []string{"imagetag"},
 				Parent: &image.Image{
 					Name:              "parent",
@@ -303,6 +304,7 @@ func TestBuildWorker(t *testing.T) {
 					PersistentVars:    map[string]interface{}{"parentpvar": "value"},
 					Vars:              map[string]interface{}{"parentvar": "value"},
 					Labels:            map[string]string{"parentlabel": "value"},
+					PersistentLabels:  map[string]string{"parentpersistentlabel": "value"},
 				},
 			},
 			err: &errors.Error{},
@@ -327,8 +329,35 @@ func TestBuildWorker(t *testing.T) {
 					Password: "password_parent",
 				}, nil)
 				service.commandFactory.(*command.MockBuildCommandFactory).On("New",
-					mock.NewMockDriver(),
-					i,
+					//mock.NewMockDriver(),
+					testmock.Anything,
+					// i,
+					&image.Image{
+						Name:              "image",
+						Version:           "0.0.0",
+						RegistryHost:      "registry",
+						RegistryNamespace: "namespace",
+						Builder: &builder.Builder{
+							Name:   "builder",
+							Driver: "mock",
+						},
+						PersistentVars:   map[string]interface{}{"imagepvar": "value", "optpvar": "value", "parentpvar": "value", "imagepvar_overwritten": "overwritten_value"},
+						Vars:             map[string]interface{}{"imagevar": "value", "optvar": "optvalue", "imagevar_overwritten": "overwritten_value"},
+						Labels:           map[string]string{"imagelabel": "value", "optlabel": "value", "imagelabel_overwritten": "overwritten_value"},
+						Tags:             []string{"imagetag", "0", "opttag"},
+						PersistentLabels: map[string]string{"parentpersistentlabel": "value"},
+						Parent: &image.Image{
+							Name:              "parent",
+							Version:           "parent_version",
+							RegistryHost:      "parent_registry",
+							RegistryNamespace: "parent_namespace",
+							Builder:           "builder",
+							PersistentVars:    map[string]interface{}{"parentpvar": "value"},
+							Vars:              map[string]interface{}{"parentvar": "value"},
+							Labels:            map[string]string{"parentlabel": "value"},
+							PersistentLabels:  map[string]string{"parentpersistentlabel": "value"},
+						},
+					},
 					&image.BuildDriverOptions{
 						AnsibleConnectionLocal:           false,
 						AnsibleIntermediateContainerName: "builder_mock_namespace_image_0.0.0",
@@ -347,7 +376,6 @@ func TestBuildWorker(t *testing.T) {
 				service.dispatch.(*dispatch.MockDispatch).On("Enqueue", mockJob)
 			},
 		},
-
 		{
 			desc: "Testing error build when image credentials are invalid",
 			service: NewApplication(
