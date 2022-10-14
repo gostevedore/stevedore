@@ -7,6 +7,8 @@ images:
         options:
       persistent_vars:
         image_from: "{{ .Name }}"
+      persistent_labels:
+        created_at: "{{ .DateRFC3339Nano }}"
 
   busybox:
     latest:
@@ -16,6 +18,8 @@ images:
         options:
       persistent_vars:
         image_from: "docker-hub.stevedore.test:5000/library/{{ .Name }}:{{ .Version }}"
+      persistent_labels:
+        created_at: "{{ .DateRFC3339Nano }}"
 
   alpine:
     "3.16":
@@ -25,6 +29,8 @@ images:
         options:
       persistent_vars:
         image_from: "docker-hub.stevedore.test:5000/library/{{ .Name }}:{{ .Version }}"
+      persistent_labels:
+        created_at: "{{ .DateRFC3339Nano }}"
 
   ubuntu:
     latest:
@@ -35,6 +41,8 @@ images:
         options:
       persistent_vars:
         image_from: "docker-hub.stevedore.test:5000/library/{{ .Name }}:{{ .Version }}"
+      persistent_labels:
+        created_at: "{{ .DateRFC3339Nano }}"
     "20.04":
       version: "{{ .Version }}"
       registry: docker-hub.stevedore.test:5000
@@ -43,3 +51,5 @@ images:
         options:
       persistent_vars:
         image_from: "docker-hub.stevedore.test:5000/library/{{ .Name }}:{{ .Version }}"
+      persistent_labels:
+        created_at: "{{ .DateRFC3339Nano }}"
