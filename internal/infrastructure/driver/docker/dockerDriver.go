@@ -114,6 +114,12 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *image
 		}
 	}
 
+	if len(i.PersistentLabels) > 0 {
+		for label, value := range i.PersistentLabels {
+			d.driver.AddLabel(label, value)
+		}
+	}
+
 	if len(i.Labels) > 0 {
 		for label, value := range i.Labels {
 			d.driver.AddLabel(label, value)

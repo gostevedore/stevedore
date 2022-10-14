@@ -229,7 +229,7 @@ func (a *Application) build(ctx context.Context, i *image.Image, options *Option
 		i.PersistentVars = map[string]interface{}{}
 	}
 	// add persistent vars defined service options
-	// options definition has precedence over parent and image ones
+	// options vars has precedence over parent and image ones
 	for k, v := range options.PersistentVars {
 		i.PersistentVars[k] = v
 	}
@@ -255,7 +255,7 @@ func (a *Application) build(ctx context.Context, i *image.Image, options *Option
 		i.Vars = map[string]interface{}{}
 	}
 	// add vars defined on service options
-	// options defintion has precedence over the image one
+	// options vars has precedence over the image one
 	for k, v := range options.Vars {
 		i.Vars[k] = v
 	}
@@ -277,7 +277,21 @@ func (a *Application) build(ctx context.Context, i *image.Image, options *Option
 	}
 	// add persistent lables defined on the image
 	for k, v := range i.Labels {
-		i.Labels[k] = v
+		_, exist := i.Labels[k]
+		if !exist {
+			i.Labels[k] = v
+		}
+	}
+
+	if i.PersistentLabels == nil {
+		i.PersistentLabels = map[string]string{}
+	}
+
+	// overwrite persistentlabels with the parent ones
+	if i.Parent != nil && i.Parent.PersistentLabels != nil {
+		for k, v := range i.Parent.PersistentLabels {
+			i.PersistentLabels[k] = v
+		}
 	}
 
 	if i.Parent != nil {
