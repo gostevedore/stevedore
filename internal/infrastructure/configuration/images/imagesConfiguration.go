@@ -169,6 +169,11 @@ func (t *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes
 				domainimage.WithParent(parentDomainImage),
 			)
 
+			err = t.propagatePersistentAttributes(copyDomainImage)
+			if err != nil {
+				return errors.New(errContext, "", err)
+			}
+
 			imageToStore, err := t.renderImage(name, version, copyDomainImage)
 			if err != nil {
 				return errors.New(errContext, "", err)
@@ -193,6 +198,32 @@ func (t *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes
 		}
 		if len(pendingNodeName) == 0 {
 			delete(pendingNodes, name)
+		}
+	}
+
+	return nil
+}
+
+func (t *ImagesConfiguration) propagatePersistentAttributes(i *domainimage.Image) error {
+
+	errContext := "(images::propagatePersistentAttributes)"
+	if i == nil {
+		return errors.New(errContext, "To propagate persistent attributs, an image must be provided")
+	}
+
+	if i.Parent == nil {
+		return nil
+	}
+
+	if i.Parent.PersistentLabels != nil {
+		for k, v := range i.Parent.PersistentLabels {
+			i.PersistentLabels[k] = v
+		}
+	}
+
+	if i.Parent.PersistentVars != nil {
+		for k, v := range i.Parent.PersistentVars {
+			i.PersistentVars[k] = v
 		}
 	}
 

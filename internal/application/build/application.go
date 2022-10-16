@@ -228,70 +228,33 @@ func (a *Application) build(ctx context.Context, i *image.Image, options *Option
 	if i.PersistentVars == nil {
 		i.PersistentVars = map[string]interface{}{}
 	}
-	// add persistent vars defined service options
-	// options vars has precedence over parent and image ones
+
 	for k, v := range options.PersistentVars {
 		i.PersistentVars[k] = v
-	}
-
-	if i.Parent != nil && i.Parent.PersistentVars != nil {
-		for k, v := range i.Parent.PersistentVars {
-			_, exist := i.PersistentVars[k]
-			if !exist {
-				i.PersistentVars[k] = v
-			}
-		}
-	}
-
-	// add persistent vars defined on the image
-	for varKey, varValue := range i.PersistentVars {
-		_, exist := i.PersistentVars[varKey]
-		if !exist {
-			i.PersistentVars[varKey] = varValue
-		}
 	}
 
 	if i.Vars == nil {
 		i.Vars = map[string]interface{}{}
 	}
-	// add vars defined on service options
-	// options vars has precedence over the image one
+
 	for k, v := range options.Vars {
 		i.Vars[k] = v
-	}
-	// add vars defined on the image
-	for varKey, varValue := range i.Vars {
-		_, exist := i.Vars[varKey]
-		if !exist {
-			i.Vars[varKey] = varValue
-		}
 	}
 
 	if i.Labels == nil {
 		i.Labels = map[string]string{}
 	}
-	// add lables defined on service options
-	// options defintion has precedence over the image one
+
 	for k, v := range options.Labels {
 		i.Labels[k] = v
-	}
-	// add persistent lables defined on the image
-	for k, v := range i.Labels {
-		_, exist := i.Labels[k]
-		if !exist {
-			i.Labels[k] = v
-		}
 	}
 
 	if i.PersistentLabels == nil {
 		i.PersistentLabels = map[string]string{}
 	}
 
-	// overwrite persistentlabels with the parent ones
-	if i.Parent != nil && i.Parent.PersistentLabels != nil {
-		for k, v := range i.Parent.PersistentLabels {
-			i.PersistentLabels[k] = v
-		}
+	for k, v := range options.PersistentLabels {
+		i.PersistentLabels[k] = v
 	}
 
 	if i.Parent != nil {

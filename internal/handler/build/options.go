@@ -34,6 +34,8 @@ type Options struct {
 	ImageRegistryNamespace string
 	// Labels is the list of labes to assign to the image
 	Labels []string
+	// PersistentLabels is the list of persistent labels to use
+	PersistentLabels []string
 	// PersistentVars is the list of persistent vars to use
 	PersistentVars []string
 	// PullParentImage if is true the parent image is pull

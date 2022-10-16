@@ -80,6 +80,8 @@ images:
       builder: builder
       persistent_labels:
         plabel: plabelvalue
+      persistent_vars:
+        pvar: pvarvalue
   child:
     version:
       registry: registry.test
@@ -139,6 +141,9 @@ image:
 						PersistentLabels: map[string]string{
 							"plabel": "plabelvalue",
 						},
+						PersistentVars: map[string]interface{}{
+							"pvar": "pvarvalue",
+						},
 					},
 				).Return(
 					&domainimage.Image{
@@ -149,6 +154,9 @@ image:
 						Builder:           "builder",
 						PersistentLabels: map[string]string{
 							"plabel": "plabelvalue",
+						},
+						PersistentVars: map[string]interface{}{
+							"pvar": "pvarvalue",
 						},
 					}, nil)
 
@@ -161,6 +169,9 @@ image:
 						Builder:           "builder",
 						PersistentLabels: map[string]string{
 							"plabel": "plabelvalue",
+						},
+						PersistentVars: map[string]interface{}{
+							"pvar": "pvarvalue",
 						},
 					},
 				).Return(nil)
@@ -176,6 +187,9 @@ image:
 						PersistentLabels: map[string]string{
 							"plabel": "plabelvalue",
 						},
+						PersistentVars: map[string]interface{}{
+							"pvar": "pvarvalue",
+						},
 					},
 				}, nil)
 
@@ -188,10 +202,14 @@ image:
 						Builder:           "builder",
 						Children:          []*domainimage.Image{},
 						Labels:            map[string]string{},
-						PersistentLabels:  map[string]string{},
-						PersistentVars:    map[string]interface{}{},
-						Tags:              []string{},
-						Vars:              map[string]interface{}{},
+						PersistentLabels: map[string]string{
+							"plabel": "plabelvalue",
+						},
+						PersistentVars: map[string]interface{}{
+							"pvar": "pvarvalue",
+						},
+						Tags: []string{},
+						Vars: map[string]interface{}{},
 						Parent: &domainimage.Image{
 							RegistryHost:      "registry.test",
 							RegistryNamespace: "namespace",
@@ -200,6 +218,9 @@ image:
 							Builder:           "builder",
 							PersistentLabels: map[string]string{
 								"plabel": "plabelvalue",
+							},
+							PersistentVars: map[string]interface{}{
+								"pvar": "pvarvalue",
 							},
 						},
 					},
@@ -212,10 +233,14 @@ image:
 						Builder:           "builder",
 						Children:          []*domainimage.Image{},
 						Labels:            map[string]string{},
-						PersistentLabels:  map[string]string{},
-						PersistentVars:    map[string]interface{}{},
-						Tags:              []string{},
-						Vars:              map[string]interface{}{},
+						PersistentLabels: map[string]string{
+							"plabel": "plabelvalue",
+						},
+						PersistentVars: map[string]interface{}{
+							"pvar": "pvarvalue",
+						},
+						Tags: []string{},
+						Vars: map[string]interface{}{},
 						Parent: &domainimage.Image{
 							RegistryHost:      "registry.test",
 							RegistryNamespace: "namespace",
@@ -224,6 +249,9 @@ image:
 							Builder:           "builder",
 							PersistentLabels: map[string]string{
 								"plabel": "plabelvalue",
+							},
+							PersistentVars: map[string]interface{}{
+								"pvar": "pvarvalue",
 							},
 						},
 					}, nil)
@@ -237,10 +265,14 @@ image:
 						Builder:           "builder",
 						Children:          []*domainimage.Image{},
 						Labels:            map[string]string{},
-						PersistentLabels:  map[string]string{},
-						PersistentVars:    map[string]interface{}{},
-						Tags:              []string{},
-						Vars:              map[string]interface{}{},
+						PersistentLabels: map[string]string{
+							"plabel": "plabelvalue",
+						},
+						PersistentVars: map[string]interface{}{
+							"pvar": "pvarvalue",
+						},
+						Tags: []string{},
+						Vars: map[string]interface{}{},
 						Parent: &domainimage.Image{
 							RegistryHost:      "registry.test",
 							RegistryNamespace: "namespace",
@@ -249,6 +281,9 @@ image:
 							Builder:           "builder",
 							PersistentLabels: map[string]string{
 								"plabel": "plabelvalue",
+							},
+							PersistentVars: map[string]interface{}{
+								"pvar": "pvarvalue",
 							},
 						},
 					},
@@ -1124,4 +1159,80 @@ func TestRenderImage(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPropagatePersistentAttributes(t *testing.T) {
+	errContext := "(images::propagatePersistentAttributes)"
+
+	tests := []struct {
+		desc   string
+		images *ImagesConfiguration
+		image  *domainimage.Image
+		res    *domainimage.Image
+		err    error
+	}{
+		{
+			desc:   "Testing error progatating persistent attributes when image is not provided",
+			images: &ImagesConfiguration{},
+			err:    errors.New(errContext, "To propagate persistent attributs, an image must be provided"),
+		},
+		{
+			desc:   "Testing propagate persistent attributes to an image",
+			images: &ImagesConfiguration{},
+			image: &domainimage.Image{
+				PersistentVars: map[string]interface{}{
+					"pvar1": "pvalue1",
+					"pvar3": "pvalue3",
+				},
+				PersistentLabels: map[string]string{
+					"label1": "value1",
+					"label3": "value3",
+				},
+				Parent: &domainimage.Image{
+					PersistentVars: map[string]interface{}{
+						"pvar1": "parent_pvalue1",
+						"pvar2": "parent_pvalue2",
+					},
+					PersistentLabels: map[string]string{
+						"label1": "parent_value1",
+						"label2": "parent_value2",
+					},
+				},
+			},
+			res: &domainimage.Image{
+				PersistentVars: map[string]interface{}{
+					"pvar1": "parent_pvalue1",
+					"pvar2": "parent_pvalue2",
+					"pvar3": "pvalue3",
+				},
+				PersistentLabels: map[string]string{
+					"label1": "parent_value1",
+					"label2": "parent_value2",
+					"label3": "value3",
+				},
+				Parent: &domainimage.Image{
+					PersistentVars: map[string]interface{}{
+						"pvar1": "parent_pvalue1",
+						"pvar2": "parent_pvalue2",
+					},
+					PersistentLabels: map[string]string{
+						"label1": "parent_value1",
+						"label2": "parent_value2",
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			err := test.images.propagatePersistentAttributes(test.image)
+			if err != nil {
+				assert.Equal(t, test.err, err)
+			} else {
+				assert.Equal(t, test.res, test.image)
+			}
+		})
+	}
+
 }

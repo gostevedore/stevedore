@@ -9,7 +9,7 @@ require (
 	github.com/apenella/go-common-utils/error v0.0.0-20220913191136-86daaa87e7df
 	github.com/apenella/go-common-utils/transformer/string v0.0.0-20220913191136-86daaa87e7df
 	github.com/apenella/go-data-structures/extendedTree v0.0.0-20220913192333-0ad944e395c4
-	github.com/apenella/go-docker-builder v0.7.0
+	github.com/apenella/go-docker-builder v0.7.1
 	github.com/aws/aws-sdk-go-v2 v1.16.16
 	github.com/aws/aws-sdk-go-v2/config v1.17.8
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.21
