@@ -75,6 +75,18 @@ func (h *Handler) Handler(ctx context.Context, imageName string, options *Option
 		buildServiceOptions.Labels[kLabel] = vLabel
 	}
 
+	buildServiceOptions.PersistentLabels = make(map[string]string)
+	for _, persistentLabels := range options.PersistentLabels {
+
+		if strings.IndexRune(persistentLabels, AssignmentTokenSymbol) < 0 {
+			return errors.New(errContext, fmt.Sprintf("Invalid persistent variable format '%s'", persistentLabels))
+		}
+		kPVar := persistentLabels[:strings.IndexRune(persistentLabels, AssignmentTokenSymbol)]
+		vPVar := persistentLabels[strings.IndexRune(persistentLabels, AssignmentTokenSymbol)+1:]
+
+		buildServiceOptions.PersistentLabels[kPVar] = vPVar
+	}
+
 	buildServiceOptions.PersistentVars = make(map[string]interface{})
 	for _, persistentVars := range options.PersistentVars {
 

@@ -123,6 +123,7 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 			handlerOptions.ImageRegistryNamespace = buildFlagOptions.ImageRegistryNamespace
 			handlerOptions.Versions = append([]string{}, buildFlagOptions.ImageVersions...)
 			handlerOptions.Labels = append([]string{}, buildFlagOptions.Labels...)
+			handlerOptions.PersistentLabels = append([]string{}, buildFlagOptions.PersistentLabels...)
 			handlerOptions.PersistentVars = append([]string{}, buildFlagOptions.PersistentVars...)
 			handlerOptions.PullParentImage = buildFlagOptions.PullParentImage
 			handlerOptions.PushImagesAfterBuild = buildFlagOptions.PushImagesAfterBuild
@@ -161,7 +162,8 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 	// image definition flags
 	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.ImageVersions, "image-version", "v", []string{}, "List of versions to build")
 	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.Labels, "label", "l", []string{}, "List of labels to assign to the image")
-	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.PersistentVars, "persistent-variable", "p", []string{}, "List of persistent variables to set during the build process. Persistent variable that child image inherits from its parent and could not be override. The format of each variable must be <key>=<value>")
+	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.PersistentVars, "persistent-variable", "p", []string{}, "List of persistent variables to set during the build process. Persistent variable inherited from parent has precedence over the current ones. The format of each variable must be <key>=<value>")
+	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.PersistentLabels, "persistent-label", "L", []string{}, "List of persistent labels to set during the build process. Persistent labels inherited from parent has precedence over the current ones. The format of each variable must be <key>=<value>")
 	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.SemanticVersionTagsTemplates, "semver-tags-template", "T", []string{}, "List of templates to generate tags following semantic version expression")
 	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.Tags, "tag", "t", []string{}, "List of extra tags to generate")
 	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.Vars, "variable", "x", []string{}, "Variables to set during the build process. The format of each variable must be <key>=<value>")

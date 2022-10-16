@@ -297,6 +297,7 @@ func (e *Entrypoint) prepareHandlerOptions(conf *configuration.Configuration, in
 	options.ImageRegistryHost = inputHandlerOptions.ImageRegistryHost
 	options.ImageRegistryNamespace = inputHandlerOptions.ImageRegistryNamespace
 	options.Labels = append([]string{}, inputHandlerOptions.Labels...)
+	options.PersistentLabels = append([]string{}, inputHandlerOptions.PersistentLabels...)
 	options.PersistentVars = append([]string{}, inputHandlerOptions.PersistentVars...)
 	options.PullParentImage = inputHandlerOptions.PullParentImage
 	options.PushImagesAfterBuild = conf.PushImages || inputHandlerOptions.PushImagesAfterBuild

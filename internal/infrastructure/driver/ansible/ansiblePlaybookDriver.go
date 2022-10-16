@@ -141,6 +141,13 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *im
 		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], i.Tags)
 	}
 
+	// Persistent labels contains the variables defined by the user on execution time and has precedences over labels and the persistent vars defined on the image
+	if len(i.PersistentLabels) > 0 {
+		for varName, varValue := range i.PersistentLabels {
+			ansiblePlaybookOptions.AddExtraVar(varName, varValue)
+		}
+	}
+
 	if len(i.Labels) > 0 {
 		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], i.Labels)
 	}

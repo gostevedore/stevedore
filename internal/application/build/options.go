@@ -32,6 +32,8 @@ type Options struct {
 	ImageVersions []string
 	// Lables is a list of labels to add to the image
 	Labels map[string]string
+	// PersistentLabels is a persistent labels list to be sent to driver
+	PersistentLabels map[string]string `yaml:"persistent_labels"`
 	// PersistentVars is a persistent variables list to be sent to driver
 	PersistentVars map[string]interface{} `yaml:"persistent_variables"`
 	// PullParentImage flag indicate whether to pull the parent image before building

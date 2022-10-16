@@ -76,10 +76,6 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *image
 
 	d.driver.WithImageName(imageName)
 
-	// TO REMOVE
-	// add docker build context to cmd instance
-	// builderConfOptions := options.BuilderOptions
-
 	if options.BuilderOptions.Dockerfile != "" {
 		d.driver.WithDockerfile(options.BuilderOptions.Dockerfile)
 	}
