@@ -7,8 +7,9 @@ images:
         options:
       persistent_vars:
         image_from: "{{ .Name }}"
-      persistent_labels:
-        created_at: "{{ .DateRFC3339Nano }}"
+      parents:
+        root:
+          - latest
 
   busybox:
     latest:
@@ -17,9 +18,10 @@ images:
       builder:
         options:
       persistent_vars:
-        image_from: "docker-hub.stevedore.test:5000/library/{{ .Name }}:{{ .Version }}"
-      persistent_labels:
-        created_at: "{{ .DateRFC3339Nano }}"
+        image_from: "{{ .Image.RegistryHost }}/{{ .Image.RegistryNamespace }}/{{ .Name }}:{{ .Version }}"
+      parents:
+        root:
+          - latest
 
   alpine:
     "3.16":
@@ -28,9 +30,10 @@ images:
       builder:
         options:
       persistent_vars:
-        image_from: "docker-hub.stevedore.test:5000/library/{{ .Name }}:{{ .Version }}"
-      persistent_labels:
-        created_at: "{{ .DateRFC3339Nano }}"
+        image_from: "{{ .Image.RegistryHost }}/{{ .Image.RegistryNamespace }}/{{ .Name }}:{{ .Version }}"
+      parents:
+        root:
+          - latest
 
   ubuntu:
     latest:
@@ -40,9 +43,10 @@ images:
       builder:
         options:
       persistent_vars:
-        image_from: "docker-hub.stevedore.test:5000/library/{{ .Name }}:{{ .Version }}"
-      persistent_labels:
-        created_at: "{{ .DateRFC3339Nano }}"
+        image_from: "{{ .Image.RegistryHost }}/{{ .Image.RegistryNamespace }}/{{ .Name }}:{{ .Version }}"
+      parents:
+        root:
+          - latest
     "20.04":
       version: "{{ .Version }}"
       registry: docker-hub.stevedore.test:5000
@@ -50,6 +54,7 @@ images:
       builder:
         options:
       persistent_vars:
-        image_from: "docker-hub.stevedore.test:5000/library/{{ .Name }}:{{ .Version }}"
-      persistent_labels:
-        created_at: "{{ .DateRFC3339Nano }}"
+        image_from: "{{ .Image.RegistryHost }}/{{ .Image.RegistryNamespace }}/{{ .Name }}:{{ .Version }}"
+      parents:
+        root:
+          - latest
