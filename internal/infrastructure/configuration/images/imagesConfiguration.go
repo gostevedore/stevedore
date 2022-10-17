@@ -57,24 +57,22 @@ func NewImagesConfiguration(fs afero.Fs, graph ImagesGraphTemplatesStorer, store
 }
 
 // CheckCompatibility method ensures that ImagesConfiguration is compatible with current version
-func (t *ImagesConfiguration) CheckCompatibility() error {
+func (c *ImagesConfiguration) CheckCompatibility() error {
 
-	if t.DEPRECATEDImagesTree != nil && len(t.DEPRECATEDImagesTree) > 0 {
-		t.compatibility.AddDeprecated("'images_tree' is deprecated and will be removed on v0.12.0, please use 'images' instead")
-
-		//		t.Images = t.DEPRECATEDImagesTree
+	if c.DEPRECATEDImagesTree != nil && len(c.DEPRECATEDImagesTree) > 0 {
+		c.compatibility.AddDeprecated("'images_tree' is deprecated and will be removed on v0.12.0, please use 'images' instead")
 	}
 
 	return nil
 }
 
 // LoadImagesToStore method loads images defined on configuration to images store
-func (t *ImagesConfiguration) LoadImagesToStore(path string) error {
+func (c *ImagesConfiguration) LoadImagesToStore(path string) error {
 
 	var err error
 	errContext := "(images::LoadImagesToStore)"
 
-	err = t.LoadImagesConfiguration(path)
+	err = c.LoadImagesConfiguration(path)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -82,7 +80,7 @@ func (t *ImagesConfiguration) LoadImagesToStore(path string) error {
 	storedNodes := map[string]struct{}{}
 	pendingNodes := map[string]map[string]struct{}{}
 
-	for node := range t.graph.Iterate() {
+	for node := range c.graph.Iterate() {
 
 		// skip node if already stored
 		_, stored := storedNodes[node.Name()]
@@ -90,7 +88,7 @@ func (t *ImagesConfiguration) LoadImagesToStore(path string) error {
 			continue
 		}
 
-		err = t.storeNodeImages(node, storedNodes, pendingNodes)
+		err = c.storeNodeImages(node, storedNodes, pendingNodes)
 		if err != nil {
 			return errors.New(errContext, "", err)
 		}
@@ -105,7 +103,7 @@ func (t *ImagesConfiguration) LoadImagesToStore(path string) error {
 }
 
 // storeImage stores image to images store
-func (t *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes map[string]struct{}, pendingNodes map[string]map[string]struct{}) error {
+func (c *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes map[string]struct{}, pendingNodes map[string]map[string]struct{}) error {
 	var err error
 	var nodeDomainImage *domainimage.Image
 	errContext := "(images::storeImage)"
@@ -128,12 +126,12 @@ func (t *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes
 
 	if node.Parents() == nil || len(node.Parents()) <= 0 {
 
-		imageToStore, err := t.renderImage(name, version, nodeDomainImage)
+		imageToStore, err := c.renderImage(name, version, nodeDomainImage)
 		if err != nil {
 			return errors.New(errContext, "", err)
 		}
 
-		err = t.store.Store(name, version, imageToStore)
+		err = c.store.Store(name, version, imageToStore)
 		if err != nil {
 			return errors.New(errContext, "", err)
 		}
@@ -151,13 +149,13 @@ func (t *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes
 			}
 
 			parentName, parentVersion, err := graph.ParseNodeName(parent.(graph.GraphNoder))
-			parentDomainImageList, err := t.store.Find(parentName, parentVersion)
+			parentDomainImageList, err := c.store.Find(parentName, parentVersion)
 			if err != nil {
 				return errors.New(errContext, "", err)
 			}
 
-			// if parent is not already created the node is skipped
-			// though the child is also related to parent, into the graph, it ensures to create the file
+			// if parent is not already created current node is skipped
+			// Node is referenced by all its parents then when the latest parent is created, the node will be created as well
 			if len(parentDomainImageList) == 0 || parentDomainImageList == nil {
 				pendingNodes[parentName] = map[string]struct{}{parentVersion: {}}
 				continue
@@ -169,19 +167,19 @@ func (t *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes
 				domainimage.WithParent(parentDomainImage),
 			)
 
-			err = t.propagatePersistentAttributes(copyDomainImage)
+			err = c.propagatePersistentAttributes(copyDomainImage)
 			if err != nil {
 				return errors.New(errContext, "", err)
 			}
 
-			imageToStore, err := t.renderImage(name, version, copyDomainImage)
+			imageToStore, err := c.renderImage(name, version, copyDomainImage)
 			if err != nil {
 				return errors.New(errContext, "", err)
 			}
 
 			parentDomainImage.AddChild(imageToStore)
 
-			err = t.store.Store(name, version, imageToStore)
+			err = c.store.Store(name, version, imageToStore)
 			if err != nil {
 				return errors.New(errContext, "", err)
 			}
@@ -204,7 +202,7 @@ func (t *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes
 	return nil
 }
 
-func (t *ImagesConfiguration) propagatePersistentAttributes(i *domainimage.Image) error {
+func (c *ImagesConfiguration) propagatePersistentAttributes(i *domainimage.Image) error {
 
 	errContext := "(images::propagatePersistentAttributes)"
 	if i == nil {
@@ -231,7 +229,7 @@ func (t *ImagesConfiguration) propagatePersistentAttributes(i *domainimage.Image
 }
 
 // renderImage return a renderized image base on the input image. The input image is not rendered when the version value is ImageWildcardSymbol
-func (t *ImagesConfiguration) renderImage(name, version string, i *domainimage.Image) (*domainimage.Image, error) {
+func (c *ImagesConfiguration) renderImage(name, version string, i *domainimage.Image) (*domainimage.Image, error) {
 
 	errContext := "(images::renderImage)"
 
@@ -247,11 +245,11 @@ func (t *ImagesConfiguration) renderImage(name, version string, i *domainimage.I
 		return nil, errors.New(errContext, "Image version must be provided to render an image")
 	}
 
-	if t.render == nil {
+	if c.render == nil {
 		return nil, errors.New(errContext, fmt.Sprintf("Image '%s:%s' could not be rendered because renderer must by provided", name, version))
 	}
 
-	renderedImage, err := t.render.Render(name, version, i)
+	renderedImage, err := c.render.Render(name, version, i)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
@@ -270,37 +268,37 @@ func (t *ImagesConfiguration) renderImage(name, version string, i *domainimage.I
 }
 
 // LoadImagesConfiguration method generate and return an ImagesConfiguration struct from a file
-func (t *ImagesConfiguration) LoadImagesConfiguration(path string) error {
+func (c *ImagesConfiguration) LoadImagesConfiguration(path string) error {
 
 	var err error
 	var isDir bool
 
 	errContext := "(images::LoadImagesConfiguration)"
 
-	isDir, err = afero.IsDir(t.fs, path)
+	isDir, err = afero.IsDir(c.fs, path)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
 
 	if isDir {
-		return t.LoadImagesConfigurationFromDir(path)
+		return c.LoadImagesConfigurationFromDir(path)
 	} else {
-		return t.LoadImagesConfigurationFromFile(path)
+		return c.LoadImagesConfigurationFromFile(path)
 	}
 }
 
 // LoadImagesConfigurationFromDir loads images tree from all files on directory
-func (t *ImagesConfiguration) LoadImagesConfigurationFromDir(dir string) error {
+func (c *ImagesConfiguration) LoadImagesConfigurationFromDir(dir string) error {
 	var err error
 	errFuncs := []func() error{}
 	errContext := "(images::LoadImagesConfigurationFromDir)"
 
-	yamlFiles, err := afero.Glob(t.fs, dir+"/*.yaml")
+	yamlFiles, err := afero.Glob(c.fs, dir+"/*.yaml")
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
 
-	ymlFiles, err := afero.Glob(t.fs, dir+"/*.yml")
+	ymlFiles, err := afero.Glob(c.fs, dir+"/*.yml")
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -309,26 +307,26 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromDir(dir string) error {
 	loadImagesConfigurationFromFile := func(path string) func() error {
 		var err error
 
-		c := make(chan struct{}, 1)
+		ch := make(chan struct{}, 1)
 		go func() {
-			defer close(c)
-			err = t.LoadImagesConfigurationFromFile(path)
-			t.wg.Done()
+			defer close(ch)
+			err = c.LoadImagesConfigurationFromFile(path)
+			c.wg.Done()
 		}()
 
 		return func() error {
-			<-c
+			<-ch
 			return err
 		}
 	}
 
 	for _, file := range files {
-		t.wg.Add(1)
+		c.wg.Add(1)
 		f := loadImagesConfigurationFromFile(file)
 		errFuncs = append(errFuncs, f)
 	}
 
-	t.wg.Wait()
+	c.wg.Wait()
 
 	errMsg := ""
 	for _, f := range errFuncs {
@@ -345,7 +343,7 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromDir(dir string) error {
 }
 
 // LoadImagesConfigurationFromFile loads images tree from file
-func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error {
+func (c *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error {
 
 	var err error
 	var fileData []byte
@@ -353,13 +351,13 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 	errContext := "(images::LoadImagesConfigurationFromFile)"
 
 	// TODO check if it is required
-	if t == nil {
+	if c == nil {
 		return errors.New(errContext, "Builders is nil")
 	}
 
-	imageTreeAux := NewImagesConfiguration(t.fs, t.graph, t.store, t.render, t.compatibility)
+	imageTreeAux := NewImagesConfiguration(c.fs, c.graph, c.store, c.render, c.compatibility)
 
-	fileData, err = afero.ReadFile(t.fs, path)
+	fileData, err = afero.ReadFile(c.fs, path)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -393,7 +391,7 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 				image.Version = version
 			}
 
-			err = t.graph.AddImage(name, version, image)
+			err = c.graph.AddImage(name, version, image)
 			// err = t.AddImage(name, version, image)
 			if err != nil {
 				return errors.New(errContext, "", err)
@@ -421,7 +419,7 @@ func (t *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 				image.Version = version
 			}
 
-			err = t.graph.AddImage(name, version, image)
+			err = c.graph.AddImage(name, version, image)
 			if err != nil {
 				return errors.New(errContext, "", err)
 			}
