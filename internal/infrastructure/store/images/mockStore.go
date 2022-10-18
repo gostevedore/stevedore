@@ -41,7 +41,7 @@ func (m *MockStore) Find(name string, version string) ([]*image.Image, error) {
 }
 
 // FindGuaranteed is a mock implementation of the FindGuaranteed method
-func (m *MockStore) FindGuaranteed(findName, findVersion, imageName, imageVersion string) ([]*image.Image, error) {
-	args := m.Called(findName, findVersion, imageName, imageVersion)
+func (m *MockStore) FindGuaranteed(imageName, imageVersion string) ([]*image.Image, error) {
+	args := m.Called(imageName, imageVersion)
 	return args.Get(0).([]*image.Image), args.Error(1)
 }

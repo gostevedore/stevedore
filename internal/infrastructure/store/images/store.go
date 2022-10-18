@@ -311,7 +311,8 @@ func (s *Store) Find(name string, version string) ([]*image.Image, error) {
 }
 
 // FindGuaranteed returns the image associated to the image name and version. In case of a wildcard image, it generates the image. Otherwise, it returns a nil image and an error
-func (s *Store) FindGuaranteed(findName, findVersion, imageName, imageVersion string) ([]*image.Image, error) {
+func (s *Store) FindGuaranteed(imageName, imageVersion string) ([]*image.Image, error) {
+	// func (s *Store) FindGuaranteed(findName, findVersion, imageName, imageVersion string) ([]*image.Image, error) {
 
 	var err error
 	errContext := "(store::images::Store::FindGuaranteed)"
@@ -319,22 +320,22 @@ func (s *Store) FindGuaranteed(findName, findVersion, imageName, imageVersion st
 	var list []*image.Image
 	var image, imageWildcard *image.Image
 
-	list, err = s.Find(findName, findVersion)
-	if err != nil {
-		return nil, errors.New(errContext, "", err)
-	}
+	list, err = s.Find(imageName, imageVersion)
+	// if err != nil {
+	// 	return nil, errors.New(errContext, "", err)
+	// }
 
-	if len(list) > 0 {
+	if len(list) > 0 && err == nil {
 		return list, nil
 	}
 
-	imageWildcard, err = s.FindWildcardImage(findName)
+	imageWildcard, err = s.FindWildcardImage(imageName)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
 
 	if imageWildcard == nil {
-		return nil, errors.New(errContext, fmt.Sprintf("Image '%s:%s' does not exist on the store", findName, findVersion))
+		return nil, errors.New(errContext, fmt.Sprintf("Image '%s:%s' does not exist on the store", imageName, imageVersion))
 	}
 
 	image, err = s.GenerateImageFromWildcard(imageWildcard, imageName, imageVersion)

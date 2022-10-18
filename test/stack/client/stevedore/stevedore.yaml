@@ -4,5 +4,6 @@ credentials:
   storage_type: local
   local_storage_path: ./credentials
 semantic_version_tags_templates:
-  - "{{ .Major }}"
-  - "{{ .Major }}.{{ .Minor }}"
+  - "{{ .Major }}{{ with .PreRelease }}-{{ . }}{{ end }}"
+  - "{{ .Major }}.{{ .Minor }}{{ with .PreRelease }}-{{ . }}{{ end }}"
+

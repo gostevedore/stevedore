@@ -12,6 +12,20 @@ images:
       parents:
         busybox:
           - latest
+    "*":
+      registry: registry.stevedore.test
+      namespace: stable
+      version: "{{ .Version }}"
+      builder:
+        driver: docker
+        options:
+          context:
+            - path: app3
+      vars:
+        message: "{{ .Name }} {{ .Version }}"
+      parents:
+        busybox:
+          - latest
 
   app3-extended:
     version:
