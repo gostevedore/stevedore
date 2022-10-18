@@ -1052,10 +1052,10 @@ func TestFindGuaranteed(t *testing.T) {
 	errContext := "(store::images::Store::FindGuaranteed)"
 
 	tests := []struct {
-		desc              string
-		store             *Store
-		findName          string
-		findVersion       string
+		desc  string
+		store *Store
+		// findName          string
+		// findVersion       string
 		imageName         string
 		imageVersion      string
 		prepareAssertFunc func(*Store)
@@ -1064,7 +1064,7 @@ func TestFindGuaranteed(t *testing.T) {
 		err               error
 	}{
 		{
-			desc: "Testing find images in a guaranteed finding way",
+			desc: "Testing find images in a guaranteed finding mode",
 			store: &Store{
 				render: render.NewMockImageRender(),
 				imageWildcardIndex: map[string]*image.Image{
@@ -1110,8 +1110,9 @@ func TestFindGuaranteed(t *testing.T) {
 					},
 				},
 			},
-			findName:     "image1",
-			findVersion:  "v1",
+			prepareAssertFunc: func(*Store) {},
+			// findName:     "image1",
+			// findVersion:  "v1",
 			imageName:    "image1",
 			imageVersion: "v1",
 			res: []*image.Image{
@@ -1176,8 +1177,8 @@ func TestFindGuaranteed(t *testing.T) {
 					},
 				},
 			},
-			findName:     "image_wildcard",
-			findVersion:  "wildcard",
+			// findName:     "image_wildcard",
+			// findVersion:  "wildcard",
 			imageName:    "image_wildcard",
 			imageVersion: "wildcard",
 			prepareAssertFunc: func(s *Store) {
@@ -1282,8 +1283,8 @@ func TestFindGuaranteed(t *testing.T) {
 					},
 				},
 			},
-			findName:    "image_wildcard",
-			findVersion: "*",
+			imageName:    "image_wildcard",
+			imageVersion: "*",
 			res: []*image.Image{
 				{
 					Name:    "image_wildcard",
@@ -1348,8 +1349,8 @@ func TestFindGuaranteed(t *testing.T) {
 					},
 				},
 			},
-			findName:     "image",
-			findVersion:  "unexisting",
+			// findName:     "image",
+			// findVersion:  "unexisting",
 			imageName:    "image",
 			imageVersion: "unexisting",
 			err:          errors.New(errContext, "Image 'image:unexisting' does not exist on the store"),
@@ -1364,7 +1365,7 @@ func TestFindGuaranteed(t *testing.T) {
 				test.prepareAssertFunc(test.store)
 			}
 
-			list, err := test.store.FindGuaranteed(test.findName, test.findVersion, test.imageName, test.imageVersion)
+			list, err := test.store.FindGuaranteed(test.imageName, test.imageVersion)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {

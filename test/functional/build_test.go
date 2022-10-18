@@ -166,6 +166,38 @@ func (s *BuildFunctionalTestsSuite) TestBuildImageWithSemVerEnabled() {
 	}
 }
 
+func (s *BuildFunctionalTestsSuite) TestBuildImageWithWildcardVersion() {
+	var err error
+
+	if testing.Short() {
+		s.T().Skip("functional test are skipped in short mode")
+	}
+
+	err = dockerComposeCommand(s.T(), s.options, "run -w /app/test/stack/client/stevedore stevedore stevedore build app3 --image-version 1.3.0-rc.1 --push-after-build --enable-semver-tags")
+	if err != nil {
+		s.T().Log(err)
+		s.T().Fail()
+	}
+
+	err = dockerComposeCommand(s.T(), s.options, "run -w /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/stable/app3:1-rc.1")
+	if err != nil {
+		s.T().Log(err)
+		s.T().Fail()
+	}
+
+	err = dockerComposeCommand(s.T(), s.options, "run -w /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/stable/app3:1.3-rc.1")
+	if err != nil {
+		s.T().Log(err)
+		s.T().Fail()
+	}
+
+	err = dockerComposeCommand(s.T(), s.options, "run -w /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/stable/app3:1.3.0-rc.1")
+	if err != nil {
+		s.T().Log(err)
+		s.T().Fail()
+	}
+}
+
 func dockerComposeCommand(t *testing.T, options *docker.Options, cmd string) error {
 	var err error
 	cmds := strings.Split(cmd, " ")

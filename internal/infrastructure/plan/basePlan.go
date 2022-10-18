@@ -31,7 +31,7 @@ func (p *BasePlan) findImages(name string, versions []string) ([]*image.Image, e
 		}
 	} else {
 		for _, version := range versions {
-			imageAux, err = p.images.Find(name, version)
+			imageAux, err = p.images.FindGuaranteed(name, version)
 			if err != nil {
 				return nil, errors.New(errContext, "", err)
 			}
