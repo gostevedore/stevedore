@@ -6,4 +6,3 @@ credentials:
 semantic_version_tags_templates:
   - "{{ .Major }}{{ with .PreRelease }}-{{ . }}{{ end }}"
   - "{{ .Major }}.{{ .Minor }}{{ with .PreRelease }}-{{ . }}{{ end }}{{ with .Build }}-{{ . }}{{ end }}"
-
