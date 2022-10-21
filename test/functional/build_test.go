@@ -173,7 +173,7 @@ func (s *BuildFunctionalTestsSuite) TestBuildImageWithWildcardVersion() {
 		s.T().Skip("functional test are skipped in short mode")
 	}
 
-	err = dockerComposeCommand(s.T(), s.options, "run -w /app/test/stack/client/stevedore stevedore stevedore build app3 --image-version 1.3.0-rc.1 --push-after-build --enable-semver-tags")
+	err = dockerComposeCommand(s.T(), s.options, "run -w /app/test/stack/client/stevedore stevedore stevedore build app3 --image-version 1.3.0-rc.1+1234 --push-after-build --enable-semver-tags")
 	if err != nil {
 		s.T().Log(err)
 		s.T().Fail()
@@ -185,13 +185,13 @@ func (s *BuildFunctionalTestsSuite) TestBuildImageWithWildcardVersion() {
 		s.T().Fail()
 	}
 
-	err = dockerComposeCommand(s.T(), s.options, "run -w /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/stable/app3:1.3-rc.1")
+	err = dockerComposeCommand(s.T(), s.options, "run -w /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/stable/app3:1.3-rc0.1-1234")
 	if err != nil {
 		s.T().Log(err)
 		s.T().Fail()
 	}
 
-	err = dockerComposeCommand(s.T(), s.options, "run -w /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/stable/app3:1.3.0-rc.1")
+	err = dockerComposeCommand(s.T(), s.options, "run -w /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/stable/app3:1.3.0-rc0.1_1234")
 	if err != nil {
 		s.T().Log(err)
 		s.T().Fail()

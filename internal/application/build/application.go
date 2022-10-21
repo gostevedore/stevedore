@@ -319,6 +319,11 @@ func (a *Application) build(ctx context.Context, i *image.Image, options *Option
 
 	buildOptions.RemoveImageAfterBuild = options.RemoveImagesAfterPush
 
+	err = i.Sanetize()
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
+
 	cmd, err := a.command(driver, i, buildOptions)
 	if err != nil {
 		return errors.New(errContext, "", err)

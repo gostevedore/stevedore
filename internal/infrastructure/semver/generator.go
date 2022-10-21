@@ -1,6 +1,8 @@
 package semver
 
-import errors "github.com/apenella/go-common-utils/error"
+import (
+	errors "github.com/apenella/go-common-utils/error"
+)
 
 type SemVerGenerator struct {
 	semver *SemVer

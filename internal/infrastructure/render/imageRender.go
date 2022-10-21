@@ -3,7 +3,7 @@ package render
 import (
 	"bytes"
 	"fmt"
-	"html/template"
+	"text/template"
 	"time"
 
 	errors "github.com/apenella/go-common-utils/error"

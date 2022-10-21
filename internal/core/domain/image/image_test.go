@@ -174,7 +174,7 @@ func TestDockerNormalizedNamed(t *testing.T) {
 			},
 		},
 		{
-			desc: "Testing docekr normalized name",
+			desc: "Testing docker normalized name",
 			err:  &errors.Error{},
 			image: &Image{
 				Name:              "image",
@@ -183,6 +183,17 @@ func TestDockerNormalizedNamed(t *testing.T) {
 				RegistryNamespace: "namespace",
 			},
 			res: "registry.test/namespace/image:version",
+		},
+		{
+			desc: "Testing error invalid reference format",
+			err:  errors.New("", "Image name 'registry.test/namespace/image:version+invalid' could not be normalized\n\tinvalid reference format"),
+			image: &Image{
+				Name:              "image",
+				Version:           "version+invalid",
+				RegistryHost:      "registry.test",
+				RegistryNamespace: "namespace",
+			},
+			res: "",
 		},
 	}
 
@@ -200,6 +211,37 @@ func TestDockerNormalizedNamed(t *testing.T) {
 		})
 	}
 
+}
+
+func TestSanetize(t *testing.T) {
+	tests := []struct {
+		desc  string
+		image *Image
+		res   *Image
+		err   error
+	}{
+		{
+			desc: "Testing sanetize image version with +",
+			image: &Image{
+				Name:    "name",
+				Version: "version+extra",
+			},
+			res: &Image{
+				Name:    "name",
+				Version: "version_extra",
+			},
+			err: &errors.Error{},
+		},
+	}
+
+	for _, test := range tests {
+		err := test.image.Sanetize()
+		if err != nil {
+			assert.Equal(t, test.err.Error(), err.Error())
+		} else {
+			assert.Equal(t, test.res, test.image)
+		}
+	}
 }
 
 func TestCopy(t *testing.T) {

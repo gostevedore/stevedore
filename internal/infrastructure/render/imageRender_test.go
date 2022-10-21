@@ -106,6 +106,27 @@ func TestRender(t *testing.T) {
 			},
 			err: &errors.Error{},
 		},
+		{
+			desc:    "Testing render domain image with extra symbols",
+			render:  &ImageRender{},
+			name:    "image_name",
+			version: "1.2.3-rc0+build123",
+			image: &domainimage.Image{
+				Name:    "{{.Name}}",
+				Version: "{{.Version}}",
+			},
+			res: &domainimage.Image{
+				Children:         []*domainimage.Image{},
+				Name:             "image_name",
+				Version:          "1.2.3-rc0+build123",
+				Labels:           map[string]string{},
+				PersistentLabels: map[string]string{},
+				PersistentVars:   map[string]interface{}{},
+				Tags:             []string{},
+				Vars:             map[string]interface{}{},
+			},
+			err: &errors.Error{},
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
