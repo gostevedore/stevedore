@@ -179,6 +179,7 @@ func (i *Image) AddChild(child *Image) {
 
 // NormalizedNamed normalizes the image name
 func (i *Image) DockerNormalizedNamed() (string, error) {
+	var err error
 	errContext := "(image::DockerNormalizedNamed)"
 
 	if i.Name == "" {
@@ -197,7 +198,28 @@ func (i *Image) DockerNormalizedNamed() (string, error) {
 		return "", errors.New(errContext, "Registry namespace is empty")
 	}
 
-	return fmt.Sprintf("%s/%s/%s:%s", i.RegistryHost, i.RegistryNamespace, i.Name, i.Version), nil
+	name := fmt.Sprintf("%s/%s/%s:%s", i.RegistryHost, i.RegistryNamespace, i.Name, i.Version)
+
+	_, err = reference.ParseNormalizedNamed(name)
+	if err != nil {
+		return "", errors.New(errContext, fmt.Sprintf("Image name '%s' could not be normalized", name), err)
+	}
+
+	return name, nil
+}
+
+// Sanetize normalizes the image name
+func (i *Image) Sanetize() error {
+
+	sanitizeTable := map[string]string{
+		"+": "_",
+	}
+
+	for dirty, sane := range sanitizeTable {
+		i.Version = strings.ReplaceAll(i.Version, dirty, sane)
+	}
+
+	return nil
 }
 
 // Copy method return a copy of the instanced Image
