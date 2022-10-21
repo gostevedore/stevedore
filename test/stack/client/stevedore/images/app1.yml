@@ -1,0 +1,21 @@
+images:
+  app1:
+    "v1":
+      registry: registry.stevedore.test
+      namespace: stable
+      version: "{{ .Version }}-{{ .Parent.Name }}-{{ .Parent.Version }}"
+      vars:
+        golang_version: "1.19"
+      builder:
+        driver: docker
+        options:
+          context:
+            - path: app1
+      parents:
+        ubuntu:
+          - latest
+          - "20.04"
+        scratch:
+          - latest
+        alpine:
+          - "3.16"
