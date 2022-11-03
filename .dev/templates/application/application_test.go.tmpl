@@ -12,6 +12,7 @@ func TestRun(t *testing.T) {
 	tests := []struct {
 		desc string
 		app  *{{ .ApplicationObject }}
+		prepareMockFunc func()
 		err  error
 	}{}
 

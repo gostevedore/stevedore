@@ -14,6 +14,7 @@ func TestExecute(t *testing.T) {
 		entrypoint *{{ .EntrypointObject }}
 		args       []string
 		conf       *configuration.Configuration
+		prepareMockFunc func()
 		err        error
 	}{}
 
