@@ -83,7 +83,7 @@ func (e *Entrypoint) Options(opts ...OptionsFunc) {
 	}
 }
 
-// Execute executes the entrypoint
+// Execute is a pseudo-main method for the command
 func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, handlerOptions *handler.Options) error {
 	var err error
 	var promoteRepoFactory factory.PromoteFactory
