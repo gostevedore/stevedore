@@ -375,7 +375,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 		// {
 		// 	desc: "Testing error creating credentials store on create credentials entrypoint when configuration is not provided",
 		// 	entrypoint: NewCreateCredentialsEntrypoint(
-		// 		WithCompatibilitier(compatibility.NewMockCompatibility()),
+		// 		WithCompatibility(compatibility.NewMockCompatibility()),
 		// 	),
 		// 	conf: nil,
 		// 	err:  errors.New(errContext, "To create the credentials store, configuration is required"),
@@ -383,7 +383,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 		{
 			desc: "Testing error creating credentials store on create credentials entrypoint when credentials configuration is not provided",
 			entrypoint: NewCreateCredentialsEntrypoint(
-				WithCompatibilitier(compatibility.NewMockCompatibility()),
+				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
 			conf: &configuration.Configuration{},
 			err:  errors.New(errContext, "To create the credentials store, credentials configuration is required"),
@@ -391,7 +391,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 		{
 			desc: "Testing error creating credentials store on create credentials entrypoint when credentials format is not provided",
 			entrypoint: NewCreateCredentialsEntrypoint(
-				WithCompatibilitier(compatibility.NewMockCompatibility()),
+				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
 			conf: &configuration.Configuration{
 				Credentials: &configuration.CredentialsConfiguration{},
@@ -401,7 +401,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 		{
 			desc: "Testing error creating credentials store on create credentials entrypoint when credentials storage type is not provided",
 			entrypoint: NewCreateCredentialsEntrypoint(
-				WithCompatibilitier(compatibility.NewMockCompatibility()),
+				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
 			conf: &configuration.Configuration{
 				Credentials: &configuration.CredentialsConfiguration{
@@ -414,7 +414,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 		{
 			desc: "Testing error creating credentials store on create credentials entrypoint when options are not provided",
 			entrypoint: NewCreateCredentialsEntrypoint(
-				WithCompatibilitier(compatibility.NewMockCompatibility()),
+				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
 			conf: &configuration.Configuration{
 				Credentials: &configuration.CredentialsConfiguration{
@@ -427,7 +427,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 		{
 			desc: "Testing create a local credentials store on create credentials entrypoint",
 			entrypoint: NewCreateCredentialsEntrypoint(
-				WithCompatibilitier(compatibility.NewMockCompatibility()),
+				WithCompatibility(compatibility.NewMockCompatibility()),
 				WithFileSystem(afero.NewMemMapFs()),
 			),
 			conf: &configuration.Configuration{

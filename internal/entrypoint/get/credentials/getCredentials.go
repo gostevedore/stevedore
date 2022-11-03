@@ -57,8 +57,8 @@ func WithFileSystem(fs afero.Fs) OptionsFunc {
 	}
 }
 
-// WithCompatibilitier set the
-func WithCompatibilitier(c Compatibilitier) OptionsFunc {
+// WithCompatibility set the
+func WithCompatibility(c Compatibilitier) OptionsFunc {
 	return func(e *Entrypoint) {
 		e.compatibility = c
 	}

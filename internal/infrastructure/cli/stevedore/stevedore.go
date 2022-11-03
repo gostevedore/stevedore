@@ -9,6 +9,7 @@ import (
 	buildentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/build"
 	createcredentialsentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/create/credentials"
 	getcredentialsentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/get/credentials"
+	getimagesentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/get/images"
 	promoteentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/build"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command"
@@ -18,6 +19,7 @@ import (
 	createcredentials "github.com/gostevedore/stevedore/internal/infrastructure/cli/create/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/get"
 	getcredentials "github.com/gostevedore/stevedore/internal/infrastructure/cli/get/credentials"
+	getimages "github.com/gostevedore/stevedore/internal/infrastructure/cli/get/images"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/version"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
@@ -112,23 +114,34 @@ You just need to define how each image should be built and the relationship amon
 	createCredentialsEntrypoint := createcredentialsentrypoint.NewCreateCredentialsEntrypoint(
 		createcredentialsentrypoint.WithConsole(console),
 		createcredentialsentrypoint.WithFileSystem(fs),
-		createcredentialsentrypoint.WithCompatibilitier(compatibilityStore),
+		createcredentialsentrypoint.WithCompatibility(compatibilityStore),
 	)
 	createCredentialsCommand := middleware.Command(ctx, createcredentials.NewCommand(ctx, compatibilityStore, config, createCredentialsEntrypoint), compatibilityReport, log, console)
 
 	createCommand := create.NewCommand(ctx, createCredentialsCommand)
 	command.AddCommand(createCommand)
-	// Get
 
+	// Get
 	// Get credentials
 	getCredentialsEntrypoint := getcredentialsentrypoint.NewEntrypoint(
 		getcredentialsentrypoint.WithWriter(console),
 		getcredentialsentrypoint.WithFileSystem(fs),
-		getcredentialsentrypoint.WithCompatibilitier(compatibilityStore),
+		getcredentialsentrypoint.WithCompatibility(compatibilityStore),
 	)
 	getCredentialsCommand := middleware.Command(ctx, getcredentials.NewCommand(ctx, config, getCredentialsEntrypoint), compatibilityReport, log, console)
 
-	getCommand := get.NewCommand(ctx, getCredentialsCommand)
+	// Get images
+	getImagesEntrypoint := getimagesentrypoint.NewGetImagesEntrypoint(
+		getimagesentrypoint.WithWriter(console),
+		getimagesentrypoint.WithFileSystem(fs),
+		getimagesentrypoint.WithCompatibility(compatibilityStore),
+	)
+	getImagesCommand := middleware.Command(ctx, getimages.NewCommand(ctx, config, getImagesEntrypoint), compatibilityReport, log, console)
+
+	getCommand := get.NewCommand(ctx,
+		getCredentialsCommand,
+		getImagesCommand,
+	)
 	command.AddCommand(getCommand)
 
 	// command.AddCommand(middleware.Middleware(create.NewCommand(ctx, config)))
