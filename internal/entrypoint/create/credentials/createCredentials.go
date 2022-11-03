@@ -61,8 +61,8 @@ func WithFileSystem(fs afero.Fs) OptionsFunc {
 	}
 }
 
-// WithCompatibilitier sets the compatibility for the entrypoint
-func WithCompatibilitier(c Compatibilitier) OptionsFunc {
+// WithCompatibility sets the compatibility for the entrypoint
+func WithCompatibility(c Compatibilitier) OptionsFunc {
 	return func(e *CreateCredentialsEntrypoint) {
 		e.compatibility = c
 	}

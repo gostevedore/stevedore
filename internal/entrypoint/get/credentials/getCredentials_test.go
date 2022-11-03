@@ -35,7 +35,7 @@ func TestExecute(t *testing.T) {
 			entrypoint: NewEntrypoint(
 				WithWriter(ioutil.Discard),
 				WithFileSystem(afero.NewMemMapFs()),
-				WithCompatibilitier(compatibility.NewMockCompatibility()),
+				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
 			conf: &configuration.Configuration{
 				Credentials: &configuration.CredentialsConfiguration{
@@ -93,7 +93,7 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 		{
 			desc: "Testing error creating credentials local storage on get credentials entrypoint when local storage path is not defined",
 			entrypoint: NewEntrypoint(
-				WithCompatibilitier(compatibility.NewMockCompatibility()),
+				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
 			conf: &configuration.CredentialsConfiguration{
 				StorageType: credentials.LocalStore,
@@ -105,7 +105,7 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 			desc: "Testing error creating credentials filter on get credentials entrypoint when storage type in not defined",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(afero.NewMemMapFs()),
-				WithCompatibilitier(compatibility.NewMockCompatibility()),
+				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
 			conf: &configuration.CredentialsConfiguration{
 				Format:      "json",
@@ -117,7 +117,7 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 			desc: "Testing create credentials local storage on get credentials",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(afero.NewMemMapFs()),
-				WithCompatibilitier(compatibility.NewMockCompatibility()),
+				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
 			conf: &configuration.CredentialsConfiguration{
 				StorageType:      credentials.LocalStore,
@@ -177,7 +177,7 @@ func TestCredentialsFilter(t *testing.T) {
 			desc: "Testing create credentials filter on get credentials",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(afero.NewMemMapFs()),
-				WithCompatibilitier(compatibility.NewMockCompatibility()),
+				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
 			conf: &configuration.Configuration{
 				Credentials: &configuration.CredentialsConfiguration{
