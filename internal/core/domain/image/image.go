@@ -13,6 +13,14 @@ import (
 const (
 	// ImageWildcardVersionSymbol is the wildcard version
 	ImageWildcardVersionSymbol = "*"
+	// NameFilterAttribute is the attribute's filter value to filter by name
+	NameFilterAttribute = "name"
+	// VersionFilterAttribute is the attribute's filter value to filter by version
+	VersionFilterAttribute = "version"
+	// RegistryHostFilterAttribute is the attribute's filter value to filter by registry host
+	RegistryHostFilterAttribute = "registry"
+	// RegistryNamespaceFilterAttribute is the attribute's filter value to filter by namespace
+	RegistryNamespaceFilterAttribute = "namespace"
 )
 
 // Image defines the image on the system

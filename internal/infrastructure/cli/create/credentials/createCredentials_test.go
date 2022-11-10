@@ -132,6 +132,8 @@ func TestNewCommand(t *testing.T) {
 			err := cmd.Command.RunE(cmd.Command, test.args)
 			if err != nil && assert.Error(t, err) {
 				assert.Equal(t, test.err.Error(), err.Error())
+			} else {
+				test.entrypoint.(*entrypoint.MockCreateCredentialsEntrypoint).AssertExpectations(t)
 			}
 		})
 	}

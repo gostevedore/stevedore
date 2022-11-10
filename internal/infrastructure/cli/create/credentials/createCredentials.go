@@ -31,6 +31,13 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, config *conf
 		Long: `
 		Stevedore subcommand to add a new credentials badge into credentials store
 `,
+		Example: `
+Create credentials to authenticate through basic auth into a private registry:
+  stevedore create credentials myregistry --username username
+
+Create credentials to achieve credentials from AWS ECR using the default credentials chain:
+  stevedore create credentials ecr-host --aws-region eu-west-1 --aws-use-default-credentials-chain
+`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
