@@ -29,7 +29,7 @@ import (
 )
 
 func TestBuild(t *testing.T) {
-	errContext := "(build::Build)"
+	errContext := "(application::build::Build)"
 	_ = errContext
 	tests := []struct {
 		desc              string
@@ -194,7 +194,7 @@ func TestBuild(t *testing.T) {
 
 func TestBuildWorker(t *testing.T) {
 
-	errContext := "(build::worker)"
+	errContext := "(application::build::worker)"
 
 	tests := []struct {
 		desc              string
@@ -531,7 +531,7 @@ func TestBuildWorker(t *testing.T) {
 }
 
 func TestJob(t *testing.T) {
-	errContext := "(build::command)"
+	errContext := "(application::build::command)"
 
 	tests := []struct {
 		desc              string
@@ -578,7 +578,7 @@ func TestJob(t *testing.T) {
 }
 
 func TestCommand(t *testing.T) {
-	errContext := "(build::command)"
+	errContext := "(application::build::command)"
 
 	driverFactory := factory.NewBuildDriverFactory()
 	driverFactory.Register("mock",
@@ -663,7 +663,7 @@ func TestCommand(t *testing.T) {
 }
 
 func TestGetBuilder(t *testing.T) {
-	errContext := "(build::builder)"
+	errContext := "(application::build::builder)"
 
 	tests := []struct {
 		desc              string
@@ -785,7 +785,7 @@ func TestGetBuilder(t *testing.T) {
 
 func TestGetCredentials(t *testing.T) {
 
-	errContext := "(build::getCredentials)"
+	errContext := "(application::build::getCredentials)"
 
 	tests := []struct {
 		desc              string
@@ -855,7 +855,7 @@ func TestGetCredentials(t *testing.T) {
 }
 
 func TestGetDriver(t *testing.T) {
-	errContext := "(build::getDriver)"
+	errContext := "(application::build::getDriver)"
 
 	tests := []struct {
 		desc    string

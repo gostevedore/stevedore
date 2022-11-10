@@ -16,7 +16,7 @@ func NewMock{{ .ApplicationObject }}() *Mock{{ .ApplicationObject }} {
 	return &Mock{{ .ApplicationObject }}{}
 }
 
-// Build provides a mock function with given fields: ctx, buildPlan, name, version, options, optionsFunc
+// Run provides a mock function to carry out the application tasks
 func (m *Mock{{ .ApplicationObject }}) Run(ctx context.Context, optionsFunc ...OptionsFunc) error {
 	args := m.Called(ctx, optionsFunc)
 	return args.Error(0)
