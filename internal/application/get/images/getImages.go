@@ -55,7 +55,7 @@ func (a *GetImagesApplication) Options(opts ...OptionsFunc) {
 	}
 }
 
-// Build starts the building process
+// Run method carries out the application tasks
 func (a *GetImagesApplication) Run(ctx context.Context, options *Options, optionsFunc ...OptionsFunc) error {
 
 	var err error

@@ -96,7 +96,7 @@ func (a *Application) Options(opts ...OptionsFunc) {
 	}
 }
 
-// Build starts the building process
+// Build method carries out the application tasks
 func (a *Application) Build(ctx context.Context, buildPlan Planner, name string, version []string, options *Options, optionsFunc ...OptionsFunc) error {
 
 	var err error
@@ -104,7 +104,7 @@ func (a *Application) Build(ctx context.Context, buildPlan Planner, name string,
 	var wg sync.WaitGroup
 	buildWorkerErrs := []func() error{}
 
-	errContext := "(build::Build)"
+	errContext := "(application::build::Build)"
 
 	if options == nil {
 		return errors.New(errContext, "To build an image, service options are required")
@@ -171,7 +171,7 @@ func (a *Application) Build(ctx context.Context, buildPlan Planner, name string,
 }
 
 func (a *Application) build(ctx context.Context, i *image.Image, options *Options) error {
-	errContext := "(build::build)"
+	errContext := "(application::build::build)"
 
 	if options == nil {
 		return errors.New(errContext, "Build worker requires service options")
@@ -346,7 +346,7 @@ func (a *Application) build(ctx context.Context, i *image.Image, options *Option
 }
 
 func (a *Application) job(ctx context.Context, cmd job.Commander) (scheduler.Jobber, error) {
-	errContext := "(build::job)"
+	errContext := "(application::build::job)"
 
 	if a.jobFactory == nil {
 		return nil, errors.New(errContext, "To create a build job, is required a job factory")
@@ -356,7 +356,7 @@ func (a *Application) job(ctx context.Context, cmd job.Commander) (scheduler.Job
 }
 
 func (a *Application) command(driver repository.BuildDriverer, i *image.Image, options *image.BuildDriverOptions) (job.Commander, error) {
-	errContext := "(build::command)"
+	errContext := "(application::build::command)"
 
 	if a.commandFactory == nil {
 		return nil, errors.New(errContext, "To create a build command, is required a command factory")
@@ -379,7 +379,7 @@ func (a *Application) command(driver repository.BuildDriverer, i *image.Image, o
 
 func (a *Application) getCredentials(registry string) (repository.AuthMethodReader, error) {
 
-	errContext := "(build::getCredentials)"
+	errContext := "(application::build::getCredentials)"
 
 	if a.credentials == nil {
 		return nil, errors.New(errContext, "To get credentials, is required a credentials store")
@@ -391,7 +391,7 @@ func (a *Application) getCredentials(registry string) (repository.AuthMethodRead
 }
 
 func (a *Application) getDriver(builder *builder.Builder, options *Options) (repository.BuildDriverer, error) {
-	errContext := "(build::getDriver)"
+	errContext := "(application::build::getDriver)"
 
 	var factoryFunc factory.BuildDriverFactoryFunc
 	var err error
@@ -424,7 +424,7 @@ func (a *Application) getDriver(builder *builder.Builder, options *Options) (rep
 
 func (a *Application) getBuilder(i *image.Image) (*builder.Builder, error) {
 
-	errContext := "(build::builder)"
+	errContext := "(application::build::builder)"
 
 	if i == nil {
 		return nil, errors.New(errContext, "To generate a builder, is required an image definition")

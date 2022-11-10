@@ -56,14 +56,14 @@ func (a *Application) Options(opts ...OptionsFunc) {
 	}
 }
 
-// Promote an image
+// Promote method carries out the application tasks
 func (a *Application) Promote(ctx context.Context, options *Options) error {
 
 	var err error
 	var sourceImage, targetImage *image.Image
 
 	promoteOptions := &image.PromoteOptions{}
-	errContext := "(Application::Promote)"
+	errContext := "(application::promote::Promote)"
 
 	if a.factory == nil {
 		return errors.New(errContext, "Promote factory has not been initialized")

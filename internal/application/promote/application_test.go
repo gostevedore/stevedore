@@ -19,7 +19,7 @@ import (
 )
 
 func TestPromote(t *testing.T) {
-	errContext := "(Application::Promote)"
+	errContext := "(application::promote::Promote)"
 
 	tests := []struct {
 		desc            string

@@ -39,7 +39,7 @@ func (a *CreateCredentialsApplication) Options(opts ...OptionsFunc) {
 	}
 }
 
-// Build starts the building process
+// Run method carries out the application tasks
 func (a *CreateCredentialsApplication) Run(ctx context.Context, id string, badge *credentials.Badge, optionsFunc ...OptionsFunc) error {
 	var err error
 

@@ -44,10 +44,10 @@ func (a *Application) Options(opts ...OptionsFunc) {
 	}
 }
 
-// Build starts the building process
+// Run method carries out the application tasks
 func (a *Application) Run(ctx context.Context, optionsFunc ...OptionsFunc) error {
 
-	errContext := "(get::credentials::application::Run)"
+	errContext := "(application::get::credentials::Run)"
 
 	a.Options(optionsFunc...)
 

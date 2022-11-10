@@ -16,7 +16,7 @@ func NewMockGetImagesApplication() *MockGetImagesApplication {
 	return &MockGetImagesApplication{}
 }
 
-// Build provides a mock function with given fields: ctx, buildPlan, name, version, options, optionsFunc
+// Run provides a mock method to carry out the application tasks
 func (m *MockGetImagesApplication) Run(ctx context.Context, options *Options, optionsFunc ...OptionsFunc) error {
 	args := m.Called(ctx, options, optionsFunc)
 	return args.Error(0)
