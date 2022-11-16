@@ -5,6 +5,7 @@ import (
 	"io"
 
 	errors "github.com/apenella/go-common-utils/error"
+	gdsexttree "github.com/apenella/go-data-structures/extendedTree"
 	application "github.com/gostevedore/stevedore/internal/application/get/images"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
@@ -16,7 +17,8 @@ import (
 	filter "github.com/gostevedore/stevedore/internal/infrastructure/filters/images"
 	"github.com/gostevedore/stevedore/internal/infrastructure/graph"
 	"github.com/gostevedore/stevedore/internal/infrastructure/now"
-	output "github.com/gostevedore/stevedore/internal/infrastructure/output/images"
+	plainoutput "github.com/gostevedore/stevedore/internal/infrastructure/output/images/plain"
+	treeoutput "github.com/gostevedore/stevedore/internal/infrastructure/output/images/tree"
 	"github.com/gostevedore/stevedore/internal/infrastructure/render"
 	store "github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/spf13/afero"
@@ -78,6 +80,7 @@ func (e *GetImagesEntrypoint) Execute(ctx context.Context, args []string, conf *
 	var graphTemplateFactory *graph.GraphTemplateFactory
 	var imagesGraphTemplatesStore *imagesgraphtemplate.ImagesGraphTemplate
 	var imagesStore *store.Store
+	var writer repository.ImagesOutputter
 
 	errContext := "(get::images::entrypoint::Execute)"
 
@@ -101,9 +104,11 @@ func (e *GetImagesEntrypoint) Execute(ctx context.Context, args []string, conf *
 		return errors.New(errContext, "", err)
 	}
 
-	writer := e.createtOutput(inputEntrypointOptions)
+	writer, err = e.createtOutput(inputEntrypointOptions)
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
 
-	// missing: assign outputer (tree, text) and assign store, assign filters
 	getImagesService = application.NewGetImagesApplication(
 		application.WithStore(imagesStore),
 		application.WithSelector(map[string]repository.ImagesSelector{
@@ -221,24 +226,56 @@ func (e *GetImagesEntrypoint) createGraphTemplateFactory() (*graph.GraphTemplate
 	return graph.NewGraphTemplateFactory(false), nil
 }
 
-func (e *GetImagesEntrypoint) createtOutput(options *Options) repository.ImagesOutputter {
+func (e *GetImagesEntrypoint) createtOutput(options *Options) (repository.ImagesOutputter, error) {
+	var output repository.ImagesOutputter
+	var err error
+
+	errContext := "(get::images::entrypoint::createtOutput)"
 
 	if options.Tree {
-		return e.createTreeOutput()
+		output, err = e.createTreeOutput()
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
+	} else {
+		output, err = e.createPlainTextOutput()
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
 	}
 
-	return e.createPlainTextOutput()
+	return output, nil
+
 }
 
-func (e *GetImagesEntrypoint) createPlainTextOutput() repository.ImagesOutputter {
+func (e *GetImagesEntrypoint) createPlainTextOutput() (repository.ImagesOutputter, error) {
+
+	errContext := "(get::images::entrypoint::createPlainTextOutput)"
+
+	if e.writer == nil {
+		return nil, errors.New(errContext, "Get images entrypoint requires a writer to create the plain text output")
+	}
+
 	c := console.NewConsole(e.writer, nil)
-	output := output.NewPlainOutput(
-		output.WithWriter(c),
+	output := plainoutput.NewPlainOutput(
+		plainoutput.WithWriter(c),
 	)
 
-	return output
+	return output, nil
 }
 
-func (e *GetImagesEntrypoint) createTreeOutput() repository.ImagesOutputter {
-	return nil
+func (e *GetImagesEntrypoint) createTreeOutput() (repository.ImagesOutputter, error) {
+	errContext := "(get::images::entrypoint::createTreeOutput)"
+
+	if e.writer == nil {
+		return nil, errors.New(errContext, "Get images entrypoint requires a writer to create the tree output")
+	}
+
+	c := console.NewConsole(e.writer, nil)
+	output := treeoutput.NewTreeOutput(
+		treeoutput.WithWriter(c),
+		treeoutput.WithGraph(&gdsexttree.Graph{}),
+	)
+
+	return output, nil
 }

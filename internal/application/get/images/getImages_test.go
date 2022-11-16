@@ -8,7 +8,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	filter "github.com/gostevedore/stevedore/internal/infrastructure/filters/images"
-	output "github.com/gostevedore/stevedore/internal/infrastructure/output/images"
+	output "github.com/gostevedore/stevedore/internal/infrastructure/output/images/mock"
 	store "github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/stretchr/testify/assert"
 )

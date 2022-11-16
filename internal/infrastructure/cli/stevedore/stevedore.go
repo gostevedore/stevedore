@@ -59,8 +59,8 @@ func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore Compatibili
 	stevedoreCmd := &cobra.Command{
 		Use:   "stevedore",
 		Short: "Stevedore, the docker images factory",
-		Long: `Stevedore is a tool to manage bunches of Docker images builds in just one command. It improves the way you build and promote your Docker images when you have a lot of them. Is not a Dockerfile's alternative, but how to use them to build your images.
-You just need to define how each image should be built and the relationship among the images. At this moment, everything is ready to build Docker images: build a single image, build all versions of the same images, build an image and all its children.`,
+		Long: `Stevedore is a tool to manage bunches of Docker images builds in just one command. It improves the way you build and promote your Docker images when you have a lot of them. Is not a Dockerfile's alternative, but how to use it to build your images.
+You just need to define how each image should be built and the relationship among the other images. At this moment, everything is ready to build Docker images: build a single image, build all versions of the same images, build an image and all its children.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
