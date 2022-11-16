@@ -2,7 +2,6 @@ package images
 
 import (
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
@@ -96,10 +95,10 @@ func imageToOutputSlice(i *image.Image) ([]string, error) {
 	if _, isString := i.Builder.(string); isString {
 		res = append(res, i.Builder.(string))
 	} else {
-		if _, isBuilder := i.Builder.(*builder.Builder); isBuilder {
-			res = append(res, IN_LINE_BUILDER)
-		} else {
+		if i.Builder == nil {
 			res = append(res, NA)
+		} else {
+			res = append(res, IN_LINE_BUILDER)
 		}
 	}
 

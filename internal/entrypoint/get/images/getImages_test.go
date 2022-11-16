@@ -1,6 +1,7 @@
 package images
 
 import (
+	"io"
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
@@ -11,7 +12,8 @@ import (
 	imagesgraphtemplate "github.com/gostevedore/stevedore/internal/infrastructure/configuration/images/graph"
 	"github.com/gostevedore/stevedore/internal/infrastructure/graph"
 	"github.com/gostevedore/stevedore/internal/infrastructure/now"
-	output "github.com/gostevedore/stevedore/internal/infrastructure/output/images"
+	plainoutput "github.com/gostevedore/stevedore/internal/infrastructure/output/images/plain"
+	treeoutput "github.com/gostevedore/stevedore/internal/infrastructure/output/images/tree"
 	"github.com/gostevedore/stevedore/internal/infrastructure/render"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/spf13/afero"
@@ -282,20 +284,63 @@ func TestCreateOutput(t *testing.T) {
 		entrypoint *GetImagesEntrypoint
 		options    *Options
 		res        repository.ImagesOutputter
+		err        error
 	}{
 		{
-			desc:       "Testing create get images entrypoint default (plain text) output",
+			desc: "Testing create get images entrypoint default (plain text) output",
+			entrypoint: NewGetImagesEntrypoint(
+				WithWriter(io.Discard),
+			),
+			options: &Options{},
+			res:     plainoutput.NewPlainOutput(),
+			err:     &errors.Error{},
+		},
+		{
+			desc:       "Testing error on get images entrypoint when default (plain text) output is not provided by a writer",
 			entrypoint: NewGetImagesEntrypoint(),
 			options:    &Options{},
-			res:        output.NewPlainOutput(),
+			err: errors.New(
+				"(get::images::entrypoint::createtOutput)", "",
+				errors.New(
+					"(get::images::entrypoint::createPlainTextOutput)",
+					"Get images entrypoint requires a writer to create the plain text output"),
+			),
+		},
+		{
+			desc: "Testing create get images entrypoint tree output",
+			entrypoint: NewGetImagesEntrypoint(
+				WithWriter(io.Discard),
+			),
+			options: &Options{
+				Tree: true,
+			},
+			res: treeoutput.NewTreeOutput(),
+			err: &errors.Error{},
+		},
+		{
+			desc:       "Testing error on get images entrypoint when tree output is not provided by a writer",
+			entrypoint: NewGetImagesEntrypoint(),
+			options: &Options{
+				Tree: true,
+			},
+			err: errors.New(
+				"(get::images::entrypoint::createtOutput)", "",
+				errors.New(
+					"(get::images::entrypoint::createTreeOutput)",
+					"Get images entrypoint requires a writer to create the tree output"),
+			),
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
 
-			res := test.entrypoint.createtOutput(test.options)
-			assert.IsType(t, test.res, res)
+			res, err := test.entrypoint.createtOutput(test.options)
+			if err != nil {
+				assert.Equal(t, test.err, err)
+			} else {
+				assert.IsType(t, test.res, res)
+			}
 		})
 	}
 }
