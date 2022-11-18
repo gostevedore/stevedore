@@ -402,9 +402,6 @@ func (a *Application) getDriver(builder *builder.Builder, options *Options) (rep
 	}
 
 	driverName := builder.Driver
-	if options.DryRun {
-		driverName = image.DryRunDriverName
-	}
 
 	factoryFunc, err = a.driverFactory.Get(driverName)
 	if err != nil {

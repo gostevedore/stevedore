@@ -4,8 +4,8 @@ package build
 type Options struct {
 	// Concurrency is the number of images builds that can be excuted at the same time
 	Concurrency int
-	// Debug if is true debug mode is enabled: ???
+	// Debug if is true debug mode is enabled
 	Debug bool
-	// // DryRun is true if the build should be a dry run: ???
-	// DryRun bool
+	// DryRun is true if the build should be a dry run
+	DryRun bool
 }

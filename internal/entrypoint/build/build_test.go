@@ -34,7 +34,7 @@ import (
 )
 
 func TestPrepareEntrypointOptions(t *testing.T) {
-	errContext := "(build::entrypoint::prepareEntrypointOptions)"
+	errContext := "(entrypoint::build::prepareEntrypointOptions)"
 
 	tests := []struct {
 		desc       string
@@ -87,6 +87,24 @@ func TestPrepareEntrypointOptions(t *testing.T) {
 			},
 			err: &errors.Error{},
 		},
+		{
+			desc:       "Testing prepare build entrypoint options using configuration concurrency and dryrun enabled",
+			entrypoint: &Entrypoint{},
+			conf: &configuration.Configuration{
+				Concurrency: 5,
+			},
+			options: &Options{
+				Concurrency: 0,
+				DryRun:      true,
+				Debug:       true,
+			},
+			res: &Options{
+				Concurrency: 1,
+				Debug:       true,
+				DryRun:      true,
+			},
+			err: &errors.Error{},
+		},
 	}
 
 	for _, test := range tests {
@@ -105,7 +123,7 @@ func TestPrepareEntrypointOptions(t *testing.T) {
 
 func TestPrepareImageName(t *testing.T) {
 
-	errContext := "(build::entrypoint::prepareImageName)"
+	errContext := "(entrypoint::build::prepareImageName)"
 
 	tests := []struct {
 		desc       string
@@ -149,7 +167,7 @@ func TestPrepareImageName(t *testing.T) {
 }
 
 func TestPrepareHandlerOptions(t *testing.T) {
-	errContext := "(build::entrypoint::prepareHandlerOptions)"
+	errContext := "(entrypoint::build::prepareHandlerOptions)"
 
 	tests := []struct {
 		desc       string
@@ -181,7 +199,6 @@ func TestPrepareHandlerOptions(t *testing.T) {
 				AnsibleLimit:                     "ansible-limit",
 				BuildOnCascade:                   true,
 				CascadeDepth:                     3,
-				DryRun:                           true,
 				EnableSemanticVersionTags:        true,
 				ImageFromName:                    "image-from-name",
 				ImageFromRegistryHost:            "image-from-registry-host",
@@ -208,7 +225,6 @@ func TestPrepareHandlerOptions(t *testing.T) {
 				AnsibleLimit:                     "ansible-limit",
 				BuildOnCascade:                   true,
 				CascadeDepth:                     3,
-				DryRun:                           true,
 				EnableSemanticVersionTags:        true,
 				ImageFromName:                    "image-from-name",
 				ImageFromRegistryHost:            "image-from-registry-host",
@@ -243,7 +259,6 @@ func TestPrepareHandlerOptions(t *testing.T) {
 				AnsibleLimit:                     "ansible-limit",
 				BuildOnCascade:                   true,
 				CascadeDepth:                     3,
-				DryRun:                           true,
 				EnableSemanticVersionTags:        true,
 				ImageFromName:                    "image-from-name",
 				ImageFromRegistryHost:            "image-from-registry-host",
@@ -269,7 +284,6 @@ func TestPrepareHandlerOptions(t *testing.T) {
 				AnsibleLimit:                     "ansible-limit",
 				BuildOnCascade:                   true,
 				CascadeDepth:                     3,
-				DryRun:                           true,
 				EnableSemanticVersionTags:        true,
 				ImageFromName:                    "image-from-name",
 				ImageFromRegistryHost:            "image-from-registry-host",
@@ -309,7 +323,7 @@ func TestPrepareHandlerOptions(t *testing.T) {
 
 func TestCreateCredentialsLocalStore(t *testing.T) {
 
-	errContext := "(build::entrypoint::createCredentialsStore)"
+	errContext := "(entrypoint::build::createCredentialsStore)"
 
 	tests := []struct {
 		desc          string
@@ -391,7 +405,7 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 }
 
 func TestCreateCredentialsFactory(t *testing.T) {
-	errContext := "(build::entrypoint::createCredentialsFactory)"
+	errContext := "(entrypoint::build::createCredentialsFactory)"
 
 	baseDir := "/credentials"
 	testFs := afero.NewMemMapFs()
@@ -469,7 +483,7 @@ func TestCreateCredentialsFactory(t *testing.T) {
 }
 
 func TestCreateBuildersStore(t *testing.T) {
-	errContext := "(build::entrypoint::createBuildersStore)"
+	errContext := "(entrypoint::build::createBuildersStore)"
 
 	baseDir := "/builders"
 	testFs := afero.NewMemMapFs()
@@ -618,7 +632,7 @@ func TestCreateSemVerFactory(t *testing.T) {
 }
 
 func TestCreateImageRender(t *testing.T) {
-	errContext := "(build::entrypoint::createImageRender)"
+	errContext := "(entrypoint::build::createImageRender)"
 
 	tests := []struct {
 		desc       string
@@ -656,7 +670,7 @@ func TestCreateImageRender(t *testing.T) {
 }
 
 func TestCreateImagesStore(t *testing.T) {
-	errContext := "(build::entrypoint::createImagesStore)"
+	errContext := "(entrypoint::build::createImagesStore)"
 
 	baseDir := "/images"
 	testFs := afero.NewMemMapFs()
@@ -759,7 +773,7 @@ func TestCreateImagesStore(t *testing.T) {
 }
 
 func TestCreateImagesGraphTemplatesStorer(t *testing.T) {
-	errContext := "(build::entrypoint::createImagesGraphTemplatesStorer)"
+	errContext := "(entrypoint::build::createImagesGraphTemplatesStorer)"
 
 	tests := []struct {
 		desc       string
@@ -829,7 +843,7 @@ func TestCreateGraphTemplateFactory(t *testing.T) {
 
 func TestCreateBuildDriverFactory(t *testing.T) {
 
-	errContext := "(entrypoint::createBuildDriverFactory)"
+	errContext := "(entrypoint::build::createBuildDriverFactory)"
 
 	tests := []struct {
 		desc        string
@@ -943,23 +957,38 @@ func TestCreateDryRunDriver(t *testing.T) {
 }
 
 func TestCreateDefaultDriver(t *testing.T) {
-
+	errContext := "(entrypoint::createDefaultDriver)"
 	tests := []struct {
 		desc       string
 		entrypoint *Entrypoint
+		options    *Options
 		res        repository.BuildDriverer
 		err        error
 	}{
 		{
+			desc:       "Testing error creating default driver in build entrypoint when options are not provided",
+			entrypoint: NewEntrypoint(),
+			err:        errors.New(errContext, "Build entrypoint options are required to create default driver"),
+		},
+		{
 			desc:       "Testing create default driver in build entrypoint",
 			entrypoint: NewEntrypoint(),
+			options:    &Options{},
 			res:        &defaultdriver.DefaultDriver{},
+		},
+		{
+			desc:       "Testing create default driver in build entrypoint with dryrun enabled",
+			entrypoint: NewEntrypoint(),
+			options: &Options{
+				DryRun: true,
+			},
+			res: &dryrun.DryRunDriver{},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-			driverFunc, err := test.entrypoint.createDefaultDriver()
+			driverFunc, err := test.entrypoint.createDefaultDriver(test.options)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
@@ -975,7 +1004,7 @@ func TestCreateDefaultDriver(t *testing.T) {
 
 func TestCreateAnsibleDriver(t *testing.T) {
 
-	errContext := "(entrypoint::createAnsibleDriver)"
+	errContext := "(entrypoint::build::createAnsibleDriver)"
 
 	tests := []struct {
 		desc       string
@@ -995,6 +1024,14 @@ func TestCreateAnsibleDriver(t *testing.T) {
 			entrypoint: NewEntrypoint(),
 			options:    &Options{},
 			res:        &ansible.AnsiblePlaybookDriver{},
+		},
+		{
+			desc:       "Testing create ansible driver in build entrypoint with dryrun enabled",
+			entrypoint: NewEntrypoint(),
+			options: &Options{
+				DryRun: true,
+			},
+			res: &dryrun.DryRunDriver{},
 		},
 	}
 
@@ -1017,7 +1054,7 @@ func TestCreateAnsibleDriver(t *testing.T) {
 }
 
 func TestCreateDockerDriver(t *testing.T) {
-	errContext := "(entrypoint::createDockerDriver)"
+	errContext := "(entrypoint::build::createDockerDriver)"
 
 	tests := []struct {
 		desc        string
@@ -1048,6 +1085,16 @@ func TestCreateDockerDriver(t *testing.T) {
 			res:         &docker.DockerDriver{},
 			err:         &errors.Error{},
 		},
+		{
+			desc:        "Testing create docker driver in build entrypoint with dryrun enabled",
+			entrypoint:  NewEntrypoint(),
+			credentials: credentialsfactory.NewMockCredentialsFactory(),
+			options: &Options{
+				DryRun: true,
+			},
+			res: &dryrun.DryRunDriver{},
+			err: &errors.Error{},
+		},
 	}
 
 	for _, test := range tests {
@@ -1064,7 +1111,6 @@ func TestCreateDockerDriver(t *testing.T) {
 				assert.NotNil(t, driver)
 				assert.IsType(t, test.res, driver)
 			}
-
 		})
 	}
 }
