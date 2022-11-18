@@ -456,7 +456,7 @@ func TestStore(t *testing.T) {
 				storedImage, exist := s.imageWildcardIndex["image_name"]
 				assert.True(t, exist, "Image is not on the wildcard index")
 				assert.Equal(t, image, storedImage, "Unexpected image in the wildcard index")
-				assert.Equal(t, 0, len(s.store))
+				assert.Equal(t, 1, len(s.store))
 				assert.Equal(t, 0, len(s.imageNameDefinitionVersionList))
 				assert.Equal(t, 0, len(s.imageNameVersionRenderedVersionsList))
 				assert.Equal(t, 0, len(s.imagesIndex))

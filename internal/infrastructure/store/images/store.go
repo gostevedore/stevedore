@@ -233,6 +233,8 @@ func (s *Store) storeWildcardImage(name string, i *image.Image) error {
 
 	s.imageWildcardIndex[name] = i
 
+	s.store = append(s.store, i)
+
 	return nil
 }
 
