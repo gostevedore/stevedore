@@ -8,13 +8,13 @@ require (
 	github.com/apenella/go-common-utils/data v0.0.0-20220913191136-86daaa87e7df
 	github.com/apenella/go-common-utils/error v0.0.0-20220913191136-86daaa87e7df
 	github.com/apenella/go-common-utils/transformer/string v0.0.0-20220913191136-86daaa87e7df
-	github.com/apenella/go-data-structures/extendedTree v0.0.0-20221115202020-96dbfd1c7fa0
+	github.com/apenella/go-data-structures/extendedTree v0.0.0-20221117064317-a3b6d9f69cda
 	github.com/apenella/go-docker-builder v0.7.2
 	github.com/aws/aws-sdk-go-v2 v1.17.1
-	github.com/aws/aws-sdk-go-v2/config v1.18.0
-	github.com/aws/aws-sdk-go-v2/credentials v1.13.0
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.17.21
-	github.com/aws/aws-sdk-go-v2/service/sts v1.17.2
+	github.com/aws/aws-sdk-go-v2/config v1.18.1
+	github.com/aws/aws-sdk-go-v2/credentials v1.13.1
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.17.22
+	github.com/aws/aws-sdk-go-v2/service/sts v1.17.3
 	github.com/docker/distribution v2.8.1+incompatible
 	github.com/docker/docker v20.10.21+incompatible
 	github.com/go-git/go-git/v5 v5.4.2
@@ -37,7 +37,6 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20221026131551-cf6655e29de4 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/ahmetb/go-cursor v0.0.0-20131010032410-8136607ea412 // indirect
-	github.com/apenella/go-data-structures/tree v0.0.0-20221115202020-96dbfd1c7fa0 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.19 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.25 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.19 // indirect
@@ -72,7 +71,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
-	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
+	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
@@ -86,7 +85,7 @@ require (
 	github.com/xanzy/ssh-agent v0.3.2 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	golang.org/x/crypto v0.2.0 // indirect
+	golang.org/x/crypto v0.3.0 // indirect
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/net v0.2.0 // indirect
 	golang.org/x/sys v0.2.0 // indirect
