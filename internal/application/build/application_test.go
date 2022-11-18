@@ -2,7 +2,6 @@ package build
 
 import (
 	"context"
-	"io/ioutil"
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
@@ -14,7 +13,6 @@ import (
 	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
 	authmethodkeyfile "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/keyfile"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/docker"
-	"github.com/gostevedore/stevedore/internal/infrastructure/driver/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/mock"
 	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
@@ -892,29 +890,6 @@ func TestGetDriver(t *testing.T) {
 			options: &Options{},
 			res:     &mock.MockDriver{},
 			err:     &errors.Error{},
-		},
-		{
-			desc: "Testing get driver with dry-run",
-			service: NewApplication(
-				WithDriverFactory(
-					&factory.BuildDriverFactory{
-						"docker": func() (repository.BuildDriverer, error) {
-							return mock.NewMockDriver(), nil
-						},
-						"dry-run": func() (repository.BuildDriverer, error) {
-							return dryrun.NewDryRunDriver(ioutil.Discard), nil
-						},
-					},
-				),
-			),
-			builder: &builder.Builder{
-				Driver: "docker",
-			},
-			options: &Options{
-				DryRun: true,
-			},
-			res: &dryrun.DryRunDriver{},
-			err: &errors.Error{},
 		},
 	}
 

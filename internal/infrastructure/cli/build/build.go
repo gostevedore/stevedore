@@ -104,15 +104,15 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 				compatibility.AddDeprecated(DeprecatedFlagMessagePushImages)
 			}
 
+			entrypointOptions.Concurrency = buildFlagOptions.Concurrency
+			entrypointOptions.Debug = buildFlagOptions.Debug
+			entrypointOptions.DryRun = buildFlagOptions.DryRun
 			handlerOptions.AnsibleConnectionLocal = buildFlagOptions.AnsibleConnectionLocal
 			handlerOptions.AnsibleIntermediateContainerName = buildFlagOptions.AnsibleIntermediateContainerName
 			handlerOptions.AnsibleInventoryPath = buildFlagOptions.AnsibleInventoryPath
 			handlerOptions.AnsibleLimit = buildFlagOptions.AnsibleLimit
 			handlerOptions.BuildOnCascade = buildFlagOptions.BuildOnCascade
 			handlerOptions.CascadeDepth = buildFlagOptions.CascadeDepth
-			entrypointOptions.Concurrency = buildFlagOptions.Concurrency
-			entrypointOptions.Debug = buildFlagOptions.Debug
-			handlerOptions.DryRun = buildFlagOptions.DryRun
 			handlerOptions.EnableSemanticVersionTags = buildFlagOptions.EnableSemanticVersionTags
 			handlerOptions.ImageFromName = buildFlagOptions.ImageFromName
 			handlerOptions.ImageFromRegistryHost = buildFlagOptions.ImageFromRegistryHost

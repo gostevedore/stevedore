@@ -14,8 +14,6 @@ type Options struct {
 	BuildOnCascade bool
 	// CascadeDepth is the number of levels to build when build on cascade is executed: ???
 	CascadeDepth int
-	// DryRun if is true, the build is executed in dry run mode
-	DryRun bool
 	// EnableSemanticVersionTags if is true semantic version tags are generated
 	EnableSemanticVersionTags bool
 	// ImageFromName is the name of the image to use as source
