@@ -67,12 +67,13 @@ func TestImageNamespaceFilterSelect(t *testing.T) {
 	}
 
 	for _, test := range tests {
-
-		list, err := test.filter.Select(test.images, "", test.item)
-		if err != nil {
-			assert.Equal(t, test.err, err)
-		} else {
-			assert.ElementsMatch(t, test.res, list)
-		}
+		t.Run(test.desc, func(t *testing.T) {
+			list, err := test.filter.Select(test.images, "", test.item)
+			if err != nil {
+				assert.Equal(t, test.err, err)
+			} else {
+				assert.ElementsMatch(t, test.res, list)
+			}
+		})
 	}
 }
