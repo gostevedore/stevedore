@@ -82,7 +82,7 @@ func (c *ImagesConfiguration) LoadImagesToStore(path string) error {
 
 	for node := range c.graph.Iterate() {
 
-		// skip node if already stored
+		// skip node when it is already stored
 		_, stored := storedNodes[node.Name()]
 		if stored {
 			continue
@@ -92,7 +92,6 @@ func (c *ImagesConfiguration) LoadImagesToStore(path string) error {
 		if err != nil {
 			return errors.New(errContext, "", err)
 		}
-
 	}
 
 	if len(pendingNodes) != 0 {
@@ -137,7 +136,7 @@ func (c *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes
 		}
 	} else {
 		for _, parent := range node.Parents() {
-			// skip node if already stored
+			// skip node when it is already stored
 			_, stored := storedNodes[strings.Join([]string{node.Name(), parent.Name()}, ":")]
 			if stored {
 				continue
@@ -154,8 +153,8 @@ func (c *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes
 				return errors.New(errContext, "", err)
 			}
 
-			// if parent is not already created current node is skipped
-			// Node is referenced by all its parents then when the latest parent is created, the node will be created as well
+			// when then parent is not already created, the current node is skipped
+			// Node is referred by all its parents then when the latest parent is created, the node will be created as well
 			if len(parentDomainImageList) == 0 || parentDomainImageList == nil {
 				pendingNodes[parentName] = map[string]struct{}{parentVersion: {}}
 				continue
@@ -177,7 +176,10 @@ func (c *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes
 				return errors.New(errContext, "", err)
 			}
 
-			parentDomainImage.AddChild(imageToStore)
+			// not tested
+			if version != domainimage.ImageWildcardVersionSymbol {
+				parentDomainImage.AddChild(imageToStore)
+			}
 
 			err = c.store.Store(name, version, imageToStore)
 			if err != nil {

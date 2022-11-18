@@ -92,6 +92,22 @@ images:
       parents:
         parent1:
         - parent1_version
+  parent2:
+    parent2_version:
+      registry: registry.test
+      namespace: namespace
+      version: "v{{ .Version }}"
+      builder: builder
+  child2:
+    "*":
+      registry: registry.test
+      namespace: namespace
+      name: child2
+      version: "{{ .Version }}"
+      builder: builder
+      parents:
+        parent2:
+        - parent2_version
 `), 0644)
 	if err != nil {
 		t.Log(err)
@@ -285,6 +301,70 @@ image:
 							PersistentVars: map[string]interface{}{
 								"pvar": "pvarvalue",
 							},
+						},
+					},
+				).Return(nil)
+
+				// Create parent2:parent2_version
+				i.render.(*render.MockImageRender).On("Render", "parent2", "parent2_version",
+					&domainimage.Image{
+						RegistryHost:      "registry.test",
+						RegistryNamespace: "namespace",
+						Name:              "parent2",
+						Version:           "v{{ .Version }}",
+						Builder:           "builder",
+					},
+				).Return(
+					&domainimage.Image{
+						RegistryHost:      "registry.test",
+						RegistryNamespace: "namespace",
+						Name:              "parent2",
+						Version:           "vparent2_version",
+						Builder:           "builder",
+					}, nil)
+
+				i.store.(*images.MockStore).On("Store", "parent2", "parent2_version",
+					&domainimage.Image{
+						RegistryHost:      "registry.test",
+						RegistryNamespace: "namespace",
+						Name:              "parent2",
+						Version:           "vparent2_version",
+						Builder:           "builder",
+					},
+				).Return(nil)
+
+				// Create child2:*
+				i.store.(*images.MockStore).On("Find", "parent2", "parent2_version").Return([]*domainimage.Image{
+					{
+						RegistryHost:      "registry.test",
+						RegistryNamespace: "namespace",
+						Name:              "parent2",
+						Version:           "vparent2_version",
+						Builder:           "builder",
+					},
+				}, nil)
+
+				// child2:* is not rendered because renderImage method return the image as is because its version is equal to *
+
+				i.store.(*images.MockStore).On("Store", "child2", "*",
+					&domainimage.Image{
+						RegistryHost:      "registry.test",
+						RegistryNamespace: "namespace",
+						Name:              "child2",
+						Version:           "{{ .Version }}",
+						Builder:           "builder",
+						Children:          []*domainimage.Image{},
+						Labels:            map[string]string{},
+						PersistentLabels:  map[string]string{},
+						PersistentVars:    map[string]interface{}{},
+						Tags:              []string{},
+						Vars:              map[string]interface{}{},
+						Parent: &domainimage.Image{
+							RegistryHost:      "registry.test",
+							RegistryNamespace: "namespace",
+							Name:              "parent2",
+							Version:           "vparent2_version",
+							Builder:           "builder",
 						},
 					},
 				).Return(nil)
