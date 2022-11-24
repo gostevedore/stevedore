@@ -40,21 +40,10 @@ type ImagesStorerReader interface {
 	FindGuaranteed(imageName, imageVersion string) ([]*image.Image, error)
 }
 
-// // ImagesIndexer interface defines which methods are needed to provide extra indexes in order lookup images into an store
-// type ImagesIndexer interface {
-// 	Index(image *image.Image) error
-// }
-
 // ImagesSelector interface defines which methods are needed to select images from a list
 type ImagesSelector interface {
 	Select(images []*image.Image, operation string, item string) ([]*image.Image, error)
 }
-
-// // ImagesSelectIndexer interface defines which methods are needed to extend images storage which extra indexes and selectors
-// type ImagesSelectIndexer interface {
-// 	ImagesIndexer
-// 	ImagesSelector
-// }
 
 // ImagesOutputter interface defines which methods are needed to return images definitions
 type ImagesOutputter interface {

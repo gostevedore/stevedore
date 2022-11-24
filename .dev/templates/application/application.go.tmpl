@@ -12,13 +12,13 @@ type {{ .ApplicationObject }} struct {
 // New{{ .ApplicationObject }} creats a new application service
 func New{{ .ApplicationObject }}(options ...OptionsFunc) *{{ .ApplicationObject }} {
 
-	service := &{{ .ApplicationObject }}{}
-	service.Options(options...)
+	app := &{{ .ApplicationObject }}{}
+	app.Options(options...)
 
-	return service
+	return app
 }
 
-// Options configure the service
+// Options to configure the application
 func (a *{{ .ApplicationObject }}) Options(opts ...OptionsFunc) {
 	for _, opt := range opts {
 		opt(a)

@@ -26,3 +26,13 @@ func (b *MockStore) Find(name string) (*builder.Builder, error) {
 	args := b.Mock.Called(name)
 	return args.Get(0).(*builder.Builder), args.Error(1)
 }
+
+// All return all builders
+func (b *MockStore) List() ([]*builder.Builder, error) {
+	args := b.Mock.Called()
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	} else {
+		return args.Get(0).([]*builder.Builder), args.Error(1)
+	}
+}

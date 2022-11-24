@@ -247,7 +247,7 @@ func TestPrepareHandlerOptions(t *testing.T) {
 			err: &errors.Error{},
 		},
 		{
-			desc:       "Testing prepare handler options using also configuration options",
+			desc:       "Testing prepare handler options using also configuration options in build entrypoint",
 			entrypoint: &Entrypoint{},
 			conf: &configuration.Configuration{
 				SemanticVersionTagsTemplates: []string{"conf-semantic-version-tags-template1", "conf-semantic-version-tags-template2"},
@@ -377,7 +377,7 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 			err: errors.New(errContext, "Unsupported credentials storage type 'unsupported'"),
 		},
 		{
-			desc: "Testing create credentials local store",
+			desc: "Testing create credentials local store in build entrypoint",
 			entrypoint: NewEntrypoint(
 				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
@@ -450,7 +450,7 @@ func TestCreateCredentialsFactory(t *testing.T) {
 			err:  errors.New(errContext, "To create the credentials store in build entrypoint, credentials configuration is required"),
 		},
 		{
-			desc: "Testing create credentials factory",
+			desc: "Testing create credentials factory in build entrypoint",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 				WithCompatibility(compatibility.NewMockCompatibility()),
@@ -738,7 +738,7 @@ func TestCreateImagesStore(t *testing.T) {
 			err:           errors.New(errContext, "To create an images store in build entrypoint, images path must be provided in configuration"),
 		},
 		{
-			desc: "Testing create images store",
+			desc: "Testing create images store in build entrypoint",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(testFs),
 				WithCompatibility(compatibility.NewMockCompatibility()),
@@ -932,7 +932,7 @@ func TestCreateDryRunDriver(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:       "Testing create dry-run driver",
+			desc:       "Testing create dry-run driver in build entrypoint",
 			entrypoint: NewEntrypoint(),
 			res:        &dryrun.DryRunDriver{},
 		},

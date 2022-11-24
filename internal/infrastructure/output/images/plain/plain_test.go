@@ -11,6 +11,8 @@ import (
 )
 
 func TestOuput(t *testing.T) {
+	errContext := "(output::images::PlainOutput::Output)"
+
 	tests := []struct {
 		desc            string
 		output          *PlainOutput
@@ -19,7 +21,12 @@ func TestOuput(t *testing.T) {
 		err             error
 	}{
 		{
-			desc: "Testing plain output",
+			desc:   "Testing error on image plain output when writer is not define",
+			output: NewPlainOutput(),
+			err:    errors.New(errContext, "Images plain text output requires a writer"),
+		},
+		{
+			desc: "Testing get images in plain output",
 			output: NewPlainOutput(
 				WithWriter(console.NewMockConsole()),
 			),

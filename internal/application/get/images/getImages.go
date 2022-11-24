@@ -21,10 +21,10 @@ type GetImagesApplication struct {
 // NewGetImagesApplication creats a new application service
 func NewGetImagesApplication(options ...OptionsFunc) *GetImagesApplication {
 
-	service := &GetImagesApplication{}
-	service.Options(options...)
+	app := &GetImagesApplication{}
+	app.Options(options...)
 
-	return service
+	return app
 }
 
 // WithStore sets the images store

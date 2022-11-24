@@ -1,69 +1,62 @@
-package getbuilders
+package builders
 
-// import (
-// 	"context"
+import (
+	"context"
 
-// 	errors "github.com/apenella/go-common-utils/error"
-// 	"github.com/gostevedore/stevedore/internal/build"
-// 	"github.com/gostevedore/stevedore/internal/command"
-// 	"github.com/gostevedore/stevedore/internal/configuration"
-// 	"github.com/gostevedore/stevedore/internal/engine"
-// 	"github.com/gostevedore/stevedore/internal/ui/console"
-// 	"github.com/spf13/cobra"
-// )
+	errors "github.com/apenella/go-common-utils/error"
+	handler "github.com/gostevedore/stevedore/internal/handler/get/builders"
+	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command"
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
+	"github.com/spf13/cobra"
+)
 
-// const (
-// 	columnSeparator = " | "
-// )
+// NewCommand return an stevedore command object for get builders
+func NewCommand(ctx context.Context, config *configuration.Configuration, entrypoint Entrypointer) *command.StevedoreCommand {
 
-// //  NewCommand return an stevedore command object for get builders
-// func NewCommand(ctx context.Context, config *configuration.Configuration) *command.StevedoreCommand {
+	getBuildersFlagOptions := &getBuildersFlagOptions{}
 
-// 	getBuildersCmd := &cobra.Command{
-// 		Use: "builders",
-// 		Aliases: []string{
-// 			"builder",
-// 		},
-// 		Short: "Stevedore subcommand to get builders information",
-// 		Long: `Stevedore subcommand to get builders information
-//   Example:
-//     stevedore get builders
-// `,
-// 		RunE: getBuildersHandler(ctx, config),
-// 	}
+	getBuildersCmd := &cobra.Command{
+		Use: "builders",
+		Aliases: []string{
+			"builder",
+			"b",
+		},
+		Short: "Stevedore subcommand to get builders information",
+		Long: `
+		Stevedore subcommand to get builders information
+`,
+		Example: `
+Get builder filtered by name:
+  stevedore get images --filter name=golang-app
 
-// 	command := &command.StevedoreCommand{
-// 		Command: getBuildersCmd,
-// 	}
+Get builder filtered by driver:
+  stevedore get images --filter driver=docker
+`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var err error
 
-// 	return command
-// }
+			errContext := "(cli::get::builders::RunE)"
 
-// func getBuildersHandler(ctx context.Context, config *configuration.Configuration) command.CobraRunEFunc {
+			handlerOptions := &handler.Options{}
 
-// 	return func(cmd *cobra.Command, args []string) error {
-// 		var err error
-// 		var imagesEngine *engine.ImagesEngine
-// 		var builders [][]string
-// 		var table [][]string
+			if len(getBuildersFlagOptions.Filter) > 0 {
+				handlerOptions.Filter = append([]string{}, getBuildersFlagOptions.Filter...)
+			}
 
-// 		imagesEngine, err = engine.NewImagesEngine(ctx, 1, config.TreePathFile, config.BuilderPathFile)
-// 		if err != nil {
-// 			return errors.New("(command::getBuildersHandler)", "Error creating images engine", err)
-// 		}
+			err = entrypoint.Execute(ctx, cmd.Flags().Args(), config, handlerOptions)
+			if err != nil {
+				return errors.New(errContext, "", err)
+			}
 
-// 		builders, err = imagesEngine.Builders.ListBuilders()
-// 		if err != nil {
-// 			return errors.New("(command::getBuildersHandler)", "Error listing builders", err)
-// 		}
+			return nil
+		},
+	}
 
-// 		table = make([][]string, len(builders)+1)
-// 		table[0] = build.ListBuildersHeader()
-// 		copy(table[1:], builders)
+	getBuildersCmd.Flags().StringSliceVarP(&getBuildersFlagOptions.Filter, "filter", "f", []string{}, "List of filters to apply. Filters must be defined on the following format: <attribute>=<value>")
 
-// 		console.PrintTable(table)
+	command := &command.StevedoreCommand{
+		Command: getBuildersCmd,
+	}
 
-// 		return nil
-// 	}
-
-// }
+	return command
+}

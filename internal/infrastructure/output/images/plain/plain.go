@@ -42,10 +42,15 @@ func outputHeader() []string {
 	return []string{"NAME", "VERSION", "REGISTRY", "NAMESPACE", "BUILDER", "PARENT"}
 }
 
+// Output writes into writer the images from list in plain format
 func (o *PlainOutput) Output(list []*image.Image) error {
 	errContext := "(output::images::PlainOutput::Output)"
 	content := [][]string{}
 	content = append(content, outputHeader())
+
+	if o.writer == nil {
+		return errors.New(errContext, "Images plain text output requires a writer")
+	}
 
 	for _, image := range list {
 		imageSlice, err := imageToOutputSlice(image)
