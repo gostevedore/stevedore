@@ -25,7 +25,11 @@ func (m *MockStore) Store(name string, version string, parent *image.Image) erro
 // List is a mock implementation of the List method
 func (m *MockStore) List() ([]*image.Image, error) {
 	args := m.Called()
-	return args.Get(0).([]*image.Image), args.Error(1)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	} else {
+		return args.Get(0).([]*image.Image), args.Error(1)
+	}
 }
 
 // FindByName is a mock implementation of the All method

@@ -8,6 +8,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	buildentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/build"
 	createcredentialsentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/create/credentials"
+	getbuildersentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/get/builders"
 	getcredentialsentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/get/credentials"
 	getimagesentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/get/images"
 	promoteentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/promote"
@@ -18,6 +19,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/create"
 	createcredentials "github.com/gostevedore/stevedore/internal/infrastructure/cli/create/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/get"
+	getbuilders "github.com/gostevedore/stevedore/internal/infrastructure/cli/get/builders"
 	getcredentials "github.com/gostevedore/stevedore/internal/infrastructure/cli/get/credentials"
 	getimages "github.com/gostevedore/stevedore/internal/infrastructure/cli/get/images"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/promote"
@@ -138,7 +140,16 @@ You just need to define how each image should be built and the relationship amon
 	)
 	getImagesCommand := middleware.Command(ctx, getimages.NewCommand(ctx, config, getImagesEntrypoint), compatibilityReport, log, console)
 
-	getCommand := get.NewCommand(ctx,
+	getBuildersEntrypoint := getbuildersentrypoint.NewGetBuildersEntrypoint(
+		getbuildersentrypoint.WithWriter(console),
+		getbuildersentrypoint.WithFileSystem(fs),
+		getbuildersentrypoint.WithCompatibility(compatibilityStore),
+	)
+	getBuildersCommand := middleware.Command(ctx, getbuilders.NewCommand(ctx, config, getBuildersEntrypoint), compatibilityReport, log, console)
+
+	getCommand := get.NewCommand(
+		ctx,
+		getBuildersCommand,
 		getCredentialsCommand,
 		getImagesCommand,
 	)

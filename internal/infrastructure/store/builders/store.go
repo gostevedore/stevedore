@@ -61,3 +61,15 @@ func (b *Store) Find(name string) (*builder.Builder, error) {
 
 	return builder, nil
 }
+
+// All return all builders
+func (f *Store) List() ([]*builder.Builder, error) {
+	var list []*builder.Builder
+	for _, builder := range f.Builders {
+		list = append(list, builder)
+	}
+
+	// sort.Sort(SortedBuilders(filtered))
+
+	return list, nil
+}

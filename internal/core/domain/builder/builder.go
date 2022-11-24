@@ -12,6 +12,10 @@ import (
 
 const (
 	arrayOptionAssignment = "="
+	// NameFilterAttribute is the attribute's filter value to filter by name
+	NameFilterAttribute = "name"
+	// DriverFilterAttribute is the attribute's filter value to filter by driver
+	DriverFilterAttribute = "driver"
 )
 
 // Builder serializes each builder defined on user configuration

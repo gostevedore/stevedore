@@ -6,7 +6,7 @@ start: cleanup generate-keys generate-certs ## start docker registry
 	docker compose -p stevedore-functional-test-manual up -d --build registry docker-hub gitserver stevedore
 
 prepare-images:
-	docker compose -p stevedore-functional-test-manual run stevedore /prepare-images.sh
+	docker compose -p stevedore-functional-test-manual run stevedore /prepare-images
 
 cleanup: cleanup-certs ## cleanup example environment
 	docker compose -p stevedore-functional-test-manual down -v --remove-orphans
@@ -28,7 +28,8 @@ attach-client: start prepare-images ## attach to client container preloading doc
 	docker compose -p stevedore-functional-test-manual build stevedore
 	docker compose -p stevedore-functional-test-manual run -w /app/test/stack/client/stevedore stevedore sh
 
-attach-client-no-images: start ## attach to client container
+attach-client-no-images: ## attach to client container
+#attach-client-no-images: start ## attach to client container
 #attach-client: ## attach to client container
 	docker compose -p stevedore-functional-test-manual build stevedore
 	docker compose -p stevedore-functional-test-manual run -w /app/test/stack/client/stevedore stevedore sh

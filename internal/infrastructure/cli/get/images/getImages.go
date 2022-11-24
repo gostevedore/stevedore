@@ -30,6 +30,9 @@ Stevedore subcommand that show detail about images definition
 		Example: `
 Get images filtered by name:
   stevedore get images --filter name=app1
+
+Get images filtered by registry:
+  stevedore get images --filter registry=registry.test
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
@@ -57,7 +60,7 @@ Get images filtered by name:
 	}
 
 	getImagesCmd.Flags().BoolVarP(&getImagesFlagOptions.Tree, "tree", "t", false, "When this flag is enabled, output is returned in tree format")
-	getImagesCmd.Flags().StringSliceVarP(&getImagesFlagOptions.Filter, "filter", "f", []string{}, "List of filters to apply. Filters must follow the <attribute>=<value> format")
+	getImagesCmd.Flags().StringSliceVarP(&getImagesFlagOptions.Filter, "filter", "f", []string{}, "List of filters to apply. Filters must be defined on the following format: <attribute>=<value>")
 
 	command := &command.StevedoreCommand{
 		Command: getImagesCmd,

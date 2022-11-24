@@ -75,6 +75,7 @@ services:
     environment:
       - GIT_KEYS=/git/keys
       - CGO_ENABLED=0
+      - DOCKER_BUILDKIT=1
     volumes:
       - ssl:/ssl
       - ../..:/app
@@ -82,7 +83,7 @@ services:
       - ../stack/client/docker/daemon.json:/etc/docker/daemon.json
       - ../stack/client/docker/config.json:/root/.docker/config.json
       - ../stack/client/stevedore:/stevedore
-      - ../stack/client/prepare-images.sh:/prepare-images.sh
+      - ../stack/client/prepare-images:/prepare-images
     depends_on:
       - gitserver
     deploy:
