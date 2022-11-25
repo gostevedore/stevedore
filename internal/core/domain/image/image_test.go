@@ -4,12 +4,13 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewImage(t *testing.T) {
 
-	errContext := "(image::NewImage)"
+	errContext := "(core::domain::image::NewImage)"
 
 	tests := []struct {
 		desc              string
@@ -136,7 +137,7 @@ func TestAddChild(t *testing.T) {
 }
 
 func TestDockerNormalizedNamed(t *testing.T) {
-	errContext := "(image::DockerNormalizedNamed)"
+	errContext := "(core::domain::image::DockerNormalizedNamed)"
 
 	tests := []struct {
 		desc  string
@@ -392,5 +393,93 @@ func TestParse(t *testing.T) {
 		} else {
 			assert.Equal(t, test.res, res)
 		}
+	}
+}
+
+func TestSanetizeBuilder(t *testing.T) {
+
+	tests := []struct {
+		desc  string
+		image *Image
+		res   *Image
+		err   error
+	}{
+		{
+			desc: "Testing sanetize an image builder with string value on builder",
+			image: &Image{
+				Name:    "image",
+				Version: "version",
+				Builder: "string",
+			},
+			res: &Image{
+				Name:    "image",
+				Version: "version",
+				Builder: "string",
+			},
+			err: &errors.Error{},
+		},
+		{
+			desc: "Testing sanetize an image builder with map value on builder",
+			image: &Image{
+				Name:    "image",
+				Version: "version",
+				Builder: map[interface{}]interface{}{
+					"driver": "docker",
+					"options": map[interface{}]interface{}{
+						"dockerfile": "Dockerfile.test",
+					},
+				},
+			},
+			res: &Image{
+				Name:    "image",
+				Version: "version",
+				Builder: &builder.Builder{
+					Name:   "image:version",
+					Driver: "docker",
+					Options: &builder.BuilderOptions{
+						Dockerfile: "Dockerfile.test",
+					},
+				},
+			},
+			err: &errors.Error{},
+		},
+		{
+			desc: "Testing sanetize an image builder with builder value on builder",
+			image: &Image{
+				Name:    "image",
+				Version: "version",
+				Builder: &builder.Builder{
+					Name:   "image:version",
+					Driver: "docker",
+					Options: &builder.BuilderOptions{
+						Dockerfile: "Dockerfile.test",
+					},
+				},
+			},
+			res: &Image{
+				Name:    "image",
+				Version: "version",
+				Builder: &builder.Builder{
+					Name:   "image:version",
+					Driver: "docker",
+					Options: &builder.BuilderOptions{
+						Dockerfile: "Dockerfile.test",
+					},
+				},
+			},
+			err: &errors.Error{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+			err := test.image.sanetizeBuilder()
+			if err != nil {
+				assert.Equal(t, err, test.err)
+			} else {
+				assert.Equal(t, test.res, test.image)
+			}
+		})
 	}
 }

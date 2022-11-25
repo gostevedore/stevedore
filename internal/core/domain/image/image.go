@@ -2,12 +2,15 @@ package image
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 
+	data "github.com/apenella/go-common-utils/data"
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/docker/distribution/reference"
-	"gopkg.in/yaml.v2"
+	"github.com/gostevedore/stevedore/internal/core/domain/builder"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -59,7 +62,7 @@ type OptionFunc func(*Image)
 // NewImage creates a new image
 func NewImage(name, version, registryHost, registryNamesapace string, opt ...OptionFunc) (*Image, error) {
 
-	errContext := "(image::NewImage)"
+	errContext := "(core::domain::image::NewImage)"
 
 	// Image name normalization
 	imageName := name
@@ -152,7 +155,7 @@ func WithVars(vars map[string]interface{}) OptionFunc {
 
 // Parse generates an image skeleton using a docker images name passed as parameter
 func Parse(name string) (*Image, error) {
-	errContext := "(image::Parse)"
+	errContext := "(core::domain::image::Parse)"
 
 	referenceName, err := reference.ParseNormalizedNamed(name)
 	if err != nil {
@@ -188,7 +191,7 @@ func (i *Image) AddChild(child *Image) {
 // NormalizedNamed normalizes the image name
 func (i *Image) DockerNormalizedNamed() (string, error) {
 	var err error
-	errContext := "(image::DockerNormalizedNamed)"
+	errContext := "(core::domain::image::DockerNormalizedNamed)"
 
 	if i.Name == "" {
 		return "", errors.New(errContext, "Image name is empty")
@@ -218,7 +221,8 @@ func (i *Image) DockerNormalizedNamed() (string, error) {
 
 // Sanetize normalizes the image name
 func (i *Image) Sanetize() error {
-
+	var err error
+	errContext := "(core::domain::image::Sanetize)"
 	sanitizeTable := map[string]string{
 		"+": "_",
 	}
@@ -227,7 +231,53 @@ func (i *Image) Sanetize() error {
 		i.Version = strings.ReplaceAll(i.Version, dirty, sane)
 	}
 
+	err = i.sanetizeBuilder()
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
+
 	return nil
+}
+
+func (i *Image) sanetizeBuilder() error {
+
+	var err error
+	var str string
+	var builderSane *builder.Builder
+	errContext := "(core::domain::image::sanetizeBuilder)"
+
+	value := reflect.ValueOf(i.Builder)
+	switch value.Kind() {
+	case reflect.String:
+		return nil
+
+	case reflect.Map: // interface conversion: interface {} is map[interface {}]interface {}, not *builder.Builder
+		str, err = data.ObjectToYamlString(i.Builder)
+		if err != nil {
+			return err
+		}
+
+		err = yaml.Unmarshal([]byte(str), &builderSane)
+		if err != nil {
+			return errors.New(errContext, "", err)
+		}
+
+		if builderSane.Name == "" && i.Name != "" && i.Version != "" {
+			builderSane.Name = fmt.Sprintf("%s:%s", i.Name, i.Version)
+		}
+		i.Builder = builderSane
+
+		return nil
+
+	case reflect.TypeOf(builderSane).Kind():
+		if i.Builder.(*builder.Builder).Name == "" && i.Name != "" {
+			i.Builder.(*builder.Builder).Name = i.Name
+		}
+
+		return nil
+	default:
+		return nil
+	}
 }
 
 // Copy method return a copy of the instanced Image
@@ -282,7 +332,7 @@ func (i *Image) IsWildcardImage() bool {
 
 // YAMLMarshal marshals the image to YAML
 func (i *Image) YAMLMarshal() ([]byte, error) {
-	errContext := "(image::YAMLMarshal)"
+	errContext := "(core::domain::image::YAMLMarshal)"
 
 	marshaled, err := yaml.Marshal(i)
 	if err != nil {
@@ -294,7 +344,7 @@ func (i *Image) YAMLMarshal() ([]byte, error) {
 
 // YAMLUnmarshal unmarshals the image from a YAML string
 func (i *Image) YAMLUnmarshal(in []byte) error {
-	errContext := "(image::YAMLUnmarshal)"
+	errContext := "(core::domain::image::YAMLUnmarshal)"
 
 	err := yaml.Unmarshal(in, i)
 	if err != nil {
