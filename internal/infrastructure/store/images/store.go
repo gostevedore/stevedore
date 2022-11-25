@@ -66,6 +66,7 @@ func (s *Store) Store(name string, version string, i *image.Image) error {
 	defer s.mutex.Unlock()
 
 	if version == image.ImageWildcardVersionSymbol {
+
 		err = s.storeWildcardImage(name, i)
 		if err != nil {
 			return errors.New(errContext, "", err)

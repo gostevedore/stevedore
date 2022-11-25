@@ -125,7 +125,7 @@ options:
 
 func TestNewBuilderFromIOReader(t *testing.T) {
 
-	errContext := "(builder::NewBuilderFromIOReader)"
+	errContext := "(core::domain::builder::NewBuilderFromIOReader)"
 
 	tests := []struct {
 		desc string
