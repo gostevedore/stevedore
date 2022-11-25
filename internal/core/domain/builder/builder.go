@@ -93,7 +93,7 @@ func NewBuilder(name, driver string, options *BuilderOptions, varmap varsmap.Var
 func NewBuilderFromByteArray(data []byte) (*Builder, error) {
 	var builder *Builder
 
-	errContext := "(builder::NewBuilderFromByteArray)"
+	errContext := "(core::domain::builder::NewBuilderFromByteArray)"
 
 	err := yaml.Unmarshal(data, &builder)
 	if err != nil {
@@ -113,7 +113,7 @@ func NewBuilderFromIOReader(reader io.Reader) (*Builder, error) {
 	var buff bytes.Buffer
 	var err error
 
-	errContext := "(builder::NewBuilderFromIOReader)"
+	errContext := "(core::domain::builder::NewBuilderFromIOReader)"
 
 	_, err = buff.ReadFrom(reader)
 	if err != nil {

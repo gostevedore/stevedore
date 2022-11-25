@@ -86,8 +86,10 @@ func (v Varsmap) SetUnderlyingMap(underlyingmap map[string]string) {
 func (v Varsmap) Combine(c Varsmap) error {
 	var existsV, existsC bool
 
+	errContext := "(core::domain::varsmap::Combine)"
+
 	if v == nil {
-		return errors.New("(varsmap::Combine)", "Variables mapping is nil")
+		return errors.New(errContext, "Variables mapping is nil")
 	}
 
 	auxV := v.GetUnderlyingMap()
