@@ -1,5 +1,6 @@
   
 images_path: images
+builders_path: builders
 credentials:
   storage_type: local
   local_storage_path: ./credentials

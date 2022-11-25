@@ -1,0 +1,6 @@
+builders:
+  foundations:
+    driver: ansible-playbook
+    options:
+      playbook: site.yml
+      inventory: inv
