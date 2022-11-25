@@ -8,7 +8,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	"github.com/spf13/afero"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // Builders list of builders to create images

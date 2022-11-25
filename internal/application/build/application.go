@@ -15,7 +15,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/job"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // OptionsFunc is a function used to configure the service

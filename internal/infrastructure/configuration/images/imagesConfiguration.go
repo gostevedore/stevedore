@@ -11,7 +11,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration/images/graph"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration/images/image"
 	"github.com/spf13/afero"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // const (
@@ -354,7 +354,7 @@ func (c *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 
 	// TODO check if it is required
 	if c == nil {
-		return errors.New(errContext, "Builders is nil")
+		return errors.New(errContext, "ImagesConfiguration is nil")
 	}
 
 	imageTreeAux := NewImagesConfiguration(c.fs, c.graph, c.store, c.render, c.compatibility)

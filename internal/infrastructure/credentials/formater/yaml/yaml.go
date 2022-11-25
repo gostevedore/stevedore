@@ -3,7 +3,7 @@ package yaml
 import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type YAMLFormater struct{}

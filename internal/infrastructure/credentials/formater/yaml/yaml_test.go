@@ -51,9 +51,9 @@ aws_role_arn: awsrolearn
 aws_secret_access_key: awssecretaccesskey
 aws_profile: awsprofile
 aws_shared_credentials_files:
-- awssharedcredentialsfiles
+    - awssharedcredentialsfiles
 aws_shared_config_files:
-- awssharedconfigfiles
+    - awssharedconfigfiles
 aws_use_default_credentials_chain: true
 docker_login_password: deprecatedpassword
 docker_login_username: deprecatedusername
