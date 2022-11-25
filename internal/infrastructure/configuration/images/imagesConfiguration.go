@@ -233,9 +233,15 @@ func (c *ImagesConfiguration) propagatePersistentAttributes(i *domainimage.Image
 // renderImage return a renderized image base on the input image. The input image is not rendered when the version value is ImageWildcardSymbol
 func (c *ImagesConfiguration) renderImage(name, version string, i *domainimage.Image) (*domainimage.Image, error) {
 
+	var err error
+	var renderedImage, normalizedImage *domainimage.Image
 	errContext := "(images::renderImage)"
 
 	if version == domainimage.ImageWildcardVersionSymbol {
+		err = i.Sanetize()
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
 		return i, nil
 	}
 
@@ -251,20 +257,25 @@ func (c *ImagesConfiguration) renderImage(name, version string, i *domainimage.I
 		return nil, errors.New(errContext, fmt.Sprintf("Image '%s:%s' could not be rendered because renderer must by provided", name, version))
 	}
 
-	renderedImage, err := c.render.Render(name, version, i)
+	renderedImage, err = c.render.Render(name, version, i)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
 
-	normalizeImage, err := domainimage.NewImage(renderedImage.Name, renderedImage.Version, renderedImage.RegistryHost, renderedImage.RegistryNamespace)
+	normalizedImage, err = domainimage.NewImage(renderedImage.Name, renderedImage.Version, renderedImage.RegistryHost, renderedImage.RegistryNamespace)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
 
-	renderedImage.Name = normalizeImage.Name
-	renderedImage.Version = normalizeImage.Version
-	renderedImage.RegistryHost = normalizeImage.RegistryHost
-	renderedImage.RegistryNamespace = normalizeImage.RegistryNamespace
+	renderedImage.Name = normalizedImage.Name
+	renderedImage.Version = normalizedImage.Version
+	renderedImage.RegistryHost = normalizedImage.RegistryHost
+	renderedImage.RegistryNamespace = normalizedImage.RegistryNamespace
+
+	err = renderedImage.Sanetize()
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
 
 	return renderedImage, nil
 }
