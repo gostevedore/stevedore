@@ -1,0 +1,6 @@
+builders:
+  backend-apps:
+    driver: docker
+    options:
+      context:
+        - path: backend
