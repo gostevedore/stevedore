@@ -90,17 +90,23 @@ You just need to define how each image should be built and the relationship amon
 		Command: stevedoreCmd,
 	}
 
-	// Completion
+	//
+	// Completion subcommand
+	//
 	command.AddCommand(
 		middleware.Command(ctx, completion.NewCommand(ctx, config, command, console), compatibilityReport, log, console),
 	)
 
-	// Version
+	//
+	// Version subcommand
+	//
 	command.AddCommand(
 		middleware.Command(ctx, version.NewCommand(ctx, console), compatibilityReport, log, console),
 	)
 
-	// Build
+	//
+	// Build subcommand
+	//
 	buildEntrypoint := buildentrypoint.NewEntrypoint(
 		buildentrypoint.WithWriter(console),
 		buildentrypoint.WithFileSystem(fs),
@@ -110,7 +116,9 @@ You just need to define how each image should be built and the relationship amon
 		middleware.Command(ctx, build.NewCommand(ctx, compatibilityStore, config, buildEntrypoint), compatibilityReport, log, console),
 	)
 
-	// Create
+	//
+	// Create subcommand
+	//
 
 	// Create credentials
 	createCredentialsEntrypoint := createcredentialsentrypoint.NewCreateCredentialsEntrypoint(
@@ -120,10 +128,14 @@ You just need to define how each image should be built and the relationship amon
 	)
 	createCredentialsCommand := middleware.Command(ctx, createcredentials.NewCommand(ctx, compatibilityStore, config, createCredentialsEntrypoint), compatibilityReport, log, console)
 
+	// Create root
 	createCommand := create.NewCommand(ctx, createCredentialsCommand)
 	command.AddCommand(createCommand)
 
-	// Get
+	//
+	// Get subcommand
+	//
+
 	// Get credentials
 	getCredentialsEntrypoint := getcredentialsentrypoint.NewEntrypoint(
 		getcredentialsentrypoint.WithWriter(console),
@@ -140,6 +152,7 @@ You just need to define how each image should be built and the relationship amon
 	)
 	getImagesCommand := middleware.Command(ctx, getimages.NewCommand(ctx, config, getImagesEntrypoint), compatibilityReport, log, console)
 
+	// Get builders
 	getBuildersEntrypoint := getbuildersentrypoint.NewGetBuildersEntrypoint(
 		getbuildersentrypoint.WithWriter(console),
 		getbuildersentrypoint.WithFileSystem(fs),
@@ -147,6 +160,7 @@ You just need to define how each image should be built and the relationship amon
 	)
 	getBuildersCommand := middleware.Command(ctx, getbuilders.NewCommand(ctx, config, getBuildersEntrypoint), compatibilityReport, log, console)
 
+	// Get root
 	getCommand := get.NewCommand(
 		ctx,
 		getBuildersCommand,
@@ -162,7 +176,9 @@ You just need to define how each image should be built and the relationship amon
 	// command.AddCommand(middleware.Middleware(promote.NewCommand(ctx, config)))
 	// command.AddCommand(middleware.Middleware(version.NewCommand(ctx, config)))
 
-	// Promote
+	//
+	// Promote subcommand
+	//
 	promoteEntrypoint := promoteentrypoint.NewEntrypoint(
 		promoteentrypoint.WithWriter(console),
 		promoteentrypoint.WithFileSystem(fs),
