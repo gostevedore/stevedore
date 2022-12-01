@@ -8,4 +8,6 @@ type Options struct {
 	Debug bool
 	// DryRun is true if the build should be a dry run
 	DryRun bool
+	// UserDockerNormalizedName when is true are used Docker normalized name references
+	UseDockerNormalizedName bool
 }

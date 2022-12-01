@@ -24,6 +24,8 @@ type promoteFlagOptions struct {
 	PromoteSourceImageTag bool
 	// RemoteSourceImage is the flag to indicate whether to promote from remote source image
 	RemoteSourceImage bool
+	// UserDockerNormalizedName when is true are used Docker normalized name references
+	UseDockerNormalizedName bool
 
 	// DEPRECATEDRemoveTargetImageTags is a flag to indicate whether to remove from local generated image tags
 	DEPRECATEDRemoveTargetImageTags bool

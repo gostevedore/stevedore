@@ -31,6 +31,8 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker/godockerbuilder"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
+	defaultreferencename "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/default"
+	dockerreferencename "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	credentialsstorefactory "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/factory"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
@@ -84,12 +86,13 @@ func (e *Entrypoint) Options(opts ...OptionsFunc) {
 }
 
 // Execute is a pseudo-main method for the command
-func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, handlerOptions *handler.Options) error {
+func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, entrypointOptions *Options, handlerOptions *handler.Options) error {
 	var err error
 	var promoteRepoFactory factory.PromoteFactory
 	var credentialsFactory repository.CredentialsFactorier
 	var semverGenerator *semver.SemVerGenerator
 	var options *handler.Options
+	var referenceName repository.ImageReferenceNamer
 
 	errContext := "(promote::entrypoint::Execute)"
 
@@ -113,10 +116,16 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 		return errors.New(errContext, "", err)
 	}
 
+	referenceName, err = e.createReferenceName(entrypointOptions)
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
+
 	promoteService := application.NewApplication(
 		application.WithPromoteFactory(promoteRepoFactory),
 		application.WithCredentials(credentialsFactory),
 		application.WithSemver(semverGenerator),
+		application.WithReferenceNamer(referenceName),
 	)
 
 	promoteHandler := handler.NewHandler(promoteService)
@@ -290,4 +299,12 @@ func (e *Entrypoint) createPromoteFactory() (factory.PromoteFactory, error) {
 
 func (e *Entrypoint) createSemanticVersionFactory() (*semver.SemVerGenerator, error) {
 	return semver.NewSemVerGenerator(), nil
+}
+
+func (e *Entrypoint) createReferenceName(options *Options) (repository.ImageReferenceNamer, error) {
+	if options.UseDockerNormalizedName {
+		return dockerreferencename.NewDockerNormalizedReferenceName(), nil
+	}
+
+	return defaultreferencename.NewDefaultReferenceName(), nil
 }

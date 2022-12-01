@@ -7,4 +7,6 @@ type getImagesFlagOptions struct {
 	Tree bool
 	// Filter is a list of filters to apply to the output
 	Filter []string
+	// UserDockerNormalizedName when is true are used Docker normalized name references
+	UseDockerNormalizedName bool
 }

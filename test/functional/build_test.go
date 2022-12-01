@@ -261,7 +261,7 @@ func start(t *testing.T, options *docker.Options) error {
 		return err
 	}
 
-	err = dockerComposeCommand(t, options, "run stevedore /prepare-images.sh")
+	err = dockerComposeCommand(t, options, "run stevedore /prepare-images")
 	if err != nil {
 		return err
 	}

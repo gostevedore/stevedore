@@ -4,6 +4,7 @@ import (
 	"context"
 
 	errors "github.com/apenella/go-common-utils/error"
+	entrypoint "github.com/gostevedore/stevedore/internal/entrypoint/promote"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
@@ -30,12 +31,15 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 
 			errContext := "(cli::promote::RunE)"
 			handlerOptions := &handler.Options{}
+			entrypointOptions := &entrypoint.Options{}
 
 			// Transitorial flags
 			if promoteFlagOptions.DEPRECATEDRemoveTargetImageTags && !handlerOptions.RemoveTargetImageTags {
 				promoteFlagOptions.RemoveTargetImageTags = promoteFlagOptions.DEPRECATEDRemoveTargetImageTags
 				compatibility.AddDeprecated(DeprecatedFlagMessageRemoveTargetImageTags)
 			}
+
+			entrypointOptions.UseDockerNormalizedName = promoteFlagOptions.UseDockerNormalizedName
 
 			handlerOptions.DryRun = promoteFlagOptions.DryRun
 			handlerOptions.EnableSemanticVersionTags = promoteFlagOptions.EnableSemanticVersionTags
@@ -48,7 +52,7 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 			handlerOptions.PromoteSourceImageTag = promoteFlagOptions.PromoteSourceImageTag
 			handlerOptions.RemoteSourceImage = promoteFlagOptions.RemoteSourceImage
 
-			err = promote.Execute(ctx, cmd.Flags().Args(), conf, handlerOptions)
+			err = promote.Execute(ctx, cmd.Flags().Args(), conf, entrypointOptions, handlerOptions)
 			if err != nil {
 				return errors.New(errContext, "", err)
 			}
@@ -69,6 +73,7 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 	promoteCmd.Flags().BoolVar(&promoteFlagOptions.RemoveTargetImageTags, "remove-local-images-after-push", false, "Remove source image tags")
 	promoteCmd.Flags().BoolVarP(&promoteFlagOptions.PromoteSourceImageTag, "force-promote-source-image", "s", false, "Force to promote source image tag, although promote-image-tag is set")
 	promoteCmd.Flags().BoolVarP(&promoteFlagOptions.RemoteSourceImage, "image-from-remote-source", "R", false, "Promote an image stored on a Docker registry")
+	promoteCmd.Flags().BoolVar(&promoteFlagOptions.UseDockerNormalizedName, "use-docker-normalized-name", false, "Use Docker normalized name references")
 
 	command := &command.StevedoreCommand{
 		Command: promoteCmd,

@@ -16,7 +16,8 @@ fi
 
 /usr/local/bin/dockerd-entrypoint.sh 2> /dev/null &
 
-while ! nc -z localhost 2376; do
+# while ! nc -z localhost 2376; do
+while ! docker info > /dev/null 2>&1; do
     >&2 echo " Waiting for dockerd to be ready..."
     sleep 0.5 # wait for 1/2 of the second before check again
 done

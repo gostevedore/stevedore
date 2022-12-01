@@ -22,6 +22,8 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/graph"
 	"github.com/gostevedore/stevedore/internal/infrastructure/now"
 	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
+	defaultreferencename "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/default"
+	dockerreferencename "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/render"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/command"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/job"
@@ -1147,4 +1149,42 @@ func TestCreatePlanFactory(t *testing.T) {
 		assert.NotNil(t, planFactory)
 		assert.IsType(t, plan.NewPlanFactory(imageStore), planFactory)
 	})
+}
+
+func TestCreateReferenceName(t *testing.T) {
+	tests := []struct {
+		desc       string
+		entrypoint *Entrypoint
+		options    *Options
+		res        repository.ImageReferenceNamer
+		err        error
+	}{
+		{
+			desc:       "Testinc create docker reference name on build entrypoint",
+			entrypoint: NewEntrypoint(),
+			options: &Options{
+				UseDockerNormalizedName: true,
+			},
+			res: dockerreferencename.NewDockerNormalizedReferenceName(),
+		},
+		{
+			desc:       "Testinc create default reference name on build entrypoint",
+			entrypoint: NewEntrypoint(),
+			options:    &Options{},
+			res:        defaultreferencename.NewDefaultReferenceName(),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			res, err := test.entrypoint.createReferenceName(test.options)
+			if err != nil {
+				assert.Equal(t, test.res, res)
+			} else {
+				assert.IsType(t, test.res, res)
+			}
+		})
+	}
 }

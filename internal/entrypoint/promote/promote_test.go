@@ -15,6 +15,8 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
+	defaultreferencename "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/default"
+	dockerreferencename "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/spf13/afero"
@@ -313,4 +315,42 @@ func TestCreateSemanticVersionFactory(t *testing.T) {
 		assert.NotNil(t, sv)
 		assert.IsType(t, &semver.SemVerGenerator{}, sv)
 	})
+}
+
+func TestCreateReferenceName(t *testing.T) {
+	tests := []struct {
+		desc       string
+		entrypoint *Entrypoint
+		options    *Options
+		res        repository.ImageReferenceNamer
+		err        error
+	}{
+		{
+			desc:       "Testinc create docker reference name on promote entrypoint",
+			entrypoint: NewEntrypoint(),
+			options: &Options{
+				UseDockerNormalizedName: true,
+			},
+			res: dockerreferencename.NewDockerNormalizedReferenceName(),
+		},
+		{
+			desc:       "Testinc create default reference name on promote entrypoint",
+			entrypoint: NewEntrypoint(),
+			options:    &Options{},
+			res:        defaultreferencename.NewDefaultReferenceName(),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			res, err := test.entrypoint.createReferenceName(test.options)
+			if err != nil {
+				assert.Equal(t, test.res, res)
+			} else {
+				assert.IsType(t, test.res, res)
+			}
+		})
+	}
 }

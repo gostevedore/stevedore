@@ -107,6 +107,8 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 			entrypointOptions.Concurrency = buildFlagOptions.Concurrency
 			entrypointOptions.Debug = buildFlagOptions.Debug
 			entrypointOptions.DryRun = buildFlagOptions.DryRun
+			entrypointOptions.UseDockerNormalizedName = buildFlagOptions.UseDockerNormalizedName
+
 			handlerOptions.AnsibleConnectionLocal = buildFlagOptions.AnsibleConnectionLocal
 			handlerOptions.AnsibleIntermediateContainerName = buildFlagOptions.AnsibleIntermediateContainerName
 			handlerOptions.AnsibleInventoryPath = buildFlagOptions.AnsibleInventoryPath
@@ -174,6 +176,7 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageName, "image-name", "i", "", "Image name. Its value overrides the name on the images tree definition")
 	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageRegistryHost, "image-registry-host", "r", "", "Image registry host")
 	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageRegistryNamespace, "image-registry-namespace", "n", "", "Image namespace")
+	buildCmd.Flags().BoolVar(&buildFlagOptions.UseDockerNormalizedName, "use-docker-normalized-name", false, "Use Docker normalized name references")
 
 	// behavior flags
 	buildCmd.Flags().BoolVar(&buildFlagOptions.BuildOnCascade, "build-on-cascade", false, "When this flag is enabled, children images are also built")

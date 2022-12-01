@@ -15,9 +15,10 @@ type OptionsFunc func(*Application)
 
 // Application is the application used to promote images
 type Application struct {
-	credentials repository.CredentialsFactorier
-	factory     PromoteFactorier
-	semver      Semverser
+	credentials    repository.CredentialsFactorier
+	factory        PromoteFactorier
+	referenceNamer repository.ImageReferenceNamer
+	semver         Semverser
 }
 
 // NewApplication creates an application
@@ -28,7 +29,7 @@ func NewApplication(options ...OptionsFunc) *Application {
 	return app
 }
 
-// WitCredentials sets credentials for the service
+// WitCredentials sets credentials for the application
 func WithCredentials(c repository.CredentialsFactorier) OptionsFunc {
 	return func(a *Application) {
 		a.credentials = c
@@ -42,14 +43,21 @@ func WithPromoteFactory(f PromoteFactorier) OptionsFunc {
 	}
 }
 
-// WithSemver sets the semver component for the service
+// WithSemver sets the semver component for the application
 func WithSemver(sv Semverser) OptionsFunc {
 	return func(a *Application) {
 		a.semver = sv
 	}
 }
 
-// Options configure the service
+// WithReferenceNamer sets the reference namer component for the application
+func WithReferenceNamer(ref repository.ImageReferenceNamer) OptionsFunc {
+	return func(a *Application) {
+		a.referenceNamer = ref
+	}
+}
+
+// Options configure the application
 func (a *Application) Options(opts ...OptionsFunc) {
 	for _, opt := range opts {
 		opt(a)
@@ -61,28 +69,33 @@ func (a *Application) Promote(ctx context.Context, options *Options) error {
 
 	var err error
 	var sourceImage, targetImage *image.Image
+	var referenceName string
 
 	promoteOptions := &image.PromoteOptions{}
 	errContext := "(application::promote::Promote)"
 
 	if a.factory == nil {
-		return errors.New(errContext, "Promote factory has not been initialized")
+		return errors.New(errContext, "Promote application requires promote factory")
 	}
 
 	if a.semver == nil {
-		return errors.New(errContext, "Semver has not been initialized")
+		return errors.New(errContext, "Promote application requires semver")
+	}
+
+	if a.referenceNamer == nil {
+		return errors.New(errContext, "Promote application requires a image reference namer")
 	}
 
 	if a.credentials == nil {
-		return errors.New(errContext, "Credentials has not been initialized")
+		return errors.New(errContext, "Promote application requires credentials factory")
 	}
 
 	if options == nil {
-		return errors.New(errContext, "Options are required on promote service")
+		return errors.New(errContext, "Promote application requires options")
 	}
 
 	if options.SourceImageName == "" {
-		return errors.New(errContext, "Promote options requires an image source name defined")
+		return errors.New(errContext, "Promote application options requires an image source name defined")
 	}
 
 	promoteOptions.SourceImageName = options.SourceImageName
@@ -138,10 +151,11 @@ func (a *Application) Promote(ctx context.Context, options *Options) error {
 		}
 	}
 
-	promoteOptions.TargetImageName, err = targetImage.DockerNormalizedNamed()
+	referenceName, err = a.referenceNamer.GenerateName(targetImage)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
+	promoteOptions.TargetImageName = referenceName
 
 	auth, err = a.getCredentials(targetImage.RegistryHost)
 	if err != nil {

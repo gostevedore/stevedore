@@ -1,6 +1,8 @@
 package images
 
 import (
+	"fmt"
+
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
@@ -15,7 +17,8 @@ const (
 type PlainOutputOptionsFunc func(*PlainOutput)
 
 type PlainOutput struct {
-	writer repository.ImagesPlainPrinter
+	writer        repository.ImagesPlainPrinter
+	referenceName repository.ImageReferenceNamer
 }
 
 func NewPlainOutput(options ...PlainOutputOptionsFunc) *PlainOutput {
@@ -30,6 +33,12 @@ func WithWriter(w repository.ImagesPlainPrinter) PlainOutputOptionsFunc {
 	}
 }
 
+func WithReferenceName(ref repository.ImageReferenceNamer) PlainOutputOptionsFunc {
+	return func(o *PlainOutput) {
+		o.referenceName = ref
+	}
+}
+
 // Options configure the service
 func (o *PlainOutput) Options(opts ...PlainOutputOptionsFunc) {
 	for _, opt := range opts {
@@ -39,7 +48,7 @@ func (o *PlainOutput) Options(opts ...PlainOutputOptionsFunc) {
 
 // outputHeader returns the header for the output
 func outputHeader() []string {
-	return []string{"NAME", "VERSION", "REGISTRY", "NAMESPACE", "BUILDER", "PARENT"}
+	return []string{"NAME", "VERSION", "BUILDER", "IMAGE FULL NAME", "PARENT"}
 }
 
 // Output writes into writer the images from list in plain format
@@ -53,7 +62,7 @@ func (o *PlainOutput) Output(list []*image.Image) error {
 	}
 
 	for _, image := range list {
-		imageSlice, err := imageToOutputSlice(image)
+		imageSlice, err := o.imageToOutputSlice(image)
 		if err != nil {
 			return errors.New(errContext, "", err)
 		}
@@ -68,8 +77,12 @@ func (o *PlainOutput) Output(list []*image.Image) error {
 	return nil
 }
 
-func imageToOutputSlice(i *image.Image) ([]string, error) {
+func (o *PlainOutput) imageToOutputSlice(i *image.Image) ([]string, error) {
 	errContext := "(output::images::imageToOutputSlice)"
+
+	if o.referenceName == nil {
+		return nil, errors.New(errContext, "Images plain text output requires a reference name")
+	}
 
 	res := []string{}
 
@@ -85,18 +98,6 @@ func imageToOutputSlice(i *image.Image) ([]string, error) {
 		res = append(res, NA)
 	}
 
-	if i.RegistryHost != "" {
-		res = append(res, i.RegistryHost)
-	} else {
-		res = append(res, NA)
-	}
-
-	if i.RegistryNamespace != "" {
-		res = append(res, i.RegistryNamespace)
-	} else {
-		res = append(res, NA)
-	}
-
 	if _, isString := i.Builder.(string); isString {
 		res = append(res, i.Builder.(string))
 	} else {
@@ -107,13 +108,25 @@ func imageToOutputSlice(i *image.Image) ([]string, error) {
 		}
 	}
 
+	if i.Name != "" && i.Version != "" {
+		ref, err := o.referenceName.GenerateName(i)
+		if err != nil {
+			// instead of returned the error fmt is used as a fallback
+			ref = fmt.Sprintf("%s:%s", i.Name, i.Version)
+		}
+		res = append(res, ref)
+	} else {
+		res = append(res, NA)
+	}
+
 	if i.Parent != nil {
-		parent, err := i.Parent.DockerNormalizedNamed()
+		parent, err := o.referenceName.GenerateName(i.Parent)
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}
-
 		res = append(res, parent)
+	} else {
+		res = append(res, NA)
 	}
 
 	return res, nil

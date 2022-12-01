@@ -30,6 +30,7 @@ func TestNewCommand(t *testing.T) {
 				"name=a",
 				"--filter",
 				"builder=b",
+				"--use-docker-normalized-name",
 			},
 			prepareMockFunc: func(e Entrypointer, c *configuration.Configuration) {
 				e.(*entrypoint.MockGetImagesEntrypoint).On(
@@ -38,7 +39,8 @@ func TestNewCommand(t *testing.T) {
 					[]string{},
 					c,
 					&entrypoint.Options{
-						Tree: true,
+						Tree:                    true,
+						UseDockerNormalizedName: true,
 					},
 					&handler.Options{
 						Filter: []string{

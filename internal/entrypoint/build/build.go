@@ -42,6 +42,8 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/graph"
 	"github.com/gostevedore/stevedore/internal/infrastructure/now"
 	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
+	defaultreferencename "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/default"
+	dockerreferencename "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/render"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/command"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/dispatch"
@@ -581,7 +583,6 @@ func (e *Entrypoint) createDefaultDriver(options *Options) (factory.BuildDriverF
 	}
 
 	if options.DryRun {
-		fmt.Println(">>>>> dryrun", errContext)
 		return e.createDryRunDriver()
 	}
 
@@ -595,7 +596,6 @@ func (e *Entrypoint) createDefaultDriver(options *Options) (factory.BuildDriverF
 func (e *Entrypoint) createDryRunDriver() (factory.BuildDriverFactoryFunc, error) {
 
 	f := func() (repository.BuildDriverer, error) {
-		fmt.Println(">>>> createDryRunDriver")
 		return dryrun.NewDryRunDriver(e.writer), nil
 	}
 
@@ -611,7 +611,6 @@ func (e *Entrypoint) createAnsibleDriver(options *Options) (factory.BuildDriverF
 	}
 
 	if options.DryRun {
-		fmt.Println(">>>>> dryrun", errContext)
 		return e.createDryRunDriver()
 	}
 
@@ -637,6 +636,7 @@ func (e *Entrypoint) createDockerDriver(credentialsFactory repository.Credential
 	var err error
 	var gitAuth *gitauth.GitAuthFactory
 	var goDockerBuildDriver *godockerbuilder.GoDockerBuildDriver
+	var referenceName repository.ImageReferenceNamer
 
 	errContext := "(entrypoint::build::createDockerDriver)"
 
@@ -649,8 +649,12 @@ func (e *Entrypoint) createDockerDriver(credentialsFactory repository.Credential
 	}
 
 	if options.DryRun {
-		fmt.Println(">>>>> dryrun", errContext)
 		return e.createDryRunDriver()
+	}
+
+	referenceName, err = e.createReferenceName(options)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
 	}
 
 	f := func() (repository.BuildDriverer, error) {
@@ -666,7 +670,7 @@ func (e *Entrypoint) createDockerDriver(credentialsFactory repository.Credential
 		gitAuth = gitauth.NewGitAuthFactory(credentialsFactory)
 		dockerDriverBuldContext = dockercontext.NewDockerBuildContextFactory(gitAuth)
 		goDockerBuildDriver = godockerbuilder.NewGoDockerBuildDriver(goDockerBuild, dockerDriverBuldContext)
-		dockerDriver, err = docker.NewDockerDriver(goDockerBuildDriver, e.writer)
+		dockerDriver, err = docker.NewDockerDriver(goDockerBuildDriver, referenceName, e.writer)
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}
@@ -688,4 +692,12 @@ func (e *Entrypoint) createPlanFactory(store *images.Store, options *Options) (*
 	factory := plan.NewPlanFactory(store)
 
 	return factory, nil
+}
+
+func (e *Entrypoint) createReferenceName(options *Options) (repository.ImageReferenceNamer, error) {
+	if options.UseDockerNormalizedName {
+		return dockerreferencename.NewDockerNormalizedReferenceName(), nil
+	}
+
+	return defaultreferencename.NewDefaultReferenceName(), nil
 }

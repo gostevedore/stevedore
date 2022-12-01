@@ -54,6 +54,8 @@ type buildFlagOptions struct {
 	SemanticVersionTagsTemplates []string
 	// Tags is the list of tags to generate
 	Tags []string
+	// UserDockerNormalizedName when is true are used Docker normalized name references
+	UseDockerNormalizedName bool
 	// Vars is the list of vars to use
 	Vars []string
 

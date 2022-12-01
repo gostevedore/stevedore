@@ -345,7 +345,6 @@ image:
 				}, nil)
 
 				// child2:* is not rendered because renderImage method return the image as is because its version is equal to *
-
 				i.store.(*images.MockStore).On("Store", "child2", "*",
 					&domainimage.Image{
 						RegistryHost:      "registry.test",
@@ -1211,10 +1210,10 @@ func TestRenderImage(t *testing.T) {
 				i.render.(*render.MockImageRender).AssertExpectations(t)
 			},
 			res: &domainimage.Image{
-				Name:              "image",
-				Version:           "version",
-				RegistryHost:      "docker.io",
-				RegistryNamespace: "library",
+				Name:    "image",
+				Version: "version",
+				// RegistryHost:      "docker.io",
+				// RegistryNamespace: "library",
 			},
 		},
 	}

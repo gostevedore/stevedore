@@ -48,10 +48,14 @@ func TestNewCommand(t *testing.T) {
 				"--remove-local-images-after-push",
 				"--force-promote-source-image",
 				"--image-from-remote-source",
+				"--use-docker-normalized-name",
 			},
 			prepareMockFunc: func(compatibility Compatibilitier, promote Entrypointer, config *configuration.Configuration) {
 
-				options := &handler.Options{
+				entrypointOptions := &entrypoint.Options{
+					UseDockerNormalizedName: true,
+				}
+				handlerOptions := &handler.Options{
 					DryRun:                       true,
 					EnableSemanticVersionTags:    true,
 					TargetImageName:              "promote-image-name",
@@ -71,7 +75,8 @@ func TestNewCommand(t *testing.T) {
 						"source-registry-host.com/source-namespace/source-image:source-tag",
 					},
 					config,
-					options,
+					entrypointOptions,
+					handlerOptions,
 				).Return(nil)
 			},
 			err: &errors.Error{},
@@ -96,13 +101,16 @@ func TestNewCommand(t *testing.T) {
 				"promote-registry-namespace",
 				"--promote-image-tag",
 				"promote-image-tag",
-				"--remove-promote-tags",
+				"--remove-local-images-after-push",
 				"--force-promote-source-image",
 				"--image-from-remote-source",
 			},
 			prepareMockFunc: func(comp Compatibilitier, promote Entrypointer, config *configuration.Configuration) {
 
-				options := &handler.Options{
+				entrypointOptions := &entrypoint.Options{
+					UseDockerNormalizedName: false,
+				}
+				handlerOptions := &handler.Options{
 					DryRun:                       true,
 					EnableSemanticVersionTags:    true,
 					TargetImageName:              "promote-image-name",
@@ -122,101 +130,106 @@ func TestNewCommand(t *testing.T) {
 						"source-registry-host.com/source-namespace/source-image:source-tag",
 					},
 					config,
-					options,
+					entrypointOptions,
+					handlerOptions,
 				).Return(nil)
 				comp.(*compatibility.MockCompatibility).On("AddDeprecated", []string{DeprecatedFlagMessageRemoveTargetImageTags}).Return(nil)
 			},
 			err: &errors.Error{},
 		},
+		{
+			desc:          "Testing to promote an image to a new registry host, registry namespace, with new name and multiple tags",
+			handler:       handler.NewHandlerMock(),
+			compatibility: compatibility.NewMockCompatibility(),
+			config:        &configuration.Configuration{},
+			entrypoint:    entrypoint.NewMockEntrypoint(),
+			args: []string{
+				"myregistryhost.com/namespace/ubuntu:20.04",
+				"--dry-run",
+				"--promote-image-name",
+				"myubuntu",
+				"--promote-image-registry-namespace",
+				"stable",
+				"--promote-image-registry-host",
+				"myprodregistryhost.com",
+				"--promote-image-tag",
+				"tag1",
+				"--promote-image-tag",
+				"tag2",
+				"--remove-local-images-after-push",
+			},
+			prepareMockFunc: func(compatibility Compatibilitier, promote Entrypointer, config *configuration.Configuration) {
+				entrypointOptions := &entrypoint.Options{}
+				handlerOptions := &handler.Options{
+					DryRun:                       true,
+					EnableSemanticVersionTags:    false,
+					TargetImageName:              "myubuntu",
+					TargetImageRegistryNamespace: "stable",
+					TargetImageRegistryHost:      "myprodregistryhost.com",
+					TargetImageTags:              []string{"tag1", "tag2"},
+					RemoveTargetImageTags:        true,
+					SemanticVersionTagsTemplates: []string{},
+					PromoteSourceImageTag:        false,
+					RemoteSourceImage:            false,
+				}
 
-		// {
-		// 	desc:          "Testing to promote an image to a new registry host, registry namespace, with new name and multiple tags",
-		// 	handler:       handler.NewHandlerMock(),
-		// 	compatibility: compatibility.NewMockCompatibility(),
-		// 	config:        &configuration.Configuration{},
-		// 	entrypoint:    entrypoint.NewMockEntrypoint(),
-		// 	args: []string{
-		// 		"--dry-run",
-		// 		"myregistryhost.com/namespace/ubuntu:20.04",
-		// 		"--promote-image-name",
-		// 		"myubuntu",
-		// 		"--promote-image-namespace",
-		// 		"stable",
-		// 		"--promote-image-registry",
-		// 		"myprodregistryhost.com",
-		// 		"--promote-image-tag",
-		// 		"tag1",
-		// 		"--promote-image-tag",
-		// 		"tag2",
-		// 		"--remove-local-images-after-push",
-		// 	},
-		// 	prepareMockFunc: func(compatibility Compatibilitier, promote Entrypointer, config *configuration.Configuration) {
-		// 		args := []string{}
+				promote.(*entrypoint.MockEntrypoint).On(
+					"Execute",
+					context.TODO(),
+					[]string{
+						"myregistryhost.com/namespace/ubuntu:20.04",
+					},
+					config,
+					entrypointOptions,
+					handlerOptions,
+				).Return(nil)
+			},
+			err: &errors.Error{},
+		},
+		{
+			desc:       "Testing to promote image and semver tags",
+			handler:    handler.NewHandlerMock(),
+			entrypoint: entrypoint.NewMockEntrypoint(),
+			args: []string{
+				"myregistryhost.com/namespace/ubuntu:1.2.3",
+				"--dry-run",
+				"--enable-semver-tags",
+				"--semver-tags-template",
+				"{{ .Major }}",
+				"--semver-tags-template",
+				"{{ .Major }}.{{ .Minor }}",
+				"--image-from-remote-source",
+				"--remove-local-images-after-push",
+			},
+			prepareMockFunc: func(compatibility Compatibilitier, promote Entrypointer, config *configuration.Configuration) {
 
-		// 		options := &handler.Options{
-		// 			DryRun:                       true,
-		// 			EnableSemanticVersionTags:    false,
-		// 			SourceImageName:              "myregistryhost.com/namespace/ubuntu:20.04",
-		// 			TargetImageName:              "myubuntu",
-		// 			TargetImageRegistryNamespace: "stable",
-		// 			TargetImageRegistryHost:      "myprodregistryhost.com",
-		// 			TargetImageTags:              []string{"tag1", "tag2"},
-		// 			RemoveTargetImageTags:        true,
-		// 			SemanticVersionTagsTemplates: []string{},
-		// 			PromoteSourceImageTag:        false,
-		// 			RemoteSourceImage:            false,
-		// 		}
+				entrypointOptions := &entrypoint.Options{}
+				handlerOptions := &handler.Options{
+					DryRun:                       true,
+					EnableSemanticVersionTags:    true,
+					TargetImageName:              "",
+					TargetImageRegistryNamespace: "",
+					TargetImageRegistryHost:      "",
+					TargetImageTags:              []string{},
+					RemoveTargetImageTags:        true,
+					SemanticVersionTagsTemplates: []string{"{{ .Major }}", "{{ .Major }}.{{ .Minor }}"},
+					PromoteSourceImageTag:        false,
+					RemoteSourceImage:            true,
+				}
 
-		// 		promote.(*entrypoint.MockEntrypoint).On("Execute", context.TODO(), args, config, options).Return(nil)
-		// 	},
-		// 	err: &errors.Error{},
-		// },
-		// {
-		// 	desc:       "Testing to promote image and semver tags",
-		// 	handler:    handler.NewHandlerMock(),
-		// 	entrypoint: entrypoint.NewMockEntrypoint(),
-		// 	args: []string{
-		// 		"--dry-run",
-		// 		"myregistryhost.com/namespace/ubuntu:1.2.3",
-		// 		"--enable-semver-tags",
-		// 		"--semver-tags-template",
-		// 		"{{ .Major }}",
-		// 		"--semver-tags-template",
-		// 		"{{ .Major }}.{{ .Minor }}",
-		// 		"--promote-source-tags",
-		// 		"--remove-local-images-after-push",
-		// 		"--remote-source-image",
-		// 	},
-		// 	prepareMockFunc: func(compatibility Compatibilitier, promote Entrypointer, config *configuration.Configuration) {
-		// 		args := []string{}
-
-		// 		options := &handler.Options{
-		// 			DryRun:                       true,
-		// 			EnableSemanticVersionTags:    true,
-		// 			SourceImageName:              "myregistryhost.com/namespace/ubuntu:1.2.3",
-		// 			TargetImageName:              "",
-		// 			TargetImageRegistryNamespace: "",
-		// 			TargetImageRegistryHost:      "",
-		// 			TargetImageTags:              []string{},
-		// 			RemoveTargetImageTags:        true,
-		// 			SemanticVersionTagsTemplates: []string{"{{ .Major }}", "{{ .Major }}.{{ .Minor }}"},
-		// 			PromoteSourceImageTag:        true,
-		// 			RemoteSourceImage:            true,
-		// 		}
-
-		// 		promote.(*entrypoint.MockEntrypoint).On("Execute", context.TODO(), args, config, options).Return(nil)
-		// 	},
-		// 	err: &errors.Error{},
-		// },
-		// {
-		// 	desc:       "Testing to promote without image name",
-		// 	handler:    handler.NewHandlerMock(),
-		// 	entrypoint: entrypoint.NewMockEntrypoint(),
-		// 	args: []string{
-		// 		"--dry-run",
-		// 	},
-		// 	err: errors.New("(promote::RunE)", "Source images name must be provided"),
-		// },
+				promote.(*entrypoint.MockEntrypoint).On(
+					"Execute",
+					context.TODO(),
+					[]string{
+						"myregistryhost.com/namespace/ubuntu:1.2.3",
+					},
+					config,
+					entrypointOptions,
+					handlerOptions,
+				).Return(nil)
+			},
+			err: &errors.Error{},
+		},
 	}
 
 	for _, test := range tests {

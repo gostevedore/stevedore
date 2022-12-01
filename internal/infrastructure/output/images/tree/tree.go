@@ -7,14 +7,16 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	graph "github.com/apenella/go-data-structures/extendedTree"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
 
 // TreeOutputOptionsFunc is a function used to configure the service
 type TreeOutputOptionsFunc func(*TreeOutput)
 
 type TreeOutput struct {
-	writer io.Writer
-	graph  Grapher
+	writer        io.Writer
+	graph         Grapher
+	referenceName repository.ImageReferenceNamer
 }
 
 func NewTreeOutput(options ...TreeOutputOptionsFunc) *TreeOutput {
@@ -32,6 +34,12 @@ func WithWriter(w io.Writer) TreeOutputOptionsFunc {
 func WithGraph(g Grapher) TreeOutputOptionsFunc {
 	return func(o *TreeOutput) {
 		o.graph = g
+	}
+}
+
+func WithReferenceName(ref repository.ImageReferenceNamer) TreeOutputOptionsFunc {
+	return func(o *TreeOutput) {
+		o.referenceName = ref
 	}
 }
 
@@ -88,7 +96,11 @@ func (o *TreeOutput) addNodeToGraphRec(i *image.Image, parent *graph.Node) error
 		return errors.New(errContext, " Tree output requireds that graph must be initialized")
 	}
 
-	nodeName := nodeName(i)
+	//	if (parent != nil && i.Parent != nil) || (parent == nil && i.Parent == nil) {
+	nodeName, err := o.nodeName(i)
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
 
 	node = &graph.Node{
 		Name: nodeName,
@@ -117,20 +129,24 @@ func (o *TreeOutput) addNodeToGraphRec(i *image.Image, parent *graph.Node) error
 			}
 		}
 	}
+	//	}
 
 	return nil
 }
 
-func nodeName(i *image.Image) string {
-	nodeName := fmt.Sprintf("%s:%s", i.Name, i.Version)
+func (o *TreeOutput) nodeName(i *image.Image) (string, error) {
+	errContext := "(output::images::tree::nodeName)"
 
-	if i.RegistryNamespace != "" {
-		nodeName = fmt.Sprintf("%s/%s", i.RegistryNamespace, nodeName)
+	if o.referenceName == nil {
+		return "", errors.New(errContext, "Images plain text output requires a reference name")
 	}
 
-	if i.RegistryHost != "" {
-		nodeName = fmt.Sprintf("%s/%s", i.RegistryHost, nodeName)
+	ref, err := o.referenceName.GenerateName(i)
+	if err != nil {
+		// return "", errors.New(errContext, "", err)
+		// instead of returned the error fmt is used as a fallback
+		ref = fmt.Sprintf("%s:%s", i.Name, i.Version)
 	}
 
-	return nodeName
+	return ref, nil
 }

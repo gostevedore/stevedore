@@ -10,7 +10,9 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/docker/godockerbuilder"
+	reference "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/default"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,11 +20,12 @@ func TestNewDockerDriver(t *testing.T) {
 	errContext := "(dockerdriver::NewDockerDriver)"
 
 	tests := []struct {
-		desc   string
-		driver DockerDriverer
-		writer io.Writer
-		res    *DockerDriver
-		err    error
+		desc          string
+		driver        DockerDriverer
+		writer        io.Writer
+		referenceName repository.ImageReferenceNamer
+		res           *DockerDriver
+		err           error
 	}{
 		{
 			desc:   "Testing error creating a docker driver with nil driver",
@@ -31,13 +34,22 @@ func TestNewDockerDriver(t *testing.T) {
 			err:    errors.New(errContext, "To create a DockerDriver is expected a driver"),
 		},
 		{
-			desc:   "Testing create a docker driver",
-			driver: godockerbuilder.NewMockGoDockerBuildDriver(),
-			writer: nil,
-			err:    &errors.Error{},
+			desc:          "Testing error creating a docker driver with nil driver",
+			driver:        godockerbuilder.NewMockGoDockerBuildDriver(),
+			referenceName: nil,
+			writer:        nil,
+			err:           errors.New(errContext, "To create a DockerDriver is expected a reference name"),
+		},
+		{
+			desc:          "Testing create a docker driver",
+			driver:        godockerbuilder.NewMockGoDockerBuildDriver(),
+			writer:        nil,
+			referenceName: reference.NewDefaultReferenceName(),
+			err:           &errors.Error{},
 			res: &DockerDriver{
-				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
-				writer: os.Stdout,
+				driver:        godockerbuilder.NewMockGoDockerBuildDriver(),
+				writer:        os.Stdout,
+				referenceName: reference.NewDefaultReferenceName(),
 			},
 		},
 	}
@@ -46,7 +58,7 @@ func TestNewDockerDriver(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			res, err := NewDockerDriver(test.driver, test.writer)
+			res, err := NewDockerDriver(test.driver, test.referenceName, test.writer)
 			if err != nil && assert.Error(t, err) {
 				assert.Equal(t, test.err, err)
 			} else {
@@ -65,6 +77,7 @@ func TestBuild(t *testing.T) {
 	tests := []struct {
 		desc              string
 		driver            *DockerDriver
+		ref               repository.ImageReferenceNamer
 		ctx               context.Context
 		image             *image.Image
 		options           *image.BuildDriverOptions
@@ -80,9 +93,17 @@ func TestBuild(t *testing.T) {
 			err: errors.New(errContext, "To build an image is required a driver"),
 		},
 		{
-			desc: "Testing error building a docker image with nil image",
+			desc: "Testing error building a docker image with nil reference name",
 			driver: &DockerDriver{
 				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
+			},
+			err: errors.New(errContext, "To build an image is required a reference name"),
+		},
+		{
+			desc: "Testing error building a docker image with nil image",
+			driver: &DockerDriver{
+				driver:        godockerbuilder.NewMockGoDockerBuildDriver(),
+				referenceName: reference.NewDefaultReferenceName(),
 			},
 			err: errors.New(errContext, "To build an image is required a image"),
 		},
@@ -90,7 +111,8 @@ func TestBuild(t *testing.T) {
 			desc:  "Testing error building a docker image with nil options",
 			image: &image.Image{},
 			driver: &DockerDriver{
-				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
+				driver:        godockerbuilder.NewMockGoDockerBuildDriver(),
+				referenceName: reference.NewDefaultReferenceName(),
 			},
 			err: errors.New(errContext, "To build an image is required a build options"),
 		},
@@ -98,7 +120,8 @@ func TestBuild(t *testing.T) {
 			desc:  "Testing error building a docker image with nil golang context",
 			image: &image.Image{},
 			driver: &DockerDriver{
-				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
+				driver:        godockerbuilder.NewMockGoDockerBuildDriver(),
+				referenceName: reference.NewDefaultReferenceName(),
 			},
 			options: &image.BuildDriverOptions{},
 			err:     errors.New(errContext, "To build an image is required a golang context"),
@@ -107,7 +130,8 @@ func TestBuild(t *testing.T) {
 			desc:  "Testing error building a docker image with not defined image name",
 			image: &image.Image{},
 			driver: &DockerDriver{
-				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
+				driver:        godockerbuilder.NewMockGoDockerBuildDriver(),
+				referenceName: reference.NewDefaultReferenceName(),
 			},
 			ctx:     context.TODO(),
 			options: &image.BuildDriverOptions{},
@@ -116,8 +140,9 @@ func TestBuild(t *testing.T) {
 		{
 			desc: "Testing building a docker image",
 			driver: &DockerDriver{
-				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
-				writer: os.Stdout,
+				driver:        godockerbuilder.NewMockGoDockerBuildDriver(),
+				writer:        os.Stdout,
+				referenceName: reference.NewDefaultReferenceName(),
 			},
 			ctx: context.TODO(),
 			image: &image.Image{
@@ -236,7 +261,8 @@ func TestBuild(t *testing.T) {
 		{
 			desc: "Testing error context not defined on build options",
 			driver: &DockerDriver{
-				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
+				driver:        godockerbuilder.NewMockGoDockerBuildDriver(),
+				referenceName: reference.NewDefaultReferenceName(),
 			},
 			ctx: context.TODO(),
 			image: &image.Image{
@@ -307,7 +333,8 @@ func TestBuild(t *testing.T) {
 		{
 			desc: "Testing error when there is not found any docker build context definition",
 			driver: &DockerDriver{
-				driver: godockerbuilder.NewMockGoDockerBuildDriver(),
+				driver:        godockerbuilder.NewMockGoDockerBuildDriver(),
+				referenceName: reference.NewDefaultReferenceName(),
 			},
 			ctx: context.TODO(),
 			image: &image.Image{

@@ -19,6 +19,8 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/now"
 	plainoutput "github.com/gostevedore/stevedore/internal/infrastructure/output/images/plain"
 	treeoutput "github.com/gostevedore/stevedore/internal/infrastructure/output/images/tree"
+	defaultreferencename "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/default"
+	dockerreferencename "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/render"
 	store "github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/spf13/afero"
@@ -233,12 +235,12 @@ func (e *GetImagesEntrypoint) createtOutput(options *Options) (repository.Images
 	errContext := "(get::images::entrypoint::createtOutput)"
 
 	if options.Tree {
-		output, err = e.createTreeOutput()
+		output, err = e.createTreeOutput(options)
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}
 	} else {
-		output, err = e.createPlainTextOutput()
+		output, err = e.createPlainTextOutput(options)
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}
@@ -248,7 +250,7 @@ func (e *GetImagesEntrypoint) createtOutput(options *Options) (repository.Images
 
 }
 
-func (e *GetImagesEntrypoint) createPlainTextOutput() (repository.ImagesOutputter, error) {
+func (e *GetImagesEntrypoint) createPlainTextOutput(options *Options) (repository.ImagesOutputter, error) {
 
 	errContext := "(get::images::entrypoint::createPlainTextOutput)"
 
@@ -256,26 +258,46 @@ func (e *GetImagesEntrypoint) createPlainTextOutput() (repository.ImagesOutputte
 		return nil, errors.New(errContext, "Get images entrypoint requires a writer to create the plain text output")
 	}
 
+	ref, err := e.createReferenceName(options)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
 	c := console.NewConsole(e.writer, nil)
 	output := plainoutput.NewPlainOutput(
 		plainoutput.WithWriter(c),
+		plainoutput.WithReferenceName(ref),
 	)
 
 	return output, nil
 }
 
-func (e *GetImagesEntrypoint) createTreeOutput() (repository.ImagesOutputter, error) {
+func (e *GetImagesEntrypoint) createTreeOutput(options *Options) (repository.ImagesOutputter, error) {
 	errContext := "(get::images::entrypoint::createTreeOutput)"
 
 	if e.writer == nil {
 		return nil, errors.New(errContext, "Get images entrypoint requires a writer to create the tree output")
 	}
 
+	ref, err := e.createReferenceName(options)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
 	c := console.NewConsole(e.writer, nil)
 	output := treeoutput.NewTreeOutput(
 		treeoutput.WithWriter(c),
 		treeoutput.WithGraph(&gdsexttree.Graph{}),
+		treeoutput.WithReferenceName(ref),
 	)
 
 	return output, nil
+}
+
+func (e *GetImagesEntrypoint) createReferenceName(options *Options) (repository.ImageReferenceNamer, error) {
+	if options.UseDockerNormalizedName {
+		return dockerreferencename.NewDockerNormalizedReferenceName(), nil
+	}
+
+	return defaultreferencename.NewDefaultReferenceName(), nil
 }
