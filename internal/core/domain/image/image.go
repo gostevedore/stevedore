@@ -165,8 +165,7 @@ func Parse(name string) (*Image, error) {
 	referenceName = reference.TagNameOnly(referenceName)
 
 	return &Image{
-		Name: reference.Path(referenceName)[strings.LastIndex(reference.Path(referenceName), "/")+1:],
-		//Version:           referenceName.String()[strings.IndexRune(referenceName.String(), ':')+1:],
+		Name:              reference.Path(referenceName)[strings.LastIndex(reference.Path(referenceName), "/")+1:],
 		Version:           referenceName.String()[strings.LastIndex(referenceName.String(), ":")+1:],
 		RegistryHost:      reference.Domain(referenceName),
 		RegistryNamespace: reference.Path(referenceName)[:strings.LastIndex(reference.Path(referenceName), "/")],
@@ -188,36 +187,36 @@ func (i *Image) AddChild(child *Image) {
 	i.Children = append(i.Children, child)
 }
 
-// NormalizedNamed normalizes the image name
-func (i *Image) DockerNormalizedNamed() (string, error) {
-	var err error
-	errContext := "(core::domain::image::DockerNormalizedNamed)"
+// // NormalizedNamed normalizes the image name
+// func (i *Image) DockerNormalizedNamed() (string, error) {
+// 	var err error
+// 	errContext := "(core::domain::image::DockerNormalizedNamed)"
 
-	if i.Name == "" {
-		return "", errors.New(errContext, "Image name is empty")
-	}
+// 	if i.Name == "" {
+// 		return "", errors.New(errContext, "Image name is empty")
+// 	}
 
-	if i.Version == "" {
-		return "", errors.New(errContext, "Image version is empty")
-	}
+// 	if i.Version == "" {
+// 		return "", errors.New(errContext, "Image version is empty")
+// 	}
 
-	if i.RegistryHost == "" {
-		return "", errors.New(errContext, "Registry host is empty")
-	}
+// 	if i.RegistryHost == "" {
+// 		return "", errors.New(errContext, "Registry host is empty")
+// 	}
 
-	if i.RegistryNamespace == "" {
-		return "", errors.New(errContext, "Registry namespace is empty")
-	}
+// 	if i.RegistryNamespace == "" {
+// 		return "", errors.New(errContext, "Registry namespace is empty")
+// 	}
 
-	name := fmt.Sprintf("%s/%s/%s:%s", i.RegistryHost, i.RegistryNamespace, i.Name, i.Version)
+// 	name := fmt.Sprintf("%s/%s/%s:%s", i.RegistryHost, i.RegistryNamespace, i.Name, i.Version)
 
-	_, err = reference.ParseNormalizedNamed(name)
-	if err != nil {
-		return "", errors.New(errContext, fmt.Sprintf("Image name '%s' could not be normalized", name), err)
-	}
+// 	_, err = reference.ParseNormalizedNamed(name)
+// 	if err != nil {
+// 		return "", errors.New(errContext, fmt.Sprintf("Image name '%s' could not be normalized", name), err)
+// 	}
 
-	return name, nil
-}
+// 	return name, nil
+// }
 
 // Sanetize normalizes the image name
 func (i *Image) Sanetize() error {

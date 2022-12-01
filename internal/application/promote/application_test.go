@@ -14,6 +14,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/mock"
+	reference "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/default"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/stretchr/testify/assert"
 )
@@ -35,6 +36,7 @@ func TestPromote(t *testing.T) {
 				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
+				WithReferenceNamer(reference.NewDefaultReferenceName()),
 			),
 			context: context.TODO(),
 			options: &Options{
@@ -80,6 +82,7 @@ func TestPromote(t *testing.T) {
 				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
+				WithReferenceNamer(reference.NewDefaultReferenceName()),
 			),
 			context: context.TODO(),
 			options: &Options{
@@ -127,6 +130,7 @@ func TestPromote(t *testing.T) {
 				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
+				WithReferenceNamer(reference.NewDefaultReferenceName()),
 			),
 			context: context.TODO(),
 			options: &Options{
@@ -179,6 +183,7 @@ func TestPromote(t *testing.T) {
 				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
+				WithReferenceNamer(reference.NewDefaultReferenceName()),
 			),
 			context: context.TODO(),
 			options: &Options{
@@ -224,6 +229,7 @@ func TestPromote(t *testing.T) {
 				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
+				WithReferenceNamer(reference.NewDefaultReferenceName()),
 			),
 			context: context.TODO(),
 			options: &Options{
@@ -273,8 +279,9 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote source image with all options, using semver configuration parameters overridden by service options",
 			service: &Application{
-				credentials: credentialsfactory.NewMockCredentialsFactory(),
-				semver:      semver.NewSemVerGenerator(),
+				credentials:    credentialsfactory.NewMockCredentialsFactory(),
+				semver:         semver.NewSemVerGenerator(),
+				referenceNamer: reference.NewDefaultReferenceName(),
 			},
 			context: context.TODO(),
 			options: &Options{
@@ -324,8 +331,9 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing error promote when push credentials are invalid",
 			service: &Application{
-				credentials: credentialsfactory.NewMockCredentialsFactory(),
-				semver:      semver.NewSemVerGenerator(),
+				credentials:    credentialsfactory.NewMockCredentialsFactory(),
+				semver:         semver.NewSemVerGenerator(),
+				referenceNamer: reference.NewDefaultReferenceName(),
 			},
 			context: context.TODO(),
 			options: &Options{
@@ -372,8 +380,9 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing error promote when pull credentials are invalid",
 			service: &Application{
-				credentials: credentialsfactory.NewMockCredentialsFactory(),
-				semver:      semver.NewSemVerGenerator(),
+				credentials:    credentialsfactory.NewMockCredentialsFactory(),
+				semver:         semver.NewSemVerGenerator(),
+				referenceNamer: reference.NewDefaultReferenceName(),
 			},
 			context: context.TODO(),
 			options: &Options{

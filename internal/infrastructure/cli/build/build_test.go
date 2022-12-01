@@ -75,6 +75,7 @@ func TestNewCommand(t *testing.T) {
 				"--pull-parent-image",
 				"--push-after-build",
 				"--remove-local-images-after-push",
+				"--use-docker-normalized-name",
 			},
 			prepareAssertFunc: func(compatibility Compatibilitier, build Entrypointer, config *configuration.Configuration) {
 				build.(*entrypoint.MockEntrypoint).On(
@@ -83,8 +84,9 @@ func TestNewCommand(t *testing.T) {
 					[]string{"my-image"},
 					config,
 					&entrypoint.Options{
-						Concurrency: 5,
-						DryRun:      true,
+						Concurrency:             5,
+						DryRun:                  true,
+						UseDockerNormalizedName: true,
 					},
 					&handler.Options{
 						AnsibleConnectionLocal:           true,

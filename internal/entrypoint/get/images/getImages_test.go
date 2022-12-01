@@ -14,6 +14,8 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/now"
 	plainoutput "github.com/gostevedore/stevedore/internal/infrastructure/output/images/plain"
 	treeoutput "github.com/gostevedore/stevedore/internal/infrastructure/output/images/tree"
+	defaultreferencename "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/default"
+	dockerreferencename "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/render"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/spf13/afero"
@@ -338,6 +340,44 @@ func TestCreateOutput(t *testing.T) {
 			res, err := test.entrypoint.createtOutput(test.options)
 			if err != nil {
 				assert.Equal(t, test.err, err)
+			} else {
+				assert.IsType(t, test.res, res)
+			}
+		})
+	}
+}
+
+func TestCreateReferenceName(t *testing.T) {
+	tests := []struct {
+		desc       string
+		entrypoint *GetImagesEntrypoint
+		options    *Options
+		res        repository.ImageReferenceNamer
+		err        error
+	}{
+		{
+			desc:       "Testinc create docker reference name on build entrypoint",
+			entrypoint: NewGetImagesEntrypoint(),
+			options: &Options{
+				UseDockerNormalizedName: true,
+			},
+			res: dockerreferencename.NewDockerNormalizedReferenceName(),
+		},
+		{
+			desc:       "Testinc create default reference name on build entrypoint",
+			entrypoint: NewGetImagesEntrypoint(),
+			options:    &Options{},
+			res:        defaultreferencename.NewDefaultReferenceName(),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			res, err := test.entrypoint.createReferenceName(test.options)
+			if err != nil {
+				assert.Equal(t, test.res, res)
 			} else {
 				assert.IsType(t, test.res, res)
 			}

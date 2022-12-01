@@ -3,6 +3,7 @@ package promote
 import (
 	"context"
 
+	entrypoint "github.com/gostevedore/stevedore/internal/entrypoint/promote"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 )
@@ -14,7 +15,7 @@ type HandlerPromoter interface {
 
 // Entrypointer is the interface that wraps the main build function
 type Entrypointer interface {
-	Execute(ctx context.Context, args []string, conf *configuration.Configuration, options *handler.Options) error
+	Execute(ctx context.Context, args []string, conf *configuration.Configuration, entrypointOptions *entrypoint.Options, handlerOptions *handler.Options) error
 }
 
 // Compatibilitier is the interface for the compatibility checker

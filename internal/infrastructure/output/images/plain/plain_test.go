@@ -7,6 +7,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/infrastructure/console"
+	reference "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/default"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,9 +27,10 @@ func TestOuput(t *testing.T) {
 			err:    errors.New(errContext, "Images plain text output requires a writer"),
 		},
 		{
-			desc: "Testing get images in plain output",
+			desc: "Testing output images in plain output",
 			output: NewPlainOutput(
 				WithWriter(console.NewMockConsole()),
+				WithReferenceName(reference.NewDefaultReferenceName()),
 			),
 			list: []*image.Image{
 				{
@@ -67,9 +69,9 @@ func TestOuput(t *testing.T) {
 			},
 			prepareMockFunc: func(o *PlainOutput) {
 				o.writer.(*console.MockConsole).On("PrintTable", [][]string{
-					{"NAME", "VERSION", "REGISTRY", "NAMESPACE", "BUILDER", "PARENT"},
-					{"image1", "v1", "registry.test", "namespace", "builder", "registry.test/library/parent:v1"},
-					{"parent", "v1", "registry.test", "library", "<in-line>"},
+					{"NAME", "VERSION", "BUILDER", "IMAGE FULL NAME", "PARENT"},
+					{"image1", "v1", "builder", "registry.test/namespace/image1:v1", "registry.test/library/parent:v1"},
+					{"parent", "v1", "<in-line>", "registry.test/library/parent:v1", "-"},
 					{"-", "-", "-", "-", "-"},
 				}).Return(nil)
 			},

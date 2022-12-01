@@ -42,9 +42,8 @@ Get images filtered by registry:
 			entrypointOptions := &entrypoint.Options{}
 			handlerOptions := &handler.Options{}
 
-			if getImagesFlagOptions.Tree {
-				entrypointOptions.Tree = getImagesFlagOptions.Tree
-			}
+			entrypointOptions.Tree = getImagesFlagOptions.Tree
+			entrypointOptions.UseDockerNormalizedName = getImagesFlagOptions.UseDockerNormalizedName
 
 			if len(getImagesFlagOptions.Filter) > 0 {
 				handlerOptions.Filter = append([]string{}, getImagesFlagOptions.Filter...)
@@ -61,6 +60,7 @@ Get images filtered by registry:
 
 	getImagesCmd.Flags().BoolVarP(&getImagesFlagOptions.Tree, "tree", "t", false, "When this flag is enabled, output is returned in tree format")
 	getImagesCmd.Flags().StringSliceVarP(&getImagesFlagOptions.Filter, "filter", "f", []string{}, "List of filters to apply. Filters must be defined on the following format: <attribute>=<value>")
+	getImagesCmd.Flags().BoolVar(&getImagesFlagOptions.UseDockerNormalizedName, "use-docker-normalized-name", false, "Use Docker normalized name references")
 
 	command := &command.StevedoreCommand{
 		Command: getImagesCmd,

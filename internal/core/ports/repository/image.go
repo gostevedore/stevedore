@@ -54,3 +54,8 @@ type ImagesOutputter interface {
 type ImagesPlainPrinter interface {
 	PrintTable(content [][]string) error
 }
+
+// ImageReferenceNamer is an interface to generate image names
+type ImageReferenceNamer interface {
+	GenerateName(image *image.Image) (string, error)
+}

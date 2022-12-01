@@ -177,9 +177,9 @@ func (c *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes
 			}
 
 			// not tested
-			if version != domainimage.ImageWildcardVersionSymbol {
-				parentDomainImage.AddChild(imageToStore)
-			}
+			//if version != domainimage.ImageWildcardVersionSymbol {
+			parentDomainImage.AddChild(imageToStore)
+			//}
 
 			err = c.store.Store(name, version, imageToStore)
 			if err != nil {
@@ -234,7 +234,8 @@ func (c *ImagesConfiguration) propagatePersistentAttributes(i *domainimage.Image
 func (c *ImagesConfiguration) renderImage(name, version string, i *domainimage.Image) (*domainimage.Image, error) {
 
 	var err error
-	var renderedImage, normalizedImage *domainimage.Image
+	var renderedImage *domainimage.Image
+	//var normalizedImage *domainimage.Image
 	errContext := "(images::renderImage)"
 
 	if version == domainimage.ImageWildcardVersionSymbol {
@@ -262,15 +263,15 @@ func (c *ImagesConfiguration) renderImage(name, version string, i *domainimage.I
 		return nil, errors.New(errContext, "", err)
 	}
 
-	normalizedImage, err = domainimage.NewImage(renderedImage.Name, renderedImage.Version, renderedImage.RegistryHost, renderedImage.RegistryNamespace)
-	if err != nil {
-		return nil, errors.New(errContext, "", err)
-	}
+	// normalizedImage, err = domainimage.NewImage(renderedImage.Name, renderedImage.Version, renderedImage.RegistryHost, renderedImage.RegistryNamespace)
+	// if err != nil {
+	// 	return nil, errors.New(errContext, "", err)
+	// }
 
-	renderedImage.Name = normalizedImage.Name
-	renderedImage.Version = normalizedImage.Version
-	renderedImage.RegistryHost = normalizedImage.RegistryHost
-	renderedImage.RegistryNamespace = normalizedImage.RegistryNamespace
+	// renderedImage.Name = normalizedImage.Name
+	// renderedImage.Version = normalizedImage.Version
+	// renderedImage.RegistryHost = normalizedImage.RegistryHost
+	// renderedImage.RegistryNamespace = normalizedImage.RegistryNamespace
 
 	err = renderedImage.Sanetize()
 	if err != nil {

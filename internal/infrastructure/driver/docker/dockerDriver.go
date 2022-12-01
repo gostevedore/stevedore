@@ -8,6 +8,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
 
 const (
@@ -17,12 +18,13 @@ const (
 
 // DockerDriver is a driver for Docker
 type DockerDriver struct {
-	driver DockerDriverer
-	writer io.Writer
+	driver        DockerDriverer
+	referenceName repository.ImageReferenceNamer
+	writer        io.Writer
 }
 
 // NewDockerDriver creates a new DockerDriver
-func NewDockerDriver(driver DockerDriverer, writer io.Writer) (*DockerDriver, error) {
+func NewDockerDriver(driver DockerDriverer, ref repository.ImageReferenceNamer, writer io.Writer) (*DockerDriver, error) {
 
 	errContext := "(dockerdriver::NewDockerDriver)"
 
@@ -30,13 +32,18 @@ func NewDockerDriver(driver DockerDriverer, writer io.Writer) (*DockerDriver, er
 		return nil, errors.New(errContext, "To create a DockerDriver is expected a driver")
 	}
 
+	if ref == nil {
+		return nil, errors.New(errContext, "To create a DockerDriver is expected a reference name")
+	}
+
 	if writer == nil {
 		writer = os.Stdout
 	}
 
 	return &DockerDriver{
-		driver: driver,
-		writer: writer,
+		driver:        driver,
+		writer:        writer,
+		referenceName: ref,
 	}, nil
 }
 
@@ -51,6 +58,10 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *image
 
 	if d.driver == nil {
 		return errors.New(errContext, "To build an image is required a driver")
+	}
+
+	if d.referenceName == nil {
+		return errors.New(errContext, "To build an image is required a reference name")
 	}
 
 	if i == nil {
@@ -69,7 +80,7 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *image
 		return errors.New(errContext, "To build an image is required an image name")
 	}
 
-	imageName, err = i.DockerNormalizedNamed()
+	imageName, err = d.referenceName.GenerateName(i)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -101,7 +112,7 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *image
 			if err != nil {
 				return errors.New(errContext, "", err)
 			}
-			imageTaggedName, err := imageTaggedAux.DockerNormalizedNamed()
+			imageTaggedName, err := d.referenceName.GenerateName(imageTaggedAux)
 			if err != nil {
 				return errors.New(errContext, "", err)
 			}

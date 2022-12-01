@@ -7,6 +7,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	gdsexttree "github.com/apenella/go-data-structures/extendedTree"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
+	reference "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/default"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,6 +25,7 @@ func TestOutput(t *testing.T) {
 				WithGraph(
 					&gdsexttree.Graph{},
 				),
+				WithReferenceName(reference.NewDefaultReferenceName()),
 			),
 			list: []*image.Image{
 				{
