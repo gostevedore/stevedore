@@ -5,6 +5,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
+	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -71,8 +72,10 @@ builders:
 							Dockerfile: "Dockerfile.test",
 							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
 						},
+						VarMapping: varsmap.New(),
 					},
 				).Return(nil)
+
 				b.store.(*builders.MockStore).On("Store",
 					&builder.Builder{
 						Name:   "second",
@@ -81,6 +84,7 @@ builders:
 							Dockerfile: "Dockerfile.test",
 							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
 						},
+						VarMapping: varsmap.New(),
 					},
 				).Return(nil)
 			},
@@ -200,8 +204,10 @@ builders:
 							Dockerfile: "Dockerfile.test",
 							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
 						},
+						VarMapping: varsmap.New(),
 					},
 				).Return(nil)
+
 				b.store.(*builders.MockStore).On("Store",
 					&builder.Builder{
 						Name:   "second",
@@ -210,8 +216,10 @@ builders:
 							Dockerfile: "Dockerfile.test",
 							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
 						},
+						VarMapping: varsmap.New(),
 					},
 				).Return(nil)
+
 				b.store.(*builders.MockStore).On("Store",
 					&builder.Builder{
 						Name:   "third",
@@ -220,6 +228,7 @@ builders:
 							Dockerfile: "Dockerfile.test",
 							Context:    []*builder.DockerDriverContextOptions{{Path: "/even/another/path/to/context"}},
 						},
+						VarMapping: varsmap.New(),
 					},
 				).Return(nil)
 			},
@@ -321,8 +330,10 @@ builders:
 							Dockerfile: "Dockerfile.test",
 							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
 						},
+						VarMapping: varsmap.New(),
 					},
 				).Return(nil)
+
 				b.store.(*builders.MockStore).On("Store",
 					&builder.Builder{
 						Name:   "second",
@@ -331,6 +342,7 @@ builders:
 							Dockerfile: "Dockerfile.test",
 							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
 						},
+						VarMapping: varsmap.New(),
 					},
 				).Return(nil)
 			},
@@ -349,8 +361,10 @@ builders:
 							Dockerfile: "Dockerfile.test",
 							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
 						},
+						VarMapping: varsmap.New(),
 					},
 				).Return(nil)
+
 				b.store.(*builders.MockStore).On("Store",
 					&builder.Builder{
 						Name:   "second",
@@ -359,8 +373,10 @@ builders:
 							Dockerfile: "Dockerfile.test",
 							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
 						},
+						VarMapping: varsmap.New(),
 					},
 				).Return(nil)
+
 				b.store.(*builders.MockStore).On("Store",
 					&builder.Builder{
 						Name:   "third",
@@ -369,6 +385,7 @@ builders:
 							Dockerfile: "Dockerfile.test",
 							Context:    []*builder.DockerDriverContextOptions{{Path: "/even/another/path/to/context"}},
 						},
+						VarMapping: varsmap.New(),
 					},
 				).Return(nil)
 			},

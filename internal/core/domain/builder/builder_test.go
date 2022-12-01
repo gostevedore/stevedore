@@ -11,10 +11,12 @@ import (
 
 func TestNewBuilder(t *testing.T) {
 	tests := []struct {
-		desc   string
-		name   string
-		driver string
-		res    *Builder
+		desc    string
+		name    string
+		driver  string
+		options *BuilderOptions
+		varsmap varsmap.Varsmap
+		res     *Builder
 	}{
 		{
 			desc:   "Testing create a new builder",
@@ -27,13 +29,103 @@ func TestNewBuilder(t *testing.T) {
 				VarMapping: varsmap.New(),
 			},
 		},
+		{
+			desc:   "Testing create a new builder with a given varmap",
+			name:   "builder",
+			driver: "ansible-playbook",
+			res: &Builder{
+				Name:    "builder",
+				Driver:  "ansible-playbook",
+				Options: &BuilderOptions{},
+				VarMapping: varsmap.Varsmap{
+					varsmap.VarMappingImageBuilderNameKey:              "OtherVarMappingImageBuilderName",
+					varsmap.VarMappingImageBuilderTagKey:               "OtherVarMappingImageBuilderTag",
+					varsmap.VarMappingImageBuilderRegistryNamespaceKey: "OtherVarMappingImageBuilderRegistryNamespace",
+					varsmap.VarMappingImageBuilderRegistryHostKey:      "OtherVarMappingImageBuilderRegistryHost",
+					varsmap.VarMappingImageBuilderLabelKey:             "OtherVarMappingImageBuilderLabel",
+					varsmap.VarMappingImageFromNameKey:                 "OtherVarMappingImageFromName",
+					varsmap.VarMappingImageFromTagKey:                  "OtherVarMappingImageFromTag",
+					varsmap.VarMappingImageFromRegistryNamespaceKey:    "OtherVarMappingImageFromRegistryNamespace",
+					varsmap.VarMappingImageFromRegistryHostKey:         "OtherVarMappingImageFromRegistryHost",
+					varsmap.VarMappingImageNameKey:                     "OtherVarMappingImageName",
+					varsmap.VarMappingImageTagKey:                      "OtherVarMappingImageTag",
+					varsmap.VarMappingImageExtraTagsKey:                "OtherVarMappingImageExtraTags",
+					varsmap.VarMappingImageLabelsKey:                   "OtherVarMappingImageLabels",
+					varsmap.VarMappingRegistryNamespaceKey:             "OtherVarMappingRegistryNamespace",
+					varsmap.VarMappingRegistryHostKey:                  "OtherVarMappingRegistryHost",
+					varsmap.VarMappingPullParentImageKey:               "OtherVarMappingPullParentImage",
+					varsmap.VarMappingPushImagetKey:                    "OtherVarMappingPushImaget",
+				},
+			},
+			varsmap: varsmap.Varsmap{
+				varsmap.VarMappingImageBuilderNameKey:              "OtherVarMappingImageBuilderName",
+				varsmap.VarMappingImageBuilderTagKey:               "OtherVarMappingImageBuilderTag",
+				varsmap.VarMappingImageBuilderRegistryNamespaceKey: "OtherVarMappingImageBuilderRegistryNamespace",
+				varsmap.VarMappingImageBuilderRegistryHostKey:      "OtherVarMappingImageBuilderRegistryHost",
+				varsmap.VarMappingImageBuilderLabelKey:             "OtherVarMappingImageBuilderLabel",
+				varsmap.VarMappingImageFromNameKey:                 "OtherVarMappingImageFromName",
+				varsmap.VarMappingImageFromTagKey:                  "OtherVarMappingImageFromTag",
+				varsmap.VarMappingImageFromRegistryNamespaceKey:    "OtherVarMappingImageFromRegistryNamespace",
+				varsmap.VarMappingImageFromRegistryHostKey:         "OtherVarMappingImageFromRegistryHost",
+				varsmap.VarMappingImageNameKey:                     "OtherVarMappingImageName",
+				varsmap.VarMappingImageTagKey:                      "OtherVarMappingImageTag",
+				varsmap.VarMappingImageExtraTagsKey:                "OtherVarMappingImageExtraTags",
+				varsmap.VarMappingImageLabelsKey:                   "OtherVarMappingImageLabels",
+				varsmap.VarMappingRegistryNamespaceKey:             "OtherVarMappingRegistryNamespace",
+				varsmap.VarMappingRegistryHostKey:                  "OtherVarMappingRegistryHost",
+				varsmap.VarMappingPullParentImageKey:               "OtherVarMappingPullParentImage",
+				varsmap.VarMappingPushImagetKey:                    "OtherVarMappingPushImaget",
+			},
+		},
+		{
+			desc:   "Testing create a new builder combining varmap",
+			name:   "builder",
+			driver: "ansible-playbook",
+			res: &Builder{
+				Name:    "builder",
+				Driver:  "ansible-playbook",
+				Options: &BuilderOptions{},
+				VarMapping: varsmap.Varsmap{
+					varsmap.VarMappingImageBuilderLabelKey:             "OtherVarMappingImageBuilderLabel",
+					varsmap.VarMappingImageBuilderNameKey:              "OtherVarMappingImageBuilderName",
+					varsmap.VarMappingImageBuilderRegistryHostKey:      "OtherVarMappingImageBuilderRegistryHost",
+					varsmap.VarMappingImageBuilderRegistryNamespaceKey: "OtherVarMappingImageBuilderRegistryNamespace",
+					varsmap.VarMappingImageBuilderTagKey:               "OtherVarMappingImageBuilderTag",
+					varsmap.VarMappingImageExtraTagsKey:                "OtherVarMappingImageExtraTags",
+					varsmap.VarMappingImageFromNameKey:                 "OtherVarMappingImageFromName",
+					varsmap.VarMappingImageFromRegistryHostKey:         "OtherVarMappingImageFromRegistryHost",
+					varsmap.VarMappingImageFromRegistryNamespaceKey:    "OtherVarMappingImageFromRegistryNamespace",
+					varsmap.VarMappingImageFromTagKey:                  "OtherVarMappingImageFromTag",
+					varsmap.VarMappingImageLabelsKey:                   "image_labels",
+					varsmap.VarMappingImageNameKey:                     "image_name",
+					varsmap.VarMappingImageTagKey:                      "image_tag",
+					varsmap.VarMappingPullParentImageKey:               "pull_parent_image",
+					varsmap.VarMappingPushImagetKey:                    "push_image",
+					varsmap.VarMappingRegistryHostKey:                  "image_registry_host",
+					varsmap.VarMappingRegistryNamespaceKey:             "image_registry_namespace",
+				},
+			},
+			varsmap: varsmap.Varsmap{
+				varsmap.VarMappingImageBuilderLabelKey:             "OtherVarMappingImageBuilderLabel",
+				varsmap.VarMappingImageBuilderNameKey:              "OtherVarMappingImageBuilderName",
+				varsmap.VarMappingImageBuilderRegistryHostKey:      "OtherVarMappingImageBuilderRegistryHost",
+				varsmap.VarMappingImageBuilderRegistryNamespaceKey: "OtherVarMappingImageBuilderRegistryNamespace",
+				varsmap.VarMappingImageBuilderTagKey:               "OtherVarMappingImageBuilderTag",
+				varsmap.VarMappingImageExtraTagsKey:                "OtherVarMappingImageExtraTags",
+				varsmap.VarMappingImageFromNameKey:                 "OtherVarMappingImageFromName",
+				varsmap.VarMappingImageFromRegistryHostKey:         "OtherVarMappingImageFromRegistryHost",
+				varsmap.VarMappingImageFromRegistryNamespaceKey:    "OtherVarMappingImageFromRegistryNamespace",
+				varsmap.VarMappingImageFromTagKey:                  "OtherVarMappingImageFromTag",
+			},
+		},
 	}
+
 	for _, test := range tests {
 
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			builder := NewBuilder(test.name, test.driver, nil, nil)
+			builder := NewBuilder(test.name, test.driver, test.options, test.varsmap)
 			assert.Equal(t, test.res, builder)
 		})
 	}
