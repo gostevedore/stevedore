@@ -3,6 +3,7 @@ package godockerbuilder
 import (
 	"context"
 	"io"
+	"sync"
 
 	errors "github.com/apenella/go-common-utils/error"
 	transformer "github.com/apenella/go-common-utils/transformer/string"
@@ -17,6 +18,10 @@ import (
 type GoDockerBuildDriver struct {
 	cmd            DockerBuilder
 	contextFactory *buildcontext.DockerBuildContextFactory
+
+	addBuildArgsMutex sync.Mutex
+	addLabelMutex     sync.Mutex
+	addTagsMutex      sync.Mutex
 }
 
 // NewGoDockerBuildDriver creates a new GoDockerBuildDriver
@@ -82,6 +87,9 @@ func (d *GoDockerBuildDriver) AddPushAuth(username string, password string) erro
 
 // AddBuildArgs append new build args
 func (d *GoDockerBuildDriver) AddBuildArgs(arg string, value string) error {
+	d.addBuildArgsMutex.Lock()
+	defer d.addBuildArgsMutex.Unlock()
+
 	return d.cmd.AddBuildArgs(arg, value)
 }
 
@@ -113,11 +121,17 @@ func (d *GoDockerBuildDriver) AddBuildContext(options ...*builder.DockerDriverCo
 
 // AddLabel adds a label to the image
 func (d *GoDockerBuildDriver) AddLabel(label string, value string) error {
+	d.addLabelMutex.Lock()
+	defer d.addLabelMutex.Unlock()
+
 	return d.cmd.AddLabel(label, value)
 }
 
 // AddTags adds tags to the image
 func (d *GoDockerBuildDriver) AddTags(tags ...string) error {
+	d.addTagsMutex.Lock()
+	defer d.addTagsMutex.Unlock()
+
 	return d.cmd.AddTags(tags...)
 }
 
