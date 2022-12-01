@@ -439,9 +439,7 @@ func (a *Application) getBuilder(i *image.Image) (*builder.Builder, error) {
 	case string:
 		return a.builders.Find(i.Builder.(string))
 	case *builder.Builder:
-
 		builderAux := i.Builder.(*builder.Builder)
-
 		return builder.NewBuilder(builderAux.Name, builderAux.Driver, builderAux.Options, builderAux.VarMapping), nil
 	default:
 		builderDefinitionBytes, err := yaml.Marshal(i.Builder)

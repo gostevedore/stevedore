@@ -77,7 +77,10 @@ func NewBuilder(name, driver string, options *BuilderOptions, varmap varsmap.Var
 		options = &BuilderOptions{}
 	}
 
-	if varmap == nil {
+	if varmap != nil {
+		// Combine existing values in varmap with those comming from a new varsmap
+		varmap.Combine(varsmap.New())
+	} else {
 		varmap = varsmap.New()
 	}
 

@@ -73,12 +73,14 @@ func (b *Builders) LoadBuildersFromFile(path string) error {
 		return errors.New(errContext, fmt.Sprintf("Error loading builders from file '%s'\nfound:\n%s", path, string(fileData)), err)
 	}
 
-	for name, builder := range buildersAux.Builders {
-		if builder.Name == "" {
-			builder.Name = name
+	for name, builderAux := range buildersAux.Builders {
+		if builderAux.Name == "" {
+			builderAux.Name = name
 		}
 
-		err = b.store.Store(builder)
+		newBuilder := builder.NewBuilder(builderAux.Name, builderAux.Driver, builderAux.Options, builderAux.VarMapping)
+
+		err = b.store.Store(newBuilder)
 		if err != nil {
 			return errors.New(errContext, fmt.Sprintf("Error loading builders from file '%s'", path), err)
 		}
