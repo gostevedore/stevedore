@@ -1349,8 +1349,6 @@ func TestFindGuaranteed(t *testing.T) {
 					},
 				},
 			},
-			// findName:     "image",
-			// findVersion:  "unexisting",
 			imageName:    "image",
 			imageVersion: "unexisting",
 			err:          errors.New(errContext, "Image 'image:unexisting' does not exist on the store"),
@@ -1608,6 +1606,131 @@ func TestGenerateImageFromWildcard(t *testing.T) {
 			} else {
 				test.assertFunc(t, test.store, i)
 			}
+		})
+	}
+}
+
+func TestIsWildcard(t *testing.T) {
+	tests := []struct {
+		desc  string
+		store *Store
+		image *image.Image
+		res   bool
+	}{
+		{
+			desc: "Testing is wildcard image when is true",
+			store: &Store{
+				imageWildcardIndex: map[string]*image.Image{
+					"image_wildcard": {
+						Name:    "image_wildcard",
+						Version: "{{ .Version }}-{{ .Parent.Version }}",
+						Parent: &image.Image{
+							Name:    "image_parent",
+							Version: "version_parent",
+						},
+					},
+				},
+				imageNameDefinitionVersionList: map[string]map[string]struct{}{
+					"image1": {"v1": struct{}{}},
+				},
+				imageNameVersionRenderedVersionsList: map[string]map[string]map[string]struct{}{
+					"image1": {
+						"v1": {"v1-a": struct{}{}},
+					},
+				},
+				imagesIndex: map[string]map[string]*image.Image{
+					"image1": {
+						"v1-a": &image.Image{
+							Version: "v1-a",
+						},
+					},
+				},
+			},
+			image: &image.Image{
+				Name:    "image_wildcard",
+				Version: "{{ .Version }}-{{ .Parent.Version }}",
+				Parent: &image.Image{
+					Name:    "image_parent",
+					Version: "version_parent",
+				},
+			},
+			res: true,
+		},
+		{
+			desc: "Testing is wildcard image when is false and image name is the same",
+			store: &Store{
+				imageWildcardIndex: map[string]*image.Image{
+					"image_wildcard": {
+						Name:    "image_wildcard",
+						Version: "{{ .Version }}-{{ .Parent.Version }}",
+						Parent: &image.Image{
+							Name:    "image_parent",
+							Version: "version_parent",
+						},
+					},
+				},
+				imageNameDefinitionVersionList: map[string]map[string]struct{}{
+					"image1": {"v1": struct{}{}},
+				},
+				imageNameVersionRenderedVersionsList: map[string]map[string]map[string]struct{}{
+					"image1": {
+						"v1": {"v1-a": struct{}{}},
+					},
+				},
+				imagesIndex: map[string]map[string]*image.Image{
+					"image1": {
+						"v1-a": &image.Image{
+							Version: "v1-a",
+						},
+					},
+				},
+			},
+			image: &image.Image{
+				Name:    "image_wildcard",
+				Version: "no-wildcard",
+			},
+			res: false,
+		},
+		{
+			desc: "Testing is wildcard image when is false and image name is distinct",
+			store: &Store{
+				imageWildcardIndex: map[string]*image.Image{
+					"image_wildcard": {
+						Name:    "image_wildcard",
+						Version: "{{ .Version }}-{{ .Parent.Version }}",
+						Parent: &image.Image{
+							Name:    "image_parent",
+							Version: "version_parent",
+						},
+					},
+				},
+				imageNameDefinitionVersionList: map[string]map[string]struct{}{
+					"image1": {"v1": struct{}{}},
+				},
+				imageNameVersionRenderedVersionsList: map[string]map[string]map[string]struct{}{
+					"image1": {
+						"v1": {"v1-a": struct{}{}},
+					},
+				},
+				imagesIndex: map[string]map[string]*image.Image{
+					"image1": {
+						"v1-a": &image.Image{
+							Version: "v1-a",
+						},
+					},
+				},
+			},
+			image: &image.Image{
+				Name:    "image1",
+				Version: "v1",
+			},
+			res: false,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			res := test.store.IsWildcard(test.image)
+			assert.Equal(t, test.res, res)
 		})
 	}
 }

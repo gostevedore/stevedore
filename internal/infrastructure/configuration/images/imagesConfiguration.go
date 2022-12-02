@@ -176,10 +176,7 @@ func (c *ImagesConfiguration) storeNodeImages(node graph.GraphNoder, storedNodes
 				return errors.New(errContext, "", err)
 			}
 
-			// not tested
-			//if version != domainimage.ImageWildcardVersionSymbol {
 			parentDomainImage.AddChild(imageToStore)
-			//}
 
 			err = c.store.Store(name, version, imageToStore)
 			if err != nil {

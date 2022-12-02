@@ -37,13 +37,13 @@ func (p *CascadePlan) Plan(name string, versions []string) ([]*Step, error) {
 	}
 
 	for _, image := range images {
-		steps = append(steps, plan(image, nil, p.depth)...)
+		steps = append(steps, p.plan(image, nil, p.depth)...)
 	}
 
 	return steps, nil
 }
 
-func plan(image *image.Image, parent *Step, depth int) []*Step {
+func (p *CascadePlan) plan(image *image.Image, parent *Step, depth int) []*Step {
 	steps := []*Step{}
 	var sync chan struct{}
 
@@ -51,6 +51,11 @@ func plan(image *image.Image, parent *Step, depth int) []*Step {
 	if parent != nil {
 		sync = make(chan struct{})
 		parent.Subscribe(sync)
+	}
+
+	// not tested
+	if p.images.IsWildcard(image) {
+		return steps
 	}
 
 	step := NewStep(image, image.Name, sync)
@@ -61,7 +66,7 @@ func plan(image *image.Image, parent *Step, depth int) []*Step {
 	}
 
 	for _, child := range image.Children {
-		steps = append(steps, plan(child, step, depth-1)...)
+		steps = append(steps, p.plan(child, step, depth-1)...)
 	}
 
 	return steps
