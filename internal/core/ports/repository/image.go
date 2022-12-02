@@ -38,6 +38,7 @@ type ImagesStorerReader interface {
 	FindByName(name string) ([]*image.Image, error)
 	Find(name string, version string) ([]*image.Image, error)
 	FindGuaranteed(imageName, imageVersion string) ([]*image.Image, error)
+	IsWildcard(*image.Image) bool
 }
 
 // ImagesSelector interface defines which methods are needed to select images from a list

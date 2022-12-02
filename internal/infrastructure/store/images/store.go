@@ -324,9 +324,9 @@ func (s *Store) FindGuaranteed(imageName, imageVersion string) ([]*image.Image, 
 	var image, imageWildcard *image.Image
 
 	list, err = s.Find(imageName, imageVersion)
-	// if err != nil {
-	// 	return nil, errors.New(errContext, "", err)
-	// }
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
 
 	if len(list) > 0 && err == nil {
 		return list, nil
@@ -404,4 +404,22 @@ func (s *Store) GenerateImageFromWildcard(i *image.Image, name string, version s
 	}
 
 	return renderedImage, nil
+}
+
+func (s *Store) IsWildcard(i *image.Image) bool {
+
+	wildcardImage, err := s.FindWildcardImage(i.Name)
+	if err != nil {
+		return false
+	}
+
+	if wildcardImage == nil {
+		return false
+	}
+
+	if wildcardImage.Version != i.Version {
+		return false
+	}
+
+	return true
 }

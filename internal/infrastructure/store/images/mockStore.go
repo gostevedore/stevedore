@@ -49,3 +49,10 @@ func (m *MockStore) FindGuaranteed(imageName, imageVersion string) ([]*image.Ima
 	args := m.Called(imageName, imageVersion)
 	return args.Get(0).([]*image.Image), args.Error(1)
 }
+
+// IsWildcard is a mock implementations of the IsWildcard method
+func (m *MockStore) IsWildcard(i *image.Image) bool {
+	args := m.Called(i)
+
+	return args.Bool(0)
+}

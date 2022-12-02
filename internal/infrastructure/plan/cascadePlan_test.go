@@ -47,11 +47,11 @@ func TestCascadePlanPlan(t *testing.T) {
 						Version: "version1",
 						Children: []*image.Image{
 							{
-								Name:    "image",
+								Name:    "image2",
 								Version: "version2",
 								Children: []*image.Image{
 									{
-										Name:    "image",
+										Name:    "image3",
 										Version: "version3",
 									},
 								},
@@ -59,6 +59,44 @@ func TestCascadePlanPlan(t *testing.T) {
 						},
 					},
 				}, nil)
+
+				p.images.(*images.MockStore).On("IsWildcard",
+					&image.Image{
+						Name:    "image",
+						Version: "version1",
+						Children: []*image.Image{
+							{
+								Name:    "image2",
+								Version: "version2",
+								Children: []*image.Image{
+									{
+										Name:    "image3",
+										Version: "version3",
+									},
+								},
+							},
+						},
+					}).Return(false)
+
+				p.images.(*images.MockStore).On("IsWildcard",
+					&image.Image{
+						Name:    "image2",
+						Version: "version2",
+						Children: []*image.Image{
+							{
+								Name:    "image3",
+								Version: "version3",
+							},
+						},
+					}).Return(false)
+
+				p.images.(*images.MockStore).On("IsWildcard",
+					&image.Image{
+
+						Name:    "image3",
+						Version: "version3",
+					}).Return(false)
+
 			},
 			assertFunc: func(p *CascadePlan) bool {
 				return p.images.(*images.MockStore).AssertExpectations(t)
@@ -84,11 +122,11 @@ func TestCascadePlanPlan(t *testing.T) {
 						Version: "version1",
 						Children: []*image.Image{
 							{
-								Name:    "image",
+								Name:    "image2",
 								Version: "version2",
 								Children: []*image.Image{
 									{
-										Name:    "image",
+										Name:    "image3",
 										Version: "version3",
 									},
 								},
@@ -96,6 +134,36 @@ func TestCascadePlanPlan(t *testing.T) {
 						},
 					},
 				}, nil)
+
+				p.images.(*images.MockStore).On("IsWildcard",
+					&image.Image{
+						Name:    "image",
+						Version: "version1",
+						Children: []*image.Image{
+							{
+								Name:    "image2",
+								Version: "version2",
+								Children: []*image.Image{
+									{
+										Name:    "image3",
+										Version: "version3",
+									},
+								},
+							},
+						},
+					}).Return(false)
+
+				p.images.(*images.MockStore).On("IsWildcard",
+					&image.Image{
+						Name:    "image2",
+						Version: "version2",
+						Children: []*image.Image{
+							{
+								Name:    "image3",
+								Version: "version3",
+							},
+						},
+					}).Return(false)
 			},
 			assertFunc: func(p *CascadePlan) bool {
 				return p.images.(*images.MockStore).AssertExpectations(t)
@@ -120,11 +188,11 @@ func TestCascadePlanPlan(t *testing.T) {
 						Version: "version1",
 						Children: []*image.Image{
 							{
-								Name:    "image",
+								Name:    "image2",
 								Version: "version2",
 								Children: []*image.Image{
 									{
-										Name:    "image",
+										Name:    "image3",
 										Version: "version3",
 									},
 								},
@@ -136,6 +204,50 @@ func TestCascadePlanPlan(t *testing.T) {
 						Version: "version4",
 					},
 				}, nil)
+
+				p.images.(*images.MockStore).On("IsWildcard",
+					&image.Image{
+						Name:    "image",
+						Version: "version1",
+						Children: []*image.Image{
+							{
+								Name:    "image2",
+								Version: "version2",
+								Children: []*image.Image{
+									{
+										Name:    "image3",
+										Version: "version3",
+									},
+								},
+							},
+						},
+					}).Return(false)
+
+				p.images.(*images.MockStore).On("IsWildcard",
+					&image.Image{
+						Name:    "image2",
+						Version: "version2",
+						Children: []*image.Image{
+							{
+								Name:    "image3",
+								Version: "version3",
+							},
+						},
+					}).Return(false)
+
+				p.images.(*images.MockStore).On("IsWildcard",
+					&image.Image{
+
+						Name:    "image3",
+						Version: "version3",
+					}).Return(false)
+
+				p.images.(*images.MockStore).On("IsWildcard",
+					&image.Image{
+
+						Name:    "image",
+						Version: "version4",
+					}).Return(false)
 			},
 			res: 4,
 			assertFunc: func(p *CascadePlan) bool {
