@@ -21,11 +21,11 @@ func (n *DefaultReferenceName) GenerateName(i *image.Image) (string, error) {
 	errContext := "(name::images::DefaultReferenceName::GenerateName)"
 
 	if i.Name == "" {
-		return "", errors.New(errContext, "Name could not be generated because image name is undefined")
+		return "", errors.New(errContext, "Image reference name can not be generated because image name is undefined")
 	}
 
 	if i.Version == "" {
-		return "", errors.New(errContext, "Name could not be generated because image version is undefined")
+		return "", errors.New(errContext, "Image reference name can not be generated because image version is undefined")
 	}
 
 	name := fmt.Sprintf("%s:%s", i.Name, i.Version)

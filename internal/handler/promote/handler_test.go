@@ -11,7 +11,7 @@ import (
 
 func TestHandler(t *testing.T) {
 
-	errContext := "(promote::Handler)"
+	errContext := "(handler::promote::Handler)"
 
 	tests := []struct {
 		desc    string
