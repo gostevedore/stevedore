@@ -127,15 +127,15 @@ func (a *Application) Promote(ctx context.Context, options *Options) error {
 		promoteOptions.TargetImageTags = append(promoteOptions.TargetImageTags, sourceImage.Version)
 	}
 
-	if options.TargetImageRegistryHost != "" {
+	if options.TargetImageRegistryHost != image.UndefinedStringValue {
 		targetImage.RegistryHost = options.TargetImageRegistryHost
 	}
 
-	if options.TargetImageRegistryNamespace != "" {
+	if options.TargetImageRegistryNamespace != image.UndefinedStringValue {
 		targetImage.RegistryNamespace = options.TargetImageRegistryNamespace
 	}
 
-	if options.TargetImageName != "" {
+	if options.TargetImageName != image.UndefinedStringValue {
 		targetImage.Name = options.TargetImageName
 	}
 
@@ -153,23 +153,26 @@ func (a *Application) Promote(ctx context.Context, options *Options) error {
 
 	referenceName, err = a.referenceNamer.GenerateName(targetImage)
 	if err != nil {
-		return errors.New(errContext, "", err)
+		return errors.New(errContext, fmt.Sprintf("Error generating target image reference name for '%s'", promoteOptions.SourceImageName), err)
 	}
 	promoteOptions.TargetImageName = referenceName
 
-	auth, err = a.getCredentials(targetImage.RegistryHost)
-	if err != nil {
-		return errors.New(errContext, "", err)
-	}
-
-	if auth != nil {
-		pushAuth, isBasicAuth := auth.(*authmethodbasic.BasicAuthMethod)
-		if !isBasicAuth {
-			return errors.New(errContext, fmt.Sprintf("Invalid credentials method for '%s'. Found '%s' when is expected basic auth method", targetImage.RegistryHost, auth.Name()))
+	// Registry host must be defined explicitly to achive the host credentials
+	if targetImage.RegistryHost != "" {
+		auth, err = a.getCredentials(targetImage.RegistryHost)
+		if err != nil {
+			return errors.New(errContext, "", err)
 		}
 
-		promoteOptions.PushAuthUsername = pushAuth.Username
-		promoteOptions.PushAuthPassword = pushAuth.Password
+		if auth != nil {
+			pushAuth, isBasicAuth := auth.(*authmethodbasic.BasicAuthMethod)
+			if !isBasicAuth {
+				return errors.New(errContext, fmt.Sprintf("Invalid credentials method for '%s'. Found '%s' when is expected basic auth method", targetImage.RegistryHost, auth.Name()))
+			}
+
+			promoteOptions.PushAuthUsername = pushAuth.Username
+			promoteOptions.PushAuthPassword = pushAuth.Password
+		}
 	}
 
 	promoteOptions.RemoteSourceImage = options.RemoteSourceImage

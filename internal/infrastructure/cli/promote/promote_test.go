@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	entrypoint "github.com/gostevedore/stevedore/internal/entrypoint/promote"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/compatibility"
@@ -47,7 +48,7 @@ func TestNewCommand(t *testing.T) {
 				"promote-image-tag",
 				"--remove-local-images-after-push",
 				"--force-promote-source-image",
-				"--image-from-remote-source",
+				"--use-source-image-from-remote",
 				"--use-docker-normalized-name",
 			},
 			prepareMockFunc: func(compatibility Compatibilitier, promote Entrypointer, config *configuration.Configuration) {
@@ -103,7 +104,7 @@ func TestNewCommand(t *testing.T) {
 				"promote-image-tag",
 				"--remove-local-images-after-push",
 				"--force-promote-source-image",
-				"--image-from-remote-source",
+				"--use-source-image-from-remote",
 			},
 			prepareMockFunc: func(comp Compatibilitier, promote Entrypointer, config *configuration.Configuration) {
 
@@ -198,7 +199,7 @@ func TestNewCommand(t *testing.T) {
 				"{{ .Major }}",
 				"--semver-tags-template",
 				"{{ .Major }}.{{ .Minor }}",
-				"--image-from-remote-source",
+				"--use-source-image-from-remote",
 				"--remove-local-images-after-push",
 			},
 			prepareMockFunc: func(compatibility Compatibilitier, promote Entrypointer, config *configuration.Configuration) {
@@ -207,9 +208,9 @@ func TestNewCommand(t *testing.T) {
 				handlerOptions := &handler.Options{
 					DryRun:                       true,
 					EnableSemanticVersionTags:    true,
-					TargetImageName:              "",
-					TargetImageRegistryNamespace: "",
-					TargetImageRegistryHost:      "",
+					TargetImageName:              image.UndefinedStringValue,
+					TargetImageRegistryNamespace: image.UndefinedStringValue,
+					TargetImageRegistryHost:      image.UndefinedStringValue,
 					TargetImageTags:              []string{},
 					RemoveTargetImageTags:        true,
 					SemanticVersionTagsTemplates: []string{"{{ .Major }}", "{{ .Major }}.{{ .Minor }}"},

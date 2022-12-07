@@ -24,6 +24,8 @@ const (
 	RegistryHostFilterAttribute = "registry"
 	// RegistryNamespaceFilterAttribute is the attribute's filter value to filter by namespace
 	RegistryNamespaceFilterAttribute = "namespace"
+	// UndefinedStringValue defines an empty value rather that and empty string
+	UndefinedStringValue = "-"
 )
 
 // Image defines the image on the system

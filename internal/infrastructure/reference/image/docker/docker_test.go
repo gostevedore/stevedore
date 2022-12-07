@@ -63,7 +63,7 @@ func TestGenerateName(t *testing.T) {
 			desc:  "Testing error on generating and image name with docker normalized named when image name is not defined",
 			name:  NewDockerNormalizedReferenceName(),
 			image: &image.Image{},
-			err:   errors.New(errContext, "Name could not be generated because image name is undefined"),
+			err:   errors.New(errContext, "Image reference name can not be generated because image name is undefined"),
 		},
 		{
 			desc: "Testing error on generating and image name with docker normalized named when image version is not defined",
@@ -71,7 +71,7 @@ func TestGenerateName(t *testing.T) {
 			image: &image.Image{
 				Name: "name",
 			},
-			err: errors.New(errContext, "Name could not be generated because image version is undefined"),
+			err: errors.New(errContext, "Image reference name can not be generated because image version is undefined"),
 		},
 	}
 

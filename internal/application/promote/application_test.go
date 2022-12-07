@@ -42,9 +42,9 @@ func TestPromote(t *testing.T) {
 			options: &Options{
 				SourceImageName:              "registry.test/namespace/image:tag",
 				EnableSemanticVersionTags:    false,
-				TargetImageName:              "",
-				TargetImageRegistryNamespace: "",
-				TargetImageRegistryHost:      "",
+				TargetImageName:              image.UndefinedStringValue,
+				TargetImageRegistryNamespace: image.UndefinedStringValue,
+				TargetImageRegistryHost:      image.UndefinedStringValue,
 				TargetImageTags:              nil,
 				PromoteSourceImageTag:        false,
 				RemoveTargetImageTags:        false,
@@ -88,9 +88,9 @@ func TestPromote(t *testing.T) {
 			options: &Options{
 				SourceImageName:              "registry.test/namespace/image:tag",
 				EnableSemanticVersionTags:    false,
-				TargetImageName:              "",
-				TargetImageRegistryNamespace: "",
-				TargetImageRegistryHost:      "",
+				TargetImageName:              image.UndefinedStringValue,
+				TargetImageRegistryNamespace: image.UndefinedStringValue,
+				TargetImageRegistryHost:      image.UndefinedStringValue,
 				TargetImageTags:              nil,
 				PromoteSourceImageTag:        false,
 				RemoveTargetImageTags:        false,
@@ -123,6 +123,98 @@ func TestPromote(t *testing.T) {
 				}, nil)
 			},
 			err: &errors.Error{},
+		},
+		{
+			desc: "Testing promote source image using empty target values",
+			service: NewApplication(
+				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
+				WithSemver(semver.NewSemVerGenerator()),
+				WithPromoteFactory(factory.NewPromoteFactory()),
+				WithReferenceNamer(reference.NewDefaultReferenceName()),
+			),
+			context: context.TODO(),
+			options: &Options{
+				EnableSemanticVersionTags:    false,
+				PromoteSourceImageTag:        false,
+				RemoteSourceImage:            true,
+				RemoveTargetImageTags:        false,
+				SemanticVersionTagsTemplates: nil,
+				SourceImageName:              "registry.test/namespace/image:tag",
+				TargetImageName:              image.UndefinedStringValue,
+				TargetImageRegistryHost:      "",
+				TargetImageRegistryNamespace: "",
+				TargetImageTags:              nil,
+			},
+			prepareMockFunc: func(p *Application) {
+				options := &image.PromoteOptions{
+					PullAuthPassword:      "password",
+					PullAuthUsername:      "username",
+					RemoteSourceImage:     true,
+					RemoveTargetImageTags: false,
+					SourceImageName:       "registry.test/namespace/image:tag",
+					TargetImageName:       "image:tag",
+					TargetImageTags:       nil,
+				}
+
+				mock := mock.NewMockPromote()
+				mock.On("Promote", context.TODO(), options).Return(nil)
+
+				factory := factory.NewPromoteFactory()
+				factory.Register(image.DockerPromoterName, mock)
+				p.factory = factory
+
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username",
+					Password: "password",
+				}, nil)
+			},
+			err: &errors.Error{},
+		},
+		{
+			desc: "Testing error promoting source image using an empty target image name",
+			service: NewApplication(
+				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
+				WithSemver(semver.NewSemVerGenerator()),
+				WithPromoteFactory(factory.NewPromoteFactory()),
+				WithReferenceNamer(reference.NewDefaultReferenceName()),
+			),
+			context: context.TODO(),
+			options: &Options{
+				EnableSemanticVersionTags:    false,
+				PromoteSourceImageTag:        false,
+				RemoteSourceImage:            true,
+				RemoveTargetImageTags:        false,
+				SemanticVersionTagsTemplates: nil,
+				SourceImageName:              "registry.test/namespace/image:tag",
+				TargetImageName:              "",
+				TargetImageRegistryHost:      "",
+				TargetImageRegistryNamespace: "",
+				TargetImageTags:              nil,
+			},
+			prepareMockFunc: func(p *Application) {
+				options := &image.PromoteOptions{
+					PullAuthPassword:      "password",
+					PullAuthUsername:      "username",
+					RemoteSourceImage:     true,
+					RemoveTargetImageTags: false,
+					SourceImageName:       "registry.test/namespace/image:tag",
+					TargetImageName:       "image:tag",
+					TargetImageTags:       nil,
+				}
+
+				mock := mock.NewMockPromote()
+				mock.On("Promote", context.TODO(), options).Return(nil)
+
+				factory := factory.NewPromoteFactory()
+				factory.Register(image.DockerPromoterName, mock)
+				p.factory = factory
+
+				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+					Username: "username",
+					Password: "password",
+				}, nil)
+			},
+			err: errors.New(errContext, "Error generating target image reference name for 'registry.test/namespace/image:tag'\n\tImage reference name can not be generated because image name is undefined"),
 		},
 		{
 			desc: "Testing promote source image with all options",

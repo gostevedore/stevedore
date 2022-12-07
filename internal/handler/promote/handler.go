@@ -19,41 +19,32 @@ func NewHandler(a PromoteApplication) *Handler {
 
 func (h *Handler) Handler(ctx context.Context, options *Options) error {
 
-	errContext := "(promote::Handler)"
+	errContext := "(handler::promote::Handler)"
 
 	if options.SourceImageName == "" {
 		return errors.New(errContext, "Source images name must be provided")
 	}
 
-	serviceOptions := &promote.Options{
+	applicationOptions := &promote.Options{
 		SourceImageName:       options.SourceImageName,
 		RemoveTargetImageTags: options.RemoveTargetImageTags,
 	}
 
-	if options.TargetImageName != "" {
-		serviceOptions.TargetImageName = options.TargetImageName
-	}
-
-	if options.TargetImageRegistryNamespace != "" {
-		serviceOptions.TargetImageRegistryNamespace = options.TargetImageRegistryNamespace
-	}
-
-	if options.TargetImageRegistryHost != "" {
-		serviceOptions.TargetImageRegistryHost = options.TargetImageRegistryHost
-	}
+	applicationOptions.DryRun = options.DryRun
+	applicationOptions.EnableSemanticVersionTags = options.EnableSemanticVersionTags
+	applicationOptions.PromoteSourceImageTag = options.PromoteSourceImageTag
+	applicationOptions.RemoteSourceImage = options.RemoteSourceImage
+	applicationOptions.RemoveTargetImageTags = options.RemoveTargetImageTags
+	applicationOptions.SemanticVersionTagsTemplates = options.SemanticVersionTagsTemplates
+	applicationOptions.TargetImageName = options.TargetImageName
+	applicationOptions.TargetImageRegistryHost = options.TargetImageRegistryHost
+	applicationOptions.TargetImageRegistryNamespace = options.TargetImageRegistryNamespace
 
 	if len(options.TargetImageTags) > 0 {
-		serviceOptions.TargetImageTags = options.TargetImageTags
+		applicationOptions.TargetImageTags = append([]string{}, options.TargetImageTags...)
 	}
 
-	serviceOptions.DryRun = options.DryRun
-	serviceOptions.PromoteSourceImageTag = options.PromoteSourceImageTag
-	serviceOptions.EnableSemanticVersionTags = options.EnableSemanticVersionTags
-	serviceOptions.RemoveTargetImageTags = options.RemoveTargetImageTags
-	serviceOptions.RemoteSourceImage = options.RemoteSourceImage
-	serviceOptions.SemanticVersionTagsTemplates = options.SemanticVersionTagsTemplates
-
-	err := h.app.Promote(ctx, serviceOptions)
+	err := h.app.Promote(ctx, applicationOptions)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
