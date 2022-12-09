@@ -93,7 +93,7 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *im
 	}
 
 	if i.Name == "" {
-		return errors.New(errContext, "Image has not been defined on build options")
+		return errors.New(errContext, "Image name is not defined")
 	}
 
 	ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageNameKey], i.Name)

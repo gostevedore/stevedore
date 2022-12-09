@@ -7,6 +7,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/application/build"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
 )
 
@@ -29,7 +30,7 @@ func NewHandler(p PlanFactorier, a BuildApplication) *Handler {
 // Handler handles build commands
 func (h *Handler) Handler(ctx context.Context, imageName string, options *Options) error {
 
-	errContext := "(build::Handler)"
+	errContext := "(handler::build::Handler)"
 	var err error
 	var buildPlan build.Planner
 
@@ -121,7 +122,7 @@ func (h *Handler) Handler(ctx context.Context, imageName string, options *Option
 }
 
 func (h *Handler) createBuildPlan(options *Options) (plan.Planner, error) {
-	errContext := "(build::createBuildPlan)"
+	errContext := "(handler::build::createBuildPlan)"
 
 	var err error
 	var plan build.Planner
@@ -158,7 +159,7 @@ func (h *Handler) createBuildPlan(options *Options) (plan.Planner, error) {
 
 // validateCascadePlanOptions returns an error if the options are not valid for cascade plan
 func validateCascadePlanOptions(options *Options) error {
-	errContext := "(build::validateCascadePlanOptions)"
+	errContext := "(handler::build::validateCascadePlanOptions)"
 
 	if options == nil {
 		return errors.New(errContext, "Options to be validated are required")
@@ -176,11 +177,11 @@ func validateCascadePlanOptions(options *Options) error {
 		return errors.New(errContext, "Cascade plan does not support ansible limit, it could cause an unpredictable result")
 	}
 
-	if options.ImageName != "" {
+	if options.ImageName != image.UndefinedStringValue {
 		return errors.New(errContext, "Cascade plan does not support image name, it could cause an unpredictable result")
 	}
 
-	if options.ImageFromName != "" {
+	if options.ImageFromName != image.UndefinedStringValue {
 		return errors.New(errContext, "Cascade plan does not support image from name, it could cause an unpredictable result")
 	}
 
