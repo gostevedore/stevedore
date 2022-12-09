@@ -171,6 +171,7 @@ func (a *Application) Build(ctx context.Context, buildPlan Planner, name string,
 }
 
 func (a *Application) build(ctx context.Context, i *image.Image, options *Options) error {
+	var parent *image.Image
 	errContext := "(application::build::build)"
 
 	if options == nil {
@@ -203,15 +204,15 @@ func (a *Application) build(ctx context.Context, i *image.Image, options *Option
 	buildOptions := &image.BuildDriverOptions{}
 
 	// Image name could be overwritten by options
-	if options.ImageName != "" {
+	if options.ImageName != image.UndefinedStringValue {
 		i.Name = options.ImageName
 	}
 
-	if options.ImageRegistryHost != "" {
+	if options.ImageRegistryHost != image.UndefinedStringValue {
 		i.RegistryHost = options.ImageRegistryHost
 	}
 
-	if options.ImageRegistryNamespace != "" {
+	if options.ImageRegistryNamespace != image.UndefinedStringValue {
 		i.RegistryNamespace = options.ImageRegistryNamespace
 	}
 
@@ -257,7 +258,55 @@ func (a *Application) build(ctx context.Context, i *image.Image, options *Option
 		i.PersistentLabels[k] = v
 	}
 
-	if i.Parent != nil {
+	if options.ImageFromName != image.UndefinedStringValue {
+		if i.Parent == nil {
+			if parent == nil {
+				parent = &image.Image{}
+			}
+			parent.Name = options.ImageFromName
+		} else {
+			i.Parent.Name = options.ImageFromName
+		}
+	}
+
+	if options.ImageFromVersion != image.UndefinedStringValue {
+		if i.Parent == nil {
+			if parent == nil {
+				parent = &image.Image{}
+			}
+			parent.Version = options.ImageFromVersion
+		} else {
+			i.Parent.Version = options.ImageFromVersion
+		}
+	}
+
+	if options.ImageFromRegistryHost != image.UndefinedStringValue {
+		if i.Parent == nil {
+			if parent == nil {
+				parent = &image.Image{}
+			}
+			parent.RegistryHost = options.ImageFromRegistryHost
+		} else {
+			i.Parent.RegistryHost = options.ImageFromRegistryHost
+		}
+	}
+
+	if options.ImageFromRegistryNamespace != image.UndefinedStringValue {
+		if i.Parent == nil {
+			if parent == nil {
+				parent = &image.Image{}
+			}
+			parent.RegistryNamespace = options.ImageFromRegistryNamespace
+		} else {
+			i.Parent.RegistryNamespace = options.ImageFromRegistryNamespace
+		}
+	}
+
+	if i.Parent == nil && parent != nil {
+		i.Parent = parent
+	}
+
+	if i.Parent != nil && i.Parent.RegistryHost != "" && i.Parent.RegistryHost != image.UndefinedStringValue {
 		auth, err := a.getCredentials(i.Parent.RegistryHost)
 		if err != nil {
 			return errors.New(errContext, "", err)
@@ -274,28 +323,29 @@ func (a *Application) build(ctx context.Context, i *image.Image, options *Option
 		}
 	}
 
-	auth, err := a.getCredentials(i.RegistryHost)
-	if err != nil {
-		return errors.New(errContext, "", err)
-	}
-
-	if auth != nil {
-		pushAuth, isBasicAuth := auth.(*authmethodbasic.BasicAuthMethod)
-		if !isBasicAuth {
-			return errors.New(errContext, fmt.Sprintf("Invalid credentials method for '%s'. Found '%s' when is expected basic auth method", i.RegistryHost, auth.Name()))
+	if i.RegistryHost != image.UndefinedStringValue {
+		auth, err := a.getCredentials(i.RegistryHost)
+		if err != nil {
+			return errors.New(errContext, "", err)
 		}
 
-		buildOptions.PushAuthUsername = pushAuth.Username
-		buildOptions.PushAuthPassword = pushAuth.Password
+		if auth != nil {
+			pushAuth, isBasicAuth := auth.(*authmethodbasic.BasicAuthMethod)
+			if !isBasicAuth {
+				return errors.New(errContext, fmt.Sprintf("Invalid credentials method for '%s'. Found '%s' when is expected basic auth method", i.RegistryHost, auth.Name()))
+			}
+
+			buildOptions.PushAuthUsername = pushAuth.Username
+			buildOptions.PushAuthPassword = pushAuth.Password
+		}
 	}
 
 	imageBuilder, err := a.getBuilder(i)
 	if err != nil {
-		return errors.New(errContext, "", err)
+		return errors.New(errContext, "", err) // TODO is it populated by default?
 	}
 
 	buildOptions.BuilderOptions = imageBuilder.Options
-	// TODO is it populated by default?
 	buildOptions.BuilderVarMappings = imageBuilder.VarMapping
 
 	driver, err := a.getDriver(imageBuilder, options)

@@ -6,6 +6,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/application/build"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -13,7 +14,7 @@ import (
 
 func TestHandler(t *testing.T) {
 
-	errContext := "(build::Handler)"
+	errContext := "(handler::build::Handler)"
 
 	tests := []struct {
 		desc              string
@@ -157,7 +158,7 @@ func TestHandler(t *testing.T) {
 }
 
 func TestCreateBuildPlan(t *testing.T) {
-	errContext := "(build::createBuildPlan)"
+	errContext := "(handler::build::createBuildPlan)"
 
 	tests := []struct {
 		desc              string
@@ -189,6 +190,8 @@ func TestCreateBuildPlan(t *testing.T) {
 			options: &Options{
 				BuildOnCascade: true,
 				CascadeDepth:   5,
+				ImageName:      image.UndefinedStringValue,
+				ImageFromName:  image.UndefinedStringValue,
 			},
 			res: nil,
 			err: nil,
@@ -236,7 +239,7 @@ func TestCreateBuildPlan(t *testing.T) {
 }
 
 func TestValidateCascadePlanOptions(t *testing.T) {
-	errContext := "(build::validateCascadePlanOptions)"
+	errContext := "(handler::build::validateCascadePlanOptions)"
 
 	tests := []struct {
 		desc    string
@@ -278,14 +281,18 @@ func TestValidateCascadePlanOptions(t *testing.T) {
 		{
 			desc: "Testing not valid cascade plan options when image from name is defined",
 			options: &Options{
+				ImageName:     image.UndefinedStringValue,
 				ImageFromName: "name",
 			},
 			err: errors.New(errContext, "Cascade plan does not support image from name, it could cause an unpredictable result"),
 		},
 		{
-			desc:    "Testing valid options for cascade plan",
-			options: &Options{},
-			err:     &errors.Error{},
+			desc: "Testing valid options for cascade plan",
+			options: &Options{
+				ImageName:     image.UndefinedStringValue,
+				ImageFromName: image.UndefinedStringValue,
+			},
+			err: &errors.Error{},
 		},
 	}
 
@@ -299,7 +306,6 @@ func TestValidateCascadePlanOptions(t *testing.T) {
 			} else {
 				assert.Empty(t, err)
 			}
-
 		})
 	}
 }

@@ -138,7 +138,7 @@ func TestBuild(t *testing.T) {
 			err: errors.New(errContext, "Inventory has not been defined on build options"),
 		},
 		{
-			desc:  "Testing error building an image with undefined inventory",
+			desc:  "Testing error building an image with undefined image name",
 			image: &image.Image{},
 			driver: &AnsiblePlaybookDriver{
 				driver: goansible.NewMockAnsibleDriver(),
@@ -150,7 +150,7 @@ func TestBuild(t *testing.T) {
 					Inventory: "inventory.yml",
 				},
 			},
-			err: errors.New(errContext, "Image has not been defined on build options"),
+			err: errors.New(errContext, "Image name is not defined"),
 		},
 		{
 			desc: "Testing build an image",

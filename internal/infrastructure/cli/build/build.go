@@ -4,6 +4,7 @@ import (
 	"context"
 
 	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	entrypoint "github.com/gostevedore/stevedore/internal/entrypoint/build"
 	handler "github.com/gostevedore/stevedore/internal/handler/build"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command"
@@ -169,13 +170,13 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.SemanticVersionTagsTemplates, "semver-tags-template", "T", []string{}, "List of templates to generate tags following semantic version expression")
 	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.Tags, "tag", "t", []string{}, "List of extra tags to generate")
 	buildCmd.Flags().StringSliceVarP(&buildFlagOptions.Vars, "variable", "x", []string{}, "Variables to set during the build process. The format of each variable must be <key>=<value>")
-	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageFromName, "image-from-name", "I", "", "Image parent's name")
-	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageFromRegistryHost, "image-from-registry", "R", "", "Image parent's registry host")
-	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageFromRegistryNamespace, "image-from-namespace", "N", "", "Image parent's registry namespace")
-	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageFromVersion, "image-from-version", "V", "", "Image parent's version")
-	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageName, "image-name", "i", "", "Image name. Its value overrides the name on the images tree definition")
-	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageRegistryHost, "image-registry-host", "r", "", "Image registry host")
-	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageRegistryNamespace, "image-registry-namespace", "n", "", "Image namespace")
+	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageFromName, "image-from-name", "I", image.UndefinedStringValue, "Image parent's name")
+	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageFromRegistryHost, "image-from-registry", "R", image.UndefinedStringValue, "Image parent's registry host")
+	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageFromRegistryNamespace, "image-from-namespace", "N", image.UndefinedStringValue, "Image parent's registry namespace")
+	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageFromVersion, "image-from-version", "V", image.UndefinedStringValue, "Image parent's version")
+	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageName, "image-name", "i", image.UndefinedStringValue, "Image name. Its value overrides the name on the images tree definition")
+	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageRegistryHost, "image-registry-host", "r", image.UndefinedStringValue, "Image registry host")
+	buildCmd.Flags().StringVarP(&buildFlagOptions.ImageRegistryNamespace, "image-registry-namespace", "n", image.UndefinedStringValue, "Image namespace")
 	buildCmd.Flags().BoolVar(&buildFlagOptions.UseDockerNormalizedName, "use-docker-normalized-name", false, "Use Docker normalized name references")
 
 	// behavior flags
