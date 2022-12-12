@@ -1,7 +1,5 @@
 images:
   root:
     latest:
-      builder:
-        options:
       persistent_labels:
         created_at: "{{ .DateRFC3339Nano }}"

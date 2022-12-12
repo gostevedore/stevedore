@@ -3,8 +3,6 @@ images:
   scratch:
     latest:
       version: "{{ .Version }}"
-      builder:
-        options:
       persistent_vars:
         image_from: "{{ .Name }}"
       parents:
@@ -15,8 +13,6 @@ images:
     latest:
       registry: docker-hub.stevedore.test:5000
       namespace: library
-      builder:
-        options:
       persistent_vars:
         image_from: "{{ .Image.RegistryHost }}/{{ .Image.RegistryNamespace }}/{{ .Name }}:{{ .Version }}"
       parents:
@@ -27,8 +23,6 @@ images:
     "3.16":
       registry: docker-hub.stevedore.test:5000
       namespace: library
-      builder:
-        options:
       persistent_vars:
         image_from: "{{ .Image.RegistryHost }}/{{ .Image.RegistryNamespace }}/{{ .Name }}:{{ .Version }}"
       parents:
@@ -40,8 +34,6 @@ images:
       version: "{{ .Version }}"
       registry: docker-hub.stevedore.test:5000
       namespace: library
-      builder:
-        options:
       persistent_vars:
         image_from: "{{ .Image.RegistryHost }}/{{ .Image.RegistryNamespace }}/{{ .Name }}:{{ .Version }}"
       parents:
@@ -51,8 +43,6 @@ images:
       version: "{{ .Version }}"
       registry: docker-hub.stevedore.test:5000
       namespace: library
-      builder:
-        options:
       persistent_vars:
         image_from: "{{ .Image.RegistryHost }}/{{ .Image.RegistryNamespace }}/{{ .Name }}:{{ .Version }}"
       parents:

@@ -19,11 +19,11 @@ type PromoteOptions struct {
 	// PullAuthUsername
 	PullAuthUsername string `yaml:"pull_auth_username"`
 	// PullAuthPassword
-	PullAuthPassword string
+	PullAuthPassword string `yaml:"-"`
 	// PushAuthUsername
 	PushAuthUsername string `yaml:"push_auth_username"`
 	// PushAuthPassword
-	PushAuthPassword string
+	PushAuthPassword string `yaml:"-"`
 }
 
 // String TODO
