@@ -701,13 +701,13 @@ func TestGetBuilder(t *testing.T) {
 		err               error
 	}{
 		{
-			desc:    "Testing error getting a builder to nil image",
+			desc:    "Testing error getting a builder from an undefined image",
 			service: &Application{},
 			image:   nil,
 			err:     errors.New(errContext, "To generate a builder, is required an image definition"),
 		},
 		{
-			desc:    "Testing error getting a builder with no builders store",
+			desc:    "Testing error getting a builder from an undefined builders store",
 			service: &Application{},
 			image: &image.Image{
 				Builder: "test",
@@ -734,7 +734,30 @@ func TestGetBuilder(t *testing.T) {
 				Name: "test",
 			},
 		},
-		// That test to be tested from the caller because is not possible to force builderDerfinetion to be seen as an interface
+		{
+			desc:    "Testing return a builder when builder is not preset on the image",
+			service: &Application{builders: builders.NewMockStore()},
+			image: &image.Image{
+				Name: "image",
+			},
+			prepareAssertFunc: func(s *Application) {
+				s.builders.(*builders.MockStore).On("Find", "test").Return(&builder.Builder{
+					Name: "test",
+				}, nil)
+			},
+			assertFunc: func(expected, actual *builder.Builder) bool {
+				//return s.builders.(*builders.MockBuilders).AssertExpectations(t)
+				return assert.Equal(t, expected, actual)
+
+			},
+			res: &builder.Builder{
+				Name:       "image",
+				Driver:     "default",
+				Options:    &builder.BuilderOptions{},
+				VarMapping: varsmap.New(),
+			},
+		},
+		// That test must be tested from the caller because is not possible to force builderDerfinetion to be seen as an interface
 		{
 			desc:    "Testing return a builder defined by an interface{}",
 			service: &Application{builders: builders.NewMockStore()},

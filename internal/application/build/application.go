@@ -477,12 +477,12 @@ func (a *Application) getBuilder(i *image.Image) (*builder.Builder, error) {
 		return nil, errors.New(errContext, "To generate a builder, is required an image definition")
 	}
 
-	if i.Builder == nil {
-		return nil, errors.New(errContext, "To generate a builder, is required a builder definition")
-	}
-
 	if a.builders == nil {
 		return nil, errors.New(errContext, "To generate a builder, is required a builder store defined on build service")
+	}
+
+	if i.Builder == nil {
+		return builder.NewBuilder(i.Name, image.DefaultDriverName, nil, nil), nil
 	}
 
 	switch i.Builder.(type) {

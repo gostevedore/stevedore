@@ -34,6 +34,7 @@
 - Image uses docekr reference normalized names
 - Images has been splitted to image configration and image as dto
 - build engine has been replaced by application service build
+- Image could be defined without specifing a builder, in that case `default` builder is used instead
 
 ### Removed
 - Image tags are not sanetized any more

@@ -1,5 +1,9 @@
 # ROADMAP
 
+## v0.12.0
+- [ ] credentials from env-vars
+- [ ] apply levenshtein distances on image name to identify which image the user want to build
+
 ## v0.11.0
 - [ ] fix: promote images with subnamespaces fails example myregistry/mynamesapce/grafana/tempo:1.0.0
 - [ ] fix: wildcard images could not use {{ .Name }} on images definition
@@ -7,18 +11,18 @@
 - [ ] fix: container builders must match to  [a-zA-Z0-9][a-zA-Z0-9_.-]*
 - Redefine github.com/gostevedore/stevedore/internal/promote use cases
      [ ] - promote images from tree
-     [ ] - promote local and remote images
+     [x] - promote local and remote images
      [x] - to support test
-- [ ] inject dockerfiles --> v0.11.0
-- [ ] git context should accept authentication
-- [ ] generate images_tree from multiples files located on a folder
-- [ ] define parents on image definitions
-- [ ] clean: remove image CheckCompatibility --> v0.11.0
-- [ ] rewrite tree package
+- [x] inject dockerfiles --> v0.11.0
+- [x] git context should accept authentication
+- [x] generate images_tree from multiples files located on a folder
+- [x] define parents on image definitions
+- [x] clean: remove image CheckCompatibility --> v0.11.0
+- [x] rewrite tree package
   - engine::imagesEngine: findNodes has dependencies
   - tree::renderizeGraphRec include to wildcard index nodes
   - tree::imageIndex global
-- [ ] remove-promote-tag to remove-local-images-after-push
+- [x] remove-promote-tag to remove-local-images-after-push
 
 ## v0.10.1
 - [x] stevedore init creates configuration file with execution permissions
@@ -80,12 +84,8 @@
 n/a
 
 ## scheduled
-- [ ] inject dockerfiles --> v0.11.0
 - [ ] documentation
 
 ## icebox
 - [ ] enable builds over http server
-- [ ] copy image from one regitry to another one (it could be a promote flag)
-- [ ] example on usage message
-- [ ] apply levenshtein distances on image name to identify which image the user want to build
 
