@@ -5,7 +5,7 @@ ARG DOCKER_VERSION="20.10"
 FROM golang:${GOLANG_VERSION}-alpine AS golang
 
 WORKDIR /usr/src/app
-
+RUN apk add --no-cache make build-base
 COPY go.mod ./
 COPY go.sum ./
 RUN go mod download && go mod verify
