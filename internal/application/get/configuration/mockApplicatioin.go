@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockGetConfigurationApplication is a mock of build application
+// MockGetConfigurationApplication is a mock of get configuration application
 type MockGetConfigurationApplication struct {
 	mock.Mock
 }
