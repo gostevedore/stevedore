@@ -40,7 +40,7 @@ func (h *GetConfigurationHandler) Options(opts ...OptionsFunc) {
 func (h *GetConfigurationHandler) Handler(ctx context.Context, options *Options) error {
 	var err error
 
-	errContext := "(get/configuration::Handler)"
+	errContext := "(handler::get::configuration::Handler)"
 
 	appOptions := &application.Options{}
 	appOptions.Configuration = options.Configuration
