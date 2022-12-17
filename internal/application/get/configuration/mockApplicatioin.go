@@ -11,7 +11,7 @@ type MockGetConfigurationApplication struct {
 	mock.Mock
 }
 
-// NewMockGetConfigurationApplication return a mock of build application
+// NewMockGetConfigurationApplication return a mock of get configuration application
 func NewMockGetConfigurationApplication() *MockGetConfigurationApplication {
 	return &MockGetConfigurationApplication{}
 }

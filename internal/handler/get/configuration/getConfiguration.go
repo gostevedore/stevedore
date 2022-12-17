@@ -36,7 +36,7 @@ func (h *GetConfigurationHandler) Options(opts ...OptionsFunc) {
 	}
 }
 
-// GetConfigurationHandler handles build commands
+// GetConfigurationHandler handles get configuration commands
 func (h *GetConfigurationHandler) Handler(ctx context.Context, options *Options) error {
 	var err error
 
