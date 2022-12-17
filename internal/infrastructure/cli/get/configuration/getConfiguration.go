@@ -1,60 +1,48 @@
-package getconfiguration
+package configuration
 
-// import (
-// 	"context"
+import (
+	"context"
 
-// 	"github.com/gostevedore/stevedore/internal/command"
-// 	"github.com/gostevedore/stevedore/internal/configuration"
-// 	"github.com/gostevedore/stevedore/internal/ui/console"
+	errors "github.com/apenella/go-common-utils/error"
+	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command"
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
+	"github.com/spf13/cobra"
+)
 
-// 	errors "github.com/apenella/go-common-utils/error"
-// 	"github.com/spf13/cobra"
-// )
+// NewCommand return an stevedore command object for get builders
+func NewCommand(ctx context.Context, config *configuration.Configuration, entrypoint Entrypointer) *command.StevedoreCommand {
 
-// const (
-// 	columnSeparator string = " | "
-// )
+	getConfigurationCmd := &cobra.Command{
+		Use: "configuration",
+		Aliases: []string{
+			"config",
+			"conf",
+			"cfg",
+		},
+		Short: "Stevedore subcommand to get configuration information",
+		Long: `
+		Stevedore subcommand to get configuration information
+`,
+		Example: `
+  stevedore get configuration
+`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var err error
 
-// //  NewCommand return an stevedore command object for get builders
-// func NewCommand(ctx context.Context, config *configuration.Configuration) *command.StevedoreCommand {
+			errContext := "(cli::get::configuration::RunE)"
 
-// 	getConfigurationCmd := &cobra.Command{
-// 		Use: "configuration",
-// 		Aliases: []string{
-// 			"config",
-// 			"conf",
-// 			"cfg",
-// 		},
-// 		Short: "Stevedore subcommand to get configuration information",
-// 		Long: `Stevedore subcommand to get configuration information
+			err = entrypoint.Execute(ctx, cmd.Flags().Args(), config)
+			if err != nil {
+				return errors.New(errContext, "", err)
+			}
 
-//   Example:
-//     stevedore get configuration
-// `,
-// 		RunE: getConfigurationHandler(ctx, config),
-// 	}
+			return nil
+		},
+	}
 
-// 	command := &command.StevedoreCommand{
-// 		Command: getConfigurationCmd,
-// 	}
+	command := &command.StevedoreCommand{
+		Command: getConfigurationCmd,
+	}
 
-// 	return command
-// }
-
-// func getConfigurationHandler(ctx context.Context, config *configuration.Configuration) command.CobraRunEFunc {
-// 	return func(cmd *cobra.Command, args []string) error {
-// 		table := [][]string{}
-// 		table = append(table, configuration.ConfigurationHeaders())
-// 		configArray, err := config.ToArray()
-// 		if err != nil {
-// 			return errors.New("(command::getConfigurationHandler)", "Error converting configuration to an array", err)
-// 		}
-// 		for _, parameter := range configArray {
-// 			table = append(table, parameter)
-// 		}
-
-// 		console.PrintTable(table)
-
-// 		return nil
-// 	}
-// }
+	return command
+}

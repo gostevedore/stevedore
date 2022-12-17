@@ -9,6 +9,7 @@ import (
 	buildentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/build"
 	createcredentialsentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/create/credentials"
 	getbuildersentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/get/builders"
+	getconfigurationentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/get/configuration"
 	getcredentialsentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/get/credentials"
 	getimagesentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/get/images"
 	promoteentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/promote"
@@ -20,6 +21,7 @@ import (
 	createcredentials "github.com/gostevedore/stevedore/internal/infrastructure/cli/create/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/get"
 	getbuilders "github.com/gostevedore/stevedore/internal/infrastructure/cli/get/builders"
+	getconfiguration "github.com/gostevedore/stevedore/internal/infrastructure/cli/get/configuration"
 	getcredentials "github.com/gostevedore/stevedore/internal/infrastructure/cli/get/credentials"
 	getimages "github.com/gostevedore/stevedore/internal/infrastructure/cli/get/images"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/promote"
@@ -136,6 +138,12 @@ You just need to define how each image should be built and the relationship amon
 	// Get subcommand
 	//
 
+	// Get configuration
+	getConfigurationEntrypoint := getconfigurationentrypoint.NewGetConfigurationEntrypoint(
+		getconfigurationentrypoint.WithWriter(console),
+	)
+	getConfigurationCommand := middleware.Command(ctx, getconfiguration.NewCommand(ctx, config, getConfigurationEntrypoint), compatibilityReport, log, console)
+
 	// Get credentials
 	getCredentialsEntrypoint := getcredentialsentrypoint.NewEntrypoint(
 		getcredentialsentrypoint.WithWriter(console),
@@ -164,6 +172,7 @@ You just need to define how each image should be built and the relationship amon
 	getCommand := get.NewCommand(
 		ctx,
 		getBuildersCommand,
+		getConfigurationCommand,
 		getCredentialsCommand,
 		getImagesCommand,
 	)
