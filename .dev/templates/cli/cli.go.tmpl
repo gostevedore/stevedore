@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//  NewCommand return an stevedore command object for get builders
+//  NewCommand return an stevedore command object for get {{ .FileNameBase }}
 func NewCommand(ctx context.Context, config *configuration.Configuration, entrypoint Entrypointer) *command.StevedoreCommand {
 
 	{{ .FileNameBase }}Cmd := &cobra.Command{
