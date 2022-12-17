@@ -26,3 +26,7 @@ type ConfigurationLoader interface {
 	SetFs(fs afero.Fs)
 	ConfigFileUsed() string
 }
+
+type ConfigurationWriter interface {
+	Write(config *Configuration) error
+}

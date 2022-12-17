@@ -6,12 +6,12 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// Mock{{ .ApplicationObject }} is a mock of build application
+// Mock{{ .ApplicationObject }} is a mock of the application
 type Mock{{ .ApplicationObject }} struct {
 	mock.Mock
 }
 
-// NewMock{{ .ApplicationObject }} return a mock of build application
+// NewMock{{ .ApplicationObject }} return a mock of the application
 func NewMock{{ .ApplicationObject }}() *Mock{{ .ApplicationObject }} {
 	return &Mock{{ .ApplicationObject }}{}
 }
