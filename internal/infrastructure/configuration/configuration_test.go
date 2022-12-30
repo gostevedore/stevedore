@@ -2,6 +2,7 @@ package configuration
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"log"
 	"os/user"
@@ -95,6 +96,31 @@ num_workers: 5
 		assert.Equal(t, test.res, c, "Unpexpected configuration value")
 
 	}
+}
+
+func TestDefaultConfig(t *testing.T) {
+	config := DefaultConfig()
+
+	// dynamic default values
+	defaultConcurrency := concurrencyValue()
+
+	expected := &Configuration{
+		BuildersPath:                 filepath.Join(DefaultConfigFolder, DefaultBuildersPath),
+		Concurrency:                  defaultConcurrency,
+		EnableSemanticVersionTags:    DefaultEnableSemanticVersionTags,
+		ImagesPath:                   filepath.Join(DefaultConfigFolder, DefaultImagesPath),
+		LogWriter:                    io.Discard,
+		PushImages:                   DefaultPushImages,
+		SemanticVersionTagsTemplates: []string{DefaultSemanticVersionTagsTemplates},
+
+		Credentials: &CredentialsConfiguration{
+			StorageType:      DefaultCredentialsStorage,
+			LocalStoragePath: DefaultCredentialsLocalStoragePath,
+			Format:           DefaultCredentialsFormat,
+		},
+	}
+
+	assert.Equal(t, expected, config)
 }
 
 func TestNew(t *testing.T) {
@@ -389,7 +415,7 @@ semantic_version_tags_templates:
 			fs:            testFs,
 			loader:        &loader.MockConfigurationLoader{},
 			file:          "unknown",
-			err:           errors.New(errContext, "Configuration file could be loaded", errors.New(errContext, "testing error")),
+			err:           errors.New(errContext, "Configuration file could not be loaded", errors.New(errContext, "testing error")),
 			prepareAssertFunc: func(l ConfigurationLoader, c Compatibilitier) {
 				l.(*loader.MockConfigurationLoader).On("SetFs", testFs).Return()
 				l.(*loader.MockConfigurationLoader).On("SetConfigFile", "unknown").Return()

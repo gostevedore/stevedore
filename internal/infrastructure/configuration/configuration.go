@@ -129,6 +129,30 @@ const (
 	SemanticVersionTagsTemplatesKey = "semantic_version_tags_templates"
 )
 
+func DefaultConfig() *Configuration {
+
+	config := &Configuration{}
+
+	// dynamic default values
+	defaultConcurrency := concurrencyValue()
+
+	config.BuildersPath = filepath.Join(DefaultConfigFolder, DefaultBuildersPath)
+	config.Concurrency = defaultConcurrency
+	config.EnableSemanticVersionTags = DefaultEnableSemanticVersionTags
+	config.ImagesPath = filepath.Join(DefaultConfigFolder, DefaultImagesPath)
+	config.LogWriter = io.Discard
+	config.PushImages = DefaultPushImages
+	config.SemanticVersionTagsTemplates = []string{DefaultSemanticVersionTagsTemplates}
+
+	config.Credentials = &CredentialsConfiguration{
+		StorageType:      DefaultCredentialsStorage,
+		LocalStoragePath: DefaultCredentialsLocalStoragePath,
+		Format:           DefaultCredentialsFormat,
+	}
+
+	return config
+}
+
 // New method create a new configuration object
 func New(fs afero.Fs, loader ConfigurationLoader, compatibility Compatibilitier) (*Configuration, error) {
 
@@ -275,7 +299,7 @@ func LoadFromFile(fs afero.Fs, loader ConfigurationLoader, file string, compatib
 	loader.SetConfigFile(file)
 	err = loader.ReadInConfig()
 	if err != nil {
-		return nil, errors.New(errContext, "Configuration file could be loaded", err)
+		return nil, errors.New(errContext, "Configuration file could not be loaded", err)
 	}
 
 	config = &Configuration{
