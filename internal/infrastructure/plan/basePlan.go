@@ -40,7 +40,14 @@ func (p *BasePlan) findImages(name string, versions []string) ([]*image.Image, e
 	}
 
 	if len(images) < 1 {
-		return nil, errors.New(errContext, fmt.Sprintf("No images found for name '%s' and version(s) %v", name, versions))
+		msg := ""
+		if len(versions) < 1 {
+			msg = fmt.Sprintf("The image '%s' seems not to be defined", name)
+		} else {
+			msg = fmt.Sprintf("The version(s) %s for the image '%s' seems not to be defined", versions, name)
+		}
+
+		return nil, errors.New(errContext, msg)
 	}
 
 	return images, nil
