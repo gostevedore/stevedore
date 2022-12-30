@@ -5,9 +5,9 @@ go 1.19
 require (
 	github.com/Masterminds/semver/v3 v3.2.0
 	github.com/apenella/go-ansible v1.1.7
-	github.com/apenella/go-common-utils/data v0.0.0-20220913191136-86daaa87e7df
-	github.com/apenella/go-common-utils/error v0.0.0-20220913191136-86daaa87e7df
-	github.com/apenella/go-common-utils/transformer/string v0.0.0-20220913191136-86daaa87e7df
+	github.com/apenella/go-common-utils/data v0.0.0-20221227202648-5452d804e940
+	github.com/apenella/go-common-utils/error v0.0.0-20221227202648-5452d804e940
+	github.com/apenella/go-common-utils/transformer/string v0.0.0-20221227202648-5452d804e940
 	github.com/apenella/go-data-structures/extendedTree v0.0.0-20221117064317-a3b6d9f69cda
 	github.com/apenella/go-docker-builder v0.7.2
 	github.com/aws/aws-sdk-go-v2 v1.17.2
