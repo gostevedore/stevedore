@@ -25,9 +25,8 @@ func NewCommand(ctx context.Context, e Entrypointer) *command.StevedoreCommand {
 Stevedore subcommand to create and initizalize the configuration
 `,
 		Example: `
- - Example setting all configuration parameters:
-
- stevedore create configuration --builders-path /builders --concurrency 4 --config /stevedore-config.yaml --credentials-format json --credentials-local-storage-path /credentials --credentials-storage-type local --enable-semver-tags --force --images-path /images --log-path-file /logs --push-images --semver-tags-template "{{ .Major }}" --semver-tags-template "{{ .Major }}_{{ .Minor }}"
+Example setting all configuration parameters:
+  stevedore create configuration --builders-path /builders --concurrency 4 --config /stevedore-config.yaml --credentials-format json --credentials-local-storage-path /credentials --credentials-storage-type local --enable-semver-tags --force --images-path /images --log-path-file /logs --push-images --semver-tags-template "{{ .Major }}" --semver-tags-template "{{ .Major }}_{{ .Minor }}"
 `,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return nil

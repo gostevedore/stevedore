@@ -51,8 +51,7 @@ func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore Compatibili
 		Use:   "stevedore [COMMAND] [OPTIONS]",
 		Short: "Stevedore, the docker images factory",
 		Long: `
-Stevedore is a tool to manage bunches of Docker images builds in just one command. It improves the way you build and promote your Docker images when you have a lot of them. Is not a Dockerfile's alternative, but how to use it to build your images.
-You just need to define how each image should be built and the relationship among the other images. At this moment, everything is ready to build Docker images: build a single image, build all versions of the same images, build an image and all its children.
+Stevedore is a Docker's images factory, a tool that can manage bunches of Docker images builds in just one command. It improves the way you build and promote your Docker images. Is not a Dockerfile's or Buildkit alternative, but a way of us them to have a better building experience.
 `,
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.HelpFunc()(cmd, args)

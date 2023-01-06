@@ -39,13 +39,19 @@ func (a *CreateConfigurationApplication) Options(opts ...OptionsFunc) {
 
 // Run method carries out the application tasks
 func (a *CreateConfigurationApplication) Run(ctx context.Context, config *configuration.Configuration, optionsFunc ...OptionsFunc) error {
+	var err error
 	errContext := "(application::create::configuration::Run)"
 
 	if config == nil {
 		return errors.New(errContext, "Create configuration application requires a configuration")
 	}
 
-	err := a.write.Write(config)
+	err = config.ValidateConfiguration()
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
+
+	err = a.write.Write(config)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}

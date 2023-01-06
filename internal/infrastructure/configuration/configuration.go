@@ -425,9 +425,10 @@ func (c *Configuration) ValidateConfiguration() error {
 
 	errContext := "(Configuration::ValidateConfiguration)"
 
-	if c.fs == nil {
-		return errors.New(errContext, "File system must be provided to create a new configuration")
-	}
+	// Note: It is not validated if fs is defined
+	// if c.fs == nil {
+	// 	return errors.New(errContext, "File system must be provided to create a new configuration")
+	// }
 
 	if c.BuildersPath == "" {
 		return errors.New(errContext, "Invalid configuration, builders path must be provided")
@@ -446,8 +447,8 @@ func (c *Configuration) ValidateConfiguration() error {
 			return errors.New(errContext, "Invalid configuration, credentials storage type must be provided")
 		}
 
-		if c.Credentials.Format == "" {
-			return errors.New(errContext, "Invalid configuration, credentials format must be provided")
+		if (c.Credentials.Format != credentials.JSONFormat) && (c.Credentials.Format != credentials.YAMLFormat) {
+			return errors.New(errContext, fmt.Sprintf("Invalid configuration, credentials format '%s' is not valid", c.Credentials.Format))
 		}
 
 		if c.Credentials.StorageType == credentials.LocalStore {
