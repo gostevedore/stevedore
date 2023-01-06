@@ -53,6 +53,7 @@ type Configuration struct {
 	SemanticVersionTagsTemplates []string
 
 	compatibility Compatibilitier
+	configFile    string
 	fs            afero.Fs
 	loader        ConfigurationLoader
 }
@@ -261,6 +262,8 @@ func New(fs afero.Fs, loader ConfigurationLoader, compatibility Compatibilitier)
 		Format:           loader.GetString(strings.Join([]string{CredentialsKey, CredentialsFormatKey}, ".")),
 	}
 
+	config.configFile = loader.ConfigFileUsed()
+
 	err = config.CheckCompatibility()
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
@@ -323,6 +326,7 @@ func LoadFromFile(fs afero.Fs, loader ConfigurationLoader, file string, compatib
 		SemanticVersionTagsTemplates:   loader.GetStringSlice(SemanticVersionTagsTemplatesKey),
 
 		compatibility: compatibility,
+		configFile:    file,
 		fs:            fs,
 		loader:        loader,
 	}
@@ -387,6 +391,11 @@ func LoadFromFile(fs afero.Fs, loader ConfigurationLoader, file string, compatib
 	return config, nil
 }
 
+// ConfigFileUsed return which is the config file used to load the configuration
+func (c *Configuration) ConfigFileUsed() string {
+	return c.configFile
+}
+
 // ReloadConfigurationFromFile
 func (c *Configuration) ReloadConfigurationFromFile(file string) error {
 	errContext := "(Configuration::ReloadConfigurationFromFile)"
@@ -404,6 +413,8 @@ func (c *Configuration) ReloadConfigurationFromFile(file string) error {
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
+
+	newConfig.configFile = file
 
 	*c = *newConfig
 	return nil

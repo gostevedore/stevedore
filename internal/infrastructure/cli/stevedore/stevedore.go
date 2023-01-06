@@ -6,6 +6,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	buildentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/build"
+	createconfigurationentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/create/configuration"
 	createcredentialsentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/create/credentials"
 	getbuildersentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/get/builders"
 	getconfigurationentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/get/configuration"
@@ -17,6 +18,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command/middleware"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/completion"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/create"
+	createconfiguration "github.com/gostevedore/stevedore/internal/infrastructure/cli/create/configuration"
 	createcredentials "github.com/gostevedore/stevedore/internal/infrastructure/cli/create/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/get"
 	getbuilders "github.com/gostevedore/stevedore/internal/infrastructure/cli/get/builders"
@@ -115,8 +117,18 @@ You just need to define how each image should be built and the relationship amon
 	)
 	createCredentialsCommand := middleware.Command(ctx, createcredentials.NewCommand(ctx, compatibilityStore, config, createCredentialsEntrypoint), compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug)
 
+	// Create configuration
+	createConfigurationEntrypoint := createconfigurationentrypoint.NewCreateConfigurationEntrypoint(
+		createconfigurationentrypoint.WithFileSystem(fs),
+	)
+	createConfigurationCommand := middleware.Command(ctx, createconfiguration.NewCommand(ctx, createConfigurationEntrypoint), compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug)
+
 	// Create root subcommand
-	createCommand := create.NewCommand(ctx, createCredentialsCommand)
+	createCommand := create.NewCommand(
+		ctx,
+		createConfigurationCommand,
+		createCredentialsCommand,
+	)
 	command.AddCommand(createCommand)
 
 	//
