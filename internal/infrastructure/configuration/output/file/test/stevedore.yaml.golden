@@ -1,5 +1,5 @@
 #
-# Stevedore is a Docker's images factory, a tool that can manage bunches of Docker images builds in just one command. It improves the way you build and promote your Docker images. Is not a Dockerfile's or Buildkit alternative, but a way of us them to have a better building experience
+# Stevedore is a Docker images factory, a tool that helps you to manage bunches of Docker image builds in just one command. It is not an alternative to Dockerfile or Buildkit, but a way to improve your building and promote experience
 
 #
 # Images tree location path
