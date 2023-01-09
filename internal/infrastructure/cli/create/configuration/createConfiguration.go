@@ -19,7 +19,12 @@ func NewCommand(ctx context.Context, e Entrypointer) *command.StevedoreCommand {
 	entrypointOptions := &entrypoint.Options{}
 
 	createConfigurationCmd := &cobra.Command{
-		Use:   "configuration",
+		Use: "configuration",
+		Aliases: []string{
+			"config",
+			"conf",
+			"cfg",
+		},
 		Short: "Stevedore subcommand to create and initizalize the configuration",
 		Long: `
 Stevedore subcommand to create and initizalize the configuration
