@@ -2,6 +2,7 @@ package logger
 
 import (
 	"io"
+	"os"
 	"time"
 
 	"go.uber.org/zap"
@@ -22,9 +23,16 @@ type Logger struct {
 // New creates a new logger
 func New() *Logger {
 
-	l, _ := zap.NewProduction()
+	//l, _ := zap.NewProduction()
+	config := zap.NewProductionEncoderConfig()
+	config.EncodeTime = customTimeEncoder
+	config.EncodeLevel = zapcore.CapitalLevelEncoder
+	encoder := zapcore.NewConsoleEncoder(config)
+	writer := zapcore.AddSync(os.Stderr)
+	core := zapcore.NewCore(encoder, writer, zapcore.DebugLevel)
+
 	return &Logger{
-		logger: l.Sugar(),
+		logger: zap.New(core).Sugar(),
 	}
 }
 
