@@ -487,7 +487,7 @@ images:
 				render.NewMockImageRender(),
 				compatibility.NewMockCompatibility(),
 			),
-			err: errors.New(errContext, "Error loading images tree from file '/imagestree/tab_error_file.yaml'\nfound:\n\nimages:\nimage:\n  version:\n\tregistry: registry\n\tnamespace: namespace\n\n\tyaml: line 5: found character that cannot start any token"),
+			err: errors.New(errContext, "Error loading images tree from file '/imagestree/tab_error_file.yaml'\nfound:\n\nimages:\nimage:\n  version:\n\tregistry: registry\n\tnamespace: namespace\n\n yaml: line 5: found character that cannot start any token"),
 		},
 		{
 			desc: "Testing load images tree from file",
@@ -689,7 +689,7 @@ images:
 					errors.New(errContext, "Error adding image to images graph store"),
 				)
 			},
-			err: errors.New(errContext, "\n\tError adding image to images graph store"),
+			err: errors.New(errContext, "Error adding image to images graph store"),
 		},
 	}
 
@@ -878,7 +878,7 @@ image:
 				)
 
 			},
-			err: errors.New(errContext, "\n\tError adding image2\n"),
+			err: errors.New(errContext, "Error adding image2\n"),
 		},
 	}
 

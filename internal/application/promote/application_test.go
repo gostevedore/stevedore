@@ -31,7 +31,7 @@ func TestPromote(t *testing.T) {
 		err             error
 	}{
 		{
-			desc: "Testing promote source image from local",
+			desc: "Testing promote application source image from local",
 			service: NewApplication(
 				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
@@ -77,7 +77,7 @@ func TestPromote(t *testing.T) {
 			err: &errors.Error{},
 		},
 		{
-			desc: "Testing promote source image from remote",
+			desc: "Testing promote application source image from remote",
 			service: NewApplication(
 				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
@@ -125,7 +125,7 @@ func TestPromote(t *testing.T) {
 			err: &errors.Error{},
 		},
 		{
-			desc: "Testing promote source image using empty target values",
+			desc: "Testing promote application source image using empty target values",
 			service: NewApplication(
 				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
@@ -214,10 +214,10 @@ func TestPromote(t *testing.T) {
 					Password: "password",
 				}, nil)
 			},
-			err: errors.New(errContext, "Error generating target image reference name for 'registry.test/namespace/image:tag'\n\tImage reference name can not be generated because image name is undefined"),
+			err: errors.New(errContext, "Error generating target image reference name for 'registry.test/namespace/image:tag'\n Image reference name can not be generated because image name is undefined"),
 		},
 		{
-			desc: "Testing promote source image with all options",
+			desc: "Testing promote application source image with all options",
 			service: NewApplication(
 				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
@@ -270,7 +270,7 @@ func TestPromote(t *testing.T) {
 			err: &errors.Error{},
 		},
 		{
-			desc: "Testing promote source image with no credentials",
+			desc: "Testing promote application source image with no credentials",
 			service: NewApplication(
 				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
@@ -316,7 +316,7 @@ func TestPromote(t *testing.T) {
 			err: &errors.Error{},
 		},
 		{
-			desc: "Testing promote source image with all options and using semver configuration parameters",
+			desc: "Testing promote application source image with all options and using semver configuration parameters",
 			service: NewApplication(
 				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
@@ -369,7 +369,7 @@ func TestPromote(t *testing.T) {
 			err: &errors.Error{},
 		},
 		{
-			desc: "Testing promote source image with all options, using semver configuration parameters overridden by service options",
+			desc: "Testing promote application source image with all options, using semver configuration parameters overridden by service options",
 			service: &Application{
 				credentials:    credentialsfactory.NewMockCredentialsFactory(),
 				semver:         semver.NewSemVerGenerator(),

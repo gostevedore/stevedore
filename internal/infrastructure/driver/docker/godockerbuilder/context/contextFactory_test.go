@@ -115,7 +115,7 @@ func TestGenerateDockerBuildContext(t *testing.T) {
 				gitAuth: gitauth.NewGitAuthFactory(nil),
 			},
 			context: nil,
-			err:     errors.New(errContext, "\n\tCredentials store is expected when a credentials id is configured"),
+			err:     errors.New(errContext, "Credentials store is expected when a credentials id is configured"),
 		},
 	}
 
