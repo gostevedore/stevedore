@@ -76,6 +76,7 @@ Stevedore is a Docker images factory, a tool that helps you to manage bunches of
 	stevedoreCmd.PersistentFlags().StringVarP(&stevedoreCmdFlagsVars.ConfigFile, "config", "c", "", "Configuration file location path")
 	stevedoreCmd.PersistentFlags().BoolVar(&stevedoreCmdFlagsVars.Debug, "debug", false, "Enable debug mode")
 
+	// Stevedore command
 	command := &command.StevedoreCommand{
 		Command: stevedoreCmd,
 	}
@@ -83,21 +84,21 @@ Stevedore is a Docker images factory, a tool that helps you to manage bunches of
 	command = middleware.Command(ctx, command, compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug)
 
 	//
-	// Completion subcommand
+	// Completion command
 	//
 	command.AddCommand(
 		middleware.Command(ctx, completion.NewCommand(ctx, config, command, console), compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug),
 	)
 
 	//
-	// Version subcommand
+	// Version ccommand
 	//
 	command.AddCommand(
 		middleware.Command(ctx, version.NewCommand(ctx, console), compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug),
 	)
 
 	//
-	// Build subcommand
+	// Build ccommand
 	//
 	buildEntrypoint := buildentrypoint.NewEntrypoint(
 		buildentrypoint.WithWriter(console),
@@ -109,7 +110,7 @@ Stevedore is a Docker images factory, a tool that helps you to manage bunches of
 	)
 
 	//
-	// Create subcommand
+	// Create command
 	//
 
 	// Create configuration
@@ -126,7 +127,7 @@ Stevedore is a Docker images factory, a tool that helps you to manage bunches of
 	)
 	createCredentialsCommand := middleware.Command(ctx, createcredentials.NewCommand(ctx, compatibilityStore, config, createCredentialsEntrypoint), compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug)
 
-	// Create root subcommand
+	// Create root command
 	createCommand := create.NewCommand(
 		ctx,
 		createConfigurationCommand,
@@ -135,16 +136,16 @@ Stevedore is a Docker images factory, a tool that helps you to manage bunches of
 	command.AddCommand(createCommand)
 
 	//
-	// Get subcommand
+	// Get command
 	//
 
-	// Get configuration
+	// Get configuration subcommand
 	getConfigurationEntrypoint := getconfigurationentrypoint.NewGetConfigurationEntrypoint(
 		getconfigurationentrypoint.WithWriter(console),
 	)
 	getConfigurationCommand := middleware.Command(ctx, getconfiguration.NewCommand(ctx, config, getConfigurationEntrypoint), compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug)
 
-	// Get credentials
+	// Get credentials subcommand
 	getCredentialsEntrypoint := getcredentialsentrypoint.NewEntrypoint(
 		getcredentialsentrypoint.WithWriter(console),
 		getcredentialsentrypoint.WithFileSystem(fs),
@@ -152,7 +153,7 @@ Stevedore is a Docker images factory, a tool that helps you to manage bunches of
 	)
 	getCredentialsCommand := middleware.Command(ctx, getcredentials.NewCommand(ctx, config, getCredentialsEntrypoint), compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug)
 
-	// Get images
+	// Get images subcommand
 	getImagesEntrypoint := getimagesentrypoint.NewGetImagesEntrypoint(
 		getimagesentrypoint.WithWriter(console),
 		getimagesentrypoint.WithFileSystem(fs),
@@ -160,7 +161,7 @@ Stevedore is a Docker images factory, a tool that helps you to manage bunches of
 	)
 	getImagesCommand := middleware.Command(ctx, getimages.NewCommand(ctx, config, getImagesEntrypoint), compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug)
 
-	// Get builders
+	// Get builders subcommand
 	getBuildersEntrypoint := getbuildersentrypoint.NewGetBuildersEntrypoint(
 		getbuildersentrypoint.WithWriter(console),
 		getbuildersentrypoint.WithFileSystem(fs),
@@ -168,7 +169,7 @@ Stevedore is a Docker images factory, a tool that helps you to manage bunches of
 	)
 	getBuildersCommand := middleware.Command(ctx, getbuilders.NewCommand(ctx, config, getBuildersEntrypoint), compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug)
 
-	// Get root subcommand
+	// Get root command
 	getCommand := get.NewCommand(
 		ctx,
 		getBuildersCommand,
@@ -179,7 +180,7 @@ Stevedore is a Docker images factory, a tool that helps you to manage bunches of
 	command.AddCommand(getCommand)
 
 	//
-	// Initialize subcommand
+	// Initialize command
 	//
 
 	// it uses the entrypoint that create configuration
@@ -187,7 +188,7 @@ Stevedore is a Docker images factory, a tool that helps you to manage bunches of
 	command.AddCommand(initializeCommand)
 
 	//
-	// Promote subcommand
+	// Promote command
 	//
 	promoteEntrypoint := promoteentrypoint.NewEntrypoint(
 		promoteentrypoint.WithWriter(console),
@@ -197,13 +198,6 @@ Stevedore is a Docker images factory, a tool that helps you to manage bunches of
 	command.AddCommand(
 		middleware.Command(ctx, promote.NewCommand(ctx, compatibilityStore, config, promoteEntrypoint), compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug),
 	)
-
-	// command.AddCommand(middleware.Middleware(create.NewCommand(ctx, config)))
-	// command.AddCommand(middleware.Middleware(get.NewCommand(ctx, config)))
-	// command.AddCommand(middleware.Middleware(initialize.NewCommand(ctx, config)))
-	// command.AddCommand(middleware.Middleware(moo.NewCommand(ctx, config)))
-	// command.AddCommand(middleware.Middleware(promote.NewCommand(ctx, config)))
-	// command.AddCommand(middleware.Middleware(version.NewCommand(ctx, config)))
 
 	return command
 }
