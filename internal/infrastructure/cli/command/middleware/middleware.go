@@ -10,11 +10,11 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command/middleware/interruption"
 )
 
-func Command(ctx context.Context, c *command.StevedoreCommand, compatibilityReport CompatibilityReporter, log Logger, cons Consoler) *command.StevedoreCommand {
+func Command(ctx context.Context, c *command.StevedoreCommand, compatibilityReport CompatibilityReporter, log Logger, cons Consoler, debug *bool) *command.StevedoreCommand {
 
 	cmd := compatibility.NewCommand(c, compatibilityReport)
 	cmd = audit.NewCommand(cmd, log)
-	cmd = error.NewCommand(cmd, cons, log)
+	cmd = error.NewCommand(cmd, cons, log, debug)
 	cmd = interruption.NewCommand(ctx, cmd, cons, log)
 
 	return cmd

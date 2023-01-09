@@ -25,7 +25,7 @@ func TestCascadePlanPlan(t *testing.T) {
 		{
 			desc: "Testing error when images storer is nil",
 			plan: &CascadePlan{},
-			err:  errors.New(errContext, "\n\tImages storer is nil"),
+			err:  errors.New(errContext, "Images storer is nil"),
 		},
 		{
 			desc: "Testing generate cascade plan with three images",

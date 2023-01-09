@@ -2,6 +2,7 @@ package configuration
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"log"
 	"os/user"
@@ -97,6 +98,31 @@ num_workers: 5
 	}
 }
 
+func TestDefaultConfig(t *testing.T) {
+	config := DefaultConfig()
+
+	// dynamic default values
+	defaultConcurrency := concurrencyValue()
+
+	expected := &Configuration{
+		BuildersPath:                 filepath.Join(DefaultConfigFolder, DefaultBuildersPath),
+		Concurrency:                  defaultConcurrency,
+		EnableSemanticVersionTags:    DefaultEnableSemanticVersionTags,
+		ImagesPath:                   filepath.Join(DefaultConfigFolder, DefaultImagesPath),
+		LogWriter:                    io.Discard,
+		PushImages:                   DefaultPushImages,
+		SemanticVersionTagsTemplates: []string{DefaultSemanticVersionTagsTemplates},
+
+		Credentials: &CredentialsConfiguration{
+			StorageType:      DefaultCredentialsStorage,
+			LocalStoragePath: DefaultCredentialsLocalStoragePath,
+			Format:           DefaultCredentialsFormat,
+		},
+	}
+
+	assert.Equal(t, expected, config)
+}
+
 func TestNew(t *testing.T) {
 	var err error
 	errContext := "(Configuration::New)"
@@ -174,6 +200,7 @@ func TestNew(t *testing.T) {
 				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsStorageTypeKey}, ".")).Return(DefaultCredentialsStorage)
 				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsLocalStoragePathKey}, ".")).Return(DefaultCredentialsLocalStoragePath)
 				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsFormatKey}, ".")).Return(DefaultCredentialsFormat)
+				l.(*loader.MockConfigurationLoader).On("ConfigFileUsed").Return("stevedore.yaml")
 
 				// DEPRECIATED
 				l.(*loader.MockConfigurationLoader).On("GetInt", DEPRECATEDNumWorkerKey).Return(0)
@@ -197,6 +224,7 @@ func TestNew(t *testing.T) {
 					LocalStoragePath: "credentials",
 					Format:           "json",
 				},
+				configFile: "stevedore.yaml",
 			},
 			err: &errors.Error{},
 		},
@@ -242,6 +270,7 @@ func TestNew(t *testing.T) {
 				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsStorageTypeKey}, ".")).Return(DefaultCredentialsStorage)
 				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsLocalStoragePathKey}, ".")).Return(DefaultCredentialsLocalStoragePath)
 				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsFormatKey}, ".")).Return(DefaultCredentialsFormat)
+				l.(*loader.MockConfigurationLoader).On("ConfigFileUsed").Return("stevedore.yaml")
 
 				// DEPRECIATED
 				l.(*loader.MockConfigurationLoader).On("GetInt", DEPRECATEDNumWorkerKey).Return(8)
@@ -270,6 +299,7 @@ func TestNew(t *testing.T) {
 					LocalStoragePath: "/credentials",
 					Format:           "json",
 				},
+				configFile: "stevedore.yaml",
 			},
 			err: &errors.Error{},
 		},
@@ -389,7 +419,7 @@ semantic_version_tags_templates:
 			fs:            testFs,
 			loader:        &loader.MockConfigurationLoader{},
 			file:          "unknown",
-			err:           errors.New(errContext, "Configuration file could be loaded", errors.New(errContext, "testing error")),
+			err:           errors.New(errContext, "Configuration file could not be loaded", errors.New(errContext, "testing error")),
 			prepareAssertFunc: func(l ConfigurationLoader, c Compatibilitier) {
 				l.(*loader.MockConfigurationLoader).On("SetFs", testFs).Return()
 				l.(*loader.MockConfigurationLoader).On("SetConfigFile", "unknown").Return()
@@ -728,11 +758,12 @@ func TestValidateConfiguration(t *testing.T) {
 			},
 			err: &errors.Error{},
 		},
-		{
-			desc:   "Testing error when file system is not defined on configuration",
-			config: &Configuration{},
-			err:    errors.New(errContext, "File system must be provided to create a new configuration"),
-		},
+		// Note: It is not validated if fs is defined
+		// {
+		// 	desc:   "Testing error when file system is not defined on configuration",
+		// 	config: &Configuration{},
+		// 	err:    errors.New(errContext, "File system must be provided to create a new configuration"),
+		// },
 		{
 			desc: "Testing error when builders path is not defined",
 			config: &Configuration{
@@ -780,7 +811,7 @@ func TestValidateConfiguration(t *testing.T) {
 				},
 				fs: testFs,
 			},
-			err: errors.New(errContext, "Invalid configuration, credentials format must be provided"),
+			err: errors.New(errContext, "Invalid configuration, credentials format '' is not valid"),
 		},
 		{
 			desc: "Testing error when credentials local storage path is not defined when is used credentials local storage type",

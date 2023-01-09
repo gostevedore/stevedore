@@ -6,7 +6,7 @@ import (
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
-	console "github.com/gostevedore/stevedore/internal/infrastructure/configuration/output/mock"
+	output "github.com/gostevedore/stevedore/internal/infrastructure/configuration/output/mock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,13 +22,13 @@ func TestRun(t *testing.T) {
 		{
 			desc: "Testing application get configuration",
 			app: NewGetConfigurationApplication(
-				WithWrite(console.NewConfigurationMockOutput()),
+				WithWrite(output.NewConfigurationMockOutput()),
 			),
 			options: &Options{
 				Configuration: &configuration.Configuration{},
 			},
 			prepareMockFunc: func(a *GetConfigurationApplication) {
-				a.write.(*console.ConfigurationMockOutput).On(
+				a.write.(*output.ConfigurationMockOutput).On(
 					"Write",
 					&configuration.Configuration{},
 				).Return(nil)
@@ -49,7 +49,7 @@ func TestRun(t *testing.T) {
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				test.app.write.(*console.ConfigurationMockOutput).AssertExpectations(t)
+				test.app.write.(*output.ConfigurationMockOutput).AssertExpectations(t)
 			}
 		})
 	}

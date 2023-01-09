@@ -1,6 +1,7 @@
   
 images_path: images
 builders_path: builders
+log_path: /dev/stdout
 credentials:
   storage_type: local
   local_storage_path: ./credentials

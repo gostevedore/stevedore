@@ -27,9 +27,9 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, config *conf
 			"auth",
 			"badge",
 		},
-		Short: "Stevedore subcommand to add a new credentials badge into credentials store",
+		Short: "Stevedore subcommand to create a credentials badge to credentials store",
 		Long: `
-		Stevedore subcommand to add a new credentials badge into credentials store
+Stevedore subcommand to create a credentials badge to credentials store
 `,
 		Example: `
 Create credentials to authenticate through basic auth into a private registry:

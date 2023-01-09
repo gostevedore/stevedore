@@ -52,7 +52,7 @@ func TestStore_LocalStoreWithSafeStore(t *testing.T) {
 					compatibility.NewMockCompatibility(),
 				),
 			),
-			err: errors.New(errContext, "\n\tCredentials 'existing_id' already exist"),
+			err: errors.New(errContext, "Credentials 'existing_id' already exist"),
 		},
 		{
 			desc: "Testing persist a badge into local store with safe store",

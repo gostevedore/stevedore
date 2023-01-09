@@ -78,11 +78,42 @@ func TestFindImages(t *testing.T) {
 				return p.images.(*images.MockStore).AssertExpectations(t)
 			},
 		},
+		{
+			desc: "Testing error generating plan when image is not defined",
+			plan: &BasePlan{
+				images: images.NewMockStore(),
+			},
+			name:     "image",
+			versions: []string{},
+			prepareAssertFunc: func(p *BasePlan) {
+				p.images.(*images.MockStore).On("FindByName", "image").Return([]*image.Image{}, nil)
+			},
+			assertFunc: func(p *BasePlan) bool {
+				return p.images.(*images.MockStore).AssertExpectations(t)
+			},
+			err: errors.New(errContext, "The image 'image' seems not to be defined"),
+		},
+		{
+			desc: "Testing error generating plan when image is not defined when version is provided",
+			plan: &BasePlan{
+				images: images.NewMockStore(),
+			},
+			name:     "image",
+			versions: []string{"version"},
+			prepareAssertFunc: func(p *BasePlan) {
+				p.images.(*images.MockStore).On("FindGuaranteed", "image", "version").Return([]*image.Image{}, nil)
+			},
+			assertFunc: func(p *BasePlan) bool {
+				return p.images.(*images.MockStore).AssertExpectations(t)
+			},
+			err: errors.New(errContext, "The version(s) [version] for the image 'image' seems not to be defined"),
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-			//t.Log(test.desc)
+			t.Log(test.desc)
+
 			if test.prepareAssertFunc != nil {
 				test.prepareAssertFunc(test.plan)
 			}

@@ -53,6 +53,7 @@ type Configuration struct {
 	SemanticVersionTagsTemplates []string
 
 	compatibility Compatibilitier
+	configFile    string
 	fs            afero.Fs
 	loader        ConfigurationLoader
 }
@@ -128,6 +129,30 @@ const (
 	// SemanticVersionTagsTemplatesKey is the key for the semantic version tags templates
 	SemanticVersionTagsTemplatesKey = "semantic_version_tags_templates"
 )
+
+func DefaultConfig() *Configuration {
+
+	config := &Configuration{}
+
+	// dynamic default values
+	defaultConcurrency := concurrencyValue()
+
+	config.BuildersPath = filepath.Join(DefaultConfigFolder, DefaultBuildersPath)
+	config.Concurrency = defaultConcurrency
+	config.EnableSemanticVersionTags = DefaultEnableSemanticVersionTags
+	config.ImagesPath = filepath.Join(DefaultConfigFolder, DefaultImagesPath)
+	config.LogWriter = io.Discard
+	config.PushImages = DefaultPushImages
+	config.SemanticVersionTagsTemplates = []string{DefaultSemanticVersionTagsTemplates}
+
+	config.Credentials = &CredentialsConfiguration{
+		StorageType:      DefaultCredentialsStorage,
+		LocalStoragePath: DefaultCredentialsLocalStoragePath,
+		Format:           DefaultCredentialsFormat,
+	}
+
+	return config
+}
 
 // New method create a new configuration object
 func New(fs afero.Fs, loader ConfigurationLoader, compatibility Compatibilitier) (*Configuration, error) {
@@ -237,6 +262,8 @@ func New(fs afero.Fs, loader ConfigurationLoader, compatibility Compatibilitier)
 		Format:           loader.GetString(strings.Join([]string{CredentialsKey, CredentialsFormatKey}, ".")),
 	}
 
+	config.configFile = loader.ConfigFileUsed()
+
 	err = config.CheckCompatibility()
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
@@ -275,7 +302,7 @@ func LoadFromFile(fs afero.Fs, loader ConfigurationLoader, file string, compatib
 	loader.SetConfigFile(file)
 	err = loader.ReadInConfig()
 	if err != nil {
-		return nil, errors.New(errContext, "Configuration file could be loaded", err)
+		return nil, errors.New(errContext, "Configuration file could not be loaded", err)
 	}
 
 	config = &Configuration{
@@ -299,6 +326,7 @@ func LoadFromFile(fs afero.Fs, loader ConfigurationLoader, file string, compatib
 		SemanticVersionTagsTemplates:   loader.GetStringSlice(SemanticVersionTagsTemplatesKey),
 
 		compatibility: compatibility,
+		configFile:    file,
 		fs:            fs,
 		loader:        loader,
 	}
@@ -363,6 +391,11 @@ func LoadFromFile(fs afero.Fs, loader ConfigurationLoader, file string, compatib
 	return config, nil
 }
 
+// ConfigFileUsed return which is the config file used to load the configuration
+func (c *Configuration) ConfigFileUsed() string {
+	return c.configFile
+}
+
 // ReloadConfigurationFromFile
 func (c *Configuration) ReloadConfigurationFromFile(file string) error {
 	errContext := "(Configuration::ReloadConfigurationFromFile)"
@@ -381,6 +414,8 @@ func (c *Configuration) ReloadConfigurationFromFile(file string) error {
 		return errors.New(errContext, "", err)
 	}
 
+	newConfig.configFile = file
+
 	*c = *newConfig
 	return nil
 }
@@ -390,9 +425,10 @@ func (c *Configuration) ValidateConfiguration() error {
 
 	errContext := "(Configuration::ValidateConfiguration)"
 
-	if c.fs == nil {
-		return errors.New(errContext, "File system must be provided to create a new configuration")
-	}
+	// Note: It is not validated if fs is defined
+	// if c.fs == nil {
+	// 	return errors.New(errContext, "File system must be provided to create a new configuration")
+	// }
 
 	if c.BuildersPath == "" {
 		return errors.New(errContext, "Invalid configuration, builders path must be provided")
@@ -411,8 +447,8 @@ func (c *Configuration) ValidateConfiguration() error {
 			return errors.New(errContext, "Invalid configuration, credentials storage type must be provided")
 		}
 
-		if c.Credentials.Format == "" {
-			return errors.New(errContext, "Invalid configuration, credentials format must be provided")
+		if (c.Credentials.Format != credentials.JSONFormat) && (c.Credentials.Format != credentials.YAMLFormat) {
+			return errors.New(errContext, fmt.Sprintf("Invalid configuration, credentials format '%s' is not valid", c.Credentials.Format))
 		}
 
 		if c.Credentials.StorageType == credentials.LocalStore {

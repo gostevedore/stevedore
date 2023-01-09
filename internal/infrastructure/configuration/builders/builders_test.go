@@ -93,7 +93,7 @@ builders:
 			desc:     "Testing error loading builders from file",
 			path:     "/builders/tab_error_file.yml",
 			builders: NewBuilders(testFs, builders.NewMockStore()),
-			err:      errors.New(errContext, "Error loading builders from file '/builders/tab_error_file.yml'\nfound:\n\nbuilders:\n  first:\n    driver: docker\n    options:\n\t  dockerfile: Dockerfile.test\n      context:\n      path: /path/to/context\n\n\tyaml: line 6: found character that cannot start any token"),
+			err:      errors.New(errContext, "Error loading builders from file '/builders/tab_error_file.yml'\nfound:\n\nbuilders:\n  first:\n    driver: docker\n    options:\n\t  dockerfile: Dockerfile.test\n      context:\n      path: /path/to/context\n\n yaml: line 6: found character that cannot start any token"),
 		},
 	}
 
@@ -236,7 +236,7 @@ builders:
 		{
 			desc:     "Testing error loading builders from directory",
 			path:     "/builders_error",
-			err:      errors.New(errContext, "Error loading builders from file '/builders_error/file1.yml'\nfound:\n\nbuilders:\n  third:\n    driver: docker\n    options:\n\t  dockerfile: Dockerfile.test\n      context:\n        - path: /even/another/path/to/context\n\n\tyaml: line 6: found character that cannot start any token\nError loading builders from file '/builders_error/file2.yml'\nfound:\n\nbuilders:\n  fourth:\n    driver: docker\n    options:\n\t  dockerfile: Dockerfile.test\n      context:\n        - path: /even/another/path/to/context\n\n\tyaml: line 6: found character that cannot start any token\n"),
+			err:      errors.New(errContext, "Error loading builders from file '/builders_error/file1.yml'\nfound:\n\nbuilders:\n  third:\n    driver: docker\n    options:\n\t  dockerfile: Dockerfile.test\n      context:\n        - path: /even/another/path/to/context\n\n yaml: line 6: found character that cannot start any token\nError loading builders from file '/builders_error/file2.yml'\nfound:\n\nbuilders:\n  fourth:\n    driver: docker\n    options:\n\t  dockerfile: Dockerfile.test\n      context:\n        - path: /even/another/path/to/context\n\n yaml: line 6: found character that cannot start any token\n"),
 			builders: NewBuilders(testFs, builders.NewMockStore()),
 		},
 	}
@@ -396,7 +396,7 @@ builders:
 			desc:     "Testing error loading builders from unexisting directory",
 			path:     "/builders_unexisting",
 			builders: NewBuilders(testFs, builders.NewMockStore()),
-			err:      errors.New(errContext, "\n\topen /builders_unexisting: file does not exist"),
+			err:      errors.New(errContext, "open /builders_unexisting: file does not exist"),
 		},
 	}
 

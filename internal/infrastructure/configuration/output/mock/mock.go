@@ -1,4 +1,4 @@
-package console
+package output
 
 import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"

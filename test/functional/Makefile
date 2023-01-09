@@ -24,7 +24,7 @@ generate-certs: cleanup-certs ## generate certificate for stevedore.test
 cleanup-certs: ## cleanup certificates
 	@docker compose -p stevedore-functional-test-manual run --rm --entrypoint /bin/sh openssl -c 'rm -rf $$(ls)'
 
-prepare-and-attach-client: prepare-images ## setup the environemnt and attach to client container preloading docker images
+start-and-attach-client: prepare-images ## starts the environment, preprare the images and attach to client container
 	docker compose -p stevedore-functional-test-manual build stevedore
 	docker compose -p stevedore-functional-test-manual run -w /app/test/stack/client/stevedore stevedore sh
 

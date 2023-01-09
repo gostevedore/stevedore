@@ -4,7 +4,7 @@ package file
 
 const (
 	configurationTemplate string = `#
-# Stevedore manages and governs the Docker's image's building process
+# Stevedore is a Docker images factory, a tool that helps you to manage bunches of Docker image builds in just one command. It is not an alternative to Dockerfile or Buildkit, but a way to improve your building and promote experience
 
 #
 # Images tree location path
@@ -108,7 +108,7 @@ semantic_version_tags_enabled: {{ . }}
 {{ else -}}
 semantic_version_tags_templates:
 {{ range .SemanticVersionTagsTemplates -}}
-  - {{ . }}
+  - "{{ . }}"
 {{ end -}}
 {{ end }}
 #

@@ -289,7 +289,7 @@ options:
 	driver: docker
 `,
 			res: &Builder{},
-			err: errors.New(errContext, "Builder could not be created.\nfound:\n'\n\tdriver: docker\n'\n\n\tyaml: line 2: found character that cannot start any token"),
+			err: errors.New(errContext, "Builder could not be created.\nfound:\n'\n\tdriver: docker\n'\n\n yaml: line 2: found character that cannot start any token"),
 		},
 	}
 

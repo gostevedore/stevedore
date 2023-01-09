@@ -1,21 +1,25 @@
 package file
 
 import (
-	"bytes"
 	"io/ioutil"
 	"testing"
 
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWriteConfigurationFile(t *testing.T) {
+func TestWrite(t *testing.T) {
 
 	var err error
-	var buff bytes.Buffer
-	var expected []byte
+	var content, expected []byte
 
-	output := NewConfigurationFileOutput(&buff)
+	testFs := afero.NewMemMapFs()
+
+	output := NewConfigurationFilePersist(
+		WithFileSystem(testFs),
+		WithFilePath("test.yaml"),
+	)
 
 	config := &configuration.Configuration{
 		BuildersPath: "mystevedore.yaml",
@@ -42,6 +46,14 @@ func TestWriteConfigurationFile(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
+	a := afero.Afero{
+		Fs: testFs,
+	}
+	content, err = a.ReadFile("test.yaml")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
 	// Uncomment to generate new golden file
 	// f, err := os.OpenFile("test/conf", os.O_RDWR|os.O_CREATE, 0666)
 	// if err != nil {
@@ -50,5 +62,5 @@ func TestWriteConfigurationFile(t *testing.T) {
 	// defer f.Close()
 	// f.Write(buff.Bytes())
 
-	assert.Equal(t, expected, buff.Bytes(), "Unexpected response")
+	assert.Equal(t, expected, content, "Unexpected response")
 }
