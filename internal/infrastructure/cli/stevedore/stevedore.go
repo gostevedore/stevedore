@@ -44,6 +44,7 @@ var stevedoreCmdFlagsVars *stevedoreCmdFlags
 func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore CompatibilityStorer, compatibilityReport CompatibilityReporter, console Consoler, log Logger, config *configuration.Configuration) *command.StevedoreCommand {
 
 	errContext := "(cli::stevedore::NewCommand)"
+	_ = errContext
 
 	stevedoreCmdFlagsVars = &stevedoreCmdFlags{}
 
@@ -51,17 +52,17 @@ func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore Compatibili
 		Use:   "stevedore [COMMAND] [OPTIONS]",
 		Short: "Stevedore, the docker images factory",
 		Long: `
-Stevedore is a Docker's images factory, a tool that can manage bunches of Docker images builds in just one command. It improves the way you build and promote your Docker images. Is not a Dockerfile's or Buildkit alternative, but a way of us them to have a better building experience.
+ Stevedore is a Docker images factory, a tool that helps you to manage bunches of Docker image builds in just one command. It is not an alternative to Dockerfile or Buildkit, but a way to improve your building and promote experience
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			cmd.HelpFunc()(cmd, args)
+			//cmd.HelpFunc()(cmd, args)
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			var err error
+
 			if stevedoreCmdFlagsVars.ConfigFile != "" {
 				err = config.ReloadConfigurationFromFile(stevedoreCmdFlagsVars.ConfigFile)
 				if err != nil {
-					console.Error(err.Error())
 					return errors.New(errContext, fmt.Sprintf("Error loading configuration from file '%s'", stevedoreCmdFlagsVars.ConfigFile), err)
 				}
 			}
@@ -77,6 +78,8 @@ Stevedore is a Docker's images factory, a tool that can manage bunches of Docker
 	command := &command.StevedoreCommand{
 		Command: stevedoreCmd,
 	}
+
+	command = middleware.Command(ctx, command, compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug)
 
 	//
 	// Completion subcommand
