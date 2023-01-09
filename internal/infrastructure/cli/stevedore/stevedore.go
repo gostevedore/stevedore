@@ -25,6 +25,7 @@ import (
 	getconfiguration "github.com/gostevedore/stevedore/internal/infrastructure/cli/get/configuration"
 	getcredentials "github.com/gostevedore/stevedore/internal/infrastructure/cli/get/credentials"
 	getimages "github.com/gostevedore/stevedore/internal/infrastructure/cli/get/images"
+	initizalize "github.com/gostevedore/stevedore/internal/infrastructure/cli/initialize"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/promote"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/version"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
@@ -52,10 +53,10 @@ func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore Compatibili
 		Use:   "stevedore [COMMAND] [OPTIONS]",
 		Short: "Stevedore, the docker images factory",
 		Long: `
- Stevedore is a Docker images factory, a tool that helps you to manage bunches of Docker image builds in just one command. It is not an alternative to Dockerfile or Buildkit, but a way to improve your building and promote experience
+Stevedore is a Docker images factory, a tool that helps you to manage bunches of Docker image builds in just one command. It is not an alternative to Dockerfile or Buildkit, but a way to improve your building and promote experience
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			//cmd.HelpFunc()(cmd, args)
+			cmd.HelpFunc()(cmd, args)
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			var err error
@@ -111,6 +112,12 @@ func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore Compatibili
 	// Create subcommand
 	//
 
+	// Create configuration
+	createConfigurationEntrypoint := createconfigurationentrypoint.NewCreateConfigurationEntrypoint(
+		createconfigurationentrypoint.WithFileSystem(fs),
+	)
+	createConfigurationCommand := middleware.Command(ctx, createconfiguration.NewCommand(ctx, createConfigurationEntrypoint), compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug)
+
 	// Create credentials
 	createCredentialsEntrypoint := createcredentialsentrypoint.NewCreateCredentialsEntrypoint(
 		createcredentialsentrypoint.WithConsole(console),
@@ -118,12 +125,6 @@ func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore Compatibili
 		createcredentialsentrypoint.WithCompatibility(compatibilityStore),
 	)
 	createCredentialsCommand := middleware.Command(ctx, createcredentials.NewCommand(ctx, compatibilityStore, config, createCredentialsEntrypoint), compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug)
-
-	// Create configuration
-	createConfigurationEntrypoint := createconfigurationentrypoint.NewCreateConfigurationEntrypoint(
-		createconfigurationentrypoint.WithFileSystem(fs),
-	)
-	createConfigurationCommand := middleware.Command(ctx, createconfiguration.NewCommand(ctx, createConfigurationEntrypoint), compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug)
 
 	// Create root subcommand
 	createCommand := create.NewCommand(
@@ -176,6 +177,14 @@ func NewCommand(ctx context.Context, fs afero.Fs, compatibilityStore Compatibili
 		getImagesCommand,
 	)
 	command.AddCommand(getCommand)
+
+	//
+	// Initialize subcommand
+	//
+
+	// it uses the entrypoint that create configuration
+	initializeCommand := middleware.Command(ctx, initizalize.NewCommand(ctx, createConfigurationEntrypoint), compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug)
+	command.AddCommand(initializeCommand)
 
 	//
 	// Promote subcommand
