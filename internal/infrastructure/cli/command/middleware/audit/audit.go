@@ -24,7 +24,8 @@ func NewCommand(c *command.StevedoreCommand, l Logger) *command.StevedoreCommand
 // auditE is a function that audit commands execution
 func auditE(l Logger, f func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		l.Info(fmt.Sprintf("Executing command 'stevedore %s %s'", cmd.Use, args))
+		command := command.FullCommand(cmd)
+		l.Info(fmt.Sprintf("Executing command '%s'", command))
 		return f(cmd, args)
 	}
 }
@@ -32,7 +33,8 @@ func auditE(l Logger, f func(cmd *cobra.Command, args []string) error) func(cmd 
 // audit is a function that audit commands execution
 func audit(l Logger, f func(cmd *cobra.Command, args []string)) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
-		l.Info(fmt.Sprintf("Executing command 'stevedore %s %+v'", cmd.Use, args))
+		command := command.FullCommand(cmd)
+		l.Info(fmt.Sprintf("Executing command '%s'", command))
 		f(cmd, args)
 	}
 }

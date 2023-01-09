@@ -1,6 +1,8 @@
 package command
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -37,6 +39,15 @@ func (c *StevedoreCommand) Execute() error {
 func (c *StevedoreCommand) Options(opts ...CommandOptionsFunc) {
 	for _, opt := range opts {
 		opt(c)
+	}
+}
+
+func FullCommand(cmd *cobra.Command) string {
+	if cmd.Parent() == nil {
+		return cmd.Use
+	} else {
+		parentCommand := FullCommand(cmd.Parent())
+		return fmt.Sprintf("%s %s", parentCommand, cmd.Use)
 	}
 }
 
