@@ -58,6 +58,7 @@ func (s *EnvvarsStore) Options(opts ...OptionsFunc) {
 func (s *EnvvarsStore) Store(id string, badge *credentials.Badge) error {
 
 	errContext := "(store::credentials::envvars::Store)"
+	output := []string{}
 
 	if s.console == nil {
 		return errors.New(errContext, "Envvars credentials store requires a console writer")
@@ -82,13 +83,15 @@ func (s *EnvvarsStore) Store(id string, badge *credentials.Badge) error {
 
 			if value != "" {
 				key := generateEnvvarKey(envvarsCredentialsPrefix, id, envvarsCredentialsAttributePrefix, attribute)
-				// s.backend.Setenv(
-				// 	key,
-				// 	value,
-				// )
-				s.console.Warn("You must create the following environment variables to use the recently created credentials:")
-				s.console.Warn(fmt.Sprintf("%s=%s", key, value))
+				output = append(output, fmt.Sprintf("%s=%s", key, value))
 			}
+		}
+	}
+
+	if len(output) > 0 {
+		s.console.Warn("You must create the following environment variables to use the recently created credentials:")
+		for _, key := range output {
+			s.console.Warn(fmt.Sprintf(" %s", key))
 		}
 	}
 
