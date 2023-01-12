@@ -17,9 +17,14 @@ import (
 )
 
 type CredentialsConfiguration struct {
-	StorageType      string
+	// StorageType is the backend used to store credentials
+	StorageType string
+	// LocalStoragePath is the local storage path where credentials are stored
 	LocalStoragePath string
-	Format           string
+	// Format defines the format to store credentials, in case a format is required
+	Format string
+	// EncryptionKey is the key used to encrypt credentials
+	EncryptionKey string
 }
 
 type Configuration struct {
@@ -106,6 +111,8 @@ const (
 	CredentialsKey = "credentials"
 	// CredentialsLocalStoragePathKey is the key for the credentials local storage path
 	CredentialsLocalStoragePathKey = "local_storage_path"
+	// CredentialsEncryptionKeyKey is the key for the credentials encryption token
+	CredentialsEncryptionKeyKey = "encryption_key"
 	// CredentialsStorageTypeKey is the key for the credentials storage type
 	CredentialsStorageTypeKey = "storage_type"
 	// DEPRECATEDBuilderPathKey is the key for the deprecated builder path
