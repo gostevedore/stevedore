@@ -14,6 +14,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/console"
 	credentialscompatibilitiy "github.com/gostevedore/stevedore/internal/infrastructure/credentials/compatibility"
 	credentialsformat "github.com/gostevedore/stevedore/internal/infrastructure/credentials/formater/mock"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/spf13/afero"
@@ -367,11 +368,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 		err        error
 		res        application.CredentialsStorer
 	}{
-		{
-			desc:       "Testing error creating credentials store on create credentials entrypoint when compatibilitier is not provided",
-			entrypoint: NewCreateCredentialsEntrypoint(),
-			err:        errors.New(errContext, "To create the credentials store, compatibilitier is required"),
-		},
+
 		// {
 		// 	desc: "Testing error creating credentials store on create credentials entrypoint when configuration is not provided",
 		// 	entrypoint: NewCreateCredentialsEntrypoint(
@@ -389,16 +386,6 @@ func TestCreateCredentialsStore(t *testing.T) {
 			err:  errors.New(errContext, "To create the credentials store, credentials configuration is required"),
 		},
 		{
-			desc: "Testing error creating credentials store on create credentials entrypoint when credentials format is not provided",
-			entrypoint: NewCreateCredentialsEntrypoint(
-				WithCompatibility(compatibility.NewMockCompatibility()),
-			),
-			conf: &configuration.Configuration{
-				Credentials: &configuration.CredentialsConfiguration{},
-			},
-			err: errors.New(errContext, "To create the credentials store, credentials format must be defined"),
-		},
-		{
 			desc: "Testing error creating credentials store on create credentials entrypoint when credentials storage type is not provided",
 			entrypoint: NewCreateCredentialsEntrypoint(
 				WithCompatibility(compatibility.NewMockCompatibility()),
@@ -410,7 +397,6 @@ func TestCreateCredentialsStore(t *testing.T) {
 			},
 			err: errors.New(errContext, "To create the credentials store, credentials storage type must be defined"),
 		},
-
 		{
 			desc: "Testing error creating credentials store on create credentials entrypoint when options are not provided",
 			entrypoint: NewCreateCredentialsEntrypoint(
@@ -423,6 +409,30 @@ func TestCreateCredentialsStore(t *testing.T) {
 				},
 			},
 			err: errors.New(errContext, "To create the credentials store, options are required"),
+		},
+		{
+			desc:       "Testing error creating local credentials store on create credentials entrypoint when compatibilitier is not provided",
+			entrypoint: NewCreateCredentialsEntrypoint(),
+			conf: &configuration.Configuration{
+				Credentials: &configuration.CredentialsConfiguration{
+					StorageType: credentials.LocalStore,
+				},
+			},
+			options: &Options{},
+			err:     errors.New(errContext, "To create the credentials store, compatibilitier is required"),
+		},
+		{
+			desc: "Testing error creating local credentials store on create credentials entrypoint when credentials format is not provided",
+			entrypoint: NewCreateCredentialsEntrypoint(
+				WithCompatibility(compatibility.NewMockCompatibility()),
+			),
+			conf: &configuration.Configuration{
+				Credentials: &configuration.CredentialsConfiguration{
+					StorageType: credentials.LocalStore,
+				},
+			},
+			options: &Options{},
+			err:     errors.New(errContext, "To create the credentials store, credentials format must be defined"),
 		},
 		{
 			desc: "Testing create a local credentials store on create credentials entrypoint",
@@ -447,6 +457,18 @@ func TestCreateCredentialsStore(t *testing.T) {
 				credentialsformat.NewMockFormater(),
 				credentialscompatibilitiy.NewCredentialsCompatibility(compatibility.NewMockCompatibility()),
 			),
+		},
+		{
+			desc:       "Testing create a envvars credentials store on create credentials entrypoint",
+			entrypoint: NewCreateCredentialsEntrypoint(),
+			conf: &configuration.Configuration{
+				Credentials: &configuration.CredentialsConfiguration{
+					StorageType: credentials.EnvvarsStore,
+				},
+			},
+			options: &Options{},
+			err:     &errors.Error{},
+			res:     envvars.NewEnvvarsStore(),
 		},
 	}
 

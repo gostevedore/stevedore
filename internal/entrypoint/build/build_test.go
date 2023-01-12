@@ -1,7 +1,6 @@
 package build
 
 import (
-	"io/ioutil"
 	"path/filepath"
 	"testing"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	imagesconfiguration "github.com/gostevedore/stevedore/internal/infrastructure/configuration/images"
 	imagesgraphtemplate "github.com/gostevedore/stevedore/internal/infrastructure/configuration/images/graph"
+	"github.com/gostevedore/stevedore/internal/infrastructure/console"
 	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible"
 	defaultdriver "github.com/gostevedore/stevedore/internal/infrastructure/driver/default"
@@ -29,6 +29,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/job"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
+	credentialsenvvarsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/spf13/afero"
@@ -323,7 +324,7 @@ func TestPrepareHandlerOptions(t *testing.T) {
 	}
 }
 
-func TestCreateCredentialsLocalStore(t *testing.T) {
+func TestCreateCredentialsStore(t *testing.T) {
 
 	errContext := "(entrypoint::build::createCredentialsStore)"
 
@@ -331,6 +332,7 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 		desc          string
 		entrypoint    *Entrypoint
 		conf          *configuration.CredentialsConfiguration
+		res           repository.CredentialsStorer
 		compatibility Compatibilitier
 		err           error
 	}{
@@ -388,6 +390,18 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 				LocalStoragePath: "local-storage-path",
 				Format:           credentials.JSONFormat,
 			},
+			res: &credentialslocalstore.LocalStore{},
+			err: &errors.Error{},
+		},
+		{
+			desc: "Testing create credentials envvars store in build entrypoint",
+			entrypoint: NewEntrypoint(
+				WithCompatibility(compatibility.NewMockCompatibility()),
+			),
+			conf: &configuration.CredentialsConfiguration{
+				StorageType: "envvars",
+			},
+			res: &credentialsenvvarsstore.EnvvarsStore{},
 			err: &errors.Error{},
 		},
 	}
@@ -396,11 +410,11 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			store, err := test.entrypoint.createCredentialsLocalStore(test.conf)
+			store, err := test.entrypoint.createCredentialsStore(test.conf)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				assert.IsType(t, &credentialslocalstore.LocalStore{}, store)
+				assert.IsType(t, test.res, store)
 			}
 		})
 	}
@@ -878,7 +892,7 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 		},
 		{
 			desc:        "Testing create build driver factory in build entrypoint",
-			entrypoint:  NewEntrypoint(WithWriter(ioutil.Discard)),
+			entrypoint:  NewEntrypoint(WithWriter(console.NewMockConsole())),
 			credentials: credentialsfactory.NewMockCredentialsFactory(),
 			options:     &Options{},
 			err:         &errors.Error{},

@@ -76,6 +76,13 @@ services:
       - GIT_KEYS=/git/keys
       - CGO_ENABLED=0
       - DOCKER_BUILDKIT=1
+      # Envvars credentials store
+      # stevedore create credentials gitserver.stevedore.test --private-key-file /root/.ssh/id_rsa --ask-private-key-password
+      - STEVEDORE_ENVVARS_CREDENTIALS_GITSERVER_STEVEDORE_TEST_ATTR_PRIVATE_KEY_FILE=/root/.ssh/id_rsa
+      - STEVEDORE_ENVVARS_CREDENTIALS_GITSERVER_STEVEDORE_TEST_ATTR_PRIVATE_KEY_PASSWORD=password
+      # stevedore create credentials registry.stevedore.test --username admin
+      - STEVEDORE_ENVVARS_CREDENTIALS_REGISTRY_STEVEDORE_TEST_ATTR_PASSWORD=admin
+      - STEVEDORE_ENVVARS_CREDENTIALS_REGISTRY_STEVEDORE_TEST_ATTR_USERNAME=admin
     volumes:
       - ssl:/ssl
       - ../..:/app

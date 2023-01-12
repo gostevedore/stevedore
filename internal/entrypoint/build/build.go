@@ -3,7 +3,6 @@ package build
 import (
 	"context"
 	"fmt"
-	"io"
 
 	errors "github.com/apenella/go-common-utils/error"
 	godockerbuild "github.com/apenella/go-docker-builder/pkg/build"
@@ -51,7 +50,8 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/worker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
-	credentialsstorefactory "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/factory"
+	credentialsenvvarsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars"
+	credentialsenvvarsstorebackend "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars/backend"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/spf13/afero"
@@ -67,7 +67,7 @@ type OptionsFunc func(opts *Entrypoint)
 // Entrypoint defines the entrypoint for the build application
 type Entrypoint struct {
 	fs            afero.Fs
-	writer        io.Writer
+	writer        ConsoleWriter
 	compatibility Compatibilitier
 }
 
@@ -80,7 +80,7 @@ func NewEntrypoint(opts ...OptionsFunc) *Entrypoint {
 }
 
 // WithWriter sets the writer for the entrypoint
-func WithWriter(w io.Writer) OptionsFunc {
+func WithWriter(w ConsoleWriter) OptionsFunc {
 	return func(e *Entrypoint) {
 		e.writer = w
 	}
@@ -275,7 +275,7 @@ func (e *Entrypoint) prepareImageName(args []string) (string, error) {
 
 	imageName := args[0]
 	if len(args) > 1 {
-		fmt.Fprintf(e.writer, "Ignoring extra arguments: %v\n", args[1:])
+		e.writer.Warn(fmt.Sprintf("Ignoring extra arguments: %v\n", args[1:]))
 	}
 
 	return imageName, nil
@@ -326,7 +326,9 @@ func (e *Entrypoint) prepareHandlerOptions(conf *configuration.Configuration, in
 	return options, nil
 }
 
-func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.CredentialsConfiguration) (*credentialslocalstore.LocalStore, error) {
+func (e *Entrypoint) createCredentialsStore(conf *configuration.CredentialsConfiguration) (repository.CredentialsStorer, error) {
+
+	var store repository.CredentialsStorer
 
 	errContext := "(entrypoint::build::createCredentialsStore)"
 
@@ -334,16 +336,17 @@ func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.Credentials
 		return nil, errors.New(errContext, "To create credentials store in build entrypoint, credentials configuration is required")
 	}
 
-	if conf.Format == "" {
-		return nil, errors.New(errContext, "To create credentials store in build entrypoint, credentials format must be specified")
-	}
-
-	if e.compatibility == nil {
-		return nil, errors.New(errContext, "To create credentials store in build entrypoint, compatibility is required")
-	}
-
 	switch conf.StorageType {
 	case credentials.LocalStore:
+
+		if conf.Format == "" {
+			return nil, errors.New(errContext, "To create credentials store in build entrypoint, credentials format must be specified")
+		}
+
+		if e.compatibility == nil {
+			return nil, errors.New(errContext, "To create credentials store in build entrypoint, compatibility is required")
+		}
+
 		if conf.LocalStoragePath == "" {
 			return nil, errors.New(errContext, "To create credentials store in build entrypoint, local storage path is required")
 		}
@@ -355,12 +358,19 @@ func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.Credentials
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}
-		store := credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
+		store = credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
 
-		return store, nil
+	case credentials.EnvvarsStore:
+		store = credentialsenvvarsstore.NewEnvvarsStore(
+			credentialsenvvarsstore.WithConsole(e.writer),
+			credentialsenvvarsstore.WithBackend(credentialsenvvarsstorebackend.NewOSEnvvarsBackend()),
+		)
+
 	default:
 		return nil, errors.New(errContext, fmt.Sprintf("Unsupported credentials storage type '%s'", conf.StorageType))
 	}
+
+	return store, nil
 }
 
 func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration) (repository.CredentialsFactorier, error) {
@@ -378,18 +388,19 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 		return nil, errors.New(errContext, "To create the credentials store in build entrypoint, credentials configuration is required")
 	}
 
-	// create credentials store
-	localstore, err := e.createCredentialsLocalStore(conf.Credentials)
+	//storefactory := credentialsstorefactory.NewCredentialsStoreFactory()
+	// create credentials local store
+	store, err := e.createCredentialsStore(conf.Credentials)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
-	storefactory := credentialsstorefactory.NewCredentialsStoreFactory()
-	storefactory.Register(credentials.LocalStore, localstore)
-	// since there is only one store, we can use it directly
-	store, err := storefactory.Get(credentials.LocalStore)
-	if err != nil {
-		return nil, errors.New(errContext, "", err)
-	}
+	// storefactory.Register(credentials.LocalStore, localstore)
+
+	// // since there is only one store, we can use it directly
+	// store, err := storefactory.Get(credentials.LocalStore)
+	// if err != nil {
+	// 	return nil, errors.New(errContext, "", err)
+	// }
 
 	// create authorization methods
 	basic := authmethodbasic.NewBasicAuthMethod()
@@ -407,7 +418,6 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 			token.NewECRClientFactory(
 				func(cfg aws.Config) token.ECRClienter {
 					c := ecr.NewFromConfig(cfg)
-
 					return c
 				},
 			),
