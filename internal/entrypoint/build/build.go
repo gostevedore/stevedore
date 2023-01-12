@@ -51,7 +51,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/worker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
-	credentialsstorefactory "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/factory"
+	credentialsenvvarsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/spf13/afero"
@@ -326,7 +326,9 @@ func (e *Entrypoint) prepareHandlerOptions(conf *configuration.Configuration, in
 	return options, nil
 }
 
-func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.CredentialsConfiguration) (*credentialslocalstore.LocalStore, error) {
+func (e *Entrypoint) createCredentialsStore(conf *configuration.CredentialsConfiguration) (repository.CredentialsStorer, error) {
+
+	var store repository.CredentialsStorer
 
 	errContext := "(entrypoint::build::createCredentialsStore)"
 
@@ -334,16 +336,17 @@ func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.Credentials
 		return nil, errors.New(errContext, "To create credentials store in build entrypoint, credentials configuration is required")
 	}
 
-	if conf.Format == "" {
-		return nil, errors.New(errContext, "To create credentials store in build entrypoint, credentials format must be specified")
-	}
-
-	if e.compatibility == nil {
-		return nil, errors.New(errContext, "To create credentials store in build entrypoint, compatibility is required")
-	}
-
 	switch conf.StorageType {
 	case credentials.LocalStore:
+
+		if conf.Format == "" {
+			return nil, errors.New(errContext, "To create credentials store in build entrypoint, credentials format must be specified")
+		}
+
+		if e.compatibility == nil {
+			return nil, errors.New(errContext, "To create credentials store in build entrypoint, compatibility is required")
+		}
+
 		if conf.LocalStoragePath == "" {
 			return nil, errors.New(errContext, "To create credentials store in build entrypoint, local storage path is required")
 		}
@@ -355,12 +358,16 @@ func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.Credentials
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}
-		store := credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
+		store = credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
 
-		return store, nil
+	case credentials.EnvvarsStore:
+		store = credentialsenvvarsstore.NewEnvvarsStore()
+
 	default:
 		return nil, errors.New(errContext, fmt.Sprintf("Unsupported credentials storage type '%s'", conf.StorageType))
 	}
+
+	return store, nil
 }
 
 func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration) (repository.CredentialsFactorier, error) {
@@ -378,18 +385,19 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 		return nil, errors.New(errContext, "To create the credentials store in build entrypoint, credentials configuration is required")
 	}
 
-	// create credentials store
-	localstore, err := e.createCredentialsLocalStore(conf.Credentials)
+	//storefactory := credentialsstorefactory.NewCredentialsStoreFactory()
+	// create credentials local store
+	store, err := e.createCredentialsStore(conf.Credentials)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
-	storefactory := credentialsstorefactory.NewCredentialsStoreFactory()
-	storefactory.Register(credentials.LocalStore, localstore)
-	// since there is only one store, we can use it directly
-	store, err := storefactory.Get(credentials.LocalStore)
-	if err != nil {
-		return nil, errors.New(errContext, "", err)
-	}
+	// storefactory.Register(credentials.LocalStore, localstore)
+
+	// // since there is only one store, we can use it directly
+	// store, err := storefactory.Get(credentials.LocalStore)
+	// if err != nil {
+	// 	return nil, errors.New(errContext, "", err)
+	// }
 
 	// create authorization methods
 	basic := authmethodbasic.NewBasicAuthMethod()
