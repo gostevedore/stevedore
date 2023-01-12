@@ -80,12 +80,15 @@ func (s *EnvvarsStore) Store(id string, badge *credentials.Badge) error {
 				return errors.New(errContext, fmt.Sprintf("Error converting to '%s''s value", attribute), err)
 			}
 
-			key := generateEnvvarKey(envvarsCredentialsPrefix, id, envvarsCredentialsAttributePrefix, attribute)
-			s.backend.Setenv(
-				key,
-				value,
-			)
-			s.console.Info(fmt.Sprintf("%s=%s", key, value))
+			if value != "" {
+				key := generateEnvvarKey(envvarsCredentialsPrefix, id, envvarsCredentialsAttributePrefix, attribute)
+				// s.backend.Setenv(
+				// 	key,
+				// 	value,
+				// )
+				s.console.Warn("You must create the following environment variables to use the recently created credentials:")
+				s.console.Warn(fmt.Sprintf("%s=%s", key, value))
+			}
 		}
 	}
 

@@ -3,7 +3,6 @@ package credentials
 import (
 	"context"
 	"fmt"
-	"io"
 
 	errors "github.com/apenella/go-common-utils/error"
 	application "github.com/gostevedore/stevedore/internal/application/get/credentials"
@@ -21,6 +20,8 @@ import (
 	sshagent "github.com/gostevedore/stevedore/internal/infrastructure/output/credentials/types/SSHAgent"
 	privatekeyfile "github.com/gostevedore/stevedore/internal/infrastructure/output/credentials/types/privateKeyFile"
 	usernamepassword "github.com/gostevedore/stevedore/internal/infrastructure/output/credentials/types/usernamePassword"
+	credentialsenvvarsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars"
+	credentialsenvvarsstorebackend "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars/backend"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/spf13/afero"
 )
@@ -31,7 +32,7 @@ type OptionsFunc func(opts *Entrypoint)
 // Entrypoint defines the entrypoint for the application
 type Entrypoint struct {
 	fs            afero.Fs
-	writer        io.Writer
+	writer        ConsoleWriter
 	compatibility Compatibilitier
 }
 
@@ -44,7 +45,7 @@ func NewEntrypoint(opts ...OptionsFunc) *Entrypoint {
 }
 
 // WithWriter sets the writer for the entrypoint
-func WithWriter(w io.Writer) OptionsFunc {
+func WithWriter(w ConsoleWriter) OptionsFunc {
 	return func(e *Entrypoint) {
 		e.writer = w
 	}
@@ -116,6 +117,10 @@ func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.Credentials
 
 	errContext := "(get::credentials::entrypoint::createCredentialsLocalStore)"
 
+	if e.fs == nil {
+		return nil, errors.New(errContext, "To create credentials local store in the entrypoint, a file system is required")
+	}
+
 	if conf == nil {
 		return nil, errors.New(errContext, "To create credentials local store in the entrypoint, credentials configuration is required")
 	}
@@ -139,12 +144,19 @@ func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.Credentials
 	return store, nil
 }
 
+func (e *Entrypoint) createCredentialsEnvvarsStore() (*credentialsenvvarsstore.EnvvarsStore, error) {
+	store := credentialsenvvarsstore.NewEnvvarsStore(
+		credentialsenvvarsstore.WithConsole(e.writer),
+		credentialsenvvarsstore.WithBackend(credentialsenvvarsstorebackend.NewOSEnvvarsBackend()),
+	)
+
+	return store, nil
+}
+
 func (e *Entrypoint) createCredentialsFilter(conf *configuration.Configuration) (repository.CredentialsFilterer, error) {
 	errContext := "(get::credentials::entrypoint::createCredentialsFilter)"
-
-	if e.fs == nil {
-		return nil, errors.New(errContext, "To create the credentials filter in the entrypoint, a file system is required")
-	}
+	var store repository.CredentialsFilterer
+	var err error
 
 	if conf == nil {
 		return nil, errors.New(errContext, "To create the credentials filter in the entrypoint, configuration is required")
@@ -161,12 +173,19 @@ func (e *Entrypoint) createCredentialsFilter(conf *configuration.Configuration) 
 		}
 
 		// create credentials store
-		localstore, err := e.createCredentialsLocalStore(conf.Credentials)
+		store, err = e.createCredentialsLocalStore(conf.Credentials)
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}
-		return localstore, nil
+
+	case credentials.EnvvarsStore:
+		store, err = e.createCredentialsEnvvarsStore()
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
+
 	default:
 		return nil, errors.New(errContext, fmt.Sprintf("Unsupported credentials storage type '%s'", conf.Credentials.StorageType))
 	}
+	return store, nil
 }

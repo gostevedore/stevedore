@@ -1,7 +1,6 @@
 package build
 
 import (
-	"io/ioutil"
 	"path/filepath"
 	"testing"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	imagesconfiguration "github.com/gostevedore/stevedore/internal/infrastructure/configuration/images"
 	imagesgraphtemplate "github.com/gostevedore/stevedore/internal/infrastructure/configuration/images/graph"
+	"github.com/gostevedore/stevedore/internal/infrastructure/console"
 	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible"
 	defaultdriver "github.com/gostevedore/stevedore/internal/infrastructure/driver/default"
@@ -892,7 +892,7 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 		},
 		{
 			desc:        "Testing create build driver factory in build entrypoint",
-			entrypoint:  NewEntrypoint(WithWriter(ioutil.Discard)),
+			entrypoint:  NewEntrypoint(WithWriter(console.NewMockConsole())),
 			credentials: credentialsfactory.NewMockCredentialsFactory(),
 			options:     &Options{},
 			err:         &errors.Error{},

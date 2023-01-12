@@ -3,7 +3,6 @@ package build
 import (
 	"context"
 	"fmt"
-	"io"
 
 	errors "github.com/apenella/go-common-utils/error"
 	godockerbuild "github.com/apenella/go-docker-builder/pkg/build"
@@ -52,6 +51,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
 	credentialsenvvarsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars"
+	credentialsenvvarsstorebackend "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars/backend"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/images"
 	"github.com/spf13/afero"
@@ -67,7 +67,7 @@ type OptionsFunc func(opts *Entrypoint)
 // Entrypoint defines the entrypoint for the build application
 type Entrypoint struct {
 	fs            afero.Fs
-	writer        io.Writer
+	writer        ConsoleWriter
 	compatibility Compatibilitier
 }
 
@@ -80,7 +80,7 @@ func NewEntrypoint(opts ...OptionsFunc) *Entrypoint {
 }
 
 // WithWriter sets the writer for the entrypoint
-func WithWriter(w io.Writer) OptionsFunc {
+func WithWriter(w ConsoleWriter) OptionsFunc {
 	return func(e *Entrypoint) {
 		e.writer = w
 	}
@@ -275,7 +275,7 @@ func (e *Entrypoint) prepareImageName(args []string) (string, error) {
 
 	imageName := args[0]
 	if len(args) > 1 {
-		fmt.Fprintf(e.writer, "Ignoring extra arguments: %v\n", args[1:])
+		e.writer.Warn(fmt.Sprintf("Ignoring extra arguments: %v\n", args[1:]))
 	}
 
 	return imageName, nil
@@ -361,7 +361,10 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.CredentialsConfi
 		store = credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
 
 	case credentials.EnvvarsStore:
-		store = credentialsenvvarsstore.NewEnvvarsStore()
+		store = credentialsenvvarsstore.NewEnvvarsStore(
+			credentialsenvvarsstore.WithConsole(e.writer),
+			credentialsenvvarsstore.WithBackend(credentialsenvvarsstorebackend.NewOSEnvvarsBackend()),
+		)
 
 	default:
 		return nil, errors.New(errContext, fmt.Sprintf("Unsupported credentials storage type '%s'", conf.StorageType))
@@ -415,7 +418,6 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 			token.NewECRClientFactory(
 				func(cfg aws.Config) token.ECRClienter {
 					c := ecr.NewFromConfig(cfg)
-
 					return c
 				},
 			),

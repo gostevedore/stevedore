@@ -20,7 +20,7 @@ images:
                   # ID                               TYPE              CRENDENTIALS
                   # 82e99d42ee1191bb42fbfb444920104d username-password username=admin
                   # bb0876e6bbd033a93e5242ec916a9c03 Private key file  private_key_file=/root/.ssh/id_rsa, protected by password
-                  credentials_id: gitserver
+                  credentials_id: gitserver.stevedore.test
       parents:
         alpine:
           - "3.16"

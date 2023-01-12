@@ -6,3 +6,11 @@ type Compatibilitier interface {
 	AddRemoved(removed ...string)
 	AddChanged(changed ...string)
 }
+
+type ConsoleWriter interface {
+	Debug(msg ...interface{})
+	Error(msg ...interface{})
+	Info(msg ...interface{})
+	Warn(msg ...interface{})
+	Write(data []byte) (int, error)
+}

@@ -48,15 +48,16 @@ func TestStore(t *testing.T) {
 				AWSSharedCredentialsFiles:     []string{"file1", "file2"},
 			},
 			prepareAssertFunc: func(s *EnvvarsStore) {
-				s.backend.(*backend.MockEnvvarsBackend).On("Setenv", "STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY_TEST_5000_ATTR_AWS_SHARED_CREDENTIALS_FILES", "file1,file2")
-				s.backend.(*backend.MockEnvvarsBackend).On("Setenv", "STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY_TEST_5000_ATTR_AWS_USE_DEFAULT_CREDENTIALS_CHAIN", "1")
-				s.backend.(*backend.MockEnvvarsBackend).On("Setenv", "STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY_TEST_5000_ATTR_PASSWORD", "password")
-				s.backend.(*backend.MockEnvvarsBackend).On("Setenv", "STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY_TEST_5000_ATTR_USERNAME", "username")
+				// s.backend.(*backend.MockEnvvarsBackend).On("Setenv", "STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY_TEST_5000_ATTR_AWS_SHARED_CREDENTIALS_FILES", "file1,file2")
+				// s.backend.(*backend.MockEnvvarsBackend).On("Setenv", "STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY_TEST_5000_ATTR_AWS_USE_DEFAULT_CREDENTIALS_CHAIN", "1")
+				// s.backend.(*backend.MockEnvvarsBackend).On("Setenv", "STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY_TEST_5000_ATTR_PASSWORD", "password")
+				// s.backend.(*backend.MockEnvvarsBackend).On("Setenv", "STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY_TEST_5000_ATTR_USERNAME", "username")
 
-				s.console.(*console.MockConsole).On("Info", []interface{}{"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY_TEST_5000_ATTR_AWS_SHARED_CREDENTIALS_FILES=file1,file2"})
-				s.console.(*console.MockConsole).On("Info", []interface{}{"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY_TEST_5000_ATTR_AWS_USE_DEFAULT_CREDENTIALS_CHAIN=1"})
-				s.console.(*console.MockConsole).On("Info", []interface{}{"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY_TEST_5000_ATTR_PASSWORD=password"})
-				s.console.(*console.MockConsole).On("Info", []interface{}{"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY_TEST_5000_ATTR_USERNAME=username"})
+				s.console.(*console.MockConsole).On("Warn", []interface{}{"You must create the following environment variables to use the recently created credentials:"})
+				s.console.(*console.MockConsole).On("Warn", []interface{}{"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY_TEST_5000_ATTR_AWS_SHARED_CREDENTIALS_FILES=file1,file2"})
+				s.console.(*console.MockConsole).On("Warn", []interface{}{"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY_TEST_5000_ATTR_AWS_USE_DEFAULT_CREDENTIALS_CHAIN=1"})
+				s.console.(*console.MockConsole).On("Warn", []interface{}{"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY_TEST_5000_ATTR_PASSWORD=password"})
+				s.console.(*console.MockConsole).On("Warn", []interface{}{"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY_TEST_5000_ATTR_USERNAME=username"})
 			},
 		},
 	}
@@ -300,7 +301,7 @@ func TestAll(t *testing.T) {
 		}
 
 		res := test.store.All()
-		assert.Equal(t, test.res, res)
+		assert.ElementsMatch(t, test.res, res)
 
 	}
 }

@@ -12,6 +12,8 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	credentialscompatibility "github.com/gostevedore/stevedore/internal/infrastructure/credentials/compatibility"
 	credentialsformatfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/formater/factory"
+	credentialsenvvarsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars"
+	credentialsenvvarsstorebackend "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars/backend"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/spf13/afero"
@@ -287,11 +289,8 @@ func (e *CreateCredentialsEntrypoint) createCredentialsStore(conf *configuration
 
 	var store application.CredentialsStorer
 	var err error
+	var credentialsFormat repository.Formater
 	errContext := "(create::credentials::entrypoint:::createCredentialsLocalStore)"
-
-	if e.compatibility == nil {
-		return nil, errors.New(errContext, "To create the credentials store, compatibilitier is required")
-	}
 
 	if conf == nil {
 		return nil, errors.New(errContext, "To create the credentials store, configuration is required")
@@ -299,10 +298,6 @@ func (e *CreateCredentialsEntrypoint) createCredentialsStore(conf *configuration
 
 	if conf.Credentials == nil {
 		return nil, errors.New(errContext, "To create the credentials store, credentials configuration is required")
-	}
-
-	if conf.Credentials.Format == "" {
-		return nil, errors.New(errContext, "To create the credentials store, credentials format must be defined")
 	}
 
 	if conf.Credentials.StorageType == "" {
@@ -313,15 +308,23 @@ func (e *CreateCredentialsEntrypoint) createCredentialsStore(conf *configuration
 		return nil, errors.New(errContext, "To create the credentials store, options are required")
 	}
 
-	credentialsCompatibility := credentialscompatibility.NewCredentialsCompatibility(e.compatibility)
-	credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
-	credentialsFormat, err := credentialsFormatFactory.Get(conf.Credentials.Format)
-	if err != nil {
-		return nil, errors.New(errContext, "", err)
-	}
-
 	switch conf.Credentials.StorageType {
 	case credentials.LocalStore:
+
+		if e.compatibility == nil {
+			return nil, errors.New(errContext, "To create the credentials store, compatibilitier is required")
+		}
+
+		if conf.Credentials.Format == "" {
+			return nil, errors.New(errContext, "To create the credentials store, credentials format must be defined")
+		}
+
+		credentialsCompatibility := credentialscompatibility.NewCredentialsCompatibility(e.compatibility)
+		credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
+		credentialsFormat, err = credentialsFormatFactory.Get(conf.Credentials.Format)
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
 
 		if options.ForceCreate {
 			store, err = e.createCredentialsLocalStore(credentialsCompatibility, conf.Credentials, credentialsFormat)
@@ -335,11 +338,26 @@ func (e *CreateCredentialsEntrypoint) createCredentialsStore(conf *configuration
 			}
 		}
 
-		return store, nil
+	case credentials.EnvvarsStore:
+		store, err = e.createCredentialsEnvvarsStore()
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
+
 	default:
 		return nil, errors.New(errContext, fmt.Sprintf("Unsupported credentials storage type '%s'", conf.Credentials.StorageType))
 	}
 
+	return store, nil
+}
+
+func (e *CreateCredentialsEntrypoint) createCredentialsEnvvarsStore() (*credentialsenvvarsstore.EnvvarsStore, error) {
+	store := credentialsenvvarsstore.NewEnvvarsStore(
+		credentialsenvvarsstore.WithConsole(e.console),
+		credentialsenvvarsstore.WithBackend(credentialsenvvarsstorebackend.NewOSEnvvarsBackend()),
+	)
+
+	return store, nil
 }
 
 func (e *CreateCredentialsEntrypoint) createCredentialsLocalStore(comp credentialslocalstore.CredentialsCompatibilier, conf *configuration.CredentialsConfiguration, format repository.Formater) (*local.LocalStore, error) {

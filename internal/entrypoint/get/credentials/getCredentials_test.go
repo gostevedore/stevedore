@@ -2,13 +2,16 @@ package credentials
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	"github.com/gostevedore/stevedore/internal/infrastructure/compatibility"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
+	"github.com/gostevedore/stevedore/internal/infrastructure/console"
+	credentialsenvvarsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -33,7 +36,7 @@ func TestExecute(t *testing.T) {
 		{
 			desc: "Testing execute get credentials entrypoint",
 			entrypoint: NewEntrypoint(
-				WithWriter(ioutil.Discard),
+				WithWriter(console.NewConsole(io.Discard, nil)),
 				WithFileSystem(afero.NewMemMapFs()),
 				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
@@ -74,17 +77,28 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 		{
 			desc:       "Testing error creating credentials local storage on get credentials entrypoint when configuration is not defined",
 			entrypoint: NewEntrypoint(),
-			err:        errors.New(errContext, "To create credentials local store in the entrypoint, credentials configuration is required"),
+			err:        errors.New(errContext, "To create credentials local store in the entrypoint, a file system is required"),
 		},
 		{
-			desc:       "Testing error creating credentials local storage on get credentials entrypoint when credentials format is not defined",
-			entrypoint: NewEntrypoint(),
-			conf:       &configuration.CredentialsConfiguration{},
-			err:        errors.New(errContext, "To create credentials local store in the entrypoint, credentials format must be specified"),
+			desc: "Testing error creating credentials local storage on get credentials entrypoint when configuration is not defined",
+			entrypoint: NewEntrypoint(
+				WithFileSystem(afero.NewMemMapFs()),
+			),
+			err: errors.New(errContext, "To create credentials local store in the entrypoint, credentials configuration is required"),
 		},
 		{
-			desc:       "Testing error creating credentials local storage on get credentials entrypoint when credentials format is not defined",
-			entrypoint: NewEntrypoint(),
+			desc: "Testing error creating credentials local storage on get credentials entrypoint when credentials format is not defined",
+			entrypoint: NewEntrypoint(
+				WithFileSystem(afero.NewMemMapFs()),
+			),
+			conf: &configuration.CredentialsConfiguration{},
+			err:  errors.New(errContext, "To create credentials local store in the entrypoint, credentials format must be specified"),
+		},
+		{
+			desc: "Testing error creating credentials local storage on get credentials entrypoint when credentials format is not defined",
+			entrypoint: NewEntrypoint(
+				WithFileSystem(afero.NewMemMapFs()),
+			),
 			conf: &configuration.CredentialsConfiguration{
 				Format: "json",
 			},
@@ -93,6 +107,7 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 		{
 			desc: "Testing error creating credentials local storage on get credentials entrypoint when local storage path is not defined",
 			entrypoint: NewEntrypoint(
+				WithFileSystem(afero.NewMemMapFs()),
 				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
 			conf: &configuration.CredentialsConfiguration{
@@ -150,28 +165,19 @@ func TestCredentialsFilter(t *testing.T) {
 		desc       string
 		entrypoint *Entrypoint
 		conf       *configuration.Configuration
-		res        *credentialslocalstore.LocalStore
+		res        repository.CredentialsFilterer
 		err        error
 	}{
 		{
-			desc:       "Testing error creating credentials filter on get credentials when file system is not defined",
+			desc:       "Testing error creating credentials filter on get credentials when configuration is not defined",
 			entrypoint: NewEntrypoint(),
-			err:        errors.New(errContext, "To create the credentials filter in the entrypoint, a file system is required"),
+			err:        errors.New(errContext, "To create the credentials filter in the entrypoint, configuration is required"),
 		},
 		{
-			desc: "Testing error creating credentials filter on get credentials when configuration is not defined",
-			entrypoint: NewEntrypoint(
-				WithFileSystem(afero.NewMemMapFs()),
-			),
-			err: errors.New(errContext, "To create the credentials filter in the entrypoint, configuration is required"),
-		},
-		{
-			desc: "Testing error creating credentials filter on get credentials when credentials configuration is not defined",
-			entrypoint: NewEntrypoint(
-				WithFileSystem(afero.NewMemMapFs()),
-			),
-			conf: &configuration.Configuration{},
-			err:  errors.New(errContext, "To create the credentials filter in the entrypoint, credentials configuration is required"),
+			desc:       "Testing error creating credentials filter on get credentials when credentials configuration is not defined",
+			entrypoint: NewEntrypoint(),
+			conf:       &configuration.Configuration{},
+			err:        errors.New(errContext, "To create the credentials filter in the entrypoint, credentials configuration is required"),
 		},
 		{
 			desc: "Testing create credentials filter on get credentials",
@@ -187,6 +193,16 @@ func TestCredentialsFilter(t *testing.T) {
 				},
 			},
 			res: &credentialslocalstore.LocalStore{},
+		},
+		{
+			desc:       "Testing create credentials filter on get credentials",
+			entrypoint: NewEntrypoint(),
+			conf: &configuration.Configuration{
+				Credentials: &configuration.CredentialsConfiguration{
+					StorageType: credentials.EnvvarsStore,
+				},
+			},
+			res: &credentialsenvvarsstore.EnvvarsStore{},
 		},
 	}
 
