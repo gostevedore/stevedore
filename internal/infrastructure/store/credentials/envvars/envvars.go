@@ -127,8 +127,32 @@ func (s *EnvvarsStore) Get(id string) (*credentials.Badge, error) {
 	errContext := "(store::credentials::envvars::Get)"
 
 	var err error
-	var hashedID, key, encryptedBadge, strBadge string
+	var hashedID string
 	var badge *credentials.Badge
+
+	if id == "" {
+		return nil, errors.New(errContext, "To get credentials badge, is required an ID")
+	}
+
+	hashedID, err = encryption.HashID(id)
+	if err != nil {
+		return nil, errors.New(errContext, fmt.Sprintf("Error hashing the id '%s'", id), err)
+	}
+
+	badge, err = s.get(hashedID)
+	if err != nil {
+		return nil, errors.New(errContext, fmt.Sprintf("Error getting credentials badge '%s'", id), err)
+	}
+
+	return badge, nil
+}
+
+func (s *EnvvarsStore) get(hashedID string) (*credentials.Badge, error) {
+	var err error
+	var key, encryptedBadge, strBadge string
+	var badge *credentials.Badge
+
+	errContext := "(store::credentials::envvars::get)"
 
 	if s.backend == nil {
 		return nil, errors.New(errContext, "Envvars credentials store requires a backend to get credentials badge")
@@ -142,25 +166,17 @@ func (s *EnvvarsStore) Get(id string) (*credentials.Badge, error) {
 		return nil, errors.New(errContext, "Envvars credentials store requires encryption to get credentials badge")
 	}
 
-	if id == "" {
-		return nil, errors.New(errContext, "To get credentials badge, is required an ID")
-	}
-
-	hashedID, err = encryption.HashID(id)
-	if err != nil {
-		return nil, errors.New(errContext, fmt.Sprintf("Error hashing the id '%s'", id), err)
-	}
 	key = generateEnvvarKey(envvarsCredentialsPrefix, hashedID)
 	encryptedBadge = s.backend.Getenv(key)
 
 	strBadge, err = s.encyption.Decrypt(encryptedBadge)
 	if err != nil {
-		return nil, errors.New(errContext, fmt.Sprintf("Error decrypting the '%s''s badge", id), err)
+		return nil, errors.New(errContext, fmt.Sprintf("Error decrypting the '%s''s badge", hashedID), err)
 	}
 
 	badge, err = s.formater.Unmarshal([]byte(strBadge))
 	if err != nil {
-		return nil, errors.New(errContext, fmt.Sprintf("Error unmarshaling the '%s''s badge", id), err)
+		return nil, errors.New(errContext, fmt.Sprintf("Error unmarshaling the '%s''s badge", hashedID), err)
 	}
 
 	return badge, nil
@@ -188,27 +204,6 @@ func (s *EnvvarsStore) All() []*credentials.Badge {
 
 	return badges
 }
-
-// func convertFieldValueToString(field interface{}) (string, error) {
-// 	errContext := "(store::credentials::envvars::convertFieldValueToString)"
-
-// 	switch field.(type) {
-// 	case string:
-// 		return fmt.Sprintf("%s", field), nil
-// 	case []string:
-// 		return strings.Join(field.([]string), ","), nil
-// 	case bool:
-// 		val := "0"
-// 		if field.(bool) {
-// 			val = "1"
-// 		}
-// 		return fmt.Sprintf("%s", val), nil
-// 	case int:
-// 		return fmt.Sprintf("%d", field), nil
-// 	default:
-// 		return "", errors.New(errContext, "Field could not be converted to string")
-// 	}
-// }
 
 func generateEnvvarKey(items ...string) string {
 	var key string

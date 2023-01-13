@@ -144,7 +144,8 @@ func TestStore(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	errContext := "(store::credentials::envvars::Get)"
+	errContextGet := "(store::credentials::envvars::Get)"
+	errContextPrivGet := "(store::credentials::envvars::get)"
 
 	tests := []struct {
 		desc              string
@@ -156,16 +157,25 @@ func TestGet(t *testing.T) {
 		err               error
 	}{
 		{
+			desc:  "Testing error getting envvars credentials when ID is not provided",
+			store: NewEnvvarsStore(),
+			err:   errors.New(errContextGet, "To get credentials badge, is required an ID"),
+		},
+		{
 			desc:  "Testing error getting envvars credentials when backend is not provided",
 			store: NewEnvvarsStore(),
-			err:   errors.New(errContext, "Envvars credentials store requires a backend to get credentials badge"),
+			id:    "myregistry.test:5000",
+			err: errors.New(errContextGet, "Error getting credentials badge 'myregistry.test:5000'",
+				errors.New(errContextPrivGet, "Envvars credentials store requires a backend to get credentials badge")),
 		},
 		{
 			desc: "Testing error getting envvars credentials when env vars formater is not provided",
 			store: NewEnvvarsStore(
 				WithBackend(backend.NewMockEnvvarsBackend()),
 			),
-			err: errors.New(errContext, "Envvars credentials store requires a formater to get credentials badge"),
+			id: "myregistry.test:5000",
+			err: errors.New(errContextGet, "Error getting credentials badge 'myregistry.test:5000'",
+				errors.New(errContextPrivGet, "Envvars credentials store requires a formater to get credentials badge")),
 		},
 		{
 			desc: "Testing error getting envvars credentials when encryption is not provided",
@@ -173,16 +183,9 @@ func TestGet(t *testing.T) {
 				WithBackend(backend.NewMockEnvvarsBackend()),
 				WithFormater(credentialsformater.NewMockFormater()),
 			),
-			err: errors.New(errContext, "Envvars credentials store requires encryption to get credentials badge"),
-		},
-		{
-			desc: "Testing error getting envvars credentials when ID is not provided",
-			store: NewEnvvarsStore(
-				WithBackend(backend.NewMockEnvvarsBackend()),
-				WithFormater(credentialsformater.NewMockFormater()),
-				WithEncryption(encryption.NewMockEncryption()),
-			),
-			err: errors.New(errContext, "To get credentials badge, is required an ID"),
+			id: "myregistry.test:5000",
+			err: errors.New(errContextGet, "Error getting credentials badge 'myregistry.test:5000'",
+				errors.New(errContextPrivGet, "Envvars credentials store requires encryption to get credentials badge")),
 		},
 		{
 			desc: "Testing get envvars credentials badge",
@@ -266,155 +269,156 @@ func TestGet(t *testing.T) {
 // 	}
 // }
 
-// func TestAll(t *testing.T) {
-// 	tests := []struct {
-// 		desc              string
-// 		store             *EnvvarsStore
-// 		prepareAssertFunc func(*EnvvarsStore)
-// 		res               []*credentials.Badge
-// 	}{
-// 		{
-// 			desc: "Testing achieving all badges from envvars store",
-// 			store: NewEnvvarsStore(
-// 				WithConsole(console.NewMockConsole()),
-// 				WithBackend(backend.NewMockEnvvarsBackend()),
-// 			),
-// 			prepareAssertFunc: func(s *EnvvarsStore) {
-// 				s.backend.(*backend.MockEnvvarsBackend).On("Environ").Return(
-// 					[]string{
-// 						"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY1_TEST_5000_ATTR_USERNAME=username",
-// 						"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY1_TEST_5000_ATTR_PASSWORD=password",
-// 						"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY2_TEST_5000_ATTR_USERNAME=username",
-// 						"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY2_TEST_5000_ATTR_PASSWORD=password",
-// 						"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY3_TEST_5000_ATTR_USERNAME=username",
-// 						"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY3_TEST_5000_ATTR_PASSWORD=password",
-// 					},
-// 				)
+func TestAll(t *testing.T) {
+	tests := []struct {
+		desc              string
+		store             *EnvvarsStore
+		prepareAssertFunc func(*EnvvarsStore)
+		res               []*credentials.Badge
+	}{
+		{
+			desc: "Testing achieving all badges from envvars store",
+			store: NewEnvvarsStore(
+				WithConsole(console.NewMockConsole()),
+				WithBackend(backend.NewMockEnvvarsBackend()),
+			),
+			prepareAssertFunc: func(s *EnvvarsStore) {
 
-// 				s.backend.(*backend.MockEnvvarsBackend).On("AchieveBadge", "STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY1_TEST_5000_ATTR").Return(
-// 					&credentials.Badge{
-// 						ID:                            "myregistry1_test_5000",
-// 						AllowUseSSHAgent:              false,
-// 						AWSAccessKeyID:                "",
-// 						AWSProfile:                    "",
-// 						AWSRegion:                     "",
-// 						AWSRoleARN:                    "",
-// 						AWSSecretAccessKey:            "",
-// 						AWSSharedConfigFiles:          []string{},
-// 						AWSSharedCredentialsFiles:     []string{},
-// 						AWSUseDefaultCredentialsChain: false,
-// 						GitSSHUser:                    "",
-// 						Password:                      "password",
-// 						PrivateKeyFile:                "",
-// 						PrivateKeyPassword:            "",
-// 						Username:                      "username",
-// 					}, nil)
+				// s.backend.(*backend.MockEnvvarsBackend).On("Environ").Return(
+				// 	[]string{
+				// 		"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY1_TEST_5000_ATTR_USERNAME=username",
+				// 		"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY1_TEST_5000_ATTR_PASSWORD=password",
+				// 		"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY2_TEST_5000_ATTR_USERNAME=username",
+				// 		"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY2_TEST_5000_ATTR_PASSWORD=password",
+				// 		"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY3_TEST_5000_ATTR_USERNAME=username",
+				// 		"STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY3_TEST_5000_ATTR_PASSWORD=password",
+				// 	},
+				// )
 
-// 				s.backend.(*backend.MockEnvvarsBackend).On("AchieveBadge", "STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY2_TEST_5000_ATTR").Return(
-// 					&credentials.Badge{
-// 						ID:                            "myregistry2_test_5000",
-// 						AllowUseSSHAgent:              false,
-// 						AWSAccessKeyID:                "",
-// 						AWSProfile:                    "",
-// 						AWSRegion:                     "",
-// 						AWSRoleARN:                    "",
-// 						AWSSecretAccessKey:            "",
-// 						AWSSharedConfigFiles:          []string{},
-// 						AWSSharedCredentialsFiles:     []string{},
-// 						AWSUseDefaultCredentialsChain: false,
-// 						GitSSHUser:                    "",
-// 						Password:                      "password",
-// 						PrivateKeyFile:                "",
-// 						PrivateKeyPassword:            "",
-// 						Username:                      "username",
-// 					}, nil)
+				// 		s.backend.(*backend.MockEnvvarsBackend).On("AchieveBadge", "STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY1_TEST_5000_ATTR").Return(
+				// 			&credentials.Badge{
+				// 				ID:                            "myregistry1_test_5000",
+				// 				AllowUseSSHAgent:              false,
+				// 				AWSAccessKeyID:                "",
+				// 				AWSProfile:                    "",
+				// 				AWSRegion:                     "",
+				// 				AWSRoleARN:                    "",
+				// 				AWSSecretAccessKey:            "",
+				// 				AWSSharedConfigFiles:          []string{},
+				// 				AWSSharedCredentialsFiles:     []string{},
+				// 				AWSUseDefaultCredentialsChain: false,
+				// 				GitSSHUser:                    "",
+				// 				Password:                      "password",
+				// 				PrivateKeyFile:                "",
+				// 				PrivateKeyPassword:            "",
+				// 				Username:                      "username",
+				// 			}, nil)
 
-// 				s.backend.(*backend.MockEnvvarsBackend).On("AchieveBadge", "STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY3_TEST_5000_ATTR").Return(
-// 					&credentials.Badge{
-// 						ID:                            "myregistry3_test_5000",
-// 						AllowUseSSHAgent:              false,
-// 						AWSAccessKeyID:                "",
-// 						AWSProfile:                    "",
-// 						AWSRegion:                     "",
-// 						AWSRoleARN:                    "",
-// 						AWSSecretAccessKey:            "",
-// 						AWSSharedConfigFiles:          []string{},
-// 						AWSSharedCredentialsFiles:     []string{},
-// 						AWSUseDefaultCredentialsChain: false,
-// 						GitSSHUser:                    "",
-// 						Password:                      "password",
-// 						PrivateKeyFile:                "",
-// 						PrivateKeyPassword:            "",
-// 						Username:                      "username",
-// 					}, nil)
+				// 		s.backend.(*backend.MockEnvvarsBackend).On("AchieveBadge", "STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY2_TEST_5000_ATTR").Return(
+				// 			&credentials.Badge{
+				// 				ID:                            "myregistry2_test_5000",
+				// 				AllowUseSSHAgent:              false,
+				// 				AWSAccessKeyID:                "",
+				// 				AWSProfile:                    "",
+				// 				AWSRegion:                     "",
+				// 				AWSRoleARN:                    "",
+				// 				AWSSecretAccessKey:            "",
+				// 				AWSSharedConfigFiles:          []string{},
+				// 				AWSSharedCredentialsFiles:     []string{},
+				// 				AWSUseDefaultCredentialsChain: false,
+				// 				GitSSHUser:                    "",
+				// 				Password:                      "password",
+				// 				PrivateKeyFile:                "",
+				// 				PrivateKeyPassword:            "",
+				// 				Username:                      "username",
+				// 			}, nil)
 
-// 			},
-// 			res: []*credentials.Badge{
-// 				{
-// 					ID:                            "myregistry1_test_5000",
-// 					AllowUseSSHAgent:              false,
-// 					AWSAccessKeyID:                "",
-// 					AWSProfile:                    "",
-// 					AWSRegion:                     "",
-// 					AWSRoleARN:                    "",
-// 					AWSSecretAccessKey:            "",
-// 					AWSSharedConfigFiles:          []string{},
-// 					AWSSharedCredentialsFiles:     []string{},
-// 					AWSUseDefaultCredentialsChain: false,
-// 					GitSSHUser:                    "",
-// 					Password:                      "password",
-// 					PrivateKeyFile:                "",
-// 					PrivateKeyPassword:            "",
-// 					Username:                      "username",
-// 				},
-// 				{
-// 					ID:                            "myregistry2_test_5000",
-// 					AllowUseSSHAgent:              false,
-// 					AWSAccessKeyID:                "",
-// 					AWSProfile:                    "",
-// 					AWSRegion:                     "",
-// 					AWSRoleARN:                    "",
-// 					AWSSecretAccessKey:            "",
-// 					AWSSharedConfigFiles:          []string{},
-// 					AWSSharedCredentialsFiles:     []string{},
-// 					AWSUseDefaultCredentialsChain: false,
-// 					GitSSHUser:                    "",
-// 					Password:                      "password",
-// 					PrivateKeyFile:                "",
-// 					PrivateKeyPassword:            "",
-// 					Username:                      "username",
-// 				},
-// 				{
-// 					ID:                            "myregistry3_test_5000",
-// 					AllowUseSSHAgent:              false,
-// 					AWSAccessKeyID:                "",
-// 					AWSProfile:                    "",
-// 					AWSRegion:                     "",
-// 					AWSRoleARN:                    "",
-// 					AWSSecretAccessKey:            "",
-// 					AWSSharedConfigFiles:          []string{},
-// 					AWSSharedCredentialsFiles:     []string{},
-// 					AWSUseDefaultCredentialsChain: false,
-// 					GitSSHUser:                    "",
-// 					Password:                      "password",
-// 					PrivateKeyFile:                "",
-// 					PrivateKeyPassword:            "",
-// 					Username:                      "username",
-// 				},
-// 			},
-// 		},
-// 	}
+				// 		s.backend.(*backend.MockEnvvarsBackend).On("AchieveBadge", "STEVEDORE_ENVVARS_CREDENTIALS_MYREGISTRY3_TEST_5000_ATTR").Return(
+				// 			&credentials.Badge{
+				// 				ID:                            "myregistry3_test_5000",
+				// 				AllowUseSSHAgent:              false,
+				// 				AWSAccessKeyID:                "",
+				// 				AWSProfile:                    "",
+				// 				AWSRegion:                     "",
+				// 				AWSRoleARN:                    "",
+				// 				AWSSecretAccessKey:            "",
+				// 				AWSSharedConfigFiles:          []string{},
+				// 				AWSSharedCredentialsFiles:     []string{},
+				// 				AWSUseDefaultCredentialsChain: false,
+				// 				GitSSHUser:                    "",
+				// 				Password:                      "password",
+				// 				PrivateKeyFile:                "",
+				// 				PrivateKeyPassword:            "",
+				// 				Username:                      "username",
+				// 			}, nil)
 
-// 	for _, test := range tests {
-// 		if test.prepareAssertFunc != nil && test.store != nil {
-// 			test.prepareAssertFunc(test.store)
-// 		}
+				// 	},
+				// 	res: []*credentials.Badge{
+				// 		{
+				// 			ID:                            "myregistry1_test_5000",
+				// 			AllowUseSSHAgent:              false,
+				// 			AWSAccessKeyID:                "",
+				// 			AWSProfile:                    "",
+				// 			AWSRegion:                     "",
+				// 			AWSRoleARN:                    "",
+				// 			AWSSecretAccessKey:            "",
+				// 			AWSSharedConfigFiles:          []string{},
+				// 			AWSSharedCredentialsFiles:     []string{},
+				// 			AWSUseDefaultCredentialsChain: false,
+				// 			GitSSHUser:                    "",
+				// 			Password:                      "password",
+				// 			PrivateKeyFile:                "",
+				// 			PrivateKeyPassword:            "",
+				// 			Username:                      "username",
+				// 		},
+				// 		{
+				// 			ID:                            "myregistry2_test_5000",
+				// 			AllowUseSSHAgent:              false,
+				// 			AWSAccessKeyID:                "",
+				// 			AWSProfile:                    "",
+				// 			AWSRegion:                     "",
+				// 			AWSRoleARN:                    "",
+				// 			AWSSecretAccessKey:            "",
+				// 			AWSSharedConfigFiles:          []string{},
+				// 			AWSSharedCredentialsFiles:     []string{},
+				// 			AWSUseDefaultCredentialsChain: false,
+				// 			GitSSHUser:                    "",
+				// 			Password:                      "password",
+				// 			PrivateKeyFile:                "",
+				// 			PrivateKeyPassword:            "",
+				// 			Username:                      "username",
+				// 		},
+				// 		{
+				// 			ID:                            "myregistry3_test_5000",
+				// 			AllowUseSSHAgent:              false,
+				// 			AWSAccessKeyID:                "",
+				// 			AWSProfile:                    "",
+				// 			AWSRegion:                     "",
+				// 			AWSRoleARN:                    "",
+				// 			AWSSecretAccessKey:            "",
+				// 			AWSSharedConfigFiles:          []string{},
+				// 			AWSSharedCredentialsFiles:     []string{},
+				// 			AWSUseDefaultCredentialsChain: false,
+				// 			GitSSHUser:                    "",
+				// 			Password:                      "password",
+				// 			PrivateKeyFile:                "",
+				// 			PrivateKeyPassword:            "",
+				// 			Username:                      "username",
+				// 		},
+			},
+		},
+	}
 
-// 		res := test.store.All()
-// 		assert.ElementsMatch(t, test.res, res)
+	for _, test := range tests {
+		if test.prepareAssertFunc != nil && test.store != nil {
+			test.prepareAssertFunc(test.store)
+		}
 
-// 	}
-// }
+		res := test.store.All()
+		assert.ElementsMatch(t, test.res, res)
+
+	}
+}
 
 func TestGenerateEnvvarKey(t *testing.T) {
 	tests := []struct {
