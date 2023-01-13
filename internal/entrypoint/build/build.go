@@ -389,7 +389,6 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 	}
 
 	//storefactory := credentialsstorefactory.NewCredentialsStoreFactory()
-	// create credentials local store
 	store, err := e.createCredentialsStore(conf.Credentials)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)

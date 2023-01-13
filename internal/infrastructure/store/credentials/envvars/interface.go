@@ -1,7 +1,5 @@
 package envvars
 
-import "github.com/gostevedore/stevedore/internal/core/domain/credentials"
-
 type ConsoleWriter interface {
 	Info(msg ...interface{})
 	Warn(msg ...interface{})
@@ -10,9 +8,14 @@ type ConsoleWriter interface {
 }
 
 type EnvvarsBackender interface {
-	Setenv(key, value string)
-	//Getenv(key string) string
+	//Setenv(key, value string)
+	Getenv(key string) string
 	//LookupEnv(key string) (string, bool)
 	Environ() []string
-	AchieveBadge(id string) (*credentials.Badge, error)
+	//AchieveBadge(id string) (*credentials.Badge, error)
+}
+
+type Encrypter interface {
+	Encrypt(text string) (string, error)
+	Decrypt(ciphertext string) (string, error)
 }
