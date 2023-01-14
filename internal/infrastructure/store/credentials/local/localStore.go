@@ -165,13 +165,14 @@ func (s *LocalStore) get(id string) (*credentials.Badge, error) {
 }
 
 // All returns all badges from the store
-func (s *LocalStore) All() []*credentials.Badge {
+func (s *LocalStore) All() ([]*credentials.Badge, error) {
+	errContext := "(store::credentials::local::All::walk)"
 	var badge *credentials.Badge
 	badges := []*credentials.Badge{}
 
-	afero.Walk(s.fs, s.path, func(path string, info os.FileInfo, err error) error {
+	err := afero.Walk(s.fs, s.path, func(path string, info os.FileInfo, err error) error {
 
-		errContext := "(store::credentials::local::get::walk)"
+		errContext := "(store::credentials::local::All::walk)"
 
 		_, err = s.fs.Stat(path)
 		if err != nil {
@@ -186,7 +187,11 @@ func (s *LocalStore) All() []*credentials.Badge {
 		return nil
 	})
 
-	return badges
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
+	return badges, nil
 }
 
 // hashID generates a hash for the id

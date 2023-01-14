@@ -303,6 +303,7 @@ func TestAll(t *testing.T) {
 		desc  string
 		store *LocalStore
 		res   []*credentials.Badge
+		err   error
 	}{
 		{
 			desc: "Testing get all credentials badges from local store",
@@ -321,6 +322,7 @@ func TestAll(t *testing.T) {
 					Password: "password",
 				},
 			},
+			err: &errors.Error{},
 		},
 		{
 			desc: "Testing get all credentials badges from an empty local store",
@@ -333,6 +335,7 @@ func TestAll(t *testing.T) {
 				),
 			),
 			res: []*credentials.Badge{},
+			err: &errors.Error{},
 		},
 	}
 
@@ -340,8 +343,12 @@ func TestAll(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			badges := test.store.All()
-			assert.Equal(t, test.res, badges)
+			badges, err := test.store.All()
+			if err != nil {
+				assert.Equal(t, test.err, err)
+			} else {
+				assert.Equal(t, test.res, badges)
+			}
 		})
 	}
 }
