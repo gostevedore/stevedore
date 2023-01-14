@@ -6,7 +6,6 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/base64"
 	"encoding/hex"
 	"io"
 
@@ -75,7 +74,7 @@ func (e Encryption) Encrypt(text string) (string, error) {
 
 	ciphertext := gcm.Seal(nonce, nonce, []byte(text), nil)
 
-	return base64Encode(ciphertext), nil
+	return hex.EncodeToString(ciphertext), nil
 }
 
 // Decrypt return the input text decrypted
@@ -106,7 +105,11 @@ func (e Encryption) Decrypt(ciphertext string) (string, error) {
 		return "", errors.New(errContext, "", err)
 	}
 
-	enc, err = base64Decode(ciphertext)
+	enc, err = hex.DecodeString(ciphertext)
+	if err != nil {
+		return "", errors.New(errContext, "", err)
+	}
+
 	nonceSize := gcm.NonceSize()
 	nonce, bytedCiphertext := enc[:nonceSize], enc[nonceSize:]
 
@@ -132,25 +135,10 @@ func hashKey(key string) ([]byte, error) {
 	return hashFunc.Sum(nil), nil
 }
 
-func base64Encode(input []byte) string {
-	return base64.StdEncoding.EncodeToString(input)
-}
-
-func base64Decode(input string) ([]byte, error) {
-	errContext := "(store::credentials::encryption::base64Decode)"
-
-	output, err := base64.StdEncoding.DecodeString(input)
-	if err != nil {
-		return nil, errors.New(errContext, "", err)
-	}
-
-	return output, nil
-}
-
 // HashID generates a hash for the id
 func HashID(id string) (string, error) {
 
-	errContext := "(store::credentials::local::hashID)"
+	errContext := "(store::credentials::encryption::hashID)"
 
 	if id == "" {
 		return "", errors.New(errContext, "Hash method requires an id")

@@ -7,6 +7,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestEncryptDecrypt(t *testing.T) {
+	var encryptedText, decryptedText, text string
+	var err error
+	enc := NewEncryption(
+		WithKey("encryption-key"),
+	)
+	text = "here you have a testing message"
+
+	encryptedText, err = enc.Encrypt(text)
+	assert.NoError(t, err)
+
+	decryptedText, err = enc.Decrypt(encryptedText)
+	assert.NoError(t, err)
+
+	assert.Equal(t, text, decryptedText)
+}
+
 func TestEncrypt(t *testing.T) {
 	errContext := "(store::credentials::encryption::Encrypt)"
 
@@ -14,7 +31,6 @@ func TestEncrypt(t *testing.T) {
 		desc       string
 		encryption Encryption
 		input      string
-		res        string
 		err        error
 	}{
 		{
@@ -28,7 +44,6 @@ func TestEncrypt(t *testing.T) {
 				WithKey("key"),
 			),
 			input: "plaintext",
-			res:   "3eiA9Ru1oRJkdZGaOyN1bQNERtAsbChquGQebMe6ygZzqNoLUA==",
 		},
 	}
 
@@ -36,9 +51,12 @@ func TestEncrypt(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			_, err := test.encryption.Encrypt(test.input)
+			res, err := test.encryption.Encrypt(test.input)
 			if err != nil {
 				assert.Equal(t, test.err, err)
+			} else {
+				// since encypted text is not always the same, it can't be compared with a fixed value
+				assert.NotEmpty(t, res)
 			}
 		})
 	}
@@ -64,7 +82,7 @@ func TestDecrypt(t *testing.T) {
 			encryption: NewEncryption(
 				WithKey("key"),
 			),
-			input: "3eiA9Ru1oRJkdZGaOyN1bQNERtAsbChquGQebMe6ygZzqNoLUA==",
+			input: "e50990a67be331277dc50b5dcfdd630eef07be89b070d1b5e2ee3091454ab26153811c2ad5",
 			res:   "plaintext",
 		},
 	}
@@ -76,6 +94,41 @@ func TestDecrypt(t *testing.T) {
 			res, err := test.encryption.Decrypt(test.input)
 			if err != nil {
 				assert.Equal(t, test.err, err)
+			} else {
+				assert.Equal(t, test.res, res)
+			}
+		})
+	}
+}
+
+func TestHashID(t *testing.T) {
+
+	errContext := "(store::credentials::encryption::hashID)"
+	tests := []struct {
+		desc string
+		id   string
+		res  string
+		err  error
+	}{
+		{
+			desc: "Testing error when hashing an id with providing the id",
+			id:   "",
+			err:  errors.New(errContext, "Hash method requires an id"),
+		},
+		{
+			desc: "Testing hashing an id",
+			id:   "id",
+			res:  "b80bb7740288fda1f201890375a60c8f",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			res, err := HashID(test.id)
+			if err != nil {
+				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
 				assert.Equal(t, test.res, res)
 			}
