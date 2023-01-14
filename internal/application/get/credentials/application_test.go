@@ -36,7 +36,7 @@ func TestRun(t *testing.T) {
 						Username: "username",
 						Password: "password",
 					},
-				})
+				}, nil)
 				app.output.(*mockoutput.MockOutput).On("Print", []*credentials.Badge{
 					{
 						ID:       "id",
