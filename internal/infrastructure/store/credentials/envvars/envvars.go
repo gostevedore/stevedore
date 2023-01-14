@@ -153,7 +153,6 @@ func (s *EnvvarsStore) get(hashedID string) (*credentials.Badge, error) {
 	var badge *credentials.Badge
 
 	errContext := "(store::credentials::envvars::get)"
-
 	if s.backend == nil {
 		return nil, errors.New(errContext, "Envvars credentials store requires a backend to get credentials badge")
 	}
@@ -183,8 +182,8 @@ func (s *EnvvarsStore) get(hashedID string) (*credentials.Badge, error) {
 }
 
 // All returns all badges
-func (s *EnvvarsStore) All() []*credentials.Badge {
-
+func (s *EnvvarsStore) All() ([]*credentials.Badge, error) {
+	errContext := "(store::credentials::envvars::All)"
 	badges := []*credentials.Badge{}
 	IDs := map[string]struct{}{}
 	allVars := s.backend.Environ()
@@ -192,17 +191,25 @@ func (s *EnvvarsStore) All() []*credentials.Badge {
 
 	for _, envvar := range allVars {
 		if strings.HasPrefix(envvar, prefix) {
-			id := strings.Split(strings.ToLower(envvar), envvarsCredentialsAttributePrefix)[0][len(envvarsCredentialsPrefix)+1 : len(strings.Split(strings.ToLower(envvar), envvarsCredentialsAttributePrefix)[0])-1]
+			envvarTokens := strings.Split(envvar, "=")
+			if len(envvarTokens) != 2 {
+				continue
+			}
+
+			id := envvarTokens[0][len(prefix)+1:]
 			IDs[id] = struct{}{}
 		}
 	}
 
 	for id, _ := range IDs {
-		badge, _ := s.Get(id)
+		badge, err := s.get(id)
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
 		badges = append(badges, badge)
 	}
 
-	return badges
+	return badges, nil
 }
 
 func generateEnvvarKey(items ...string) string {
