@@ -93,7 +93,7 @@ func TestStore(t *testing.T) {
   "use_ssh_agent": false
 }`, nil)
 
-				s.encyption.(*encryption.MockEncription).On("Encrypt", `{
+				s.encryption.(*encryption.MockEncription).On("Encrypt", `{
   "ID": "myregistry.test:5000",
   "aws_access_key_id": "",
   "aws_region": "",
@@ -131,8 +131,8 @@ func TestStore(t *testing.T) {
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {
-				if test.store.encyption != nil {
-					test.store.encyption.(*encryption.MockEncription).AssertExpectations(t)
+				if test.store.encryption != nil {
+					test.store.encryption.(*encryption.MockEncription).AssertExpectations(t)
 				}
 				if test.store.console != nil {
 					test.store.console.(*console.MockConsole).AssertExpectations(t)

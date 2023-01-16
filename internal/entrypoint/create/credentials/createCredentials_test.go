@@ -452,10 +452,12 @@ func TestCreateCredentialsStore(t *testing.T) {
 			},
 			err: &errors.Error{},
 			res: local.NewLocalStore(
-				afero.NewMemMapFs(),
-				"path",
-				credentialsformat.NewMockFormater(),
-				credentialscompatibilitiy.NewCredentialsCompatibility(compatibility.NewMockCompatibility()),
+				local.WithFilesystem(afero.NewMemMapFs()),
+				local.WithPath("path"),
+				local.WithFormater(credentialsformat.NewMockFormater()),
+				local.WithCompatibility(
+					credentialscompatibilitiy.NewCredentialsCompatibility(compatibility.NewMockCompatibility()),
+				),
 			),
 		},
 		{

@@ -31,11 +31,13 @@ func TestStore(t *testing.T) {
 		{
 			desc: "Testing error when storing to local store a badge without local path",
 			store: NewLocalStore(
-				afero.NewMemMapFs(),
-				"",
-				mock.NewMockFormater(),
-				credentialscompatibility.NewCredentialsCompatibility(
-					compatibility.NewMockCompatibility(),
+				WithFilesystem(afero.NewMemMapFs()),
+				WithPath(""),
+				WithFormater(mock.NewMockFormater()),
+				WithCompatibility(
+					credentialscompatibility.NewCredentialsCompatibility(
+						compatibility.NewMockCompatibility(),
+					),
 				),
 			),
 			err: errors.New(errContext, "To store a badge into local store, local store path must be provided"),
@@ -43,11 +45,13 @@ func TestStore(t *testing.T) {
 		{
 			desc: "Testing error when storing to local store a badge without an id",
 			store: NewLocalStore(
-				afero.NewMemMapFs(),
-				credentialsPath,
-				mock.NewMockFormater(),
-				credentialscompatibility.NewCredentialsCompatibility(
-					compatibility.NewMockCompatibility(),
+				WithFilesystem(afero.NewMemMapFs()),
+				WithPath(credentialsPath),
+				WithFormater(mock.NewMockFormater()),
+				WithCompatibility(
+					credentialscompatibility.NewCredentialsCompatibility(
+						compatibility.NewMockCompatibility(),
+					),
 				),
 			),
 			err: errors.New(errContext, "To store a badge into local store, id must be provided"),
@@ -55,11 +59,13 @@ func TestStore(t *testing.T) {
 		{
 			desc: "Testing error when storing to local store a badge with a nil badge",
 			store: NewLocalStore(
-				afero.NewMemMapFs(),
-				credentialsPath,
-				mock.NewMockFormater(),
-				credentialscompatibility.NewCredentialsCompatibility(
-					compatibility.NewMockCompatibility(),
+				WithFilesystem(afero.NewMemMapFs()),
+				WithPath(credentialsPath),
+				WithFormater(mock.NewMockFormater()),
+				WithCompatibility(
+					credentialscompatibility.NewCredentialsCompatibility(
+						compatibility.NewMockCompatibility(),
+					),
 				),
 			),
 			id:  "id",
@@ -68,11 +74,13 @@ func TestStore(t *testing.T) {
 		{
 			desc: "Testing persist a badge into local store",
 			store: NewLocalStore(
-				afero.NewMemMapFs(),
-				credentialsPath,
-				mock.NewMockFormater(),
-				credentialscompatibility.NewCredentialsCompatibility(
-					compatibility.NewMockCompatibility(),
+				WithFilesystem(afero.NewMemMapFs()),
+				WithPath(credentialsPath),
+				WithFormater(mock.NewMockFormater()),
+				WithCompatibility(
+					credentialscompatibility.NewCredentialsCompatibility(
+						compatibility.NewMockCompatibility(),
+					),
 				),
 			),
 			id: "id",
@@ -83,6 +91,7 @@ func TestStore(t *testing.T) {
 			prepareAssertFunc: func(s *LocalStore) {
 				s.formater.(*mock.MockFormater).On("Marshal",
 					&credentials.Badge{
+						ID:       "id",
 						Username: "username",
 						Password: "password",
 					}).Return("formated", nil)
@@ -148,11 +157,13 @@ func TestSafeStore(t *testing.T) {
 			desc: "Testing error persisting a badge into local store that already exist",
 			id:   "existing_id",
 			store: NewLocalStore(
-				testFs,
-				credentialsPath,
-				mock.NewMockFormater(),
-				credentialscompatibility.NewCredentialsCompatibility(
-					compatibility.NewMockCompatibility(),
+				WithFilesystem(testFs),
+				WithPath(credentialsPath),
+				WithFormater(mock.NewMockFormater()),
+				WithCompatibility(
+					credentialscompatibility.NewCredentialsCompatibility(
+						compatibility.NewMockCompatibility(),
+					),
 				),
 			),
 			err: errors.New(errContext, "Credentials 'existing_id' already exist"),
@@ -160,11 +171,13 @@ func TestSafeStore(t *testing.T) {
 		{
 			desc: "Testing persist a badge into local store",
 			store: NewLocalStore(
-				testFs,
-				credentialsPath,
-				mock.NewMockFormater(),
-				credentialscompatibility.NewCredentialsCompatibility(
-					compatibility.NewMockCompatibility(),
+				WithFilesystem(testFs),
+				WithPath(credentialsPath),
+				WithFormater(mock.NewMockFormater()),
+				WithCompatibility(
+					credentialscompatibility.NewCredentialsCompatibility(
+						compatibility.NewMockCompatibility(),
+					),
 				),
 			),
 			id: "id",
@@ -175,6 +188,7 @@ func TestSafeStore(t *testing.T) {
 			prepareAssertFunc: func(s *LocalStore) {
 				s.formater.(*mock.MockFormater).On("Marshal",
 					&credentials.Badge{
+						ID:       "id",
 						Username: "username",
 						Password: "password",
 					}).Return("formated", nil)
@@ -234,13 +248,15 @@ func TestGet(t *testing.T) {
 		err   error
 	}{
 		{
-			desc: "Testing error when getting a badge from local storewithout giving an id",
+			desc: "Testing error when getting a badge from local store without giving an id",
 			store: NewLocalStore(
-				afero.NewMemMapFs(),
-				credentialsPath,
-				json.NewJSONFormater(),
-				credentialscompatibility.NewCredentialsCompatibility(
-					compatibility.NewMockCompatibility(),
+				WithFilesystem(afero.NewMemMapFs()),
+				WithPath(credentialsPath),
+				WithFormater(json.NewJSONFormater()),
+				WithCompatibility(
+					credentialscompatibility.NewCredentialsCompatibility(
+						compatibility.NewMockCompatibility(),
+					),
 				),
 			),
 			err: errors.New(errContext, "To get a badge from the store, id must be provided"),
@@ -248,11 +264,13 @@ func TestGet(t *testing.T) {
 		{
 			desc: "Testing get credentials badge from local store",
 			store: NewLocalStore(
-				testFs,
-				credentialsPath,
-				json.NewJSONFormater(),
-				credentialscompatibility.NewCredentialsCompatibility(
-					compatibility.NewMockCompatibility(),
+				WithFilesystem(testFs),
+				WithPath(credentialsPath),
+				WithFormater(json.NewJSONFormater()),
+				WithCompatibility(
+					credentialscompatibility.NewCredentialsCompatibility(
+						compatibility.NewMockCompatibility(),
+					),
 				),
 			),
 			id: "id",
@@ -308,11 +326,13 @@ func TestAll(t *testing.T) {
 		{
 			desc: "Testing get all credentials badges from local store",
 			store: NewLocalStore(
-				testFs,
-				credentialsPath,
-				json.NewJSONFormater(),
-				credentialscompatibility.NewCredentialsCompatibility(
-					compatibility.NewMockCompatibility(),
+				WithFilesystem(testFs),
+				WithPath(credentialsPath),
+				WithFormater(json.NewJSONFormater()),
+				WithCompatibility(
+					credentialscompatibility.NewCredentialsCompatibility(
+						compatibility.NewMockCompatibility(),
+					),
 				),
 			),
 			res: []*credentials.Badge{
@@ -327,11 +347,13 @@ func TestAll(t *testing.T) {
 		{
 			desc: "Testing get all credentials badges from an empty local store",
 			store: NewLocalStore(
-				testFs,
-				emptyPath,
-				json.NewJSONFormater(),
-				credentialscompatibility.NewCredentialsCompatibility(
-					compatibility.NewMockCompatibility(),
+				WithFilesystem(testFs),
+				WithPath(emptyPath),
+				WithFormater(json.NewJSONFormater()),
+				WithCompatibility(
+					credentialscompatibility.NewCredentialsCompatibility(
+						compatibility.NewMockCompatibility(),
+					),
 				),
 			),
 			res: []*credentials.Badge{},

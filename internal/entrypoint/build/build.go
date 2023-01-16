@@ -50,6 +50,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/worker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
+	credentialsstoreencryption "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/encryption"
 	credentialsenvvarsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars"
 	credentialsenvvarsstorebackend "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars/backend"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
@@ -358,7 +359,23 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.CredentialsConfi
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}
-		store = credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
+
+		localStoreOpts := []credentialslocalstore.OptionsFunc{
+			credentialslocalstore.WithFilesystem(e.fs),
+			credentialslocalstore.WithCompatibility(credentialsCompatibility),
+			credentialslocalstore.WithPath(conf.LocalStoragePath),
+			credentialslocalstore.WithFormater(credentialsFormat),
+		}
+
+		if conf.EncryptionKey != "" {
+			encryption := credentialsstoreencryption.NewEncryption(
+				credentialsstoreencryption.WithKey(conf.EncryptionKey),
+			)
+
+			localStoreOpts = append(localStoreOpts, credentialslocalstore.WithEncryption(encryption))
+		}
+
+		store = credentialslocalstore.NewLocalStore(localStoreOpts...)
 
 	case credentials.EnvvarsStore:
 		store = credentialsenvvarsstore.NewEnvvarsStore(

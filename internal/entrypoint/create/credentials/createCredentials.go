@@ -12,6 +12,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	credentialscompatibility "github.com/gostevedore/stevedore/internal/infrastructure/credentials/compatibility"
 	credentialsformatfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/formater/factory"
+	credentialsstoreencryption "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/encryption"
 	credentialsenvvarsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars"
 	credentialsenvvarsstorebackend "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars/backend"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
@@ -384,7 +385,22 @@ func (e *CreateCredentialsEntrypoint) createCredentialsLocalStore(comp credentia
 		return nil, errors.New(errContext, "To create the credentials local store, filesystem is required")
 	}
 
-	store := credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, format, comp)
+	localStoreOpts := []credentialslocalstore.OptionsFunc{
+		credentialslocalstore.WithFilesystem(e.fs),
+		credentialslocalstore.WithCompatibility(comp),
+		credentialslocalstore.WithPath(conf.LocalStoragePath),
+		credentialslocalstore.WithFormater(format),
+	}
+
+	if conf.EncryptionKey != "" {
+		encryption := credentialsstoreencryption.NewEncryption(
+			credentialsstoreencryption.WithKey(conf.EncryptionKey),
+		)
+
+		localStoreOpts = append(localStoreOpts, credentialslocalstore.WithEncryption(encryption))
+	}
+
+	store := credentialslocalstore.NewLocalStore(localStoreOpts...)
 
 	return store, nil
 }
@@ -413,7 +429,22 @@ func (e *CreateCredentialsEntrypoint) createCredentialsLocalStoreWithSafeStore(c
 		return nil, errors.New(errContext, "To create the credentials local store, filesystem is required")
 	}
 
-	store := credentialslocalstore.NewLocalStoreWithSafeStore(e.fs, conf.LocalStoragePath, format, comp)
+	localStoreOpts := []credentialslocalstore.OptionsFunc{
+		credentialslocalstore.WithFilesystem(e.fs),
+		credentialslocalstore.WithCompatibility(comp),
+		credentialslocalstore.WithPath(conf.LocalStoragePath),
+		credentialslocalstore.WithFormater(format),
+	}
+
+	if conf.EncryptionKey != "" {
+		encryption := credentialsstoreencryption.NewEncryption(
+			credentialsstoreencryption.WithKey(conf.EncryptionKey),
+		)
+
+		localStoreOpts = append(localStoreOpts, credentialslocalstore.WithEncryption(encryption))
+	}
+
+	store := credentialslocalstore.NewLocalStoreWithSafeStore(localStoreOpts...)
 
 	return store, nil
 }

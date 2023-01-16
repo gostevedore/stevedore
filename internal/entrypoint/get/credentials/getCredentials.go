@@ -20,6 +20,7 @@ import (
 	sshagent "github.com/gostevedore/stevedore/internal/infrastructure/output/credentials/types/SSHAgent"
 	privatekeyfile "github.com/gostevedore/stevedore/internal/infrastructure/output/credentials/types/privateKeyFile"
 	usernamepassword "github.com/gostevedore/stevedore/internal/infrastructure/output/credentials/types/usernamePassword"
+	credentialsstoreencryption "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/encryption"
 	credentialsenvvarsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars"
 	credentialsenvvarsstorebackend "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars/backend"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
@@ -139,7 +140,23 @@ func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.Credentials
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
-	store := credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
+
+	localStoreOpts := []credentialslocalstore.OptionsFunc{
+		credentialslocalstore.WithFilesystem(e.fs),
+		credentialslocalstore.WithCompatibility(credentialsCompatibility),
+		credentialslocalstore.WithPath(conf.LocalStoragePath),
+		credentialslocalstore.WithFormater(credentialsFormat),
+	}
+
+	if conf.EncryptionKey != "" {
+		encryption := credentialsstoreencryption.NewEncryption(
+			credentialsstoreencryption.WithKey(conf.EncryptionKey),
+		)
+
+		localStoreOpts = append(localStoreOpts, credentialslocalstore.WithEncryption(encryption))
+	}
+
+	store := credentialslocalstore.NewLocalStore(localStoreOpts...)
 
 	return store, nil
 }

@@ -22,10 +22,10 @@ type OptionsFunc func(opts *EnvvarsStore)
 
 // EnvvarsStore is a store for credentials
 type EnvvarsStore struct {
-	console   ConsoleWriter
-	backend   EnvvarsBackender
-	encyption Encrypter
-	formater  repository.Formater
+	console    ConsoleWriter
+	backend    EnvvarsBackender
+	encryption Encrypter
+	formater   repository.Formater
 	//loader *viper.Viper
 }
 
@@ -60,7 +60,7 @@ func WithFormater(formater repository.Formater) OptionsFunc {
 
 func WithEncryption(e Encrypter) OptionsFunc {
 	return func(s *EnvvarsStore) {
-		s.encyption = e
+		s.encryption = e
 	}
 }
 
@@ -88,7 +88,7 @@ func (s *EnvvarsStore) Store(id string, badge *credentials.Badge) error {
 		return errors.New(errContext, "Envvars credentials store requires a formater to store a badge")
 	}
 
-	if s.encyption == nil {
+	if s.encryption == nil {
 		return errors.New(errContext, "Envvars credentials store requires encryption to store a badge")
 	}
 
@@ -105,7 +105,7 @@ func (s *EnvvarsStore) Store(id string, badge *credentials.Badge) error {
 		return errors.New(errContext, fmt.Sprintf("Error formating '%s''s badege", id), err)
 	}
 
-	strBadge, err = s.encyption.Encrypt(strBadge)
+	strBadge, err = s.encryption.Encrypt(strBadge)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -161,14 +161,14 @@ func (s *EnvvarsStore) get(hashedID string) (*credentials.Badge, error) {
 		return nil, errors.New(errContext, "Envvars credentials store requires a formater to get credentials badge")
 	}
 
-	if s.encyption == nil {
+	if s.encryption == nil {
 		return nil, errors.New(errContext, "Envvars credentials store requires encryption to get credentials badge")
 	}
 
 	key = generateEnvvarKey(envvarsCredentialsPrefix, hashedID)
 	encryptedBadge = s.backend.Getenv(key)
 
-	strBadge, err = s.encyption.Decrypt(encryptedBadge)
+	strBadge, err = s.encryption.Decrypt(encryptedBadge)
 	if err != nil {
 		return nil, errors.New(errContext, fmt.Sprintf("Error decrypting the '%s''s badge", hashedID), err)
 	}

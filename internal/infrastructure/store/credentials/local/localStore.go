@@ -14,6 +14,9 @@ import (
 	"github.com/spf13/afero"
 )
 
+// OptionsFunc defines the signature for an option function to set local credentials store
+type OptionsFunc func(opts *LocalStore)
+
 // LocalStore is a local store for credentials
 type LocalStore struct {
 	fs            afero.Fs
@@ -22,15 +25,51 @@ type LocalStore struct {
 	wg            sync.WaitGroup
 	compatibility CredentialsCompatibilier
 	formater      repository.Formater
+	encryption    Encrypter
 }
 
 // NewLocalStore creates a new local store for credentials
-func NewLocalStore(fs afero.Fs, path string, f repository.Formater, compatibility CredentialsCompatibilier) *LocalStore {
-	return &LocalStore{
-		path:          path,
-		fs:            fs,
-		formater:      f,
-		compatibility: compatibility,
+func NewLocalStore(opts ...OptionsFunc) *LocalStore {
+	store := &LocalStore{}
+	store.Options(opts...)
+	return store
+}
+
+func WithCompatibility(compatibility CredentialsCompatibilier) OptionsFunc {
+	return func(s *LocalStore) {
+		s.compatibility = compatibility
+	}
+}
+
+func WithFilesystem(fs afero.Fs) OptionsFunc {
+	return func(s *LocalStore) {
+		s.fs = fs
+	}
+}
+
+// WithFormater sets the formater to envvars credentials store
+func WithFormater(formater repository.Formater) OptionsFunc {
+	return func(s *LocalStore) {
+		s.formater = formater
+	}
+}
+
+func WithPath(path string) OptionsFunc {
+	return func(s *LocalStore) {
+		s.path = path
+	}
+}
+
+func WithEncryption(e Encrypter) OptionsFunc {
+	return func(s *LocalStore) {
+		s.encryption = e
+	}
+}
+
+// Options provides the options to envvars credentials store
+func (s *LocalStore) Options(opts ...OptionsFunc) {
+	for _, opt := range opts {
+		opt(s)
 	}
 }
 
@@ -77,6 +116,10 @@ func (s *LocalStore) Store(id string, badge *credentials.Badge) error {
 
 	if badge == nil {
 		return errors.New(errContext, fmt.Sprintf("To store a badge for '%s' into local store, credentials badge must be provided", id))
+	}
+
+	if badge.ID == "" {
+		badge.ID = id
 	}
 
 	hashedID, err := hashID(id)
@@ -166,11 +209,11 @@ func (s *LocalStore) get(id string) (*credentials.Badge, error) {
 
 // All returns all badges from the store
 func (s *LocalStore) All() ([]*credentials.Badge, error) {
-	errContext := "(store::credentials::local::All::walk)"
+
 	var badge *credentials.Badge
 	badges := []*credentials.Badge{}
 
-	err := afero.Walk(s.fs, s.path, func(path string, info os.FileInfo, err error) error {
+	afero.Walk(s.fs, s.path, func(path string, info os.FileInfo, err error) error {
 
 		errContext := "(store::credentials::local::All::walk)"
 
@@ -186,10 +229,6 @@ func (s *LocalStore) All() ([]*credentials.Badge, error) {
 
 		return nil
 	})
-
-	if err != nil {
-		return nil, errors.New(errContext, "", err)
-	}
 
 	return badges, nil
 }
