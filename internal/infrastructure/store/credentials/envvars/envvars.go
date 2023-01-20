@@ -205,7 +205,7 @@ func (s *EnvvarsStore) All() ([]*credentials.Badge, error) {
 		}
 	}
 
-	for id, _ := range IDs {
+	for id := range IDs {
 		badge, err := s.get(id)
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
