@@ -168,6 +168,10 @@ func (s *EnvvarsStore) get(hashedID string) (*credentials.Badge, error) {
 	key = generateEnvvarKey(envvarsCredentialsPrefix, hashedID)
 	encryptedBadge = s.backend.Getenv(key)
 
+	if encryptedBadge == "" {
+		return nil, nil
+	}
+
 	strBadge, err = s.encryption.Decrypt(encryptedBadge)
 	if err != nil {
 		return nil, errors.New(errContext, fmt.Sprintf("Error decrypting the '%s''s badge", hashedID), err)

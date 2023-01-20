@@ -3,7 +3,8 @@ images_path: images
 builders_path: builders
 log_path: /dev/stdout
 credentials:
-  storage_type: envvars 
+  storage_type: envvars
+  encryption_key: 12345asdfg
   # Uncomment the following lines to use the local credentials store
   # storage_type: local
   # local_storage_path: ./credentials

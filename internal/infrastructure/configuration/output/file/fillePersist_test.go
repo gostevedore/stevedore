@@ -29,6 +29,7 @@ func TestWrite(t *testing.T) {
 			StorageType:      "local",
 			LocalStoragePath: "mycredentials",
 			Format:           "json",
+			EncryptionKey:    "encryptionkey",
 		},
 		LogPathFile:                  "mystevedore.log",
 		PushImages:                   true,
@@ -60,7 +61,7 @@ func TestWrite(t *testing.T) {
 	// 	t.Errorf(err.Error())
 	// }
 	// defer f.Close()
-	// f.Write(buff.Bytes())
+	// f.Write(content)
 
 	assert.Equal(t, expected, content, "Unexpected response")
 }

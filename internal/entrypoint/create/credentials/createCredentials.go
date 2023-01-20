@@ -286,6 +286,93 @@ func (e *CreateCredentialsEntrypoint) prepareHandlerOptions(inputEntrypointOptio
 	return options, nil
 }
 
+func (e *CreateCredentialsEntrypoint) createCredentialsFormater(conf *configuration.CredentialsConfiguration) (repository.Formater, error) {
+	errContext := "(create::credentials::entrypoint::createCredentialsFormater)"
+
+	if conf.Format == "" {
+		return nil, errors.New(errContext, "To create credentials store in the create credentials entrypoint, credentials format must be specified")
+	}
+
+	credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
+	credentialsFormat, err := credentialsFormatFactory.Get(conf.Format)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
+	return credentialsFormat, nil
+}
+
+func (e *CreateCredentialsEntrypoint) createCredentialsEnvvarsStore(conf *configuration.CredentialsConfiguration) (*credentialsenvvarsstore.EnvvarsStore, error) {
+	errContext := "(create::credentials::entrypoint::createCredentialsEnvvarsStore)"
+	var err error
+	var format repository.Formater
+
+	format, err = e.createCredentialsFormater(conf)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
+	encryption := credentialsstoreencryption.NewEncryption(
+		credentialsstoreencryption.WithKey(conf.EncryptionKey),
+	)
+
+	store := credentialsenvvarsstore.NewEnvvarsStore(
+		credentialsenvvarsstore.WithBackend(credentialsenvvarsstorebackend.NewOSEnvvarsBackend()),
+		credentialsenvvarsstore.WithConsole(e.console),
+		credentialsenvvarsstore.WithEncryption(encryption),
+		credentialsenvvarsstore.WithFormater(format),
+	)
+
+	return store, nil
+}
+
+func (e *CreateCredentialsEntrypoint) createCredentialsLocalStore(comp credentialslocalstore.CredentialsCompatibilier, conf *configuration.CredentialsConfiguration) (*local.LocalStore, error) {
+	var err error
+	var format repository.Formater
+
+	errContext := "(create::credentials::entrypoint:::createCredentialsLocalStore)"
+
+	if comp == nil {
+		return nil, errors.New(errContext, "To create the credentials local store, credentials compatibilitier is required")
+	}
+
+	if conf == nil {
+		return nil, errors.New(errContext, "To create the credentials local store, credentials configuration is required")
+	}
+
+	if conf.LocalStoragePath == "" {
+		return nil, errors.New(errContext, "To create the credentials local store, local storage path is required")
+	}
+
+	if e.fs == nil {
+		return nil, errors.New(errContext, "To create the credentials local store, filesystem is required")
+	}
+
+	format, err = e.createCredentialsFormater(conf)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
+	localStoreOpts := []credentialslocalstore.OptionsFunc{
+		credentialslocalstore.WithCompatibility(comp),
+		credentialslocalstore.WithFilesystem(e.fs),
+		credentialslocalstore.WithFormater(format),
+		credentialslocalstore.WithPath(conf.LocalStoragePath),
+	}
+
+	if conf.EncryptionKey != "" {
+		encryption := credentialsstoreencryption.NewEncryption(
+			credentialsstoreencryption.WithKey(conf.EncryptionKey),
+		)
+
+		localStoreOpts = append(localStoreOpts, credentialslocalstore.WithEncryption(encryption))
+	}
+
+	store := credentialslocalstore.NewLocalStore(localStoreOpts...)
+
+	return store, nil
+}
+
 func (e *CreateCredentialsEntrypoint) createCredentialsStore(conf *configuration.Configuration, options *Options) (application.CredentialsStorer, error) {
 
 	var store application.CredentialsStorer
@@ -328,7 +415,7 @@ func (e *CreateCredentialsEntrypoint) createCredentialsStore(conf *configuration
 		}
 
 		if options.ForceCreate {
-			store, err = e.createCredentialsLocalStore(credentialsCompatibility, conf.Credentials, credentialsFormat)
+			store, err = e.createCredentialsLocalStore(credentialsCompatibility, conf.Credentials)
 			if err != nil {
 				return nil, errors.New(errContext, "", err)
 			}
@@ -340,7 +427,7 @@ func (e *CreateCredentialsEntrypoint) createCredentialsStore(conf *configuration
 		}
 
 	case credentials.EnvvarsStore:
-		store, err = e.createCredentialsEnvvarsStore()
+		store, err = e.createCredentialsEnvvarsStore(conf.Credentials)
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}
@@ -348,59 +435,6 @@ func (e *CreateCredentialsEntrypoint) createCredentialsStore(conf *configuration
 	default:
 		return nil, errors.New(errContext, fmt.Sprintf("Unsupported credentials storage type '%s'", conf.Credentials.StorageType))
 	}
-
-	return store, nil
-}
-
-func (e *CreateCredentialsEntrypoint) createCredentialsEnvvarsStore() (*credentialsenvvarsstore.EnvvarsStore, error) {
-	store := credentialsenvvarsstore.NewEnvvarsStore(
-		credentialsenvvarsstore.WithConsole(e.console),
-		credentialsenvvarsstore.WithBackend(credentialsenvvarsstorebackend.NewOSEnvvarsBackend()),
-	)
-
-	return store, nil
-}
-
-func (e *CreateCredentialsEntrypoint) createCredentialsLocalStore(comp credentialslocalstore.CredentialsCompatibilier, conf *configuration.CredentialsConfiguration, format repository.Formater) (*local.LocalStore, error) {
-
-	errContext := "(create::credentials::entrypoint:::createCredentialsLocalStore)"
-
-	if comp == nil {
-		return nil, errors.New(errContext, "To create the credentials local store, credentials compatibilitier is required")
-	}
-
-	if conf == nil {
-		return nil, errors.New(errContext, "To create the credentials local store, credentials configuration is required")
-	}
-
-	if conf.LocalStoragePath == "" {
-		return nil, errors.New(errContext, "To create the credentials local store, local storage path is required")
-	}
-
-	if format == nil {
-		return nil, errors.New(errContext, "To create the credentials local store, formater is required")
-	}
-
-	if e.fs == nil {
-		return nil, errors.New(errContext, "To create the credentials local store, filesystem is required")
-	}
-
-	localStoreOpts := []credentialslocalstore.OptionsFunc{
-		credentialslocalstore.WithFilesystem(e.fs),
-		credentialslocalstore.WithCompatibility(comp),
-		credentialslocalstore.WithPath(conf.LocalStoragePath),
-		credentialslocalstore.WithFormater(format),
-	}
-
-	if conf.EncryptionKey != "" {
-		encryption := credentialsstoreencryption.NewEncryption(
-			credentialsstoreencryption.WithKey(conf.EncryptionKey),
-		)
-
-		localStoreOpts = append(localStoreOpts, credentialslocalstore.WithEncryption(encryption))
-	}
-
-	store := credentialslocalstore.NewLocalStore(localStoreOpts...)
 
 	return store, nil
 }

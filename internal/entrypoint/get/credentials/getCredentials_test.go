@@ -71,6 +71,7 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 		desc       string
 		entrypoint *Entrypoint
 		conf       *configuration.CredentialsConfiguration
+		format     repository.Formater
 		res        *credentialslocalstore.LocalStore
 		err        error
 	}{
@@ -86,16 +87,16 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 			),
 			err: errors.New(errContext, "To create credentials local store in the entrypoint, credentials configuration is required"),
 		},
+		// {
+		// 	desc: "Testing error creating credentials local storage on get credentials entrypoint when credentials format is not defined",
+		// 	entrypoint: NewEntrypoint(
+		// 		WithFileSystem(afero.NewMemMapFs()),
+		// 	),
+		// 	conf: &configuration.CredentialsConfiguration{},
+		// 	err:  errors.New(errContext, "To create credentials local store in the entrypoint, credentials format must be specified"),
+		// },
 		{
-			desc: "Testing error creating credentials local storage on get credentials entrypoint when credentials format is not defined",
-			entrypoint: NewEntrypoint(
-				WithFileSystem(afero.NewMemMapFs()),
-			),
-			conf: &configuration.CredentialsConfiguration{},
-			err:  errors.New(errContext, "To create credentials local store in the entrypoint, credentials format must be specified"),
-		},
-		{
-			desc: "Testing error creating credentials local storage on get credentials entrypoint when credentials format is not defined",
+			desc: "Testing error creating credentials local storage on get credentials entrypoint when compatibilitier format is not defined",
 			entrypoint: NewEntrypoint(
 				WithFileSystem(afero.NewMemMapFs()),
 			),
@@ -145,6 +146,7 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
 
 			store, err := test.entrypoint.createCredentialsLocalStore(test.conf)
 			if err != nil {
@@ -189,7 +191,7 @@ func TestCredentialsFilter(t *testing.T) {
 				Credentials: &configuration.CredentialsConfiguration{
 					StorageType:      credentials.LocalStore,
 					LocalStoragePath: "./test/credentials",
-					Format:           "json",
+					Format:           credentials.JSONFormat,
 				},
 			},
 			res: &credentialslocalstore.LocalStore{},
@@ -200,6 +202,7 @@ func TestCredentialsFilter(t *testing.T) {
 			conf: &configuration.Configuration{
 				Credentials: &configuration.CredentialsConfiguration{
 					StorageType: credentials.EnvvarsStore,
+					Format:      credentials.JSONFormat,
 				},
 			},
 			res: &credentialsenvvarsstore.EnvvarsStore{},

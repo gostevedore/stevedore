@@ -400,6 +400,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 			),
 			conf: &configuration.CredentialsConfiguration{
 				StorageType: "envvars",
+				Format:      credentials.JSONFormat,
 			},
 			res: &credentialsenvvarsstore.EnvvarsStore{},
 			err: &errors.Error{},

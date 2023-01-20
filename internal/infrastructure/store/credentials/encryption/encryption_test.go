@@ -135,3 +135,10 @@ func TestHashID(t *testing.T) {
 		})
 	}
 }
+
+func TestGenerateEncryptionKey(t *testing.T) {
+	enc := NewEncryption()
+	key, err := enc.GenerateEncryptionKey()
+	assert.NoError(t, err)
+	assert.Equal(t, len(key), 32)
+}

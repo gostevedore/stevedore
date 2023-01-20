@@ -1,6 +1,7 @@
 package envvars
 
 import (
+	"os"
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
@@ -361,35 +362,35 @@ func TestGenerateEnvvarKey(t *testing.T) {
 	}
 }
 
-// func TestGenerateResult(t *testing.T) {
+func TestGenerateResult(t *testing.T) {
 
-// 	store := NewEnvvarsStore(
-// 		WithConsole(console.NewConsole(os.Stdout, nil)),
-// 		WithFormater(credentialsjsonformater.NewJSONFormater()),
-// 		WithEncryption(encryption.NewEncryption(
-// 			encryption.WithKey("encryption-key"),
-// 		)),
-// 	)
+	store := NewEnvvarsStore(
+		WithConsole(console.NewConsole(os.Stdout, nil)),
+		WithFormater(credentialsjsonformater.NewJSONFormater()),
+		WithEncryption(encryption.NewEncryption(
+			encryption.WithKey("encryption-key"),
+		)),
+	)
 
-// 	id := "myregistry2.test:5000"
-// 	badge := &credentials.Badge{
-// 		AllowUseSSHAgent:              false,
-// 		AWSAccessKeyID:                "",
-// 		AWSProfile:                    "",
-// 		AWSRegion:                     "",
-// 		AWSRoleARN:                    "",
-// 		AWSSecretAccessKey:            "",
-// 		AWSSharedConfigFiles:          []string{""},
-// 		AWSSharedCredentialsFiles:     []string{""},
-// 		AWSUseDefaultCredentialsChain: false,
-// 		GitSSHUser:                    "",
-// 		Password:                      "password",
-// 		PrivateKeyFile:                "",
-// 		PrivateKeyPassword:            "",
-// 		Username:                      "username",
-// 	}
-// 	err := store.Store(id, badge)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// }
+	id := "id"
+	badge := &credentials.Badge{
+		AllowUseSSHAgent:              false,
+		AWSAccessKeyID:                "",
+		AWSProfile:                    "",
+		AWSRegion:                     "",
+		AWSRoleARN:                    "",
+		AWSSecretAccessKey:            "",
+		AWSSharedConfigFiles:          []string{""},
+		AWSSharedCredentialsFiles:     []string{""},
+		AWSUseDefaultCredentialsChain: false,
+		GitSSHUser:                    "",
+		Password:                      "password",
+		PrivateKeyFile:                "",
+		PrivateKeyPassword:            "",
+		Username:                      "username",
+	}
+	err := store.Store(id, badge)
+	if err != nil {
+		t.Error(err)
+	}
+}

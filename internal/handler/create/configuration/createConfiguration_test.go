@@ -36,6 +36,7 @@ func TestHandler(t *testing.T) {
 			options: &Options{
 				BuildersPath:                 "builderspath",
 				Concurrency:                  10,
+				CredentialsEncryptionKey:     "credentialsencryptionkey",
 				CredentialsFormat:            "credentialsformat",
 				CredentialsLocalStoragePath:  "credentialslocalstoragepath",
 				CredentialsStorageType:       "credentialsstoragetype",
@@ -53,6 +54,7 @@ func TestHandler(t *testing.T) {
 						BuildersPath: "builderspath",
 						Concurrency:  10,
 						Credentials: &configuration.CredentialsConfiguration{
+							EncryptionKey:    "credentialsencryptionkey",
 							Format:           "credentialsformat",
 							LocalStoragePath: "credentialslocalstoragepath",
 							StorageType:      "credentialsstoragetype",

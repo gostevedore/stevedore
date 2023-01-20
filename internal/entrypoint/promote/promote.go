@@ -154,7 +154,7 @@ func (e *Entrypoint) prepareHandlerOptions(args []string, conf *configuration.Co
 	}
 
 	if len(args) > 1 {
-		fmt.Fprintf(e.writer, "Ignoring extra arguments: %v\n", args[1:])
+		e.writer.Warn(fmt.Sprintf("Ignoring extra arguments: %v\n", args[1:]))
 	}
 
 	options := &handler.Options{}
@@ -177,51 +177,74 @@ func (e *Entrypoint) prepareHandlerOptions(args []string, conf *configuration.Co
 	return options, nil
 }
 
+func (e *Entrypoint) createCredentialsFormater(conf *configuration.CredentialsConfiguration) (repository.Formater, error) {
+	errContext := "(promote::entrypoint::createCredentialsFormater)"
+
+	if conf.Format == "" {
+		return nil, errors.New(errContext, "To create credentials store in the entrypoint, credentials format must be specified")
+	}
+
+	credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
+	credentialsFormat, err := credentialsFormatFactory.Get(conf.Format)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
+	return credentialsFormat, nil
+}
+
 func (e *Entrypoint) createCredentialsStore(conf *configuration.CredentialsConfiguration) (repository.CredentialsStorer, error) {
 
 	var store repository.CredentialsStorer
+	var err error
+	var format repository.Formater
 
-	errContext := "(build::entrypoint::createCredentialsStore)"
+	errContext := "(promote::entrypoint::createCredentialsStore)"
 
 	if conf == nil {
-		return nil, errors.New(errContext, "To create credentials store in promote entrypoint, credentials configuration is required")
+		return nil, errors.New(errContext, "To create credentials store in the promote entrypoint, credentials configuration is required")
 	}
+
+	format, err = e.createCredentialsFormater(conf)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
+	encryption := credentialsstoreencryption.NewEncryption(
+		credentialsstoreencryption.WithKey(conf.EncryptionKey),
+	)
 
 	switch conf.StorageType {
 	case credentials.LocalStore:
-		if conf.Format == "" {
-			return nil, errors.New(errContext, "To create credentials store in promote entrypoint, credentials format must be specified")
-		}
+		// if conf.Format == "" {
+		// 	return nil, errors.New(errContext, "To create credentials store in the promote entrypoint, credentials format must be specified")
+		// }
 
 		if e.compatibility == nil {
-			return nil, errors.New(errContext, "To create credentials store in promote entrypoint, compatibility is required")
+			return nil, errors.New(errContext, "To create credentials store in the promote entrypoint, compatibility is required")
 		}
 
 		if conf.LocalStoragePath == "" {
-			return nil, errors.New(errContext, "To create credentials store in promote entrypoint, local storage path is required")
+			return nil, errors.New(errContext, "To create credentials store in the promote entrypoint, local storage path is required")
 		}
 
 		credentialsCompatibility := credentialscompatibility.NewCredentialsCompatibility(e.compatibility)
 
-		credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
-		credentialsFormat, err := credentialsFormatFactory.Get(credentials.JSONFormat)
-		if err != nil {
-			return nil, errors.New(errContext, "", err)
-		}
+		// credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
+		// credentialsFormat, err := credentialsFormatFactory.Get(credentials.JSONFormat)
+		// if err != nil {
+		// 	return nil, errors.New(errContext, "", err)
+		// }
 		// store = credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
 
 		localStoreOpts := []credentialslocalstore.OptionsFunc{
 			credentialslocalstore.WithFilesystem(e.fs),
 			credentialslocalstore.WithCompatibility(credentialsCompatibility),
 			credentialslocalstore.WithPath(conf.LocalStoragePath),
-			credentialslocalstore.WithFormater(credentialsFormat),
+			credentialslocalstore.WithFormater(format),
 		}
 
 		if conf.EncryptionKey != "" {
-			encryption := credentialsstoreencryption.NewEncryption(
-				credentialsstoreencryption.WithKey(conf.EncryptionKey),
-			)
-
 			localStoreOpts = append(localStoreOpts, credentialslocalstore.WithEncryption(encryption))
 		}
 
@@ -231,6 +254,8 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.CredentialsConfi
 		store = credentialsenvvarsstore.NewEnvvarsStore(
 			credentialsenvvarsstore.WithConsole(e.writer),
 			credentialsenvvarsstore.WithBackend(credentialsenvvarsstorebackend.NewOSEnvvarsBackend()),
+			credentialsenvvarsstore.WithFormater(format),
+			credentialsenvvarsstore.WithEncryption(encryption),
 		)
 
 	default:
@@ -243,15 +268,15 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 	errContext := "(promote::entrypoint::createCredentialsFactory)"
 
 	if e.fs == nil {
-		return nil, errors.New(errContext, "To create the credentials store in promote entrypoint, a file system is required")
+		return nil, errors.New(errContext, "To create the credentials store in the promote entrypoint, a file system is required")
 	}
 
 	if conf == nil {
-		return nil, errors.New(errContext, "To create the credentials store in promote entrypoint, configuration is required")
+		return nil, errors.New(errContext, "To create the credentials store in the promote entrypoint, configuration is required")
 	}
 
 	if conf.Credentials == nil {
-		return nil, errors.New(errContext, "To create the credentials store in promote entrypoint, credentials configuration is required")
+		return nil, errors.New(errContext, "To create the credentials store in the promote entrypoint, credentials configuration is required")
 	}
 
 	// create credentials store

@@ -80,6 +80,8 @@ const (
 	DefaultCredentialsLocalStoragePath = "credentials"
 	// DefaultCredentialsStorage is the default credentials storage
 	DefaultCredentialsStorage = credentials.LocalStore
+	// DefaultCredentialsEncryptionKey is an empty string
+	DefaultCredentialsEncryptionKey = ""
 	// DefaultEnableSemanticVersionTags is the default enable semantic version tags
 	DefaultEnableSemanticVersionTags = false
 	// DefaultImagesPath is the default images path
@@ -220,6 +222,8 @@ func New(fs afero.Fs, loader ConfigurationLoader, compatibility Compatibilitier)
 		strings.Join([]string{CredentialsKey, CredentialsLocalStoragePathKey}, "."), DefaultCredentialsLocalStoragePath)
 	loader.SetDefault(
 		strings.Join([]string{CredentialsKey, CredentialsFormatKey}, "."), DefaultCredentialsFormat)
+	loader.SetDefault(
+		strings.Join([]string{CredentialsKey, CredentialsEncryptionKeyKey}, "."), DefaultCredentialsEncryptionKey)
 
 	for _, alternativeConfigFolder := range alternativesConfigFolders {
 		loader.AddConfigPath(alternativeConfigFolder)
@@ -259,6 +263,7 @@ func New(fs afero.Fs, loader ConfigurationLoader, compatibility Compatibilitier)
 	config.Concurrency = loader.GetInt(ConcurrencyKey)
 	config.EnableSemanticVersionTags = loader.GetBool(EnableSemanticVersionTagsKey)
 	config.ImagesPath = loader.GetString(ImagesPathKey)
+	config.LogPathFile = loader.GetString(LogPathFileKey)
 	config.LogWriter = logWriter
 	config.PushImages = loader.GetBool(PushImagesKey)
 	config.SemanticVersionTagsTemplates = loader.GetStringSlice(SemanticVersionTagsTemplatesKey)
@@ -267,6 +272,7 @@ func New(fs afero.Fs, loader ConfigurationLoader, compatibility Compatibilitier)
 		StorageType:      loader.GetString(strings.Join([]string{CredentialsKey, CredentialsStorageTypeKey}, ".")),
 		LocalStoragePath: loader.GetString(strings.Join([]string{CredentialsKey, CredentialsLocalStoragePathKey}, ".")),
 		Format:           loader.GetString(strings.Join([]string{CredentialsKey, CredentialsFormatKey}, ".")),
+		EncryptionKey:    loader.GetString(strings.Join([]string{CredentialsKey, CredentialsEncryptionKeyKey}, ".")),
 	}
 
 	config.configFile = loader.ConfigFileUsed()

@@ -8,11 +8,8 @@ type ConsoleWriter interface {
 }
 
 type EnvvarsBackender interface {
-	//Setenv(key, value string)
 	Getenv(key string) string
-	//LookupEnv(key string) (string, bool)
 	Environ() []string
-	//AchieveBadge(id string) (*credentials.Badge, error)
 }
 
 type Encrypter interface {

@@ -68,6 +68,7 @@ func TestWriteToFile(t *testing.T) {
 			StorageType:      "local",
 			LocalStoragePath: "mycredentials",
 			Format:           "json",
+			EncryptionKey:    "encryptionkey",
 		},
 		LogPathFile:                  "mystevedore.log",
 		PushImages:                   true,

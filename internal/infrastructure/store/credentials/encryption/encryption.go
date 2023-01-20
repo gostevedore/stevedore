@@ -122,6 +122,17 @@ func (e Encryption) Decrypt(ciphertext string) (string, error) {
 
 }
 
+func (e Encryption) GenerateEncryptionKey() (string, error) {
+	errContext := "(store::credentials::encryption::GenerateEncryptionKey)"
+
+	buff := make([]byte, 16)
+	_, err := rand.Read(buff)
+	if err != nil {
+		return "", errors.New(errContext, "Error generating encryption key", err)
+	}
+	return hex.EncodeToString(buff), nil
+}
+
 func hashKey(key string) ([]byte, error) {
 
 	errContext := "(store::credentials::encryption::hashKey)"

@@ -337,13 +337,22 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.CredentialsConfi
 		return nil, errors.New(errContext, "To create credentials store in build entrypoint, credentials configuration is required")
 	}
 
+	if conf.Format == "" {
+		return nil, errors.New(errContext, "To create credentials store in build entrypoint, credentials format must be specified")
+	}
+
+	encryption := credentialsstoreencryption.NewEncryption(
+		credentialsstoreencryption.WithKey(conf.EncryptionKey),
+	)
+
+	credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
+	credentialsFormat, err := credentialsFormatFactory.Get(conf.Format)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
 	switch conf.StorageType {
 	case credentials.LocalStore:
-
-		if conf.Format == "" {
-			return nil, errors.New(errContext, "To create credentials store in build entrypoint, credentials format must be specified")
-		}
-
 		if e.compatibility == nil {
 			return nil, errors.New(errContext, "To create credentials store in build entrypoint, compatibility is required")
 		}
@@ -354,12 +363,6 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.CredentialsConfi
 
 		credentialsCompatibility := credentialscompatibility.NewCredentialsCompatibility(e.compatibility)
 
-		credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
-		credentialsFormat, err := credentialsFormatFactory.Get(conf.Format)
-		if err != nil {
-			return nil, errors.New(errContext, "", err)
-		}
-
 		localStoreOpts := []credentialslocalstore.OptionsFunc{
 			credentialslocalstore.WithFilesystem(e.fs),
 			credentialslocalstore.WithCompatibility(credentialsCompatibility),
@@ -368,10 +371,6 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.CredentialsConfi
 		}
 
 		if conf.EncryptionKey != "" {
-			encryption := credentialsstoreencryption.NewEncryption(
-				credentialsstoreencryption.WithKey(conf.EncryptionKey),
-			)
-
 			localStoreOpts = append(localStoreOpts, credentialslocalstore.WithEncryption(encryption))
 		}
 
@@ -381,6 +380,8 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.CredentialsConfi
 		store = credentialsenvvarsstore.NewEnvvarsStore(
 			credentialsenvvarsstore.WithConsole(e.writer),
 			credentialsenvvarsstore.WithBackend(credentialsenvvarsstorebackend.NewOSEnvvarsBackend()),
+			credentialsenvvarsstore.WithFormater(credentialsFormat),
+			credentialsenvvarsstore.WithEncryption(encryption),
 		)
 
 	default:

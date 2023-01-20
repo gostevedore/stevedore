@@ -57,13 +57,13 @@ push_images: {{ .PushImages }}
 # push_images: false
 {{ end }}
 #
-#Credentials storage
-#  default value:
-#    credentials:
-#      storage_type: local
-#      local_storage_path: /var/lib/stevedore/credentials
-#      format: json
-#
+# Credentials storage
+#   default value:
+#     credentials:
+#       storage_type: local
+#       local_storage_path: /var/lib/stevedore/credentials
+#       format: json
+# 
 {{ with .Credentials -}}
 credentials:
   storage_type: {{ .StorageType }}
@@ -71,11 +71,14 @@ credentials:
   {{ if eq .StorageType "local" -}}
   local_storage_path: {{ .LocalStoragePath }}
   {{ end -}}
-{{ else -}}
+  {{ if ne .EncryptionKey "" -}}
+  encryption_key: {{ .EncryptionKey }}
+  {{ end -}}
+{{ else }}
 # credentials:
 #   storage_type: local
-#	local_storage_path: /var/lib/stevedore/credentials
-#	format: json
+#	  local_storage_path: /var/lib/stevedore/credentials
+#	  format: json
 {{ end }}
 #
 # Generate extra tags when the main image tags is semver 2.0.0 compliance

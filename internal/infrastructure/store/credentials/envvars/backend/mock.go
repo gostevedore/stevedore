@@ -1,7 +1,6 @@
 package backend
 
 import (
-	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -35,9 +34,4 @@ func (b *MockEnvvarsBackend) LookupEnv(key string) (string, bool) {
 func (b *MockEnvvarsBackend) Environ() []string {
 	args := b.Mock.Called()
 	return args.Get(0).([]string)
-}
-
-func (b *MockEnvvarsBackend) AchieveBadge(id string) (*credentials.Badge, error) {
-	args := b.Mock.Called(id)
-	return args.Get(0).(*credentials.Badge), args.Error(1)
 }

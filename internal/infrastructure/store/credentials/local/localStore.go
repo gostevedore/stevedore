@@ -1,8 +1,6 @@
 package local
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,6 +9,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/encryption"
 	"github.com/spf13/afero"
 )
 
@@ -78,7 +77,7 @@ func (s *LocalStore) SafeStore(id string, badge *credentials.Badge) error {
 	var err error
 	var credentialsStat os.FileInfo
 
-	hashedID, err := hashID(id)
+	hashedID, err := encryption.HashID(id)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -122,7 +121,7 @@ func (s *LocalStore) Store(id string, badge *credentials.Badge) error {
 		badge.ID = id
 	}
 
-	hashedID, err := hashID(id)
+	hashedID, err := encryption.HashID(id)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -145,6 +144,13 @@ func (s *LocalStore) Store(id string, badge *credentials.Badge) error {
 		return errors.New(errContext, fmt.Sprintf("Error formatting '%s' badge before to be persisted on '%s'", id, s.path), err)
 	}
 
+	if s.encryption != nil {
+		formatedBadge, err = s.encryption.Encrypt(formatedBadge)
+		if err != nil {
+			return errors.New(errContext, "", err)
+		}
+	}
+
 	_, err = credentialFile.WriteString(formatedBadge)
 	if err != nil {
 		return errors.New(errContext, "", err)
@@ -164,7 +170,7 @@ func (s *LocalStore) Get(id string) (*credentials.Badge, error) {
 		return nil, errors.New(errContext, "To get a badge from the store, id must be provided")
 	}
 
-	hashedID, err := hashID(id)
+	hashedID, err := encryption.HashID(id)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
@@ -181,6 +187,7 @@ func (s *LocalStore) Get(id string) (*credentials.Badge, error) {
 func (s *LocalStore) get(id string) (*credentials.Badge, error) {
 	var err error
 	var fileData []byte
+	var strFileData string
 	var badge *credentials.Badge
 
 	errContext := "(store::credentials::local::get)"
@@ -188,6 +195,14 @@ func (s *LocalStore) get(id string) (*credentials.Badge, error) {
 	fileData, err = afero.ReadFile(s.fs, filepath.Join(s.path, id))
 	if err != nil {
 		return nil, errors.New(errContext, fmt.Sprintf("Error reading credentials file '%s'", filepath.Join(s.path, id)), err)
+	}
+
+	if s.encryption != nil {
+		strFileData, err = s.encryption.Decrypt(string(fileData))
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
+		fileData = []byte(strFileData)
 	}
 
 	badge, err = s.formater.Unmarshal(fileData)
@@ -233,18 +248,18 @@ func (s *LocalStore) All() ([]*credentials.Badge, error) {
 	return badges, nil
 }
 
-// hashID generates a hash for the id
-func hashID(id string) (string, error) {
+// // hashID generates a hash for the id
+// func hashID(id string) (string, error) {
 
-	errContext := "(store::credentials::local::hashID)"
+// 	errContext := "(store::credentials::local::hashID)"
 
-	if id == "" {
-		return "", errors.New(errContext, "Hash method requires an id")
-	}
+// 	if id == "" {
+// 		return "", errors.New(errContext, "Hash method requires an id")
+// 	}
 
-	hasher := md5.New()
-	hasher.Write([]byte(id))
-	registryHashed := hex.EncodeToString(hasher.Sum(nil))
+// 	hasher := md5.New()
+// 	hasher.Write([]byte(id))
+// 	registryHashed := hex.EncodeToString(hasher.Sum(nil))
 
-	return registryHashed, nil
-}
+// 	return registryHashed, nil
+// }

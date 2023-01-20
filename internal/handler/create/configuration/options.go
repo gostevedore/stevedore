@@ -7,6 +7,7 @@ type Options struct {
 	CredentialsFormat            string
 	CredentialsLocalStoragePath  string
 	CredentialsStorageType       string
+	CredentialsEncryptionKey     string
 	EnableSemanticVersionTags    bool
 	ImagesPath                   string
 	LogPathFile                  string
