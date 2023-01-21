@@ -8,29 +8,31 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestOutput(t *testing.T) {
+func TestOutputWithSecrets(t *testing.T) {
 
-	errContext := "(output::credentials::types::AWSRoleARNOutput::Output)"
+	errContext := "(output::credentials::types::AWSRoleARNWithSecretsOutput::Output)"
 
 	tests := []struct {
 		desc            string
-		output          *AWSRoleARNOutput
+		output          *AWSRoleARNWithSecretsOutput
 		badge           *credentials.Badge
 		detail          string
 		credentialsType string
 		err             error
 	}{
 		{
-			desc:            "Testing error when creating the output for AWSRoleARNOutput and badge is nil",
-			output:          NewAWSRoleARNOutput(),
+			desc:            "Testing error when creating the output for AWSRoleARNWithSecretsOutput and badge is nil",
+			output:          NewAWSRoleARNWithSecretsOutput(nil),
 			badge:           nil,
 			detail:          "",
 			credentialsType: "",
-			err:             errors.New(errContext, "To show badge output, badge must be provided"),
+			err:             errors.New(errContext, "AWS role arn with secret output requieres an output"),
 		},
 		{
-			desc:   "Testing generate output for AWSRoleARNOutput",
-			output: NewAWSRoleARNOutput(),
+			desc: "Testing generate output for AWSRoleARNWithSecretsOutput",
+			output: NewAWSRoleARNWithSecretsOutput(
+				NewAWSRoleARNOutput(),
+			),
 			badge: &credentials.Badge{
 				AWSRoleARN:         "arn:aws:iam::123456789012:role/stevedore-role",
 				AWSRegion:          "eu-west-1",
@@ -38,7 +40,7 @@ func TestOutput(t *testing.T) {
 				AWSAccessKeyID:     "accessKeyID",
 				AWSSecretAccessKey: "secretAccessKey",
 			},
-			detail:          "role_arn=arn:aws:iam::123456789012:role/stevedore-role, region=eu-west-1, profile=default, aws_access_key_id=accessKeyID",
+			detail:          "role_arn=arn:aws:iam::123456789012:role/stevedore-role, region=eu-west-1, profile=default, aws_access_key_id=accessKeyID, aws_secret_access_key=secretAccessKey",
 			credentialsType: AWSRoleARNType,
 			err:             &errors.Error{},
 		},

@@ -53,7 +53,3 @@ Centralized the Docker registry's credentials store
 #### Promote
 Promote images to another Docker registry or to another registry namespace
 > **use case:** Your production environment only accepts pulling images from a specific Docker registry, and that docker registry is only used by your production environment. Suppose that you have built and pushed an image to your staging Docker registry and you have passed all your end-to-end tests. Then, you can promote the image from your staging Docker registry to your production one
-
----
-
-Since the pull request https://github.com/gruntwork-io/terratest/pull/1187 is still reviewed the package `pkg/terratest` it is a copy of the Terratest project that provides the required functinality

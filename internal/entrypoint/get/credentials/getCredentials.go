@@ -74,10 +74,17 @@ func (e *Entrypoint) Options(opts ...OptionsFunc) {
 }
 
 // Execute is a pseudo-main method for the command
-func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration) error {
+func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, inputEntrypointOptions *Options) error {
 	var err error
 	var credentialsStore repository.CredentialsFilterer
 	errContext := "(get::credentials::entrypoint::Execute)"
+
+	var usernamepasswordoutput outputcredentials.Outputter
+	var awsstaticcredentialsoutput outputcredentials.Outputter
+	var awsrolearnoutput outputcredentials.Outputter
+	var awsdefaultchainoutput outputcredentials.Outputter
+	var privatekeyfileoutput outputcredentials.Outputter
+	var sshagentoutput outputcredentials.Outputter
 
 	if e.writer == nil {
 		return errors.New(errContext, "To execute the entrypoint, a writer is required")
@@ -89,13 +96,31 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 	}
 
 	writer := console.NewConsole(e.writer, nil)
+
+	usernamepasswordoutput = usernamepassword.NewUsernamePasswordOutput()
+	awsstaticcredentialsoutput = awsstaticcredentials.NewAWSStaticCredentialsOutput()
+	awsrolearnoutput = awsrolearn.NewAWSRoleARNOutput()
+	awsdefaultchainoutput = awsdefaultchain.NewAWSDefaultCredentialsChainOutput()
+	privatekeyfileoutput = privatekeyfile.NewPrivateKeyFileOutput()
+	sshagentoutput = sshagent.NewSSHAgentOutput()
+
+	if inputEntrypointOptions.ShowSecrets {
+		usernamepasswordoutput = usernamepassword.NewUsernamePasswordWithSecretsOutput(usernamepasswordoutput.(*usernamepassword.UsernamePasswordOutput))
+
+		awsstaticcredentialsoutput = awsstaticcredentials.NewAWSStaticCredentialsWithSecretsOutput(awsstaticcredentialsoutput.(*awsstaticcredentials.AWSStaticCredentialsOutput))
+
+		awsrolearnoutput = awsrolearn.NewAWSRoleARNWithSecretsOutput(awsrolearnoutput.(*awsrolearn.AWSRoleARNOutput))
+
+		privatekeyfileoutput = privatekeyfile.NewPrivateKeyFileWithSecretsOutput(privatekeyfileoutput.(*privatekeyfile.PrivateKeyFileOutput))
+	}
+
 	output := outputcredentials.NewOutput(writer,
-		usernamepassword.NewUsernamePasswordOutput(),
-		awsstaticcredentials.NewAWSStaticCredentialsOutput(),
-		awsrolearn.NewAWSRoleARNOutput(),
-		awsdefaultchain.NewAWSDefaultCredentialsChainOutput(),
-		privatekeyfile.NewPrivateKeyFileOutput(),
-		sshagent.NewSSHAgentOutput(),
+		usernamepasswordoutput,
+		awsstaticcredentialsoutput,
+		awsrolearnoutput,
+		awsdefaultchainoutput,
+		privatekeyfileoutput,
+		sshagentoutput,
 	)
 
 	getCredentialsApplication := application.NewApplication(

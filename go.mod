@@ -18,7 +18,7 @@ require (
 	github.com/docker/distribution v2.8.1+incompatible
 	github.com/docker/docker v20.10.21+incompatible
 	github.com/go-git/go-git/v5 v5.5.1
-	github.com/gruntwork-io/terratest v0.41.6
+	github.com/gruntwork-io/terratest v0.41.9
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/ryanuber/columnize v2.1.2+incompatible
 	github.com/spf13/afero v1.9.3

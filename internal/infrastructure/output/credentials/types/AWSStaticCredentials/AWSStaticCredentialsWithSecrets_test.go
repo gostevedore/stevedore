@@ -1,4 +1,4 @@
-package awsrolearn
+package awsstaticcredentials
 
 import (
 	"testing"
@@ -8,38 +8,38 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestOutput(t *testing.T) {
+func TestOutputWithSecrets(t *testing.T) {
 
-	errContext := "(output::credentials::types::AWSRoleARNOutput::Output)"
+	errContext := "(output::credentials::types::AWSStaticCredentialsWithSecretsOutput::Output)"
 
 	tests := []struct {
 		desc            string
-		output          *AWSRoleARNOutput
+		output          *AWSStaticCredentialsWithSecretsOutput
 		badge           *credentials.Badge
 		detail          string
 		credentialsType string
 		err             error
 	}{
 		{
-			desc:            "Testing error when creating the output for AWSRoleARNOutput and badge is nil",
-			output:          NewAWSRoleARNOutput(),
+			desc:            "Testing error when creating the output for AWSStaticCredentialsWithSecretsOutput and output is nil",
+			output:          NewAWSStaticCredentialsWithSecretsOutput(nil),
 			badge:           nil,
 			detail:          "",
 			credentialsType: "",
-			err:             errors.New(errContext, "To show badge output, badge must be provided"),
+			err:             errors.New(errContext, "AWS static credentials with secret output requieres an output"),
 		},
 		{
-			desc:   "Testing generate output for AWSRoleARNOutput",
-			output: NewAWSRoleARNOutput(),
+			desc: "Testing generate output for AWSStaticCredentialsWithSecretsOutput",
+			output: NewAWSStaticCredentialsWithSecretsOutput(
+				NewAWSStaticCredentialsOutput(),
+			),
 			badge: &credentials.Badge{
-				AWSRoleARN:         "arn:aws:iam::123456789012:role/stevedore-role",
-				AWSRegion:          "eu-west-1",
-				AWSProfile:         "default",
 				AWSAccessKeyID:     "accessKeyID",
 				AWSSecretAccessKey: "secretAccessKey",
+				AWSRegion:          "region",
 			},
-			detail:          "role_arn=arn:aws:iam::123456789012:role/stevedore-role, region=eu-west-1, profile=default, aws_access_key_id=accessKeyID",
-			credentialsType: AWSRoleARNType,
+			detail:          "aws_access_key_id=accessKeyID, region=region, aws_secret_access_key=secretAccessKey",
+			credentialsType: AWSStaticCredentialsType,
 			err:             &errors.Error{},
 		},
 	}

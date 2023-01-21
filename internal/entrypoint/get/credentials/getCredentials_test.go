@@ -24,6 +24,7 @@ func TestExecute(t *testing.T) {
 	tests := []struct {
 		desc       string
 		entrypoint *Entrypoint
+		options    *Options
 		args       []string
 		conf       *configuration.Configuration
 		err        error
@@ -40,6 +41,7 @@ func TestExecute(t *testing.T) {
 				WithFileSystem(afero.NewMemMapFs()),
 				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
+			options: &Options{},
 			conf: &configuration.Configuration{
 				Credentials: &configuration.CredentialsConfiguration{
 					StorageType:      credentials.LocalStore,
@@ -55,7 +57,7 @@ func TestExecute(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			err := test.entrypoint.Execute(context.TODO(), test.args, test.conf)
+			err := test.entrypoint.Execute(context.TODO(), test.args, test.conf, test.options)
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			}
