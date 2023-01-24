@@ -16,7 +16,13 @@ services:
       resources:
         limits:
           memory: 60M
-            
+    healthcheck:
+      test: ["CMD", "nc", "-vz", "localhost","5000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   registry:
     image: registry:2
     # ports:
@@ -45,6 +51,12 @@ services:
       resources:
         limits:
           memory: 60M
+    healthcheck:
+      test: ["CMD", "nc", "-vz", "localhost","443"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   dockerauth:
     image: cesanta/docker_auth:1
@@ -65,6 +77,12 @@ services:
       resources:
         limits:
           memory: 10M
+    healthcheck:
+      test: ["CMD", "nc", "-vz", "localhost","5001"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   stevedore:
     build:

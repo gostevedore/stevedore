@@ -16,7 +16,7 @@ fi
 
 /usr/local/bin/dockerd-entrypoint.sh 2> /dev/null &
 
-round=20
+round=50
 # while ! nc -z localhost 2376; do
 while ! docker info > /dev/null 2>&1 ; do
     if [ $round -eq 0 ]; then

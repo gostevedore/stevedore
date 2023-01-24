@@ -11,6 +11,24 @@ type BuildFunctionalTestsSuite struct {
 	FunctionalTestsSuite
 }
 
+func (s *BuildFunctionalTestsSuite) SetupTest() {
+	s.TearDownTest()
+
+	err := s.stack.Execute("up -d registry")
+	if err != nil {
+		s.T().Log(err)
+		s.T().Fail()
+	}
+}
+
+func (s *BuildFunctionalTestsSuite) TearDownTest() {
+	err := s.stack.Execute("rm --stop --force --volumes registry stevedore")
+	if err != nil {
+		s.T().Log(err)
+		s.T().Fail()
+	}
+}
+
 func (s *BuildFunctionalTestsSuite) TestBuildImageWithGitContext() {
 	var err error
 
@@ -24,13 +42,7 @@ func (s *BuildFunctionalTestsSuite) TestBuildImageWithGitContext() {
 		s.T().Fail()
 	}
 
-	err = s.stack.Execute("run -w /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/stable/app1:v1-alpine-3.16")
-	if err != nil {
-		s.T().Log(err)
-		s.T().Fail()
-	}
-
-	err = s.stack.Execute("run -w /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/stable/app1:v1-alpine-3.16")
+	err = s.stack.Execute("run -w /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/stable/app2:v1-alpine-3.16")
 	if err != nil {
 		s.T().Log(err)
 		s.T().Fail()
