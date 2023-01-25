@@ -123,10 +123,6 @@ func (a *Application) Promote(ctx context.Context, options *Options) error {
 		promoteOptions.PullAuthPassword = pullAuth.Password
 	}
 
-	if options.PromoteSourceImageTag {
-		promoteOptions.TargetImageTags = append(promoteOptions.TargetImageTags, sourceImage.Version)
-	}
-
 	if options.TargetImageRegistryHost != image.UndefinedStringValue {
 		targetImage.RegistryHost = options.TargetImageRegistryHost
 	}
@@ -139,15 +135,34 @@ func (a *Application) Promote(ctx context.Context, options *Options) error {
 		targetImage.Name = options.TargetImageName
 	}
 
+	if options.PromoteSourceImageTag {
+		tags, err := a.generateReferenceNameList(targetImage, []string{sourceImage.Version})
+		if err != nil {
+			return errors.New(errContext, "", err)
+		}
+
+		promoteOptions.TargetImageTags = append(promoteOptions.TargetImageTags, tags...)
+	}
+
 	if len(options.TargetImageTags) > 0 {
 		targetImage.Version = options.TargetImageTags[0]
-		promoteOptions.TargetImageTags = append(promoteOptions.TargetImageTags, options.TargetImageTags[1:]...)
+
+		tags, err := a.generateReferenceNameList(targetImage, options.TargetImageTags[1:])
+		if err != nil {
+			return errors.New(errContext, "", err)
+		}
+		promoteOptions.TargetImageTags = append(promoteOptions.TargetImageTags, tags...)
 	}
 
 	if options.EnableSemanticVersionTags {
 		semVerTags, _ := a.semver.GenerateSemverList(options.TargetImageTags, options.SemanticVersionTagsTemplates)
 		if len(semVerTags) > 0 {
-			promoteOptions.TargetImageTags = append(promoteOptions.TargetImageTags, semVerTags...)
+
+			tags, err := a.generateReferenceNameList(targetImage, semVerTags)
+			if err != nil {
+				return errors.New(errContext, "", err)
+			}
+			promoteOptions.TargetImageTags = append(promoteOptions.TargetImageTags, tags...)
 		}
 	}
 
@@ -189,6 +204,28 @@ func (a *Application) Promote(ctx context.Context, options *Options) error {
 	}
 
 	return nil
+}
+
+func (a *Application) generateReferenceNameList(i *image.Image, tags []string) ([]string, error) {
+
+	errContext := "(application::promote::generateReferenceNameList)"
+	list := []string{}
+
+	for _, tag := range tags {
+		var auxReferenceName string
+		var err error
+		var auxImage *image.Image
+
+		auxImage, err = i.Copy()
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
+		auxImage.Version = tag
+		auxReferenceName, err = a.referenceNamer.GenerateName(auxImage)
+		list = append(list, auxReferenceName)
+	}
+
+	return list, nil
 }
 
 func (a *Application) getCredentials(registry string) (repository.AuthMethodReader, error) {

@@ -239,8 +239,13 @@ func TestPromote(t *testing.T) {
 			},
 			prepareMockFunc: func(p *Application) {
 				options := &image.PromoteOptions{
-					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
-					TargetImageTags:       []string{"tag", "tag1", "tag2", "1"},
+					TargetImageName: "targetregistry.test/targetnamespace/targetimage:1.2.3",
+					TargetImageTags: []string{
+						"targetregistry.test/targetnamespace/targetimage:tag",
+						"targetregistry.test/targetnamespace/targetimage:tag1",
+						"targetregistry.test/targetnamespace/targetimage:tag2",
+						"targetregistry.test/targetnamespace/targetimage:1",
+					},
 					RemoveTargetImageTags: true,
 					RemoteSourceImage:     true,
 					SourceImageName:       "registry.test/namespace/image:tag",
@@ -292,8 +297,13 @@ func TestPromote(t *testing.T) {
 			},
 			prepareMockFunc: func(p *Application) {
 				options := &image.PromoteOptions{
-					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
-					TargetImageTags:       []string{"tag", "tag1", "tag2", "1"},
+					TargetImageName: "targetregistry.test/targetnamespace/targetimage:1.2.3",
+					TargetImageTags: []string{
+						"targetregistry.test/targetnamespace/targetimage:tag",
+						"targetregistry.test/targetnamespace/targetimage:tag1",
+						"targetregistry.test/targetnamespace/targetimage:tag2",
+						"targetregistry.test/targetnamespace/targetimage:1",
+					},
 					RemoveTargetImageTags: true,
 					RemoteSourceImage:     true,
 					SourceImageName:       "registry.test/namespace/image:tag",
@@ -338,8 +348,13 @@ func TestPromote(t *testing.T) {
 			},
 			prepareMockFunc: func(p *Application) {
 				options := &image.PromoteOptions{
-					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
-					TargetImageTags:       []string{"tag", "tag1", "tag2", "1"},
+					TargetImageName: "targetregistry.test/targetnamespace/targetimage:1.2.3",
+					TargetImageTags: []string{
+						"targetregistry.test/targetnamespace/targetimage:tag",
+						"targetregistry.test/targetnamespace/targetimage:tag1",
+						"targetregistry.test/targetnamespace/targetimage:tag2",
+						"targetregistry.test/targetnamespace/targetimage:1",
+					},
 					RemoveTargetImageTags: true,
 					RemoteSourceImage:     true,
 					SourceImageName:       "registry.test/namespace/image:tag",
@@ -390,8 +405,13 @@ func TestPromote(t *testing.T) {
 			},
 			prepareMockFunc: func(p *Application) {
 				options := &image.PromoteOptions{
-					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
-					TargetImageTags:       []string{"tag", "tag1", "tag2", "1"},
+					TargetImageName: "targetregistry.test/targetnamespace/targetimage:1.2.3",
+					TargetImageTags: []string{
+						"targetregistry.test/targetnamespace/targetimage:tag",
+						"targetregistry.test/targetnamespace/targetimage:tag1",
+						"targetregistry.test/targetnamespace/targetimage:tag2",
+						"targetregistry.test/targetnamespace/targetimage:1",
+					},
 					RemoveTargetImageTags: true,
 					RemoteSourceImage:     true,
 					SourceImageName:       "registry.test/namespace/image:tag",
@@ -442,8 +462,13 @@ func TestPromote(t *testing.T) {
 			},
 			prepareMockFunc: func(p *Application) {
 				options := &image.PromoteOptions{
-					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
-					TargetImageTags:       []string{"tag", "tag1", "tag2", "1"},
+					TargetImageName: "targetregistry.test/targetnamespace/targetimage:1.2.3",
+					TargetImageTags: []string{
+						"targetregistry.test/targetnamespace/targetimage:tag",
+						"targetregistry.test/targetnamespace/targetimage:tag1",
+						"targetregistry.test/targetnamespace/targetimage:tag2",
+						"targetregistry.test/targetnamespace/targetimage:1",
+					},
 					RemoveTargetImageTags: true,
 					RemoteSourceImage:     true,
 					SourceImageName:       "registry.test/namespace/image:tag",
@@ -491,8 +516,13 @@ func TestPromote(t *testing.T) {
 			},
 			prepareMockFunc: func(p *Application) {
 				options := &image.PromoteOptions{
-					TargetImageName:       "targetregistry.test/targetnamespace/targetimage:1.2.3",
-					TargetImageTags:       []string{"tag", "tag1", "tag2", "1"},
+					TargetImageName: "targetregistry.test/targetnamespace/targetimage:1.2.3",
+					TargetImageTags: []string{
+						"targetregistry.test/targetnamespace/targetimage:tag",
+						"targetregistry.test/targetnamespace/targetimage:tag1",
+						"targetregistry.test/targetnamespace/targetimage:tag2",
+						"targetregistry.test/targetnamespace/targetimage:1",
+					},
 					RemoveTargetImageTags: true,
 					RemoteSourceImage:     true,
 					SourceImageName:       "registry.test/namespace/image:tag",
