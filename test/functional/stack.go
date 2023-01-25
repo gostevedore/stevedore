@@ -13,8 +13,8 @@ type DockerComposeProject struct {
 	options *docker.Options
 }
 
-func NewDockerComposeProject(options *docker.Options) DockerComposeProject {
-	return DockerComposeProject{
+func NewDockerComposeProject(options *docker.Options) *DockerComposeProject {
+	return &DockerComposeProject{
 		options: options,
 	}
 }
@@ -24,14 +24,14 @@ type DockerComposeCommand struct {
 	testing *testing.T
 }
 
-func NewDockerComposeCommand(t *testing.T, project *DockerComposeProject) DockerComposeCommand {
-	return DockerComposeCommand{
+func NewDockerComposeCommand(t *testing.T, project *DockerComposeProject) *DockerComposeCommand {
+	return &DockerComposeCommand{
 		project: project,
 		testing: t,
 	}
 }
 
-func (c DockerComposeCommand) Execute(cmd string) (string, error) {
+func (c *DockerComposeCommand) Execute(cmd string) (string, error) {
 	var err error
 	var result string
 
@@ -48,7 +48,7 @@ func (c DockerComposeCommand) Execute(cmd string) (string, error) {
 	return result, nil
 }
 
-func (c DockerComposeCommand) ExpectedInResult(expected, result string) {
+func (c *DockerComposeCommand) ExpectedInResult(expected, result string) {
 	require.Contains(c.testing, expected, result)
 }
 
@@ -63,8 +63,8 @@ type DockerComposeStack struct {
 	PostDownAction []string
 }
 
-func NewDockerComposeStack(opts ...DockerComposeStackOptionsFunc) DockerComposeStack {
-	stack := DockerComposeStack{
+func NewDockerComposeStack(opts ...DockerComposeStackOptionsFunc) *DockerComposeStack {
+	stack := &DockerComposeStack{
 		PreUpAction:    make([]string, 0, 10),
 		PostUpAction:   make([]string, 0, 10),
 		PreDownAction:  make([]string, 0, 10),
@@ -111,7 +111,7 @@ func WithStackPostDownAction(cmd ...string) DockerComposeStackOptionsFunc {
 	}
 }
 
-func (s DockerComposeStack) Up(options ...string) error {
+func (s *DockerComposeStack) Up(options ...string) error {
 	if s.command == nil {
 		return errors.New("Docker-compose stack requires command")
 	}
@@ -138,7 +138,7 @@ func (s DockerComposeStack) Up(options ...string) error {
 	return nil
 }
 
-func (s DockerComposeStack) DownAndUp(options ...string) error {
+func (s *DockerComposeStack) DownAndUp(options ...string) error {
 	if s.command == nil {
 		return errors.New("Docker-compose stack requires command")
 	}
@@ -148,29 +148,15 @@ func (s DockerComposeStack) DownAndUp(options ...string) error {
 		return err
 	}
 
-	for _, action := range s.PreUpAction {
-		_, err := s.command.Execute(action)
-		if err != nil {
-			return err
-		}
-	}
-
-	_, err = s.command.Execute(strings.Join(append([]string{"up"}, options...), " "))
+	err = s.Up(options...)
 	if err != nil {
 		return err
-	}
-
-	for _, action := range s.PostUpAction {
-		_, err := s.command.Execute(action)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
 }
 
-func (s DockerComposeStack) Down(options ...string) error {
+func (s *DockerComposeStack) Down(options ...string) error {
 	if s.command == nil {
 		return errors.New("Docker-compose stack requires command")
 	}
@@ -197,7 +183,7 @@ func (s DockerComposeStack) Down(options ...string) error {
 	return nil
 }
 
-func (c DockerComposeStack) Execute(cmd string) error {
+func (c *DockerComposeStack) Execute(cmd string) error {
 	var err error
 	_, err = c.command.Execute(cmd)
 	if err != nil {
@@ -207,7 +193,7 @@ func (c DockerComposeStack) Execute(cmd string) error {
 	return nil
 }
 
-func (c DockerComposeStack) ExecuteAndCompare(cmd string, expectedResult string) error {
+func (c *DockerComposeStack) ExecuteAndCompare(cmd string, expectedResult string) error {
 	var err error
 	var result string
 

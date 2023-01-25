@@ -1,14 +1,25 @@
 package functional
 
 import (
+	"strings"
 	"testing"
 
-	// "github.com/gostevedore/stevedore/pkg/terratest/modules/docker"
+	"github.com/gruntwork-io/terratest/modules/docker"
 	"github.com/stretchr/testify/suite"
 )
 
 type BuildFunctionalTestsSuite struct {
 	FunctionalTestsSuite
+}
+
+func NewBuildFunctionalTestsSuite(opts ...OptionsFunc) *BuildFunctionalTestsSuite {
+
+	functional := NewTestSuite(opts...)
+	s := &BuildFunctionalTestsSuite{
+		*functional,
+	}
+
+	return s
 }
 
 func (s *BuildFunctionalTestsSuite) SetupTest() {
@@ -177,6 +188,55 @@ func (s *BuildFunctionalTestsSuite) TestBuildImageWithWildcardVersion() {
 	}
 }
 
+func buildSetupSuiteFunc(t *testing.T, stack *DockerComposeStack) error {
+	var err error
+
+	err = stack.DownAndUp("-d docker-hub gitserver")
+	return err
+}
+
+func buildTearDownSuiteFunc(t *testing.T, stack *DockerComposeStack) error {
+	err := stack.Down()
+	return err
+}
+
 func TestBuildFunctionalTests(t *testing.T) {
-	suite.Run(t, new(BuildFunctionalTestsSuite))
+
+	if testing.Short() {
+		t.Skip("functional test are skipped in short mode")
+	}
+
+	// s := new(BuildFunctionalTestsSuite)
+
+	options := &docker.Options{
+		WorkingDir:     ".",
+		ProjectName:    strings.ToLower(t.Name()),
+		EnableBuildKit: true,
+	}
+
+	project := NewDockerComposeProject(options)
+	command := NewDockerComposeCommand(t, project)
+
+	stack := NewDockerComposeStack(
+		WithCommand(command),
+		WithStackPreUpAction("build"),
+		WithStackPreUpAction("run --rm openssh -t rsa -q -N password -f id_rsa -C \"apenella@stevedore.test\""),
+		WithStackPreUpAction("run --rm openssl req -newkey rsa:2048 -nodes -keyout stevedore.test.key -out stevedore.test.csr -config /root/ssl/stevedore.test.cnf"),
+		WithStackPreUpAction("run --rm openssl x509 -signkey stevedore.test.key -in stevedore.test.csr -req -days 365 -out stevedore.test.crt -extensions req_ext -extfile /root/ssl/stevedore.test.cnf"),
+		WithStackPostUpAction("run --rm stevedore /prepare-images"),
+	)
+
+	s := NewBuildFunctionalTestsSuite(
+		WithStack(stack),
+		WithSetupSuiteFunc(buildSetupSuiteFunc),
+		WithTearDownSuiteFunc(buildTearDownSuiteFunc),
+	)
+
+	// s.Options(
+	// 	WithStack(stack),
+	// 	WithSetupSuiteFunc(buildSetupSuiteFunc),
+	// 	WithTearDownSuiteFunc(buildTearDownSuiteFunc),
+	// )
+
+	suite.Run(t, s)
 }

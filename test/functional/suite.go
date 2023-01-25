@@ -1,16 +1,59 @@
 package functional
 
 import (
-	"strings"
+	"errors"
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/docker"
 	"github.com/stretchr/testify/suite"
 )
 
 type FunctionalTestsSuite struct {
 	suite.Suite
-	stack DockerComposeStack
+	stack            *DockerComposeStack
+	setupSuiteFunc   func(*testing.T, *DockerComposeStack) error
+	tearDownSuitFunc func(*testing.T, *DockerComposeStack) error
+}
+
+type OptionsFunc func(*FunctionalTestsSuite)
+
+func NewTestSuite(opts ...OptionsFunc) *FunctionalTestsSuite {
+	suite := new(FunctionalTestsSuite)
+
+	suite.Options(opts...)
+
+	return suite
+}
+
+func defaultSetupSuiteFunc(t *testing.T, stack *DockerComposeStack) error {
+	return errors.New("You are using the default setup suite function")
+}
+
+func defaultTearDownSuiteFunc(t *testing.T, stack *DockerComposeStack) error {
+	return errors.New("You are using the default tear down suite function")
+}
+
+func WithStack(stack *DockerComposeStack) OptionsFunc {
+	return func(s *FunctionalTestsSuite) {
+		s.stack = stack
+	}
+}
+
+func WithSetupSuiteFunc(f func(*testing.T, *DockerComposeStack) error) OptionsFunc {
+	return func(s *FunctionalTestsSuite) {
+		s.setupSuiteFunc = f
+	}
+}
+
+func WithTearDownSuiteFunc(f func(*testing.T, *DockerComposeStack) error) OptionsFunc {
+	return func(s *FunctionalTestsSuite) {
+		s.tearDownSuitFunc = f
+	}
+}
+
+func (s *FunctionalTestsSuite) Options(opts ...OptionsFunc) {
+	for _, opt := range opts {
+		opt(s)
+	}
 }
 
 func (s *FunctionalTestsSuite) SetupSuite() {
@@ -20,27 +63,14 @@ func (s *FunctionalTestsSuite) SetupSuite() {
 		s.T().Skip("functional test are skipped in short mode")
 	}
 
-	options := &docker.Options{
-		WorkingDir:     ".",
-		ProjectName:    strings.ToLower(s.T().Name()),
-		EnableBuildKit: true,
+	if s.setupSuiteFunc == nil {
+		err = defaultSetupSuiteFunc(s.T(), s.stack)
+	} else {
+		err = s.setupSuiteFunc(s.T(), s.stack)
 	}
 
-	project := NewDockerComposeProject(options)
-	command := NewDockerComposeCommand(s.T(), &project)
-	s.stack = NewDockerComposeStack(
-		WithCommand(&command),
-		WithStackPreUpAction("build"),
-		WithStackPreUpAction("run --rm openssh -t rsa -q -N password -f id_rsa -C \"apenella@stevedore.test\""),
-		WithStackPreUpAction("run --rm openssl req -newkey rsa:2048 -nodes -keyout stevedore.test.key -out stevedore.test.csr -config /root/ssl/stevedore.test.cnf"),
-		WithStackPreUpAction("run --rm openssl x509 -signkey stevedore.test.key -in stevedore.test.csr -req -days 365 -out stevedore.test.crt -extensions req_ext -extfile /root/ssl/stevedore.test.cnf"),
-		WithStackPostUpAction("run --rm stevedore /prepare-images"),
-	)
-
-	//err = s.stack.DownAndUp("-d registry docker-hub gitserver stevedore")
-	err = s.stack.DownAndUp("-d docker-hub gitserver")
 	if err != nil {
-		defer s.TearDownSuite()
+		s.TearDownSuite()
 		s.T().Log(err)
 		s.T().FailNow()
 	}
@@ -53,9 +83,11 @@ func (s *FunctionalTestsSuite) TearDownSuite() {
 		s.T().Skip("functional test are skipped in short mode")
 	}
 
-	err = s.stack.Down()
-	if err != nil {
-		s.T().Log(err)
-		s.T().FailNow()
+	if s.stack != nil {
+		err = s.stack.Down()
+		if err != nil {
+			s.T().Log(err)
+			s.T().FailNow()
+		}
 	}
 }
