@@ -89,6 +89,10 @@ services:
       context: ../..
       dockerfile: test/stack/client/Dockerfile
     working_dir: /stevedore
+    command:
+      - tail
+      - -f
+      - /dev/null
     privileged: true
     environment:
       - GIT_KEYS=/git/keys
@@ -113,6 +117,12 @@ services:
       resources:
         limits:
           memory: 256M
+    healthcheck:
+      test: ["CMD", "nc", "-vz", "localhost","2376"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   gitserver:
     build:

@@ -25,11 +25,11 @@ func NewTestSuite(opts ...OptionsFunc) *FunctionalTestsSuite {
 }
 
 func defaultSetupSuiteFunc(t *testing.T, stack *DockerComposeStack) error {
-	return errors.New("You are using the default setup suite function")
+	return errors.New("You need to define a function to setup the test suite")
 }
 
 func defaultTearDownSuiteFunc(t *testing.T, stack *DockerComposeStack) error {
-	return errors.New("You are using the default tear down suite function")
+	return errors.New("You need to define a function to tear down the test suite")
 }
 
 func WithStack(stack *DockerComposeStack) OptionsFunc {
