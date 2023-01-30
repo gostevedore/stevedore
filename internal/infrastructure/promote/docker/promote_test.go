@@ -94,6 +94,8 @@ func TestPromote(t *testing.T) {
 				m.cmd.(*godockerbuilder.PromoteMock).On("WithTags", o.TargetImageTags)
 				m.cmd.(*godockerbuilder.PromoteMock).On("WithUseNormalizedNamed")
 				m.cmd.(*godockerbuilder.PromoteMock).On("Run", context.TODO()).Return(errors.New(contextError, "error from mock"))
+				m.cmd.(*godockerbuilder.PromoteMock).On("AddPullAuth", "", "").Return(nil)
+				m.cmd.(*godockerbuilder.PromoteMock).On("AddPushAuth", "", "").Return(nil)
 			},
 			assertFunc: nil,
 		},

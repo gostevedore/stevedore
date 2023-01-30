@@ -116,7 +116,6 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *image
 			if err != nil {
 				return errors.New(errContext, "", err)
 			}
-
 			d.driver.AddTags(imageTaggedName)
 		}
 	}
@@ -149,22 +148,13 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *image
 	// add docker build arguments: map de command flag options to build argurments
 	if i.Parent != nil && i.Parent.RegistryHost != "" {
 		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromRegistryHostKey], i.Parent.RegistryHost)
-
-		if options.PullAuthUsername != "" && options.PullAuthPassword != "" {
-			d.driver.AddAuth(options.PullAuthUsername, options.PullAuthPassword, i.Parent.RegistryHost)
-		}
+		d.driver.AddAuth(options.PullAuthUsername, options.PullAuthPassword, i.Parent.RegistryHost)
 	}
-
-	if options.PushAuthUsername != "" && options.PushAuthPassword != "" {
-		d.driver.AddAuth(options.PushAuthUsername, options.PushAuthPassword, i.RegistryHost)
-	}
+	d.driver.AddAuth(options.PushAuthUsername, options.PushAuthPassword, i.RegistryHost)
 
 	if options.PushImageAfterBuild {
 		d.driver.WithPushAfterBuild()
-
-		if options.PushAuthUsername != "" && options.PushAuthPassword != "" {
-			d.driver.AddPushAuth(options.PushAuthUsername, options.PushAuthPassword)
-		}
+		d.driver.AddPushAuth(options.PushAuthUsername, options.PushAuthPassword)
 	}
 
 	if options.PullParentImage {
