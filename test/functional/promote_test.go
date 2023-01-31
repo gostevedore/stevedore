@@ -93,9 +93,8 @@ func promoteTearDownSuiteFunc(t *testing.T, stack *DockerComposeStack) error {
 func TestPromoteFunctionalTests(t *testing.T) {
 
 	options := &docker.Options{
-		WorkingDir:     ".",
-		ProjectName:    strings.ToLower(t.Name()),
-		EnableBuildKit: true,
+		WorkingDir:  ".",
+		ProjectName: strings.ToLower(t.Name()),
 	}
 
 	project := NewDockerComposeProject(options)
@@ -109,9 +108,7 @@ func TestPromoteFunctionalTests(t *testing.T) {
 		WithStackPreUpAction("run --rm openssl x509 -signkey stevedore.test.key -in stevedore.test.csr -req -days 365 -out stevedore.test.crt -extensions req_ext -extfile /root/ssl/stevedore.test.cnf"),
 		// fixed timeout, try to improve by checking the status of dockerd with while !nc -vz localhost 2376; do sleep 1s;done
 		WithStackPostUpAction("exec stevedore sleep 10s"),
-		WithStackPostUpAction("exec stevedore docker pull ubuntu:latest"),
-		WithStackPostUpAction("exec stevedore docker tag ubuntu:latest docker-hub.stevedore.test:5000/library/ubuntu:latest"),
-		WithStackPostUpAction("exec stevedore docker push docker-hub.stevedore.test:5000/library/ubuntu:latest"),
+		WithStackPostUpAction("exec stevedore stevedore copy ubuntu:latest --use-source-image-from-remote --promote-image-registry-host docker-hub.stevedore.test:5000"),
 	)
 
 	s := NewPromoteFunctionalTestsSuite(

@@ -203,9 +203,8 @@ func buildTearDownSuiteFunc(t *testing.T, stack *DockerComposeStack) error {
 func TestBuildFunctionalTests(t *testing.T) {
 
 	options := &docker.Options{
-		WorkingDir:     ".",
-		ProjectName:    strings.ToLower(t.Name()),
-		EnableBuildKit: true,
+		WorkingDir:  ".",
+		ProjectName: strings.ToLower(t.Name()),
 	}
 
 	project := NewDockerComposeProject(options)
