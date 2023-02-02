@@ -1,6 +1,10 @@
 package configuration
 
-import "github.com/spf13/afero"
+import (
+	"strings"
+
+	"github.com/spf13/afero"
+)
 
 // Compatibilitier is the interface for the compatibility checker
 type Compatibilitier interface {
@@ -25,6 +29,7 @@ type ConfigurationLoader interface {
 	SetEnvPrefix(in string)
 	SetFs(fs afero.Fs)
 	ConfigFileUsed() string
+	SetEnvKeyReplacer(*strings.Replacer)
 }
 
 type ConfigurationWriter interface {

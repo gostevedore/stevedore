@@ -1,6 +1,8 @@
 package loader
 
 import (
+	"strings"
+
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 )
@@ -81,4 +83,9 @@ func (c *ConfigurationLoader) SetFs(fs afero.Fs) {
 // ConfigFileUsed sets the filesystem to use to read configuration
 func (c *ConfigurationLoader) ConfigFileUsed() string {
 	return c.viper.ConfigFileUsed()
+}
+
+// SetEnvKeyReplacer
+func (c *ConfigurationLoader) SetEnvKeyReplacer(replacer *strings.Replacer) {
+	c.viper.SetEnvKeyReplacer(replacer)
 }

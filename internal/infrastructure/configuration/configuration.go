@@ -203,6 +203,9 @@ func New(fs afero.Fs, loader ConfigurationLoader, compatibility Compatibilitier)
 	loader.AutomaticEnv()
 	loader.SetEnvPrefix("stevedore")
 
+	replacer := strings.NewReplacer(".", "_")
+	loader.SetEnvKeyReplacer(replacer)
+
 	loader.SetConfigName(DefaultConfigFile)
 	loader.SetConfigType(DefaultConfigFileExtention)
 
