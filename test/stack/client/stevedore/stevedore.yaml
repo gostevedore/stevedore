@@ -4,7 +4,8 @@ builders_path: builders
 log_path: /dev/stdout
 credentials:
   storage_type: envvars
-  encryption_key: 12345asdfg
+  # Encryption key is set as environment variable STEVEDORE_CREDENTIALS_ENCRYPTION_KEY=12345asdfg
+  # encryption_key: 12345asdfg
   # Uncomment the following lines to use the local credentials store
   # storage_type: local
   # local_storage_path: ./credentials
