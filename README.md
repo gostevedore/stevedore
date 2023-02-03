@@ -1,60 +1,252 @@
 
 ![stevedore-logo](docs/logo/logo_4_stevedore.png "Stevedore logo")
 
+Stevedore is a tool that allows you to build Docker images at scale, a factory to build Docker images. It is not an alternative to Dockerfile or Buildkit, but a way to use them to improve the experience you have building and promoting bunches of Docker images
 
 ## [Stevedore website](https://gostevedore.github.io/) - [Documentation](https://gostevedore.github.io/documentation/)
 
----
-
-Stevedore, the docker images' factory
-
-- [Stevedore website - Documentation](#stevedore-website---documentation)
-- [What is Stevedore?](#what-is-stevedore)
-- [Why stevedore?](#why-stevedore)
-- [Getting started](#getting-started)
-- [Features](#features)
-    - [Automate](#automate)
-    - [Standardize](#standardize)
-    - [Semver tags](#semver-tags)
-    - [Credentials](#credentials)
-    - [Promote](#promote)
-
-## What is Stevedore?
-Stevedore is a Docker images factory, a tool that allows you to build Docker images at scale. It is not an alternative to Dockerfile or Buildkit, but a way to improve your building and promote Docker images experience.
-
-
 ## Why stevedore?
-Stevedore is a helpful tool when you need to build a bunch of Docker images, build it in a standardized way, such as on a microservices architecture. It lets you define how to build your Docker images and their parent-child relationship. It builds automatically the children's images when the parents are ready. In case you are managing your tags using semver, it is possible to generate automatically several tags following the version tree, even you can configure which tags to create.
-Stevedore could also store your private registry credentials and log in to them on your behalf during the CI/CD processes.
+Stevedore is a helpful tool when you need to build bunches of Docker images, build them in a standardized way, such as on a microservices architecture. It lets you define how to build your Docker images as well as define a relationship amongst those images, with that, you build automatically the children's images when the parent image is ready. 
+In case you use semver to define your tags, you can generate multiple tags automatically following the version tree.
+You can build an image using a folder on your local host as the build context, and you can also use a git repository as the build context. And not only that, but you can merge several sources to create the build context. 
+Finally, Stevedore provides a credentials store to authenticate on your behalf to a Docker registry when you want to push or promote a Docker images. It also provides the capability to authenticate to AWS ECR.
 
 ## Getting started
 
+### Initial setup
 - Initialize Stevedore
-- Add credentials
-- Define images
-- Start building
+```sh
+/docker # stevedore initialize --builders-path builders --credentials-storage-type local --generate-credentials-encryption-key --images-path images --log-path-file /dev/null
+2023-02-03 21:57:20     INFO    Executing command 'stevedore [COMMAND] [OPTIONS] initialize'
+```
+
+You can validate the configuration using the get configuration subcommand.
+```sh
+/docker # stevedore get configuration
+
+ builders_path: builders
+ concurrency: 4
+ semantic_version_tags_enabled: false
+ images_path: images
+ log_path: /dev/null
+ push_images: false
+ semantic_version_tags_templates:
+   - {{ .Major }}.{{ .Minor }}.{{ .Patch }}
+ credentials:
+   storage_type: local
+   format: json
+   encryption_key: 1c591ac2d9c2664db265704052c17a67
+```
+
+- Add credentials. Since you create basic auth credentials, it means a username and password, you are asked to introduce the password
+```sh
+/docker # stevedore create credentials registry.stevedore.test --username admin
+Password:
+```
+
+Validate that the credentials
+```sh
+/docker # stevedore get credentials
+ID                      TYPE              CRENDENTIALS
+registry.stevedore.test username-password username=admin
+```
+
+Since you have defined an encryption key, the credentials content is encrypted at rest.
+```sh
+/docker # cat credentials/82e99d42ee1191bb42fbfb444920104d
+2d067af765e8de39fd76b5cd1a430768a66464208bf8fe0c092bcb146a24feed377b916952494e6cea55187f397aee8c2d90a55ef9882cf85ee97ed5660700afa002767e028b4ea6bde274a524e7100f5729601f2d44caa08a1a102af7f79079723f35953133be56e31d0eaf44f52255a5c94512c74625dca3f00b77f9031d4f48f5cf38293f7a2a90f727c9a5eedf57e001ea8766a6d1e47d20354ad3ca6cf022ee70b97b3598e7377355a7b52f62fab8b6628b230c33cf0234ea1208c0d6ecef65e8e1206e7daf15acbbfb62d77650982c9f487129534b367a7fc2b519fd04538bffe87e57184adabc57e613be4b0e106480f9078c8c1c916b65de0039a3adc6cea70b962c0d93477e114e25a2a160db0218e9312d0df00d9b1044e0b4981982834094a36d8d9e4fd9ed766605c1a0b43ff11219d6e5bebb414e084102ce8cd57e86a658455de5fff927ba9be039be4afd393b7e8137cdefb268ed7c79ff37a60c1be3693372d7890b9f8f7c81fa559719ff83371e080efaee86b239e127a094136d056641a4a58245f71414b53dd96214149c6f54de055064163fa9dcb0a6b274d9269a49e1e4f76a9c0a89ec12d40c577ea1b5c1b3f9f8454f5473518c58e8c139a96335850a6415df7e2d41f5ab383f85d30281fd29493db0f0fb577aba35326cd5063b463a41161888514dbce09ccea5887494733256d74341e2623a5328c656/docker #
+```
+
+### Build the Docker images for an application
+The idea is to define an application that needs to have multiple versions, and must be built from multiple parents.
+
+First of all we create the application.
+Take a look at the Dockerfile arguments `image_from_name` and `image_from_tag`. These arguments are automatically generated by Stevedore and provides information about the parent. However, you can also use any other argument set in the image definition through the `vars` or `persistent_vars` attributes.
+
+```sh
+/apps/my-app # cat << EOF > Dockerfile
+ARG image_from_name
+ARG image_from_tag
+
+FROM ${image_from_name}:${image_from_tag}
+
+CMD ["echo","Hey there!"]
+EOF
+```
+
+- Define the builder
+Since we want to define multiple versions for the same application, we define one builder.
+```sh
+/docker/builders # cat << EOF > apps.yaml
+builders:
+  my-app:
+    driver: docker
+    options:
+      context:
+        - path: /apps/my-app
+EOF
+```
+
+```sh
+/docker # stevedore get builders
+NAME    DRIVER
+my-apps docker
+```
+
+- Define the foundational images, the parent images.
+On the parent images we define a `persistent_labels` to set a label with the creation time to all the images created from these images.
+```sh
+/docker/images # cat << EOF > foundational.yaml
+images:
+  busybox:
+    "1.36":
+      persistent_labels:
+        created_at: "{{ .DateRFC3339Nano }}"
+    "1.35":
+      persistent_labels:
+        created_at: "{{ .DateRFC3339Nano }}"
+EOF
+```
+
+- Define the image for our application
+```sh
+/docker/images # cat << EOF > applications.yaml
+images:
+  my-app:
+    "2.1.0":
+      name: "{{ .Name }}"
+      version: "{{ .Version }}-{{ .Parent.Name }}-{{ .Parent.Version }}"
+      registry: registry.stevedore.test
+      builder: my-app
+      parents:
+        busybox:
+          - "1.35"
+    "3.2.1":
+      name: "{{ .Name }}"
+      version: "{{ .Version }}-{{ .Parent.Name }}-{{ .Parent.Version }}"
+      registry: registry.stevedore.test
+      builder: my-app
+      parents:
+        busybox:
+          - "1.35"
+          - "1.36"
+EOF
+```
+
+We ensure that images are already defined.
+```sh
+/docker # stevedore get images --tree
+├─── busybox:1.35
+│  ├─── registry.stevedore.test/my-app:3.2.1-busybox-1.35
+│  ├─── registry.stevedore.test/my-app:2.1.0-busybox-1.35
+├─── busybox:1.36
+│  ├─── registry.stevedore.test/my-app:3.2.1-busybox-1.36
+```
+
+- Start building the Docker images
+```sh
+/docker # stevedore build my-app
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 Step 1/7 : ARG image_from_name
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 Step 2/7 : ARG image_from_tag
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 Step 3/7 : FROM ${image_from_name}:${image_from_tag}
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 Step 1/7 : ARG image_from_name
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 Step 2/7 : ARG image_from_tag
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 Step 3/7 : FROM ${image_from_name}:${image_from_tag}
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 Step 1/7 : ARG image_from_name
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 Step 2/7 : ARG image_from_tag
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 Step 3/7 : FROM ${image_from_name}:${image_from_tag}
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 ‣  1.36:  Pulling from library/busybox
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 ‣  205dae5015e7:  Pull complete
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 ‣  Digest: sha256:7b3ccabffc97de872a30dfd234fd972a66d247c8cfc69b0550f276481852627c
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 ‣  Status: Downloaded newer image for busybox:1.36
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 ---> 66ba00ad3de8
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 Step 4/7 : ARG message=my-app!
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 ---> Running in 7abead2499e1
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 ---> 5f0e093a1a94
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 ‣  1.35:  Pulling from library/busybox
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 ‣  1.35:  Pulling from library/busybox
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 ‣  2461e8255644:  Pull complete
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 ‣  2461e8255644:  Pull complete
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 ‣  Digest: sha256:f4ed5f2163110c26d42741fdc92bd1710e118aed4edb19212548e8ca4e5fca22
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 ‣  Status: Downloaded newer image for busybox:1.35
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 ---> f68fa78323e7
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 Step 4/7 : ARG message=my-app!
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 ‣  Digest: sha256:f4ed5f2163110c26d42741fdc92bd1710e118aed4edb19212548e8ca4e5fca22
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 ‣  Status: Image is up to date for busybox:1.35
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 ---> f68fa78323e7
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 Step 4/7 : ARG message=my-app!
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 ---> Running in 72d2a3a19bd5
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 ---> Running in d317a4adc9a3
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 ---> 0116092ba9da
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 Step 5/7 : RUN echo "Hey there! Welcome to ${message}" > /message.txt
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 ---> 03bf5a7e8561
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 Step 5/7 : RUN echo "Hey there! Welcome to ${message}" > /message.txt
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 ---> Running in a4c2d4b4ccb4
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 ---> Running in 41aacd4c92a7
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 ---> 5de239d250df
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 Step 6/7 : CMD ["cat","/message.txt"]
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 ---> Running in 0c32a6be979e
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 ---> e50f09eee688
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 Step 7/7 : LABEL created_at=2023-02-03T22:42:55.122127826Z
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 ---> Running in 4068fc05135e
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 ---> d56ea6314840
+registry.stevedore.test/my-app:3.2.1-busybox-1.36  ‣ sha256:d56ea631484054906c3daa8289b064b91725714ddcda4e3874d1e0a7b6561c49
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 Successfully built d56ea6314840
+registry.stevedore.test/my-app:3.2.1-busybox-1.36 Successfully tagged registry.stevedore.test/my-app:3.2.1-busybox-1.36
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 ---> 75869c3433a5
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 Step 6/7 : CMD ["cat","/message.txt"]
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 ---> Running in 761056fa55b5
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 ---> 3e4e261bed5a
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 Step 7/7 : LABEL created_at=2023-02-03T22:42:55.121439497Z
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 ---> Running in f03539b96af7
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 ---> 2e362f2c8f26
+registry.stevedore.test/my-app:2.1.0-busybox-1.35  ‣ sha256:2e362f2c8f265633aec978d68ab5dc1e57efbf27cc2fe442dd8b88c4d82e6582
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 Successfully built 2e362f2c8f26
+registry.stevedore.test/my-app:2.1.0-busybox-1.35 Successfully tagged registry.stevedore.test/my-app:2.1.0-busybox-1.35
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 ---> 0fa400361b6b
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 Step 6/7 : CMD ["cat","/message.txt"]
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 ---> Running in 1ff331631429
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 ---> 778d69df86fa
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 Step 7/7 : LABEL created_at=2023-02-03T22:42:55.121439497Z
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 ---> Running in 07ed3cc21395
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 ---> 612c3f025134
+registry.stevedore.test/my-app:3.2.1-busybox-1.35  ‣ sha256:612c3f02513437418e3bd10f784af44efe09b36583b3c1b9ba54138d3158f1f4
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 Successfully built 612c3f025134
+registry.stevedore.test/my-app:3.2.1-busybox-1.35 Successfully tagged registry.stevedore.test/my-app:3.2.1-busybox-1.35
+```
+
+Validate the recently create images
+```sh
+/docker # docker images
+REPOSITORY                       TAG                  IMAGE ID       CREATED         SIZE
+registry.stevedore.test/my-app   3.2.1-busybox-1.35   612c3f025134   2 minutes ago   4.86MB
+registry.stevedore.test/my-app   3.2.1-busybox-1.36   d56ea6314840   2 minutes ago   4.87MB
+registry.stevedore.test/my-app   2.1.0-busybox-1.35   2e362f2c8f26   2 minutes ago   4.86MB
+busybox                          1.36                 66ba00ad3de8   4 weeks ago     4.87MB
+busybox                          1.35                 f68fa78323e7   6 weeks ago     4.86MB
+```
 
 ## Features
 
 #### Automate
 Define the Docker images relationship and automate its building process
-> **use case:** You have an image created with a custom setup and that image is configured as the base from many other images, you could understand it as the image `FROM`, on all your microservices. Then, every time you rebuild that image to include new security patches, all those images that depend on it are automatically built
+**use case:** You have an image created with a custom setup and that image is configured as the base from many other images, you could understand it as the image `FROM`, on all your microservices. Then, every time you rebuild that image to include new security patches, all those images that depend on it are automatically built
 
 #### Standardize
 Standardize and reuse how you create your images
-> **use case:** Your all microservices are based on the same skeleton, with a common way to test or built them. Then, you could define one Dockerfile and reuse it to generate the images for all your microservices
+**use case:** Your all microservices are based on the same skeleton, with a common way to test or built them. Then, you could define one Dockerfile and reuse it to generate the images for all your microservices
 
 #### Semver tags
 Generate automatically semver tags when the main tag is semver 2.0.0 compliance
-> **use case:** Suppose that you are tagging your images using semantic versioning. In that case, you could also generate automatically new tags based on semver tree
+**use case:** Suppose that you are tagging your images using semantic versioning. In that case, you could also generate automatically new tags based on semver tree
 
 _example:_
 _You have the tag `2.1.0`, then tags either `2` and `2.1` are also generated._
 
 #### Credentials
 Centralized the Docker registry's credentials store
-> **use case:** Suppose that your Docker registry needs to be secured and should only be accessed by continuous delivery procedures. Then, `stevedore` can authenticate on your behalf and push any created image to a Docker registry
+**use case:** Suppose that your Docker registry needs to be secured and should only be accessed by continuous delivery procedures. Then, `stevedore` can authenticate on your behalf and push any created image to a Docker registry
 
 #### Promote
 Promote images to another Docker registry or to another registry namespace
-> **use case:** Your production environment only accepts pulling images from a specific Docker registry, and that docker registry is only used by your production environment. Suppose that you have built and pushed an image to your staging Docker registry and you have passed all your end-to-end tests. Then, you can promote the image from your staging Docker registry to your production one
+**use case:** Your production environment only accepts pulling images from a specific Docker registry, and that docker registry is only used by your production environment. Suppose that you have built and pushed an image to your staging Docker registry and you have passed all your end-to-end tests. Then, you can promote the image from your staging Docker registry to your production one
