@@ -20,14 +20,19 @@ Stevedore, the docker images' factory
     - [Promote](#promote)
 
 ## What is Stevedore?
-Stevedore is a Docker images factory, a tool that helps you to manage bunches of Docker image builds in just one command. It is not an alternative to Dockerfile or Buildkit, but a way to improve your building and promote experience.
+Stevedore is a Docker images factory, a tool that allows you to build Docker images at scale. It is not an alternative to Dockerfile or Buildkit, but a way to improve your building and promote Docker images experience.
 
 
 ## Why stevedore?
-Stevedore is a helpful tool when you need to manage a bunch of Docker images in a standardized way, such as on a microservices architecture. It lets you define how to build your Docker images and their parent-child relationship. It builds automatically the children's images when the parents are ready. In case you are managing your tags using semver, it is possible to generate automatically several tags following the version tree, even you can configure which tags to create.
+Stevedore is a helpful tool when you need to build a bunch of Docker images, build it in a standardized way, such as on a microservices architecture. It lets you define how to build your Docker images and their parent-child relationship. It builds automatically the children's images when the parents are ready. In case you are managing your tags using semver, it is possible to generate automatically several tags following the version tree, even you can configure which tags to create.
 Stevedore could also store your private registry credentials and log in to them on your behalf during the CI/CD processes.
 
 ## Getting started
+
+- Initialize Stevedore
+- Add credentials
+- Define images
+- Start building
 
 ## Features
 
