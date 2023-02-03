@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestViperBehavior(t *testing.T) {
@@ -168,6 +169,7 @@ func TestNew(t *testing.T) {
 				l.(*loader.MockConfigurationLoader).On("SetFs", afero.NewMemMapFs()).Return()
 				l.(*loader.MockConfigurationLoader).On("AutomaticEnv").Return()
 				l.(*loader.MockConfigurationLoader).On("SetEnvPrefix", "stevedore").Return()
+				l.(*loader.MockConfigurationLoader).On("SetEnvKeyReplacer", mock.Anything).Return()
 				l.(*loader.MockConfigurationLoader).On("SetConfigName", DefaultConfigFile).Return()
 				l.(*loader.MockConfigurationLoader).On("SetConfigType", DefaultConfigFileExtention).Return()
 
@@ -241,6 +243,7 @@ func TestNew(t *testing.T) {
 				l.(*loader.MockConfigurationLoader).On("SetFs", afero.NewMemMapFs()).Return()
 				l.(*loader.MockConfigurationLoader).On("AutomaticEnv").Return()
 				l.(*loader.MockConfigurationLoader).On("SetEnvPrefix", "stevedore").Return()
+				l.(*loader.MockConfigurationLoader).On("SetEnvKeyReplacer", mock.Anything).Return()
 				l.(*loader.MockConfigurationLoader).On("SetConfigName", DefaultConfigFile).Return()
 				l.(*loader.MockConfigurationLoader).On("SetConfigType", DefaultConfigFileExtention).Return()
 
