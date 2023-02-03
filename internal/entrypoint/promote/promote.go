@@ -216,9 +216,6 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.CredentialsConfi
 
 	switch conf.StorageType {
 	case credentials.LocalStore:
-		// if conf.Format == "" {
-		// 	return nil, errors.New(errContext, "To create credentials store in the promote entrypoint, credentials format must be specified")
-		// }
 
 		if e.compatibility == nil {
 			return nil, errors.New(errContext, "To create credentials store in the promote entrypoint, compatibility is required")
@@ -229,13 +226,6 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.CredentialsConfi
 		}
 
 		credentialsCompatibility := credentialscompatibility.NewCredentialsCompatibility(e.compatibility)
-
-		// credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
-		// credentialsFormat, err := credentialsFormatFactory.Get(credentials.JSONFormat)
-		// if err != nil {
-		// 	return nil, errors.New(errContext, "", err)
-		// }
-		// store = credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
 
 		localStoreOpts := []credentialslocalstore.OptionsFunc{
 			credentialslocalstore.WithFilesystem(e.fs),
@@ -284,13 +274,6 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
-	// storefactory := credentialsstorefactory.NewCredentialsStoreFactory()
-	// storefactory.Register(credentials.LocalStore, localstore)
-	// // since there is only one store, we can just use it directly
-	// store, err := storefactory.Get(credentials.LocalStore)
-	// if err != nil {
-	// 	return nil, errors.New(errContext, "", err)
-	// }
 
 	// create auth methods
 	basic := authmethodbasic.NewBasicAuthMethod()

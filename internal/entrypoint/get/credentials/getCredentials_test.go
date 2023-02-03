@@ -89,14 +89,6 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 			),
 			err: errors.New(errContext, "To create credentials local store in the entrypoint, credentials configuration is required"),
 		},
-		// {
-		// 	desc: "Testing error creating credentials local storage on get credentials entrypoint when credentials format is not defined",
-		// 	entrypoint: NewEntrypoint(
-		// 		WithFileSystem(afero.NewMemMapFs()),
-		// 	),
-		// 	conf: &configuration.CredentialsConfiguration{},
-		// 	err:  errors.New(errContext, "To create credentials local store in the entrypoint, credentials format must be specified"),
-		// },
 		{
 			desc: "Testing error creating credentials local storage on get credentials entrypoint when compatibilitier format is not defined",
 			entrypoint: NewEntrypoint(

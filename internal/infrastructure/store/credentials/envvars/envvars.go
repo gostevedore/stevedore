@@ -26,7 +26,6 @@ type EnvvarsStore struct {
 	backend    EnvvarsBackender
 	encryption Encrypter
 	formater   repository.Formater
-	//loader *viper.Viper
 }
 
 // NewEnvvarsStore creates a new mocked store for credentials

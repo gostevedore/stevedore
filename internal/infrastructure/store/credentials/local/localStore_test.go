@@ -472,38 +472,3 @@ func TestAll(t *testing.T) {
 		})
 	}
 }
-
-// func TestHashID(t *testing.T) {
-
-// 	errContext := "(store::credentials::local::hashID)"
-// 	tests := []struct {
-// 		desc string
-// 		id   string
-// 		res  string
-// 		err  error
-// 	}{
-// 		{
-// 			desc: "Testing error when hashing an id with providing the id",
-// 			id:   "",
-// 			err:  errors.New(errContext, "Hash method requires an id"),
-// 		},
-// 		{
-// 			desc: "Testing hashing an id",
-// 			id:   "id",
-// 			res:  "b80bb7740288fda1f201890375a60c8f",
-// 		},
-// 	}
-
-// 	for _, test := range tests {
-// 		t.Run(test.desc, func(t *testing.T) {
-// 			t.Log(test.desc)
-
-// 			res, err := hashID(test.id)
-// 			if err != nil {
-// 				assert.Equal(t, test.err.Error(), err.Error())
-// 			} else {
-// 				assert.Equal(t, test.res, res)
-// 			}
-// 		})
-// 	}
-// }

@@ -247,19 +247,3 @@ func (s *LocalStore) All() ([]*credentials.Badge, error) {
 
 	return badges, nil
 }
-
-// // hashID generates a hash for the id
-// func hashID(id string) (string, error) {
-
-// 	errContext := "(store::credentials::local::hashID)"
-
-// 	if id == "" {
-// 		return "", errors.New(errContext, "Hash method requires an id")
-// 	}
-
-// 	hasher := md5.New()
-// 	hasher.Write([]byte(id))
-// 	registryHashed := hex.EncodeToString(hasher.Sum(nil))
-
-// 	return registryHashed, nil
-// }
