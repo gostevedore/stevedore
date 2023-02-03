@@ -81,7 +81,7 @@ func (s *PromoteFunctionalTestsSuite) TestPromoteImage() {
 func promoteSetupSuiteFunc(t *testing.T, stack *DockerComposeStack) error {
 	var err error
 
-	err = stack.DownAndUp("-d docker-hub registry stevedore")
+	err = stack.DownAndUp("-d gitserver docker-hub")
 	return err
 }
 
@@ -106,6 +106,7 @@ func TestPromoteFunctionalTests(t *testing.T) {
 		WithStackPreUpAction("run --rm openssh -t rsa -q -N password -f id_rsa -C \"apenella@stevedore.test\""),
 		WithStackPreUpAction("run --rm openssl req -newkey rsa:2048 -nodes -keyout stevedore.test.key -out stevedore.test.csr -config /root/ssl/stevedore.test.cnf"),
 		WithStackPreUpAction("run --rm openssl x509 -signkey stevedore.test.key -in stevedore.test.csr -req -days 365 -out stevedore.test.crt -extensions req_ext -extfile /root/ssl/stevedore.test.cnf"),
+		WithStackPostUpAction("up -d stevedore"),
 		// fixed timeout, try to improve by checking the status of dockerd with while !nc -vz localhost 2376; do sleep 1s;done
 		WithStackPostUpAction("exec stevedore sleep 10s"),
 		WithStackPostUpAction("exec stevedore stevedore copy ubuntu:latest --use-source-image-from-remote --promote-image-registry-host docker-hub.stevedore.test:5000"),
