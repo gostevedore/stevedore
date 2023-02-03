@@ -25,7 +25,9 @@ func (o *ConfigurationConsoleOutput) Write(conf *configuration.Configuration) er
 	fmt.Fprintf(o.writer, " %s: %d\n", configuration.ConcurrencyKey, conf.Concurrency)
 	fmt.Fprintf(o.writer, " %s: %t\n", configuration.EnableSemanticVersionTagsKey, conf.EnableSemanticVersionTags)
 	fmt.Fprintf(o.writer, " %s: %s\n", configuration.ImagesPathKey, conf.ImagesPath)
-	fmt.Fprintf(o.writer, " %s: %s\n", configuration.LogPathFileKey, conf.LogPathFile)
+	if conf.LogPathFile != "" {
+		fmt.Fprintf(o.writer, " %s: %s\n", configuration.LogPathFileKey, conf.LogPathFile)
+	}
 	fmt.Fprintf(o.writer, " %s: %t\n", configuration.PushImagesKey, conf.PushImages)
 	if len(conf.SemanticVersionTagsTemplates) > 0 {
 		fmt.Fprintf(o.writer, " %s:\n", configuration.SemanticVersionTagsTemplatesKey)
@@ -39,6 +41,9 @@ func (o *ConfigurationConsoleOutput) Write(conf *configuration.Configuration) er
 		fmt.Fprintf(o.writer, "   %s: %s\n", configuration.CredentialsFormatKey, conf.Credentials.Format)
 		if conf.Credentials.StorageType == credentials.LocalStore {
 			fmt.Fprintf(o.writer, "   %s: %s\n", configuration.CredentialsLocalStoragePathKey, conf.Credentials.LocalStoragePath)
+		}
+		if conf.Credentials.EncryptionKey != "" {
+			fmt.Fprintf(o.writer, "   %s: %s\n", configuration.CredentialsEncryptionKeyKey, conf.Credentials.EncryptionKey)
 		}
 	}
 	fmt.Println()

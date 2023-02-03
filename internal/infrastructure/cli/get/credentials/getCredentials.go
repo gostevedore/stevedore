@@ -4,6 +4,7 @@ import (
 	"context"
 
 	errors "github.com/apenella/go-common-utils/error"
+	getcredentialsentrypoint "github.com/gostevedore/stevedore/internal/entrypoint/get/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/command"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	"github.com/spf13/cobra"
@@ -11,6 +12,8 @@ import (
 
 // NewCommand return an stevedore command object to get credentials
 func NewCommand(ctx context.Context, config *configuration.Configuration, entrypoint Entrypointer) *command.StevedoreCommand {
+
+	getCredentialsFlagOptions := &getCredentialsFlagOptions{}
 
 	getCredentialsCmd := &cobra.Command{
 		Use: "credentials",
@@ -32,7 +35,10 @@ func NewCommand(ctx context.Context, config *configuration.Configuration, entryp
 
 			errContext := "(cli::get::credentials::RunE)"
 
-			err = entrypoint.Execute(ctx, cmd.Flags().Args(), config)
+			entrypointOptions := &getcredentialsentrypoint.Options{}
+			entrypointOptions.ShowSecrets = getCredentialsFlagOptions.ShowSecrets
+
+			err = entrypoint.Execute(ctx, cmd.Flags().Args(), config, entrypointOptions)
 			if err != nil {
 				return errors.New(errContext, "", err)
 			}
@@ -40,6 +46,8 @@ func NewCommand(ctx context.Context, config *configuration.Configuration, entryp
 			return nil
 		},
 	}
+
+	getCredentialsCmd.Flags().BoolVar(&getCredentialsFlagOptions.ShowSecrets, "show-secrets", false, "When this flag is enabled, the output provide secrets")
 
 	command := &command.StevedoreCommand{
 		Command: getCredentialsCmd,

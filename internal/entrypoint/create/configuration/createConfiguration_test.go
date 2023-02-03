@@ -80,6 +80,38 @@ func TestPrepareHnadlerOptions(t *testing.T) {
 			},
 			err: &errors.Error{},
 		},
+		{
+			desc:       "Testing prepare handler options into create configuration entrypoint with encryption key",
+			entrypoint: NewCreateConfigurationEntrypoint(),
+			options: &Options{
+				BuildersPath:                 "builderspath",
+				Concurrency:                  5,
+				CredentialsFormat:            "credentialsformat",
+				CredentialsLocalStoragePath:  "credentialslocalstoragepath",
+				CredentialsStorageType:       "credentialsstoragetype",
+				CredentialsEncryptionKey:     "credentialsencryptionkey",
+				EnableSemanticVersionTags:    true,
+				Force:                        true,
+				ImagesPath:                   "imagespath",
+				LogPathFile:                  "logpathfile",
+				PushImages:                   true,
+				SemanticVersionTagsTemplates: []string{"tmpl1"},
+			},
+			res: &handler.Options{
+				BuildersPath:                 "builderspath",
+				Concurrency:                  5,
+				CredentialsFormat:            "credentialsformat",
+				CredentialsLocalStoragePath:  "credentialslocalstoragepath",
+				CredentialsStorageType:       "credentialsstoragetype",
+				CredentialsEncryptionKey:     "credentialsencryptionkey",
+				EnableSemanticVersionTags:    true,
+				ImagesPath:                   "imagespath",
+				LogPathFile:                  "logpathfile",
+				PushImages:                   true,
+				SemanticVersionTagsTemplates: []string{"tmpl1"},
+			},
+			err: &errors.Error{},
+		},
 	}
 
 	for _, test := range tests {
@@ -199,6 +231,61 @@ func TestCreateOutputWriter(t *testing.T) {
 				assert.Equal(t, test.err, err)
 			} else {
 				assert.IsType(t, test.res, res)
+			}
+		})
+	}
+}
+
+func TestGetEncryptionKey(t *testing.T) {
+	errContext := "(entrypoint::create::configuration::getEncryptionKey)"
+	tests := []struct {
+		desc              string
+		entrypoint        *CreateConfigurationEntrypoint
+		options           *Options
+		resLenth          int
+		err               error
+		prepareAssertFunc func(*CreateConfigurationEntrypoint)
+	}{
+		{
+			desc:       "Testing create configuration entrypoint error getting encryption key when encryption key is set and generate encryption key is enabled",
+			entrypoint: NewCreateConfigurationEntrypoint(),
+			options: &Options{
+				CredentialsEncryptionKey:         "abc",
+				GenerateCredentialsEncryptionKey: true,
+			},
+			err: errors.New(errContext, "Providing an encryption key is not compatible with the generate encryption key option"),
+		},
+		{
+			desc:       "Testing create configuration entrypoint get encryption key when generate encryption key is enabled",
+			entrypoint: NewCreateConfigurationEntrypoint(),
+			options: &Options{
+				GenerateCredentialsEncryptionKey: true,
+			},
+			resLenth: 32,
+		},
+		{
+			desc:       "Testing create configuration entrypoint get encryption key",
+			entrypoint: NewCreateConfigurationEntrypoint(),
+			options: &Options{
+				CredentialsEncryptionKey: "abc",
+			},
+			resLenth: 3,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			if test.prepareAssertFunc != nil && test.entrypoint != nil {
+				test.prepareAssertFunc(test.entrypoint)
+			}
+
+			res, err := test.entrypoint.getEncryptionKey(test.options)
+			if err != nil {
+				assert.Equal(t, test.err, err)
+			} else {
+				assert.Equal(t, test.resLenth, len(res))
 			}
 		})
 	}

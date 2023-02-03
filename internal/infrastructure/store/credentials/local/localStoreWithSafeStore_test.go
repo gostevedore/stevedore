@@ -45,11 +45,13 @@ func TestStore_LocalStoreWithSafeStore(t *testing.T) {
 			desc: "Testing error persisting a badge into local store that already exist with safe store",
 			id:   "existing_id",
 			store: NewLocalStoreWithSafeStore(
-				testFs,
-				credentialsPath,
-				mock.NewMockFormater(),
-				credentialscompatibility.NewCredentialsCompatibility(
-					compatibility.NewMockCompatibility(),
+				WithFilesystem(testFs),
+				WithPath(credentialsPath),
+				WithFormater(mock.NewMockFormater()),
+				WithCompatibility(
+					credentialscompatibility.NewCredentialsCompatibility(
+						compatibility.NewMockCompatibility(),
+					),
 				),
 			),
 			err: errors.New(errContext, "Credentials 'existing_id' already exist"),
@@ -57,11 +59,13 @@ func TestStore_LocalStoreWithSafeStore(t *testing.T) {
 		{
 			desc: "Testing persist a badge into local store with safe store",
 			store: NewLocalStoreWithSafeStore(
-				testFs,
-				credentialsPath,
-				mock.NewMockFormater(),
-				credentialscompatibility.NewCredentialsCompatibility(
-					compatibility.NewMockCompatibility(),
+				WithFilesystem(testFs),
+				WithPath(credentialsPath),
+				WithFormater(mock.NewMockFormater()),
+				WithCompatibility(
+					credentialscompatibility.NewCredentialsCompatibility(
+						compatibility.NewMockCompatibility(),
+					),
 				),
 			),
 			id: "id",
@@ -72,6 +76,7 @@ func TestStore_LocalStoreWithSafeStore(t *testing.T) {
 			prepareAssertFunc: func(s *LocalStoreWithSafeStore) {
 				s.store.formater.(*mock.MockFormater).On("Marshal",
 					&credentials.Badge{
+						ID:       "id",
 						Username: "username",
 						Password: "password",
 					}).Return("formated", nil)

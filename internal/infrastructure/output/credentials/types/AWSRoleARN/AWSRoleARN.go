@@ -37,6 +37,10 @@ func (o *AWSRoleARNOutput) Output(badge *credentials.Badge) (string, string, err
 			detail = fmt.Sprintf("%s, profile=%s", detail, badge.AWSProfile)
 		}
 
+		if badge.AWSAccessKeyID != "" && badge.AWSSecretAccessKey != "" {
+			detail = fmt.Sprintf("%s, aws_access_key_id=%s", detail, badge.AWSAccessKeyID)
+		}
+
 		return AWSRoleARNType, detail, nil
 	} else {
 		return "", "", nil

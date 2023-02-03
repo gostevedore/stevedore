@@ -9,7 +9,7 @@ require (
 	github.com/apenella/go-common-utils/error v0.0.0-20221227202648-5452d804e940
 	github.com/apenella/go-common-utils/transformer/string v0.0.0-20221227202648-5452d804e940
 	github.com/apenella/go-data-structures/extendedTree v0.0.0-20221117064317-a3b6d9f69cda
-	github.com/apenella/go-docker-builder v0.7.2
+	github.com/apenella/go-docker-builder v0.7.3
 	github.com/aws/aws-sdk-go-v2 v1.17.2
 	github.com/aws/aws-sdk-go-v2/config v1.18.4
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.4
@@ -18,7 +18,7 @@ require (
 	github.com/docker/distribution v2.8.1+incompatible
 	github.com/docker/docker v20.10.21+incompatible
 	github.com/go-git/go-git/v5 v5.5.1
-	github.com/gruntwork-io/terratest v0.41.6
+	github.com/gruntwork-io/terratest v0.41.9
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/ryanuber/columnize v2.1.2+incompatible
 	github.com/spf13/afero v1.9.3
@@ -51,7 +51,6 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
-	github.com/fatih/structs v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect

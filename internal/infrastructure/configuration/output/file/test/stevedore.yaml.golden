@@ -32,17 +32,18 @@ concurrency: 10
 push_images: true
 
 #
-#Credentials storage
-#  default value:
-#    credentials:
-#      storage_type: local
-#      local_storage_path: /var/lib/stevedore/credentials
-#      format: json
-#
+# Credentials storage
+#   default value:
+#     credentials:
+#       storage_type: local
+#       local_storage_path: /var/lib/stevedore/credentials
+#       format: json
+# 
 credentials:
   storage_type: local
   format: json
   local_storage_path: mycredentials
+  encryption_key: encryptionkey
   
 #
 # Generate extra tags when the main image tags is semver 2.0.0 compliance

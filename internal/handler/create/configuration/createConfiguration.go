@@ -68,6 +68,10 @@ func (h *CreateConfigurationHandler) Handler(ctx context.Context, options *Optio
 		config.Credentials.StorageType = options.CredentialsStorageType
 	}
 
+	if len(options.CredentialsEncryptionKey) > 0 {
+		config.Credentials.EncryptionKey = options.CredentialsEncryptionKey
+	}
+
 	config.EnableSemanticVersionTags = options.EnableSemanticVersionTags
 
 	if len(options.ImagesPath) > 0 {

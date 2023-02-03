@@ -51,8 +51,12 @@ func (a *Application) Run(ctx context.Context, optionsFunc ...OptionsFunc) error
 
 	a.Options(optionsFunc...)
 
-	credentialsList := a.credentials.All()
-	err := a.output.Print(credentialsList)
+	credentialsList, err := a.credentials.All()
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
+
+	err = a.output.Print(credentialsList)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}

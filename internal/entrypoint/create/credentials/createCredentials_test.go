@@ -452,10 +452,12 @@ func TestCreateCredentialsStore(t *testing.T) {
 			},
 			err: &errors.Error{},
 			res: local.NewLocalStore(
-				afero.NewMemMapFs(),
-				"path",
-				credentialsformat.NewMockFormater(),
-				credentialscompatibilitiy.NewCredentialsCompatibility(compatibility.NewMockCompatibility()),
+				local.WithFilesystem(afero.NewMemMapFs()),
+				local.WithPath("path"),
+				local.WithFormater(credentialsformat.NewMockFormater()),
+				local.WithCompatibility(
+					credentialscompatibilitiy.NewCredentialsCompatibility(compatibility.NewMockCompatibility()),
+				),
 			),
 		},
 		{
@@ -464,6 +466,7 @@ func TestCreateCredentialsStore(t *testing.T) {
 			conf: &configuration.Configuration{
 				Credentials: &configuration.CredentialsConfiguration{
 					StorageType: credentials.EnvvarsStore,
+					Format:      credentials.JSONFormat,
 				},
 			},
 			options: &Options{},
@@ -518,15 +521,6 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 			err:             errors.New(errContext, "To create the credentials local store, local storage path is required"),
 		},
 		{
-			desc:            "Testing error creating credentials local store on create credentials entrypoint when credentials formater is not provided",
-			entrypoint:      NewCreateCredentialsEntrypoint(),
-			compatibilitier: credentialscompatibilitiy.NewCredentialsCompatibility(compatibility.NewMockCompatibility()),
-			conf: &configuration.CredentialsConfiguration{
-				LocalStoragePath: "path",
-			},
-			err: errors.New(errContext, "To create the credentials local store, formater is required"),
-		},
-		{
 			desc:            "Testing error creating credentials local store on create credentials entrypoint when filesystem is not provided",
 			entrypoint:      NewCreateCredentialsEntrypoint(),
 			compatibilitier: credentialscompatibilitiy.NewCredentialsCompatibility(compatibility.NewMockCompatibility()),
@@ -537,6 +531,17 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 			err:    errors.New(errContext, "To create the credentials local store, filesystem is required"),
 		},
 		{
+			desc: "Testing error creating credentials local store on create credentials entrypoint when credentials formater is not provided",
+			entrypoint: NewCreateCredentialsEntrypoint(
+				WithFileSystem(afero.NewMemMapFs()),
+			),
+			compatibilitier: credentialscompatibilitiy.NewCredentialsCompatibility(compatibility.NewMockCompatibility()),
+			conf: &configuration.CredentialsConfiguration{
+				LocalStoragePath: "path",
+			},
+			err: errors.New(errContext, "To create credentials store in the create credentials entrypoint, credentials format must be specified"),
+		},
+		{
 			desc: "Testing create credentials local store on create credentials entrypoint",
 			entrypoint: NewCreateCredentialsEntrypoint(
 				WithFileSystem(afero.NewMemMapFs()),
@@ -544,6 +549,7 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 			compatibilitier: credentialscompatibilitiy.NewCredentialsCompatibility(compatibility.NewMockCompatibility()),
 			conf: &configuration.CredentialsConfiguration{
 				LocalStoragePath: "path",
+				Format:           credentials.JSONFormat,
 			},
 			format: credentialsformat.NewMockFormater(),
 			err:    errors.New(errContext, "To create the credentials local store, filesystem is required"),
@@ -554,13 +560,12 @@ func TestCreateCredentialsLocalStore(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			res, err := test.entrypoint.createCredentialsLocalStore(test.compatibilitier, test.conf, test.format)
+			res, err := test.entrypoint.createCredentialsLocalStore(test.compatibilitier, test.conf)
 			if err != nil {
-				assert.Equal(t, test.err, err)
+				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
 				assert.IsType(t, test.res, res)
 			}
 		})
 	}
-
 }

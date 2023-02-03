@@ -46,7 +46,7 @@ type Unmarshaler interface {
 
 // CredentialsFilterer is an interface for filtering credentials content output
 type CredentialsFilterer interface {
-	All() []*credentials.Badge
+	All() ([]*credentials.Badge, error)
 	Get(id string) (*credentials.Badge, error)
 }
 

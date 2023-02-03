@@ -10,6 +10,7 @@ import (
 	handler "github.com/gostevedore/stevedore/internal/handler/create/configuration"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	output "github.com/gostevedore/stevedore/internal/infrastructure/configuration/output/file"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/encryption"
 	"github.com/spf13/afero"
 )
 
@@ -18,7 +19,8 @@ type OptionsFunc func(opts *CreateConfigurationEntrypoint)
 
 // CreateConfigurationEntrypoint defines the entrypoint for the application
 type CreateConfigurationEntrypoint struct {
-	fs afero.Fs
+	fs         afero.Fs
+	encryption EncryptionKeyGenerator
 }
 
 // NewCreateConfigurationEntrypoint returns a new entrypoint
@@ -40,6 +42,13 @@ func (e *CreateConfigurationEntrypoint) Options(opts ...OptionsFunc) {
 func WithFileSystem(fs afero.Fs) OptionsFunc {
 	return func(e *CreateConfigurationEntrypoint) {
 		e.fs = fs
+	}
+}
+
+// WithEncryption sets the encription for the entrypoint
+func WithEncryption(encryption EncryptionKeyGenerator) OptionsFunc {
+	return func(e *CreateConfigurationEntrypoint) {
+		e.encryption = encryption
 	}
 }
 
@@ -86,6 +95,11 @@ func (e *CreateConfigurationEntrypoint) prepareHandlerOptions(options *Options) 
 		return nil, errors.New(errContext, "Create configuration entrypoint requires options to prepare handler options")
 	}
 
+	key, err := e.getEncryptionKey(options)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
 	handlerOptions := &handler.Options{}
 
 	handlerOptions.BuildersPath = options.BuildersPath
@@ -93,6 +107,7 @@ func (e *CreateConfigurationEntrypoint) prepareHandlerOptions(options *Options) 
 	handlerOptions.CredentialsFormat = options.CredentialsFormat
 	handlerOptions.CredentialsLocalStoragePath = options.CredentialsLocalStoragePath
 	handlerOptions.CredentialsStorageType = options.CredentialsStorageType
+	handlerOptions.CredentialsEncryptionKey = key
 	handlerOptions.EnableSemanticVersionTags = options.EnableSemanticVersionTags
 	handlerOptions.ImagesPath = options.ImagesPath
 	handlerOptions.LogPathFile = options.LogPathFile
@@ -157,4 +172,27 @@ func (e *CreateConfigurationEntrypoint) createOutputWriter(options *Options) (co
 	}
 
 	return writer, nil
+}
+
+func (e *CreateConfigurationEntrypoint) getEncryptionKey(options *Options) (string, error) {
+
+	errContext := "(entrypoint::create::configuration::getEncryptionKey)"
+
+	if options.GenerateCredentialsEncryptionKey && options.CredentialsEncryptionKey != "" {
+		return "", errors.New(errContext, "Providing an encryption key is not compatible with the generate encryption key option")
+	}
+
+	if options.GenerateCredentialsEncryptionKey {
+
+		generator := encryption.NewEncryption()
+
+		key, err := generator.GenerateEncryptionKey()
+		if err != nil {
+			return "", errors.New(errContext, "", err)
+		}
+
+		return key, nil
+	}
+
+	return options.CredentialsEncryptionKey, nil
 }

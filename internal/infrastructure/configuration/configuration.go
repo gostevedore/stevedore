@@ -17,9 +17,14 @@ import (
 )
 
 type CredentialsConfiguration struct {
-	StorageType      string
+	// StorageType is the backend used to store credentials
+	StorageType string
+	// LocalStoragePath is the local storage path where credentials are stored
 	LocalStoragePath string
-	Format           string
+	// Format defines the format to store credentials, in case a format is required
+	Format string
+	// EncryptionKey is the key used to encrypt credentials
+	EncryptionKey string
 }
 
 type Configuration struct {
@@ -75,6 +80,8 @@ const (
 	DefaultCredentialsLocalStoragePath = "credentials"
 	// DefaultCredentialsStorage is the default credentials storage
 	DefaultCredentialsStorage = credentials.LocalStore
+	// DefaultCredentialsEncryptionKey is an empty string
+	DefaultCredentialsEncryptionKey = ""
 	// DefaultEnableSemanticVersionTags is the default enable semantic version tags
 	DefaultEnableSemanticVersionTags = false
 	// DefaultImagesPath is the default images path
@@ -106,6 +113,8 @@ const (
 	CredentialsKey = "credentials"
 	// CredentialsLocalStoragePathKey is the key for the credentials local storage path
 	CredentialsLocalStoragePathKey = "local_storage_path"
+	// CredentialsEncryptionKeyKey is the key for the credentials encryption token
+	CredentialsEncryptionKeyKey = "encryption_key"
 	// CredentialsStorageTypeKey is the key for the credentials storage type
 	CredentialsStorageTypeKey = "storage_type"
 	// DEPRECATEDBuilderPathKey is the key for the deprecated builder path
@@ -194,6 +203,9 @@ func New(fs afero.Fs, loader ConfigurationLoader, compatibility Compatibilitier)
 	loader.AutomaticEnv()
 	loader.SetEnvPrefix("stevedore")
 
+	replacer := strings.NewReplacer(".", "_")
+	loader.SetEnvKeyReplacer(replacer)
+
 	loader.SetConfigName(DefaultConfigFile)
 	loader.SetConfigType(DefaultConfigFileExtention)
 
@@ -213,6 +225,8 @@ func New(fs afero.Fs, loader ConfigurationLoader, compatibility Compatibilitier)
 		strings.Join([]string{CredentialsKey, CredentialsLocalStoragePathKey}, "."), DefaultCredentialsLocalStoragePath)
 	loader.SetDefault(
 		strings.Join([]string{CredentialsKey, CredentialsFormatKey}, "."), DefaultCredentialsFormat)
+	loader.SetDefault(
+		strings.Join([]string{CredentialsKey, CredentialsEncryptionKeyKey}, "."), DefaultCredentialsEncryptionKey)
 
 	for _, alternativeConfigFolder := range alternativesConfigFolders {
 		loader.AddConfigPath(alternativeConfigFolder)
@@ -252,6 +266,7 @@ func New(fs afero.Fs, loader ConfigurationLoader, compatibility Compatibilitier)
 	config.Concurrency = loader.GetInt(ConcurrencyKey)
 	config.EnableSemanticVersionTags = loader.GetBool(EnableSemanticVersionTagsKey)
 	config.ImagesPath = loader.GetString(ImagesPathKey)
+	config.LogPathFile = loader.GetString(LogPathFileKey)
 	config.LogWriter = logWriter
 	config.PushImages = loader.GetBool(PushImagesKey)
 	config.SemanticVersionTagsTemplates = loader.GetStringSlice(SemanticVersionTagsTemplatesKey)
@@ -260,6 +275,7 @@ func New(fs afero.Fs, loader ConfigurationLoader, compatibility Compatibilitier)
 		StorageType:      loader.GetString(strings.Join([]string{CredentialsKey, CredentialsStorageTypeKey}, ".")),
 		LocalStoragePath: loader.GetString(strings.Join([]string{CredentialsKey, CredentialsLocalStoragePathKey}, ".")),
 		Format:           loader.GetString(strings.Join([]string{CredentialsKey, CredentialsFormatKey}, ".")),
+		EncryptionKey:    loader.GetString(strings.Join([]string{CredentialsKey, CredentialsEncryptionKeyKey}, ".")),
 	}
 
 	config.configFile = loader.ConfigFileUsed()

@@ -59,21 +59,16 @@ func (p *DockerPromete) Promote(ctx context.Context, options *image.PromoteOptio
 	}
 
 	if options.RemoteSourceImage {
-		if options.PullAuthUsername != "" && options.PullAuthPassword != "" {
-			err = p.cmd.AddPullAuth(options.PullAuthUsername, options.PullAuthPassword)
-			if err != nil {
-				return errors.New(contextError, fmt.Sprintf("Image '%s' could not be promoted because is not possible to achieve pull credentials", options.SourceImageName), err)
-			}
+		err = p.cmd.AddPullAuth(options.PullAuthUsername, options.PullAuthPassword)
+		if err != nil {
+			return errors.New(contextError, fmt.Sprintf("Image '%s' could not be promoted because is not possible to achieve pull credentials", options.SourceImageName), err)
 		}
-
 		p.cmd.WithRemoteSource()
 	}
 
-	if options.PushAuthUsername != "" && options.PushAuthPassword != "" {
-		err = p.cmd.AddPushAuth(options.PushAuthUsername, options.PushAuthPassword)
-		if err != nil {
-			return errors.New(contextError, fmt.Sprintf("Image '%s' could not be promoted because is not possible to achieve push credentials", options.SourceImageName), err)
-		}
+	err = p.cmd.AddPushAuth(options.PushAuthUsername, options.PushAuthPassword)
+	if err != nil {
+		return errors.New(contextError, fmt.Sprintf("Image '%s' could not be promoted because is not possible to achieve push credentials", options.SourceImageName), err)
 	}
 
 	if options.RemoveTargetImageTags {

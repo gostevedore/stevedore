@@ -1,8 +1,6 @@
 package local
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,8 +9,12 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
+	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/encryption"
 	"github.com/spf13/afero"
 )
+
+// OptionsFunc defines the signature for an option function to set local credentials store
+type OptionsFunc func(opts *LocalStore)
 
 // LocalStore is a local store for credentials
 type LocalStore struct {
@@ -22,15 +24,51 @@ type LocalStore struct {
 	wg            sync.WaitGroup
 	compatibility CredentialsCompatibilier
 	formater      repository.Formater
+	encryption    Encrypter
 }
 
 // NewLocalStore creates a new local store for credentials
-func NewLocalStore(fs afero.Fs, path string, f repository.Formater, compatibility CredentialsCompatibilier) *LocalStore {
-	return &LocalStore{
-		path:          path,
-		fs:            fs,
-		formater:      f,
-		compatibility: compatibility,
+func NewLocalStore(opts ...OptionsFunc) *LocalStore {
+	store := &LocalStore{}
+	store.Options(opts...)
+	return store
+}
+
+func WithCompatibility(compatibility CredentialsCompatibilier) OptionsFunc {
+	return func(s *LocalStore) {
+		s.compatibility = compatibility
+	}
+}
+
+func WithFilesystem(fs afero.Fs) OptionsFunc {
+	return func(s *LocalStore) {
+		s.fs = fs
+	}
+}
+
+// WithFormater sets the formater to envvars credentials store
+func WithFormater(formater repository.Formater) OptionsFunc {
+	return func(s *LocalStore) {
+		s.formater = formater
+	}
+}
+
+func WithPath(path string) OptionsFunc {
+	return func(s *LocalStore) {
+		s.path = path
+	}
+}
+
+func WithEncryption(e Encrypter) OptionsFunc {
+	return func(s *LocalStore) {
+		s.encryption = e
+	}
+}
+
+// Options provides the options to envvars credentials store
+func (s *LocalStore) Options(opts ...OptionsFunc) {
+	for _, opt := range opts {
+		opt(s)
 	}
 }
 
@@ -39,7 +77,7 @@ func (s *LocalStore) SafeStore(id string, badge *credentials.Badge) error {
 	var err error
 	var credentialsStat os.FileInfo
 
-	hashedID, err := hashID(id)
+	hashedID, err := encryption.HashID(id)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -79,7 +117,11 @@ func (s *LocalStore) Store(id string, badge *credentials.Badge) error {
 		return errors.New(errContext, fmt.Sprintf("To store a badge for '%s' into local store, credentials badge must be provided", id))
 	}
 
-	hashedID, err := hashID(id)
+	if badge.ID == "" {
+		badge.ID = id
+	}
+
+	hashedID, err := encryption.HashID(id)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -102,6 +144,13 @@ func (s *LocalStore) Store(id string, badge *credentials.Badge) error {
 		return errors.New(errContext, fmt.Sprintf("Error formatting '%s' badge before to be persisted on '%s'", id, s.path), err)
 	}
 
+	if s.encryption != nil {
+		formatedBadge, err = s.encryption.Encrypt(formatedBadge)
+		if err != nil {
+			return errors.New(errContext, "", err)
+		}
+	}
+
 	_, err = credentialFile.WriteString(formatedBadge)
 	if err != nil {
 		return errors.New(errContext, "", err)
@@ -121,7 +170,7 @@ func (s *LocalStore) Get(id string) (*credentials.Badge, error) {
 		return nil, errors.New(errContext, "To get a badge from the store, id must be provided")
 	}
 
-	hashedID, err := hashID(id)
+	hashedID, err := encryption.HashID(id)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
@@ -138,6 +187,7 @@ func (s *LocalStore) Get(id string) (*credentials.Badge, error) {
 func (s *LocalStore) get(id string) (*credentials.Badge, error) {
 	var err error
 	var fileData []byte
+	var strFileData string
 	var badge *credentials.Badge
 
 	errContext := "(store::credentials::local::get)"
@@ -145,6 +195,14 @@ func (s *LocalStore) get(id string) (*credentials.Badge, error) {
 	fileData, err = afero.ReadFile(s.fs, filepath.Join(s.path, id))
 	if err != nil {
 		return nil, errors.New(errContext, fmt.Sprintf("Error reading credentials file '%s'", filepath.Join(s.path, id)), err)
+	}
+
+	if s.encryption != nil {
+		strFileData, err = s.encryption.Decrypt(string(fileData))
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
+		fileData = []byte(strFileData)
 	}
 
 	badge, err = s.formater.Unmarshal(fileData)
@@ -165,13 +223,14 @@ func (s *LocalStore) get(id string) (*credentials.Badge, error) {
 }
 
 // All returns all badges from the store
-func (s *LocalStore) All() []*credentials.Badge {
+func (s *LocalStore) All() ([]*credentials.Badge, error) {
+
 	var badge *credentials.Badge
 	badges := []*credentials.Badge{}
 
 	afero.Walk(s.fs, s.path, func(path string, info os.FileInfo, err error) error {
 
-		errContext := "(store::credentials::local::get::walk)"
+		errContext := "(store::credentials::local::All::walk)"
 
 		_, err = s.fs.Stat(path)
 		if err != nil {
@@ -186,21 +245,5 @@ func (s *LocalStore) All() []*credentials.Badge {
 		return nil
 	})
 
-	return badges
-}
-
-// hashID generates a hash for the id
-func hashID(id string) (string, error) {
-
-	errContext := "(store::credentials::local::hashID)"
-
-	if id == "" {
-		return "", errors.New(errContext, "Hash method requires an id")
-	}
-
-	hasher := md5.New()
-	hasher.Write([]byte(id))
-	registryHashed := hex.EncodeToString(hasher.Sum(nil))
-
-	return registryHashed, nil
+	return badges, nil
 }

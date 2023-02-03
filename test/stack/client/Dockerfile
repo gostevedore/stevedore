@@ -30,3 +30,4 @@ COPY test/stack/client/entrypoint.sh /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["go","version"]
+HEALTHCHECK --interval=15s --timeout=2s --start-period=5s --retries=3 CMD nc -vz localhost 2376 || exit 1

@@ -182,6 +182,7 @@ func TestNew(t *testing.T) {
 				l.(*loader.MockConfigurationLoader).On("SetDefault", strings.Join([]string{CredentialsKey, CredentialsStorageTypeKey}, "."), DefaultCredentialsStorage).Return()
 				l.(*loader.MockConfigurationLoader).On("SetDefault", strings.Join([]string{CredentialsKey, CredentialsLocalStoragePathKey}, "."), DefaultCredentialsLocalStoragePath).Return()
 				l.(*loader.MockConfigurationLoader).On("SetDefault", strings.Join([]string{CredentialsKey, CredentialsFormatKey}, "."), DefaultCredentialsFormat).Return()
+				l.(*loader.MockConfigurationLoader).On("SetDefault", strings.Join([]string{CredentialsKey, CredentialsEncryptionKeyKey}, "."), DefaultCredentialsEncryptionKey).Return()
 
 				l.(*loader.MockConfigurationLoader).On("AddConfigPath", filepath.Join(user.HomeDir, ".config", "stevedore")).Return()
 				l.(*loader.MockConfigurationLoader).On("AddConfigPath", user.HomeDir).Return()
@@ -200,6 +201,7 @@ func TestNew(t *testing.T) {
 				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsStorageTypeKey}, ".")).Return(DefaultCredentialsStorage)
 				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsLocalStoragePathKey}, ".")).Return(DefaultCredentialsLocalStoragePath)
 				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsFormatKey}, ".")).Return(DefaultCredentialsFormat)
+				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsEncryptionKeyKey}, ".")).Return(DefaultCredentialsEncryptionKey)
 				l.(*loader.MockConfigurationLoader).On("ConfigFileUsed").Return("stevedore.yaml")
 
 				// DEPRECIATED
@@ -223,6 +225,7 @@ func TestNew(t *testing.T) {
 					StorageType:      "local",
 					LocalStoragePath: "credentials",
 					Format:           "json",
+					EncryptionKey:    "",
 				},
 				configFile: "stevedore.yaml",
 			},
@@ -252,6 +255,7 @@ func TestNew(t *testing.T) {
 				l.(*loader.MockConfigurationLoader).On("SetDefault", strings.Join([]string{CredentialsKey, CredentialsStorageTypeKey}, "."), DefaultCredentialsStorage).Return()
 				l.(*loader.MockConfigurationLoader).On("SetDefault", strings.Join([]string{CredentialsKey, CredentialsLocalStoragePathKey}, "."), DefaultCredentialsLocalStoragePath).Return()
 				l.(*loader.MockConfigurationLoader).On("SetDefault", strings.Join([]string{CredentialsKey, CredentialsFormatKey}, "."), DefaultCredentialsFormat).Return()
+				l.(*loader.MockConfigurationLoader).On("SetDefault", strings.Join([]string{CredentialsKey, CredentialsEncryptionKeyKey}, "."), DefaultCredentialsEncryptionKey).Return()
 
 				l.(*loader.MockConfigurationLoader).On("AddConfigPath", filepath.Join(user.HomeDir, ".config", "stevedore")).Return()
 				l.(*loader.MockConfigurationLoader).On("AddConfigPath", user.HomeDir).Return()
@@ -270,6 +274,7 @@ func TestNew(t *testing.T) {
 				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsStorageTypeKey}, ".")).Return(DefaultCredentialsStorage)
 				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsLocalStoragePathKey}, ".")).Return(DefaultCredentialsLocalStoragePath)
 				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsFormatKey}, ".")).Return(DefaultCredentialsFormat)
+				l.(*loader.MockConfigurationLoader).On("GetString", strings.Join([]string{CredentialsKey, CredentialsEncryptionKeyKey}, ".")).Return(DefaultCredentialsEncryptionKey)
 				l.(*loader.MockConfigurationLoader).On("ConfigFileUsed").Return("stevedore.yaml")
 
 				// DEPRECIATED

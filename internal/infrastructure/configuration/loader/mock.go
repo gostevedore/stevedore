@@ -1,6 +1,8 @@
 package loader
 
 import (
+	"strings"
+
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/mock"
 )
@@ -87,4 +89,9 @@ func (c *MockConfigurationLoader) SetFs(fs afero.Fs) {
 func (c *MockConfigurationLoader) ConfigFileUsed() string {
 	args := c.Called()
 	return args.String(0)
+}
+
+// SetEnvKeyReplacer
+func (c *MockConfigurationLoader) SetEnvKeyReplacer(replacer *strings.Replacer) {
+	c.Called(replacer)
 }

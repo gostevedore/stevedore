@@ -50,6 +50,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler/worker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/semver"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/builders"
+	credentialsstoreencryption "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/encryption"
 	credentialsenvvarsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars"
 	credentialsenvvarsstorebackend "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars/backend"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
@@ -336,13 +337,22 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.CredentialsConfi
 		return nil, errors.New(errContext, "To create credentials store in build entrypoint, credentials configuration is required")
 	}
 
+	if conf.Format == "" {
+		return nil, errors.New(errContext, "To create credentials store in build entrypoint, credentials format must be specified")
+	}
+
+	encryption := credentialsstoreencryption.NewEncryption(
+		credentialsstoreencryption.WithKey(conf.EncryptionKey),
+	)
+
+	credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
+	credentialsFormat, err := credentialsFormatFactory.Get(conf.Format)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
 	switch conf.StorageType {
 	case credentials.LocalStore:
-
-		if conf.Format == "" {
-			return nil, errors.New(errContext, "To create credentials store in build entrypoint, credentials format must be specified")
-		}
-
 		if e.compatibility == nil {
 			return nil, errors.New(errContext, "To create credentials store in build entrypoint, compatibility is required")
 		}
@@ -353,17 +363,25 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.CredentialsConfi
 
 		credentialsCompatibility := credentialscompatibility.NewCredentialsCompatibility(e.compatibility)
 
-		credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
-		credentialsFormat, err := credentialsFormatFactory.Get(conf.Format)
-		if err != nil {
-			return nil, errors.New(errContext, "", err)
+		localStoreOpts := []credentialslocalstore.OptionsFunc{
+			credentialslocalstore.WithFilesystem(e.fs),
+			credentialslocalstore.WithCompatibility(credentialsCompatibility),
+			credentialslocalstore.WithPath(conf.LocalStoragePath),
+			credentialslocalstore.WithFormater(credentialsFormat),
 		}
-		store = credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
+
+		if conf.EncryptionKey != "" {
+			localStoreOpts = append(localStoreOpts, credentialslocalstore.WithEncryption(encryption))
+		}
+
+		store = credentialslocalstore.NewLocalStore(localStoreOpts...)
 
 	case credentials.EnvvarsStore:
 		store = credentialsenvvarsstore.NewEnvvarsStore(
 			credentialsenvvarsstore.WithConsole(e.writer),
 			credentialsenvvarsstore.WithBackend(credentialsenvvarsstorebackend.NewOSEnvvarsBackend()),
+			credentialsenvvarsstore.WithFormater(credentialsFormat),
+			credentialsenvvarsstore.WithEncryption(encryption),
 		)
 
 	default:
@@ -389,7 +407,6 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 	}
 
 	//storefactory := credentialsstorefactory.NewCredentialsStoreFactory()
-	// create credentials local store
 	store, err := e.createCredentialsStore(conf.Credentials)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)

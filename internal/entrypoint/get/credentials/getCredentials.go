@@ -20,6 +20,7 @@ import (
 	sshagent "github.com/gostevedore/stevedore/internal/infrastructure/output/credentials/types/SSHAgent"
 	privatekeyfile "github.com/gostevedore/stevedore/internal/infrastructure/output/credentials/types/privateKeyFile"
 	usernamepassword "github.com/gostevedore/stevedore/internal/infrastructure/output/credentials/types/usernamePassword"
+	credentialsstoreencryption "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/encryption"
 	credentialsenvvarsstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars"
 	credentialsenvvarsstorebackend "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars/backend"
 	credentialslocalstore "github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/local"
@@ -73,10 +74,17 @@ func (e *Entrypoint) Options(opts ...OptionsFunc) {
 }
 
 // Execute is a pseudo-main method for the command
-func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration) error {
+func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, inputEntrypointOptions *Options) error {
 	var err error
 	var credentialsStore repository.CredentialsFilterer
 	errContext := "(get::credentials::entrypoint::Execute)"
+
+	var usernamepasswordoutput outputcredentials.Outputter
+	var awsstaticcredentialsoutput outputcredentials.Outputter
+	var awsrolearnoutput outputcredentials.Outputter
+	var awsdefaultchainoutput outputcredentials.Outputter
+	var privatekeyfileoutput outputcredentials.Outputter
+	var sshagentoutput outputcredentials.Outputter
 
 	if e.writer == nil {
 		return errors.New(errContext, "To execute the entrypoint, a writer is required")
@@ -88,13 +96,31 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 	}
 
 	writer := console.NewConsole(e.writer, nil)
+
+	usernamepasswordoutput = usernamepassword.NewUsernamePasswordOutput()
+	awsstaticcredentialsoutput = awsstaticcredentials.NewAWSStaticCredentialsOutput()
+	awsrolearnoutput = awsrolearn.NewAWSRoleARNOutput()
+	awsdefaultchainoutput = awsdefaultchain.NewAWSDefaultCredentialsChainOutput()
+	privatekeyfileoutput = privatekeyfile.NewPrivateKeyFileOutput()
+	sshagentoutput = sshagent.NewSSHAgentOutput()
+
+	if inputEntrypointOptions.ShowSecrets {
+		usernamepasswordoutput = usernamepassword.NewUsernamePasswordWithSecretsOutput(usernamepasswordoutput.(*usernamepassword.UsernamePasswordOutput))
+
+		awsstaticcredentialsoutput = awsstaticcredentials.NewAWSStaticCredentialsWithSecretsOutput(awsstaticcredentialsoutput.(*awsstaticcredentials.AWSStaticCredentialsOutput))
+
+		awsrolearnoutput = awsrolearn.NewAWSRoleARNWithSecretsOutput(awsrolearnoutput.(*awsrolearn.AWSRoleARNOutput))
+
+		privatekeyfileoutput = privatekeyfile.NewPrivateKeyFileWithSecretsOutput(privatekeyfileoutput.(*privatekeyfile.PrivateKeyFileOutput))
+	}
+
 	output := outputcredentials.NewOutput(writer,
-		usernamepassword.NewUsernamePasswordOutput(),
-		awsstaticcredentials.NewAWSStaticCredentialsOutput(),
-		awsrolearn.NewAWSRoleARNOutput(),
-		awsdefaultchain.NewAWSDefaultCredentialsChainOutput(),
-		privatekeyfile.NewPrivateKeyFileOutput(),
-		sshagent.NewSSHAgentOutput(),
+		usernamepasswordoutput,
+		awsstaticcredentialsoutput,
+		awsrolearnoutput,
+		awsdefaultchainoutput,
+		privatekeyfileoutput,
+		sshagentoutput,
 	)
 
 	getCredentialsApplication := application.NewApplication(
@@ -113,7 +139,25 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 	return nil
 }
 
+func (e Entrypoint) createCredentialsFormater(conf *configuration.CredentialsConfiguration) (repository.Formater, error) {
+	errContext := "(get::credentials::entrypoint::createCredentialsFormater)"
+
+	if conf.Format == "" {
+		return nil, errors.New(errContext, "To create credentials local store in the entrypoint, credentials format must be specified")
+	}
+
+	credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
+	credentialsFormat, err := credentialsFormatFactory.Get(conf.Format)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
+	return credentialsFormat, nil
+}
+
 func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.CredentialsConfiguration) (*credentialslocalstore.LocalStore, error) {
+	var err error
+	var format repository.Formater
 
 	errContext := "(get::credentials::entrypoint::createCredentialsLocalStore)"
 
@@ -125,29 +169,57 @@ func (e *Entrypoint) createCredentialsLocalStore(conf *configuration.Credentials
 		return nil, errors.New(errContext, "To create credentials local store in the entrypoint, credentials configuration is required")
 	}
 
-	if conf.Format == "" {
-		return nil, errors.New(errContext, "To create credentials local store in the entrypoint, credentials format must be specified")
-	}
-
 	if e.compatibility == nil {
 		return nil, errors.New(errContext, "To create credentials local store in the entrypoint, compatibilitier is required")
 	}
 
-	credentialsCompatibility := credentialscompatibility.NewCredentialsCompatibility(e.compatibility)
-	credentialsFormatFactory := credentialsformatfactory.NewFormatFactory()
-	credentialsFormat, err := credentialsFormatFactory.Get(credentials.JSONFormat)
+	format, err = e.createCredentialsFormater(conf)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
-	store := credentialslocalstore.NewLocalStore(e.fs, conf.LocalStoragePath, credentialsFormat, credentialsCompatibility)
+
+	credentialsCompatibility := credentialscompatibility.NewCredentialsCompatibility(e.compatibility)
+
+	localStoreOpts := []credentialslocalstore.OptionsFunc{
+		credentialslocalstore.WithFilesystem(e.fs),
+		credentialslocalstore.WithCompatibility(credentialsCompatibility),
+		credentialslocalstore.WithPath(conf.LocalStoragePath),
+		credentialslocalstore.WithFormater(format),
+	}
+
+	if conf.EncryptionKey != "" {
+		encryption := credentialsstoreencryption.NewEncryption(
+			credentialsstoreencryption.WithKey(conf.EncryptionKey),
+		)
+
+		localStoreOpts = append(localStoreOpts, credentialslocalstore.WithEncryption(encryption))
+	}
+
+	store := credentialslocalstore.NewLocalStore(localStoreOpts...)
 
 	return store, nil
 }
 
-func (e *Entrypoint) createCredentialsEnvvarsStore() (*credentialsenvvarsstore.EnvvarsStore, error) {
+func (e *Entrypoint) createCredentialsEnvvarsStore(conf *configuration.CredentialsConfiguration) (*credentialsenvvarsstore.EnvvarsStore, error) {
+
+	var err error
+	var format repository.Formater
+
+	errContext := "(get::credentials::entrypoint::createCredentialsEnvvarsStore)"
+
+	format, err = e.createCredentialsFormater(conf)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
+	encryption := credentialsstoreencryption.NewEncryption(
+		credentialsstoreencryption.WithKey(conf.EncryptionKey),
+	)
+
 	store := credentialsenvvarsstore.NewEnvvarsStore(
-		credentialsenvvarsstore.WithConsole(e.writer),
 		credentialsenvvarsstore.WithBackend(credentialsenvvarsstorebackend.NewOSEnvvarsBackend()),
+		credentialsenvvarsstore.WithEncryption(encryption),
+		credentialsenvvarsstore.WithFormater(format),
 	)
 
 	return store, nil
@@ -166,6 +238,10 @@ func (e *Entrypoint) createCredentialsFilter(conf *configuration.Configuration) 
 		return nil, errors.New(errContext, "To create the credentials filter in the entrypoint, credentials configuration is required")
 	}
 
+	if conf.Credentials.Format == "" {
+		return nil, errors.New(errContext, "To create credentials local store in the entrypoint, credentials format must be specified")
+	}
+
 	switch conf.Credentials.StorageType {
 	case credentials.LocalStore:
 		if conf.Credentials.LocalStoragePath == "" {
@@ -179,7 +255,7 @@ func (e *Entrypoint) createCredentialsFilter(conf *configuration.Configuration) 
 		}
 
 	case credentials.EnvvarsStore:
-		store, err = e.createCredentialsEnvvarsStore()
+		store, err = e.createCredentialsEnvvarsStore(conf.Credentials)
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}

@@ -43,3 +43,4 @@ EXPOSE 80
 
 COPY entrypoint.sh /entrypoint.sh
 CMD ["/entrypoint.sh"]
+HEALTHCHECK --interval=15s --timeout=2s --start-period=5s --retries=3 CMD nc -vz localhost 80 || exit 1
