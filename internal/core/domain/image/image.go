@@ -166,12 +166,16 @@ func Parse(name string) (*Image, error) {
 	// in case that no version is specified, it will be the tag it as 'latest'
 	referenceName = reference.TagNameOnly(referenceName)
 
-	return &Image{
-		Name:              reference.Path(referenceName)[strings.LastIndex(reference.Path(referenceName), "/")+1:],
-		Version:           referenceName.String()[strings.LastIndex(referenceName.String(), ":")+1:],
-		RegistryHost:      reference.Domain(referenceName),
-		RegistryNamespace: reference.Path(referenceName)[:strings.LastIndex(reference.Path(referenceName), "/")],
-	}, nil
+	image := &Image{}
+	image.Name = reference.Path(referenceName)[strings.LastIndex(reference.Path(referenceName), "/")+1:]
+	image.Version = referenceName.String()[strings.LastIndex(referenceName.String(), ":")+1:]
+	image.RegistryHost = reference.Domain(referenceName)
+
+	if strings.LastIndex(reference.Path(referenceName), "/") > 0 {
+		image.RegistryNamespace = reference.Path(referenceName)[:strings.LastIndex(reference.Path(referenceName), "/")]
+	}
+
+	return image, nil
 }
 
 // Options returns the options of the image

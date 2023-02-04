@@ -373,12 +373,23 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
-			desc: "Testing parse image name with colom on its name",
-			name: "image:version",
+			desc: "Testing parse image name without namespace",
+			name: "myregistry.test:5000/image",
 			err:  &errors.Error{},
 			res: &Image{
 				Name:              "image",
-				Version:           "version",
+				Version:           "latest",
+				RegistryNamespace: "",
+				RegistryHost:      "myregistry.test:5000",
+			},
+		},
+		{
+			desc: "Testing parse image name with colom on its name",
+			name: "image",
+			err:  &errors.Error{},
+			res: &Image{
+				Name:              "image",
+				Version:           "latest",
 				RegistryNamespace: "library",
 				RegistryHost:      "docker.io",
 			},
