@@ -27,7 +27,10 @@ must() {
     if [[ "$?" == "1" ]]; then
         fail "${res}"
     fi
-    echo "${res}"
+
+    if [ -n "${res}" ]; then
+        echo "${res}"
+    fi
 }
 
 create_dir() {
@@ -87,7 +90,7 @@ curl_download_file_cmd() {
 
     create_dir "$(must dirname "${dest}")"
 
-    echo "${CURL_CMD} -sL ${url} --output ${dest}"
+    echo "${CURL_CMD} -sOL ${url} --output-dir ${dest}"
     return
 }
 
@@ -122,11 +125,11 @@ wget_download_file_cmd() {
 }
 
 http_client_factory() {
-    if command -v ${WGET_CMD} > /dev/null 2>&1; then
-        echo "wget_get_http_cmd" "wget_download_file_cmd"
-        return
-    elif command -v ${CURL_CMD} > /dev/null 2>&1; then
+    if command -v ${CURL_CMD} > /dev/null 2>&1; then
         echo "curl_get_http_cmd" "curl_download_file_cmd"
+        return
+    elif command -v ${WGET_CMD} > /dev/null 2>&1; then
+        echo "wget_get_http_cmd" "wget_download_file_cmd"
         return
     else
         err "You require either curl or wget to install Stevedore"
@@ -151,6 +154,7 @@ fetch_release() {
     local cmd=("$@")
 
     ${cmd} | grep -Po '"tag_name": "\K.*?(?=")'
+    return
 }
 
 generate_artefact_name() {
@@ -166,6 +170,7 @@ generate_artefact_name() {
     kernel="$(must get_kernel_name)"
 
     echo "stevedore_$(echo "${release}" | sed 's/^v//' )_${kernel}-${arch}.tar.gz"
+    return
 }
 
 fetch_artefact_url() {
@@ -186,6 +191,7 @@ fetch_artefact_url() {
     local url="https://github.com/gostevedore/stevedore/releases/download/${release}/${artefact}"
 
     echo "${url}"
+    return
 }
 
 extract_artefact() {
@@ -205,7 +211,8 @@ extract_artefact() {
 
     create_dir "${dest}"
 
-    tar -zxf "${source}" -C "${dest}"
+    must tar -zxf "${source}" -C "${dest}"
+    return
 }
 
 install_artefact() {
@@ -219,9 +226,10 @@ install_artefact() {
     local source="${1}"
     local dest="${2}"
 
-    create_dir "$(dirname "${dest}")"
+    create_dir "$(must dirname "${dest}")"
 
-    ln -sf "${source}" "${dest}"
+    must ln -sf "${source}" "${dest}"
+    return
 }
 
 read -r get_http_cmd download_file_cmd < <(must http_client_factory)
@@ -230,8 +238,16 @@ download_dir=$(must create_tmp_dir)
 trap 'cleanup "${download_dir}"' EXIT
 
 release=$(fetch_release "$($get_http_cmd ${GITHUB_API_URL}/repos/gostevedore/stevedore/releases/latest)")
+if [ -z "${release}" ]; then
+    fail "Release can not be achieved"
+fi
+
 artefact=$(must generate_artefact_name "${release}")
-echo " Installing Stevedore ${release}"
+if [ -z "${artefact}" ]; then
+    fail "Artefact name can not be achieved"
+fi
+
+echo " Installing Stevedore ${release}..."
 echo "  artefact: ${artefact}"
 
 eval "$($download_file_cmd "$(fetch_artefact_url "${release}")" "${download_dir}")"
@@ -240,3 +256,4 @@ extract_artefact "${download_dir}/${artefact}" "${SOURCE_VESION_DEST_PATH}/${rel
 install_artefact "${SOURCE_VESION_DEST_PATH}/${release}/$(basename "${BINARY_PATH}")" "${BINARY_PATH}"
 
 must "${BINARY_PATH}" version
+echo
