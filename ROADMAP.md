@@ -82,5 +82,5 @@
 - [x] use context with interruptions --> v0.7.0
 
 ## icebox
-- promote images defined on images tree
+- promote images defined on the images tree
 
