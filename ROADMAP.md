@@ -12,9 +12,8 @@
 - [ ] fix: container builders must match to  [a-zA-Z0-9][a-zA-Z0-9_.-]*
 - [x] credentials from env-vars
 - Redefine github.com/gostevedore/stevedore/internal/promote use cases
-     [ ] - promote images from tree
      [x] - promote local and remote images
-     [x] - to support test
+     [x] - testing
 - [x] inject Dockerfiles --> v0.11.0
 - [x] git context should accept authentication
 - [x] generate images_tree from multiples files located in a folder
@@ -82,9 +81,6 @@
 - [x] persistent vars
 - [x] use context with interruptions --> v0.7.0
 
-### issues
-n/a
-
 ## icebox
-
+- promote images defined on images tree
 
