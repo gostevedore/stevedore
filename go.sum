@@ -69,8 +69,6 @@ github.com/apenella/go-common-utils/transformer/string v0.0.0-20221227202648-545
 github.com/apenella/go-common-utils/transformer/string v0.0.0-20221227202648-5452d804e940/go.mod h1:jAofiFl0x4kK1BcLL2w6/S8iU1XY47bZquxzaAylciw=
 github.com/apenella/go-data-structures/extendedTree v0.0.0-20221117064317-a3b6d9f69cda h1:QAg0DxOWFSLA2IiPkHbjThLlVofWxZjGhwz0pQPWn2w=
 github.com/apenella/go-data-structures/extendedTree v0.0.0-20221117064317-a3b6d9f69cda/go.mod h1:hAC0LKywVkVMpXDbpKWwE7aeNCYNA1AxokCHR6dCjC4=
-github.com/apenella/go-docker-builder v0.7.2 h1:EWOov+Df6kTuxooPIPhsxJ1B60Jg3yFDwqk9B5Y8qXI=
-github.com/apenella/go-docker-builder v0.7.2/go.mod h1:51TAXvdlu/Ta6BIykvkj7mSIAampWp9ZGPfJzanPDKU=
 github.com/apenella/go-docker-builder v0.7.3 h1:/s1vYg7HWC/k0qtlxWtn3Jwkt9/0ju5Mb5rJWSulViU=
 github.com/apenella/go-docker-builder v0.7.3/go.mod h1:51TAXvdlu/Ta6BIykvkj7mSIAampWp9ZGPfJzanPDKU=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
@@ -244,8 +242,6 @@ github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/ad
 github.com/grpc-ecosystem/go-grpc-middleware v1.0.0/go.mod h1:FiyG127CGDf3tlThmgyCl78X/SZQqEOJBCDaAfeWzPs=
 github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0/go.mod h1:8NvIoxWQoOIhqOTXgfV/d3M/q6VIi02HzZEHgUlZvzk=
 github.com/grpc-ecosystem/grpc-gateway v1.9.0/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
-github.com/gruntwork-io/terratest v0.41.6 h1:BlZOu8GUzLEA2aODnyszCXSoF/jgo2AuVhk41vsqUQI=
-github.com/gruntwork-io/terratest v0.41.6/go.mod h1:qH1xkPTTGx30XkMHw8jAVIbzqheSjIa5IyiTwSV2vKI=
 github.com/gruntwork-io/terratest v0.41.9 h1:jyygu23iLcEFjGQhlvRx4R0EJVqOoriP+Ire4U9cZA0=
 github.com/gruntwork-io/terratest v0.41.9/go.mod h1:qH1xkPTTGx30XkMHw8jAVIbzqheSjIa5IyiTwSV2vKI=
 github.com/hashicorp/consul/api v1.1.0/go.mod h1:VmuI/Lkw1nC05EYQWNKwWGbkg+FbDBtguAZLlVdkD9Q=

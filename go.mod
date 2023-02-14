@@ -19,7 +19,6 @@ require (
 	github.com/docker/docker v20.10.21+incompatible
 	github.com/go-git/go-git/v5 v5.5.1
 	github.com/gruntwork-io/terratest v0.41.9
-	github.com/hashicorp/go-multierror v1.1.1
 	github.com/ryanuber/columnize v2.1.2+incompatible
 	github.com/spf13/afero v1.9.3
 	github.com/spf13/cobra v1.6.1
@@ -28,7 +27,6 @@ require (
 	go.uber.org/zap v1.24.0
 	golang.org/x/term v0.3.0
 	gopkg.in/yaml.v3 v3.0.1
-	gotest.tools/v3 v3.4.0
 )
 
 require (
@@ -57,6 +55,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -95,4 +94,5 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gotest.tools/v3 v3.4.0 // indirect
 )

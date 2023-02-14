@@ -60,7 +60,7 @@
 
 ---
 
-> **NOTE:** All version before v0.10.0 are not longer available but its changelog history is kept.
+**NOTE:** All version before v0.10.0 are not longer available but its changelog history is kept.
 
 ## [0.9.1]
 ### Added
