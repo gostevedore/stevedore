@@ -12,8 +12,16 @@ GITHUB_API_URL="https://api.github.com"
 SOURCE_RELEASE_DEST_BASE_PATH=/opt/stevedore
 BINARY_PATH=/usr/local/bin/stevedore
 
+alternatives() {
+    echo "
+If you have some problems installing Stevedore using the install script, look for installation alternatives in the documentation.
+https://gostevedore.github.io/documentation/getting-started/quick-start/#download-and-install-stevedore
+    "
+}
+
 fail() {
     echo "$0": "$@" >&2
+    alternatives >&2
     exit 1
 }
 
@@ -260,5 +268,6 @@ eval "$($download_file_cmd "$(fetch_artefact_url "${release}")" "${download_dir}
 extract_artefact "${download_dir}/${artefact}" "${source_release_dest_path}"
 install_artefact "${source_release_dest_path}/$(basename "${BINARY_PATH}")" "${BINARY_PATH}"
 
+echo
 must "${BINARY_PATH}" version
 echo

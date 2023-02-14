@@ -9,7 +9,6 @@ Stevedore is a tool that allows you to build Docker images at scale, a factory t
 - [Why stevedore?](#why-stevedore)
 - [Getting started guide](#getting-started-guide)
   - [Installation](#installation)
-    - [Installation script](#installation-script)
   - [Initial setup](#initial-setup)
   - [Build the Docker images for an application](#build-the-docker-images-for-an-application)
   - [Promote the images to Docker registry](#promote-the-images-to-docker-registry)
@@ -28,12 +27,11 @@ Finally, Stevedore provides a **credentials store** to authenticate on your beha
 
 ### Installation
 
-#### Installation script
-
 You can use the script provided on the Stevedore's repository to install it.
 ```sh
 curl -sL https://raw.githubusercontent.com/gostevedore/stevedore/version_v0.11.0/scripts/install.sh | sudo bash
 ```
+Visit the [documentation](https://gostevedore.github.io/documentation/getting-started/quick-start/#download-and-install-stevedore) to see other installation methods.
 
 ### Initial setup
 - Create the folders structure to define images and builders.

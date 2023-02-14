@@ -2,7 +2,7 @@
 
 ## v0.12.0
 - [ ] apply Levenshtein distances on the image name to identify which image the user wants to build
-- [ ] enable builds over HTTP server
+- [ ] enable builds over HTTP
   
 ## v0.11.0
 - [x] fix: promote images with subnamespaces fails example myregistry/mynamesapce/grafana/tempo:1.0.0
@@ -83,9 +83,6 @@
 
 ### issues
 n/a
-
-## scheduled
-- [ ] documentation
 
 ## icebox
 
