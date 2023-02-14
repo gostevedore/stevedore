@@ -9,7 +9,7 @@ set -eo pipefail
 CURL_CMD="curl"
 WGET_CMD="wget"
 GITHUB_API_URL="https://api.github.com"
-SOURCE_VESION_DEST_PATH=/opt/stevedore
+SOURCE_RELEASE_DEST_BASE_PATH=/opt/stevedore
 BINARY_PATH=/usr/local/bin/stevedore
 
 fail() {
@@ -60,7 +60,7 @@ cleanup() {
 
     local dir="${1}"
 
-    rm -rfv "${1}"
+    rm -rf "${1}"
 }
 
 curl_get_http_cmd() {
@@ -247,13 +247,18 @@ if [ -z "${artefact}" ]; then
     fail "Artefact name can not be achieved"
 fi
 
+source_release_dest_path="${SOURCE_RELEASE_DEST_BASE_PATH}/${release}"
+if [ -d "${source_release_dest_path}" ]; then
+    fail "${source_release_dest_path} already exists. Remove the directory and reinstall Stevedore"
+fi
+
 echo " Installing Stevedore ${release}..."
 echo "  artefact: ${artefact}"
 
 eval "$($download_file_cmd "$(fetch_artefact_url "${release}")" "${download_dir}")"
 
-extract_artefact "${download_dir}/${artefact}" "${SOURCE_VESION_DEST_PATH}/${release}"
-install_artefact "${SOURCE_VESION_DEST_PATH}/${release}/$(basename "${BINARY_PATH}")" "${BINARY_PATH}"
+extract_artefact "${download_dir}/${artefact}" "${source_release_dest_path}"
+install_artefact "${source_release_dest_path}/$(basename "${BINARY_PATH}")" "${BINARY_PATH}"
 
 must "${BINARY_PATH}" version
 echo
