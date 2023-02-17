@@ -165,11 +165,16 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *image
 		d.driver.WithRemoveAfterPush()
 	}
 
-	if options.BuilderOptions.Context == nil || len(options.BuilderOptions.Context) == 0 {
-		return errors.New(errContext, "Docker building context has not been defined on build options")
+	dockerBuildContextList, err := options.BuilderOptions.GetContext()
+	if err != nil {
+		return errors.New(errContext, "Docker building context has not been defined on build options", err)
 	}
 
-	err = d.driver.AddBuildContext(options.BuilderOptions.Context...)
+	if dockerBuildContextList == nil || len(dockerBuildContextList) == 0 {
+		return errors.New(errContext, "Docker building context list is empty")
+	}
+
+	err = d.driver.AddBuildContext(dockerBuildContextList...)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}

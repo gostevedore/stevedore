@@ -70,7 +70,12 @@ builders:
 						Driver: "docker",
 						Options: &builder.BuilderOptions{
 							Dockerfile: "Dockerfile.test",
-							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
+							// Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
+							Context: []interface{}{
+								map[string]interface{}{
+									"path": "/path/to/context",
+								},
+							},
 						},
 						VarMapping: varsmap.New(),
 					},
@@ -82,7 +87,12 @@ builders:
 						Driver: "docker",
 						Options: &builder.BuilderOptions{
 							Dockerfile: "Dockerfile.test",
-							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
+							// Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
+							Context: []interface{}{
+								map[string]interface{}{
+									"path": "/path/to/another/context",
+								},
+							},
 						},
 						VarMapping: varsmap.New(),
 					},
@@ -202,7 +212,12 @@ builders:
 						Driver: "docker",
 						Options: &builder.BuilderOptions{
 							Dockerfile: "Dockerfile.test",
-							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
+							// Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
+							Context: []interface{}{
+								map[string]interface{}{
+									"path": "/path/to/context",
+								},
+							},
 						},
 						VarMapping: varsmap.New(),
 					},
@@ -214,7 +229,12 @@ builders:
 						Driver: "docker",
 						Options: &builder.BuilderOptions{
 							Dockerfile: "Dockerfile.test",
-							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
+							// Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
+							Context: []interface{}{
+								map[string]interface{}{
+									"path": "/path/to/another/context",
+								},
+							},
 						},
 						VarMapping: varsmap.New(),
 					},
@@ -226,7 +246,12 @@ builders:
 						Driver: "docker",
 						Options: &builder.BuilderOptions{
 							Dockerfile: "Dockerfile.test",
-							Context:    []*builder.DockerDriverContextOptions{{Path: "/even/another/path/to/context"}},
+							// Context:    []*builder.DockerDriverContextOptions{{Path: "/even/another/path/to/context"}},
+							Context: []interface{}{
+								map[string]interface{}{
+									"path": "/even/another/path/to/context",
+								},
+							},
 						},
 						VarMapping: varsmap.New(),
 					},
@@ -328,7 +353,12 @@ builders:
 						Driver: "docker",
 						Options: &builder.BuilderOptions{
 							Dockerfile: "Dockerfile.test",
-							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
+							// Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
+							Context: []interface{}{
+								map[string]interface{}{
+									"path": "/path/to/context",
+								},
+							},
 						},
 						VarMapping: varsmap.New(),
 					},
@@ -340,7 +370,12 @@ builders:
 						Driver: "docker",
 						Options: &builder.BuilderOptions{
 							Dockerfile: "Dockerfile.test",
-							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
+							// Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
+							Context: []interface{}{
+								map[string]interface{}{
+									"path": "/path/to/another/context",
+								},
+							},
 						},
 						VarMapping: varsmap.New(),
 					},
@@ -359,7 +394,12 @@ builders:
 						Driver: "docker",
 						Options: &builder.BuilderOptions{
 							Dockerfile: "Dockerfile.test",
-							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
+							// Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/context"}},
+							Context: []interface{}{
+								map[string]interface{}{
+									"path": "/path/to/context",
+								},
+							},
 						},
 						VarMapping: varsmap.New(),
 					},
@@ -371,7 +411,12 @@ builders:
 						Driver: "docker",
 						Options: &builder.BuilderOptions{
 							Dockerfile: "Dockerfile.test",
-							Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
+							// Context:    []*builder.DockerDriverContextOptions{{Path: "/path/to/another/context"}},
+							Context: []interface{}{
+								map[string]interface{}{
+									"path": "/path/to/another/context",
+								},
+							},
 						},
 						VarMapping: varsmap.New(),
 					},
@@ -383,7 +428,12 @@ builders:
 						Driver: "docker",
 						Options: &builder.BuilderOptions{
 							Dockerfile: "Dockerfile.test",
-							Context:    []*builder.DockerDriverContextOptions{{Path: "/even/another/path/to/context"}},
+							// Context:    []*builder.DockerDriverContextOptions{{Path: "/even/another/path/to/context"}},
+							Context: []interface{}{
+								map[string]interface{}{
+									"path": "/even/another/path/to/context",
+								},
+							},
 						},
 						VarMapping: varsmap.New(),
 					},
@@ -391,7 +441,6 @@ builders:
 			},
 			err: &errors.Error{},
 		},
-
 		{
 			desc:     "Testing error loading builders from unexisting directory",
 			path:     "/builders_unexisting",

@@ -791,19 +791,32 @@ func TestGetBuilder(t *testing.T) {
 				Name:   "",
 				Driver: "docker",
 				Options: &builder.BuilderOptions{
-					Context: []*builder.DockerDriverContextOptions{
-						{
-							Git: &builder.DockerDriverGitContextOptions{
-								Path:       "path",
-								Repository: "repository",
-								Reference:  "reference",
-								Auth: &builder.DockerDriverGitContextAuthOptions{
-									Username: "username",
-									Password: "password",
+					Context: []interface{}{
+						map[string]interface{}{
+							"git": map[string]interface{}{
+								"path":       "path",
+								"repository": "repository",
+								"reference":  "reference",
+								"auth": map[string]interface{}{
+									"username": "username",
+									"password": "password",
 								},
 							},
 						},
 					},
+					// Context: []*builder.DockerDriverContextOptions{
+					// 	{
+					// 		Git: &builder.DockerDriverGitContextOptions{
+					// 			Path:       "path",
+					// 			Repository: "repository",
+					// 			Reference:  "reference",
+					// 			Auth: &builder.DockerDriverGitContextAuthOptions{
+					// 				Username: "username",
+					// 				Password: "password",
+					// 			},
+					// 		},
+					// 	},
+					// },
 					Dockerfile: "Dockerfile.test",
 				},
 				VarMapping: varsmap.New(),
