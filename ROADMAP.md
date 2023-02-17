@@ -13,18 +13,15 @@
 - [ ] fix: wildcarded images do not inherit parent persistent_vars
 - [ ] fix: container builders must match to  [a-zA-Z0-9][a-zA-Z0-9_.-]*
 - [x] credentials from env-vars
-- Redefine github.com/gostevedore/stevedore/internal/promote use cases
+- Redefine github.com/gostevedore/stevedore/internal/promote to:
      [x] - promote local and remote images
      [x] - testing
-- [x] inject Dockerfiles --> v0.11.0
+- [x] inject Dockerfiles
 - [x] git context should accept authentication
 - [x] generate images_tree from multiples files located in a folder
 - [x] define parents on image definitions
-- [x] clean: remove image CheckCompatibility --> v0.11.0
+- [x] clean: remove image CheckCompatibility
 - [x] rewrite tree package
-  - engine::imagesEngine: findNodes has dependencies
-  - tree::renderizeGraphRec include to wildcard index nodes
-  - tree::imageIndex global
 - [x] remove-promote-tag to remove-local-images-after-push
 
 ## v0.10.1
