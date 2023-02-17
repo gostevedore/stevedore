@@ -259,7 +259,7 @@ func TestBuild(t *testing.T) {
 			err: &errors.Error{},
 		},
 		{
-			desc: "Testing error context not defined on build options",
+			desc: "Testing error Docker build context not defined on build options",
 			driver: &DockerDriver{
 				driver:        godockerbuilder.NewMockGoDockerBuildDriver(),
 				referenceName: reference.NewDefaultReferenceName(),
@@ -328,10 +328,13 @@ func TestBuild(t *testing.T) {
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddPushAuth", "push-user", "push-pass").Return(nil)
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithPushAfterBuild")
 			},
-			err: errors.New(errContext, "Docker building context has not been defined on build options"),
+			err: errors.New(errContext, "Docker building context has not been defined on build options", errors.New(
+				"(core::domain::builder::BuilderOptions::GetContext)",
+				"Docker driver context options format is not valid",
+			)),
 		},
 		{
-			desc: "Testing error when there is not found any docker build context definition",
+			desc: "Testing error Docker build context defined with an empty list of context",
 			driver: &DockerDriver{
 				driver:        godockerbuilder.NewMockGoDockerBuildDriver(),
 				referenceName: reference.NewDefaultReferenceName(),
@@ -379,7 +382,7 @@ func TestBuild(t *testing.T) {
 				PushAuthPassword: "push-pass",
 				BuilderOptions: &builder.BuilderOptions{
 					Dockerfile: "Dockerfile.test",
-					Context:    []*builder.DockerDriverContextOptions{},
+					Context:    []interface{}{},
 				},
 			},
 			prepareAssertFunc: func(driver DockerDriverer) {
@@ -401,7 +404,7 @@ func TestBuild(t *testing.T) {
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddPushAuth", "push-user", "push-pass").Return(nil)
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("WithPushAfterBuild")
 			},
-			err: errors.New(errContext, "Docker building context has not been defined on build options"),
+			err: errors.New(errContext, "Docker building context list is empty"),
 		},
 	}
 

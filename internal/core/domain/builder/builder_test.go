@@ -159,12 +159,13 @@ options:
 			err: &errors.Error{},
 		},
 		{
-			desc: "Testing create builder from byte array with docker data",
+			desc: "Testing create builder from byte array with a list of Docker driver context data",
 			data: []byte(`
 driver: docker
 options:
   dockerfile: Dockerfile.test
   context:
+    - path: path
     - git:
         path: path
         repository: repository
@@ -177,19 +178,85 @@ options:
 				Name:   "",
 				Driver: "docker",
 				Options: &BuilderOptions{
-					Context: []*DockerDriverContextOptions{
-						{
-							Git: &DockerDriverGitContextOptions{
-								Path:       "path",
-								Repository: "repository",
-								Reference:  "reference",
-								Auth: &DockerDriverGitContextAuthOptions{
-									Username: "username",
-									Password: "password",
+					Context: []interface{}{
+						map[string]interface{}{
+							"path": "path",
+						},
+						map[string]interface{}{
+							"git": map[string]interface{}{
+								"path":       "path",
+								"repository": "repository",
+								"reference":  "reference",
+								"auth": map[string]interface{}{
+									"username": "username",
+									"password": "password",
 								},
 							},
 						},
 					},
+					// Context: []*DockerDriverContextOptions{
+					// 	{
+					// 		Git: &DockerDriverGitContextOptions{
+					// 			Path:       "path",
+					// 			Repository: "repository",
+					// 			Reference:  "reference",
+					// 			Auth: &DockerDriverGitContextAuthOptions{
+					// 				Username: "username",
+					// 				Password: "password",
+					// 			},
+					// 		},
+					// 	},
+					// },
+					Dockerfile: "Dockerfile.test",
+				},
+				VarMapping: varsmap.New(),
+			},
+			err: &errors.Error{},
+		},
+
+		{
+			desc: "Testing create builder from byte array with a Docker driver context data",
+			data: []byte(`
+driver: docker
+options:
+  dockerfile: Dockerfile.test
+  context:
+    git:
+      path: path
+      repository: repository
+      reference: reference
+      auth:
+        username: username
+        password: password
+`),
+			res: &Builder{
+				Name:   "",
+				Driver: "docker",
+				Options: &BuilderOptions{
+					Context: map[string]interface{}{
+						"git": map[string]interface{}{
+							"path":       "path",
+							"repository": "repository",
+							"reference":  "reference",
+							"auth": map[string]interface{}{
+								"username": "username",
+								"password": "password",
+							},
+						},
+					},
+					// Context: []*DockerDriverContextOptions{
+					// 	{
+					// 		Git: &DockerDriverGitContextOptions{
+					// 			Path:       "path",
+					// 			Repository: "repository",
+					// 			Reference:  "reference",
+					// 			Auth: &DockerDriverGitContextAuthOptions{
+					// 				Username: "username",
+					// 				Password: "password",
+					// 			},
+					// 		},
+					// 	},
+					// },
 					Dockerfile: "Dockerfile.test",
 				},
 				VarMapping: varsmap.New(),
@@ -263,19 +330,32 @@ options:
 				Name:   "",
 				Driver: "docker",
 				Options: &BuilderOptions{
-					Context: []*DockerDriverContextOptions{
-						{
-							Git: &DockerDriverGitContextOptions{
-								Path:       "path",
-								Repository: "repository",
-								Reference:  "reference",
-								Auth: &DockerDriverGitContextAuthOptions{
-									Username: "username",
-									Password: "password",
+					Context: []interface{}{
+						map[string]interface{}{
+							"git": map[string]interface{}{
+								"path":       "path",
+								"repository": "repository",
+								"reference":  "reference",
+								"auth": map[string]interface{}{
+									"username": "username",
+									"password": "password",
 								},
 							},
 						},
 					},
+					// Context: []*DockerDriverContextOptions{
+					// 	{
+					// 		Git: &DockerDriverGitContextOptions{
+					// 			Path:       "path",
+					// 			Repository: "repository",
+					// 			Reference:  "reference",
+					// 			Auth: &DockerDriverGitContextAuthOptions{
+					// 				Username: "username",
+					// 				Password: "password",
+					// 			},
+					// 		},
+					// 	},
+					// },
 					Dockerfile: "Dockerfile.test",
 				},
 				VarMapping: varsmap.New(),
