@@ -313,67 +313,6 @@ func TestStore(t *testing.T) {
 			version: "image_version",
 			err:     errors.New(errContext, "To add an image to the store an image is required"),
 		},
-
-		// Commented because store does not render images anymore it is done by imagesConfiguration
-		//
-		// {
-		// 	desc:    "Testing add a image to an empty store",
-		// 	store:   NewStore(render.NewMockImageRender()),
-		// 	name:    "image_name",
-		// 	version: "image_version",
-		// 	image: &image.Image{
-		// 		Name:              "{{.Name}}-{{.Parent.Name}}",
-		// 		Version:           "{{.Version}}-{{.Parent.Version}}",
-		// 		RegistryNamespace: "{{.Parent.RegistryNamespace}}",
-		// 		Parent: &image.Image{
-		// 			Name:              "parent_name",
-		// 			Version:           "parent_version",
-		// 			RegistryNamespace: "parent_registry_namespace",
-		// 		},
-		// 		Tags: []string{"tag1", "tag2"},
-		// 	},
-		// 	prepareAssertFunc: func(s *Store, i *image.Image) {
-		// 		s.render.(*render.MockImageRender).On("Render", "image_name", "image_version", i).Return(
-		// 			&image.Image{
-		// 				Name:              "image_name-parent_name",
-		// 				Version:           "image_version-parent_version",
-		// 				RegistryNamespace: "parent_registry_namespace",
-		// 				Parent: &image.Image{
-		// 					Name:              "parent_name",
-		// 					Version:           "parent_version",
-		// 					RegistryNamespace: "parent_registry_namespace",
-		// 				},
-		// 				Tags: []string{"tag1", "tag2"},
-		// 			},
-		// 			nil,
-		// 		)
-		// 	},
-		// 	assertFunc: func(t *testing.T, s *Store) {
-		// 		assert.Equal(t, 1, len(s.store), "Unexpected number of images in the store")
-		// 		assert.Equal(t,
-		// 			map[string]map[string]struct{}{
-		// 				"image_name": {"image_version": struct{}{}},
-		// 			},
-		// 			s.imageNameDefinitionVersionList)
-		// 		assert.Equal(t,
-		// 			map[string]map[string]map[string]struct{}{
-		// 				"image_name": {
-		// 					"image_version": {"image_version-parent_version": struct{}{}},
-		// 				},
-		// 			},
-		// 			s.imageNameVersionRenderedVersionsList)
-		// 		assert.Equal(t,
-		// 			map[string]map[string]map[string]struct{}{
-		// 				"image_name": {
-		// 					"image_version": {"image_version-parent_version": struct{}{}},
-		// 				},
-		// 			},
-		// 			s.imageNameVersionRenderedVersionsList)
-
-		// 	},
-		// 	err: &errors.Error{},
-		// },
-
 		{
 			desc:    "Testing add a image to an empty store",
 			store:   NewStore(render.NewMockImageRender()),
@@ -1153,6 +1092,12 @@ func TestFindGuaranteed(t *testing.T) {
 					},
 				},
 				imagesIndex: map[string]map[string]*image.Image{
+					"image_parent": {
+						"version_parent": &image.Image{
+							Name:    "image_parent",
+							Version: "version_parent",
+						},
+					},
 					"image1": {
 						"v1-a": &image.Image{
 							Version: "v1-a",
@@ -1177,8 +1122,6 @@ func TestFindGuaranteed(t *testing.T) {
 					},
 				},
 			},
-			// findName:     "image_wildcard",
-			// findVersion:  "wildcard",
 			imageName:    "image_wildcard",
 			imageVersion: "wildcard",
 			prepareAssertFunc: func(s *Store) {
@@ -1478,7 +1421,15 @@ func TestGenerateImageFromWildcard(t *testing.T) {
 						},
 					},
 				}
-				s.render.(*render.MockImageRender).On("Render", "image_parent", "wildcard", &image.Image{
+				s.imagesIndex = map[string]map[string]*image.Image{
+					"image_grandparent": {
+						"version_grandparent": &image.Image{
+							Name:    "image_grandparent",
+							Version: "version_grandparent",
+						},
+					},
+				}
+				s.render.(*render.MockImageRender).On("Render", "image_parent", "{{ .Parent.Version }}", &image.Image{
 					Children:         []*image.Image{},
 					Labels:           map[string]string{},
 					Name:             "image_parent",
@@ -1508,7 +1459,6 @@ func TestGenerateImageFromWildcard(t *testing.T) {
 					},
 					nil,
 				)
-
 				s.render.(*render.MockImageRender).On("Render", "image_wildcard", "wildcard", &image.Image{
 					Children:         []*image.Image{},
 					Labels:           map[string]string{},
@@ -1589,6 +1539,120 @@ func TestGenerateImageFromWildcard(t *testing.T) {
 				assert.Equal(t, expected, i)
 			},
 			err: &errors.Error{},
+		},
+		{
+			desc:    "Testing error generating an image from wildcard image with multiple parents",
+			store:   NewStore(render.NewMockImageRender()),
+			name:    "image_wildcard",
+			version: "wildcard",
+			image: &image.Image{
+				Name:    "image_wildcard",
+				Version: "{{ .Version }}-{{ .Parent.Version }}",
+				Parent: &image.Image{
+					Name:    "image_parent",
+					Version: "version_parent",
+				},
+			},
+			prepareAssertFunc: func(s *Store) {
+				s.imageWildcardIndex = map[string]*image.Image{
+					"image_wildcard": {
+						Name:    "image_wildcard",
+						Version: "{{ .Version }}-{{ .Parent.Version }}",
+						Parent: &image.Image{
+							Name:    "image_parent",
+							Version: "version_parent",
+						},
+					},
+				}
+				s.imagesIndex = map[string]map[string]*image.Image{
+					"image_parent": {
+						"version_parent_1": &image.Image{
+							Name:    "image_parent",
+							Version: "version_parent_1",
+						},
+						"version_parent_2": &image.Image{
+							Name:    "image_parent",
+							Version: "version_parent_2",
+						},
+					},
+				}
+				s.imageNameVersionRenderedVersionsList = map[string]map[string]map[string]struct{}{
+					"image_parent": {
+						"version_parent": {
+							"version_parent_1": {},
+							"version_parent_2": {},
+						},
+					},
+				}
+
+				s.render.(*render.MockImageRender).On("Render", "image_wildcard", "wildcard", &image.Image{
+					Children:         []*image.Image{},
+					Labels:           map[string]string{},
+					PersistentLabels: map[string]string{},
+					PersistentVars:   map[string]interface{}{},
+					Name:             "image_wildcard",
+					Parent: &image.Image{
+						// Children:         []*image.Image{},
+						// Labels:           map[string]string{},
+						Name: "image_parent",
+						// PersistentLabels: map[string]string{},
+						// PersistentVars:   map[string]interface{}{},
+						// Tags:             []string{},
+						// Vars:             map[string]interface{}{},
+						Version: "version_parent",
+					},
+					Tags:    []string{},
+					Vars:    map[string]interface{}{},
+					Version: "{{ .Version }}-{{ .Parent.Version }}",
+				}).Return(
+					&image.Image{
+						Children:         []*image.Image{},
+						Labels:           map[string]string{},
+						Name:             "image_wildcard",
+						PersistentLabels: map[string]string{},
+						PersistentVars:   map[string]interface{}{},
+						Parent: &image.Image{
+							Children:         []*image.Image{},
+							Labels:           map[string]string{},
+							Name:             "image_parent",
+							PersistentLabels: map[string]string{},
+							PersistentVars:   map[string]interface{}{},
+							Tags:             []string{},
+							Vars:             map[string]interface{}{},
+							Version:          "version_parent",
+						},
+						Tags:    []string{},
+						Vars:    map[string]interface{}{},
+						Version: "wildcard-version_parent",
+					},
+					nil,
+				)
+			},
+			assertFunc: func(t *testing.T, s *Store, i *image.Image) {
+				expected := &image.Image{
+					Children:         []*image.Image{},
+					Labels:           map[string]string{},
+					Name:             "image_wildcard",
+					PersistentLabels: map[string]string{},
+					PersistentVars:   map[string]interface{}{},
+					Parent: &image.Image{
+						Children:         []*image.Image{},
+						Labels:           map[string]string{},
+						Name:             "image_parent",
+						PersistentLabels: map[string]string{},
+						PersistentVars:   map[string]interface{}{},
+						Tags:             []string{},
+						Vars:             map[string]interface{}{},
+						Version:          "version_parent",
+					},
+					Tags:    []string{},
+					Vars:    map[string]interface{}{},
+					Version: "wildcard-version_parent",
+				}
+
+				assert.Equal(t, expected, i)
+			},
+			err: errors.New(errContext, "Image 'image_wildcard:wildcard' could not be generated because it has defined multiple parents.\n Parents list:\n - 'image_parent:version_parent_1'\n - 'image_parent:version_parent_2'"),
 		},
 	}
 
