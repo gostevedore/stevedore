@@ -89,6 +89,7 @@ func TestHandler(t *testing.T) {
 				RemoveImagesAfterPush:            true,
 				SemanticVersionTagsTemplates:     []string{"{{ .Major }}.{{ .Minor }}"},
 				Versions:                         []string{"version-1", "version-2"},
+				Vars:                             []string{"var-1=value-var1"},
 
 				BuildOnCascade: false,
 				CascadeDepth:   5,
@@ -127,6 +128,7 @@ func TestHandler(t *testing.T) {
 						PushImageAfterBuild:              true,
 						RemoveImagesAfterPush:            true,
 						SemanticVersionTagsTemplates:     []string{"{{ .Major }}.{{ .Minor }}"},
+						Vars:                             map[string]interface{}{"var-1": "value-var1"},
 					},
 					mock.AnythingOfType("[]build.OptionsFunc"),
 				).Return(nil)

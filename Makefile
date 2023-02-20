@@ -25,7 +25,7 @@ WORKING_DIR=`pwd`
 
 #
 # Go options
-GO_TEST_OPTS=-count=1 -parallel=4 -v -cover
+GO_TEST_OPTS=-count=1 -parallel=4
 
 #
 # checksum
@@ -112,7 +112,7 @@ tar: checksum ## generate and artifact (it is recommend to use 'snapshot' target
 	rm -rf bin/${BINARY} bin/${BINARY}.${CHECKSUM_EXT}
 
 unit-tests: ## execute unit tests
-	go test ${GO_TEST_OPTS} ./internal/...
+	go test ${GO_TEST_OPTS} ./internal/... -covermode=atomic -coverprofile=coverage.out
 
 functional-tests: ## execute functional tests
 	go test ${GO_TEST_OPTS} ./test/functional/...

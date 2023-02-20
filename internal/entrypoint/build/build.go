@@ -271,7 +271,7 @@ func (e *Entrypoint) prepareImageName(args []string) (string, error) {
 	errContext := "(entrypoint::build::prepareImageName)"
 
 	if len(args) < 1 || args == nil {
-		return "", errors.New(errContext, "To execute the build entrypoint, arguments are required")
+		return "", errors.New(errContext, "To execute the build entrypoint, an image name must be provided")
 	}
 
 	imageName := args[0]

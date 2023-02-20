@@ -14,9 +14,11 @@ import (
 // Store is a store for images
 type Store struct {
 
-	// imageNameDefinitionVersionList is the list of versions defined for an image name
+	// imageNameDefinitionVersionList contains the names of the version defined for an image definition
+	//   map["image1"]: {"version1":struct{}{},"version2":struct{}{}}
 	imageNameDefinitionVersionList map[string]map[string]struct{}
-	// imageNameRenderedVersionsList is the list of rendered versions for an image name and version
+	// imageNameRenderedVersionsList contains the names of the versions achieved after rendering an image
+	//   map["image1"]: {"version1": { "version1-parent_version": struct{}{}},"version2": {"version2-parent_version": struct{}{}}}
 	imageNameVersionRenderedVersionsList map[string]map[string]map[string]struct{}
 	// imagesIndex images referenced by its name and rendered version
 	imagesIndex map[string]map[string]*image.Image
@@ -74,14 +76,6 @@ func (s *Store) Store(name string, version string, i *image.Image) error {
 
 		return nil
 	}
-
-	// Commented because store does not render images anymore it is done by imagesConfiguration
-	//
-	// // render the image
-	// renderedImage, err = s.render.Render(name, version, i)
-	// if err != nil {
-	// 	return errors.New(errContext, "", err)
-	// }
 
 	err = s.addImageNameDefinitionVersionList(name, version)
 	if err != nil {
@@ -313,7 +307,7 @@ func (s *Store) Find(name string, version string) ([]*image.Image, error) {
 	return list, nil
 }
 
-// FindGuaranteed returns the image associated to the image name and version. In case of a wildcard image, it generates the image. Otherwise, it returns a nil image and an error
+// FindGuaranteed returns the image associated to an image name and version. In case of finding for a wildcard image, it generates the image. Otherwise, it returns a nil image and an error
 func (s *Store) FindGuaranteed(imageName, imageVersion string) ([]*image.Image, error) {
 	// func (s *Store) FindGuaranteed(findName, findVersion, imageName, imageVersion string) ([]*image.Image, error) {
 
@@ -323,6 +317,7 @@ func (s *Store) FindGuaranteed(imageName, imageVersion string) ([]*image.Image, 
 	var list []*image.Image
 	var image, imageWildcard *image.Image
 
+	// simple find
 	list, err = s.Find(imageName, imageVersion)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
@@ -332,6 +327,7 @@ func (s *Store) FindGuaranteed(imageName, imageVersion string) ([]*image.Image, 
 		return list, nil
 	}
 
+	// try to generate the image when image no image is returned by simple find
 	imageWildcard, err = s.FindWildcardImage(imageName)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
@@ -370,7 +366,9 @@ func (s *Store) FindWildcardImage(name string) (*image.Image, error) {
 func (s *Store) GenerateImageFromWildcard(i *image.Image, name string, version string) (*image.Image, error) {
 
 	var err error
-	var parent, parentWildcard, renderedImage, imageToRender *image.Image
+	var parent, renderedImage, imageToRender *image.Image
+	//var parent, parentWildcard, renderedImage, imageToRender *image.Image
+	var parentWildcardList []*image.Image
 	errContext := "(store::images::Store::GenerateImageFromWildcard)"
 
 	if i == nil {
@@ -385,17 +383,30 @@ func (s *Store) GenerateImageFromWildcard(i *image.Image, name string, version s
 
 	// ensure that parent is properly rended when it is also a wildcard image
 	if parent != nil {
-		parentWildcard, err = s.FindWildcardImage(parent.Name)
+		// parentWildcard, err = s.FindWildcardImage(parent.Name)
+		parentWildcardList, err = s.FindGuaranteed(parent.Name, parent.Version)
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}
-		if parentWildcard != nil {
-			parent, err = s.GenerateImageFromWildcard(parentWildcard, parent.Name, version)
-			if err != nil {
-				return nil, errors.New(errContext, "", err)
+
+		if len(parentWildcardList) > 1 {
+			msg := fmt.Sprintf("Image '%s:%s' could not be generated because it has defined multiple parents.\n Parents list:", name, version)
+			for _, parent := range parentWildcardList {
+				msg = fmt.Sprintf("%s\n - '%s:%s'", msg, parent.Name, parent.Version)
 			}
+			return nil, errors.New(errContext, msg)
 		}
-		imageToRender.Options(image.WithParent(parent))
+
+		if len(parentWildcardList) == 1 {
+			imageToRender.Options(image.WithParent(parentWildcardList[0]))
+		}
+		// if parentWildcard != nil {
+		// 	parent, err = s.GenerateImageFromWildcard(parentWildcard, parent.Name, version)
+		// 	if err != nil {
+		// 		return nil, errors.New(errContext, "", err)
+		// 	}
+		// }
+		// imageToRender.Options(image.WithParent(parent))
 	}
 
 	renderedImage, err = s.render.Render(name, version, imageToRender)
