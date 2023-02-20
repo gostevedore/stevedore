@@ -181,7 +181,7 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *im
 	}
 
 	// TODO:
-	// go-ansible library is not able to pass secrets, auth values won't be passed to ansible playbook till this is allowed
+	// go-ansible library is not able to pass secrets, auth values won't be passed to ansible playbook while it should be done as plain text
 
 	d.driver.WithPlaybook(playbook)
 	d.driver.WithOptions(ansiblePlaybookOptions)
