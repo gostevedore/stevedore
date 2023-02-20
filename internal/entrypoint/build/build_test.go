@@ -138,13 +138,13 @@ func TestPrepareImageName(t *testing.T) {
 		{
 			desc:       "Testing error preparing image name in build entrypoint when no args is nil",
 			entrypoint: &Entrypoint{},
-			err:        errors.New(errContext, "To execute the build entrypoint, arguments are required"),
+			err:        errors.New(errContext, "To execute the build entrypoint, an image name must be provided"),
 		},
 		{
 			desc:       "Testing error preparing image name in build entrypoint when no args are provided",
 			entrypoint: &Entrypoint{},
 			args:       []string{},
-			err:        errors.New(errContext, "To execute the build entrypoint, arguments are required"),
+			err:        errors.New(errContext, "To execute the build entrypoint, an image name must be provided"),
 		},
 		{
 			desc:       "Testing prepare image name in build entrypoint",

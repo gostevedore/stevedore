@@ -102,6 +102,18 @@ func (h *Handler) Handler(ctx context.Context, imageName string, options *Option
 	buildServiceOptions.PushImageAfterBuild = options.PushImagesAfterBuild
 	buildServiceOptions.RemoveImagesAfterPush = options.RemoveImagesAfterPush
 
+	buildServiceOptions.Vars = make(map[string]interface{})
+	for _, vars := range options.Vars {
+
+		if strings.IndexRune(vars, AssignmentTokenSymbol) < 0 {
+			return errors.New(errContext, fmt.Sprintf("Invalid vars variable format '%s'", vars))
+		}
+		kVar := vars[:strings.IndexRune(vars, AssignmentTokenSymbol)]
+		vVar := vars[strings.IndexRune(vars, AssignmentTokenSymbol)+1:]
+
+		buildServiceOptions.Vars[kVar] = vVar
+	}
+
 	buildPlan, err = h.createBuildPlan(options)
 	if err != nil {
 		return errors.New(errContext, "", err)
