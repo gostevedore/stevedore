@@ -1,6 +1,6 @@
 # RELEASE NOTES
 
-## Undefined
+## [v0.11.0]
 
 ### Added
 - Installation script
@@ -19,6 +19,7 @@
 - Subcomand get builders accept filters
 
 ### Changed
+- Updated license to Apache 2.0
 - The whole project has been refactored following the ports-and-adapter architectonical design. Inside the `ìnternal` folder there are 5 main subfolders:
   - `application`: Use cases implementation
   - `core`: The domain objects and the repositories to interact with them
