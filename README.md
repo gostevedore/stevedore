@@ -1,3 +1,4 @@
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ![stevedore-logo](docs/logo/logo_4_stevedore.png "Stevedore logo")
 
@@ -29,7 +30,7 @@ Finally, Stevedore provides a **credentials store** to authenticate on your beha
 
 You can use the script provided on the Stevedore's repository to install it.
 ```sh
-curl -sL https://raw.githubusercontent.com/gostevedore/stevedore/version_v0.11.0/scripts/install.sh | sudo bash
+curl -sL https://raw.githubusercontent.com/gostevedore/stevedore/main/scripts/install.sh | sudo bash
 ```
 Visit the [documentation](https://gostevedore.github.io/documentation/getting-started/quick-start/#download-and-install-stevedore) to see other installation methods.
 
