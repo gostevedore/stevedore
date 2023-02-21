@@ -1,28 +1,98 @@
 module github.com/gostevedore/stevedore
 
-go 1.15
+go 1.19
 
 require (
-	github.com/Masterminds/semver/v3 v3.1.1
-	github.com/apenella/go-ansible v0.6.1
-	github.com/apenella/go-common-utils v0.3.0 // indirect
-	github.com/apenella/go-common-utils/data v0.0.0-20210325064729-0c2d7e503180
-	github.com/apenella/go-common-utils/error v0.0.0-20210101160429-a7ae7d856d3e
-	github.com/apenella/go-data-structures/extendedTree v0.0.0-20210105152744-e87edca182ed
-	github.com/apenella/go-data-structures/tree v0.0.0-20210105152744-e87edca182ed
-	github.com/apenella/go-docker-builder v0.3.3
-	github.com/containerd/containerd v1.4.3 // indirect
-	github.com/docker/distribution v2.7.1+incompatible
-	github.com/docker/docker v20.10.2+incompatible
-	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
-	github.com/morikuni/aec v1.0.0 // indirect
-	github.com/ryanuber/columnize v0.0.0-20160712163229-9b3edd62028f
-	github.com/spf13/cobra v1.1.1
-	github.com/spf13/viper v1.7.1
-	github.com/stretchr/testify v1.6.1
-	go.uber.org/thriftrw v1.25.1
-	go.uber.org/zap v1.16.0
-	gopkg.in/yaml.v2 v2.4.0
-	gotest.tools v2.2.0+incompatible
-	gotest.tools/v3 v3.0.3 // indirect
+	github.com/Masterminds/semver/v3 v3.2.0
+	github.com/apenella/go-ansible v1.1.7
+	github.com/apenella/go-common-utils/data v0.0.0-20221227202648-5452d804e940
+	github.com/apenella/go-common-utils/error v0.0.0-20221227202648-5452d804e940
+	github.com/apenella/go-common-utils/transformer/string v0.0.0-20221227202648-5452d804e940
+	github.com/apenella/go-data-structures/extendedTree v0.0.0-20221117064317-a3b6d9f69cda
+	github.com/apenella/go-docker-builder v0.7.3
+	github.com/aws/aws-sdk-go-v2 v1.17.2
+	github.com/aws/aws-sdk-go-v2/config v1.18.4
+	github.com/aws/aws-sdk-go-v2/credentials v1.13.4
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.17.24
+	github.com/aws/aws-sdk-go-v2/service/sts v1.17.6
+	github.com/docker/distribution v2.8.1+incompatible
+	github.com/docker/docker v20.10.21+incompatible
+	github.com/go-git/go-git/v5 v5.5.1
+	github.com/gruntwork-io/terratest v0.41.9
+	github.com/ryanuber/columnize v2.1.2+incompatible
+	github.com/spf13/afero v1.9.3
+	github.com/spf13/cobra v1.6.1
+	github.com/spf13/viper v1.14.0
+	github.com/stretchr/testify v1.8.1
+	go.uber.org/zap v1.24.0
+	golang.org/x/term v0.4.0
+	gopkg.in/yaml.v3 v3.0.1
+)
+
+require (
+	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
+	github.com/Microsoft/go-winio v0.6.0 // indirect
+	github.com/ProtonMail/go-crypto v0.0.0-20221026131551-cf6655e29de4 // indirect
+	github.com/acomagu/bufpipe v1.0.3 // indirect
+	github.com/ahmetb/go-cursor v0.0.0-20131010032410-8136607ea412 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.20 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.26 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.20 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.27 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.20 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.11.26 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.13.9 // indirect
+	github.com/aws/smithy-go v1.13.5 // indirect
+	github.com/cloudflare/circl v1.3.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/docker/go-connections v0.4.0 // indirect
+	github.com/docker/go-units v0.5.0 // indirect
+	github.com/emirpasic/gods v1.18.1 // indirect
+	github.com/fatih/color v1.13.0 // indirect
+	github.com/fsnotify/fsnotify v1.6.0 // indirect
+	github.com/go-git/gcfg v1.5.0 // indirect
+	github.com/go-git/go-billy/v5 v5.3.1 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/imdario/mergo v0.3.13 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/kevinburke/ssh_config v1.2.0 // indirect
+	github.com/magiconair/properties v1.8.7 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/opencontainers/go-digest v1.0.0 // indirect
+	github.com/opencontainers/image-spec v1.0.2 // indirect
+	github.com/pelletier/go-toml v1.9.5 // indirect
+	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
+	github.com/pjbgf/sha1cd v0.2.3 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/sergi/go-diff v1.2.0 // indirect
+	github.com/sirupsen/logrus v1.9.0 // indirect
+	github.com/skeema/knownhosts v1.1.0 // indirect
+	github.com/spf13/cast v1.5.0 // indirect
+	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
+	github.com/subosito/gotenv v1.4.1 // indirect
+	github.com/wk8/go-ordered-map v1.0.0 // indirect
+	github.com/xanzy/ssh-agent v0.3.3 // indirect
+	go.uber.org/atomic v1.10.0 // indirect
+	go.uber.org/multierr v1.8.0 // indirect
+	golang.org/x/crypto v0.4.0 // indirect
+	golang.org/x/mod v0.7.0 // indirect
+	golang.org/x/net v0.5.0 // indirect
+	golang.org/x/sys v0.4.0 // indirect
+	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/tools v0.5.1-0.20230111220935-a7f7db3f17fc // indirect
+	gopkg.in/ini.v1 v1.67.0 // indirect
+	gopkg.in/warnings.v0 v0.1.2 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gotest.tools/v3 v3.4.0 // indirect
 )

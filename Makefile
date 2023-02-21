@@ -25,7 +25,7 @@ WORKING_DIR=`pwd`
 
 #
 # Go options
-GO_TEST_OPTS=-count=1 -parallel=4 -v
+GO_TEST_OPTS=-count=1 -parallel=4
 
 #
 # checksum
@@ -36,7 +36,7 @@ CHECKSUM_EXT=md5
 # Setup the -ldflags option for go build here, interpolate the variable values
 #  -s: Omit the symbol table and debug information.
 #  -w: Omit the DWARF symbol table
-LDFLAGS=-ldflags "-s -w -X '${PROJECT}/internal/release.BuildDate=${BUILD_DATE}' -X ${PROJECT}/internal/release.Version=${VERSION} -X ${PROJECT}/internal/release.Commit=${COMMIT}"
+LDFLAGS=-ldflags "-s -w -X '${PROJECT}/internal/core/domain/release.BuildDate=${BUILD_DATE}' -X ${PROJECT}/internal/core/domain/release.Version=${VERSION} -X ${PROJECT}/internal/release.Commit=${COMMIT}"
 
 #
 # dafault target
@@ -69,8 +69,8 @@ hi:
 # reference: https://blog.codeship.com/building-minimal-docker-containers-for-go-applications/
 #
 
-build: clean ## run a golang build (it is recommend to use 'snapshot' target)
-	CGO_ENABLED=0 GOOS=linux go build ${LDFLAGS} -a -o bin/${BINARY} cmd/${BINARY}.go
+# build: clean ## run a golang build (it is recommend to use 'snapshot' target)
+# 	CGO_ENABLED=0 GOOS=linux go build ${LDFLAGS} -a -o bin/${BINARY} cmd/${BINARY}.go
 
 checksum: build ## generate binary checksum
 	${CHECKSUM} bin/${BINARY} > bin/${BINARY}.${CHECKSUM_EXT}
@@ -97,7 +97,8 @@ notes: ## generate release notes from commits since last tag
 	mv aux RELEASE_NOTES.md
 
 snapshot: ## create a goreleaser snapshot
-	goreleaser --snapshot --skip-publish --rm-dist --release-notes RELEASE_NOTES.md
+# goreleaser --snapshot --skip-publish --rm-dist --release-notes RELEASE_NOTES.md
+	goreleaser --snapshot --skip-publish --clean --release-notes RELEASE_NOTES.md
 
 tag: ## generate a tag on main branch based on the Version file content
 	git checkout main
@@ -110,8 +111,13 @@ tar: checksum ## generate and artifact (it is recommend to use 'snapshot' target
 	tar cvzf ${ARTIFACTS_DIR}/${BINARY}-${VERSION}.tar.gz bin/${BINARY} bin/${BINARY}.${CHECKSUM_EXT}
 	rm -rf bin/${BINARY} bin/${BINARY}.${CHECKSUM_EXT}
 
-test: ## execute all tests
-	go test ${GO_TEST_OPTS} ./...
+unit-tests: ## execute unit tests
+	go test ${GO_TEST_OPTS} ./internal/... -covermode=atomic -coverprofile=coverage.out
+
+functional-tests: ## execute functional tests
+	go test ${GO_TEST_OPTS} ./test/functional/...
+
+tests: unit-tests functional-tests ## execute all tests
 
 vet: ## execute go vet
 	go vet ${LDFLAGS} ./...

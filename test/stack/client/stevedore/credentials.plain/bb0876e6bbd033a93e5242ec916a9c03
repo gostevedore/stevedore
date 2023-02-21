@@ -1,0 +1,19 @@
+{
+  "ID": "",
+  "aws_access_key_id": "",
+  "aws_region": "",
+  "aws_role_arn": "",
+  "aws_secret_access_key": "",
+  "aws_profile": "",
+  "aws_shared_credentials_files": [],
+  "aws_shared_config_files": [],
+  "aws_use_default_credentials_chain": false,
+  "docker_login_password": "",
+  "docker_login_username": "",
+  "password": "",
+  "username": "",
+  "private_key_file": "/root/.ssh/id_rsa",
+  "private_key_password": "password",
+  "git_ssh_user": "",
+  "use_ssh_agent": false
+}

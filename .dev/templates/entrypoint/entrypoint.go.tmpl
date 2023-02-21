@@ -1,0 +1,33 @@
+package {{ .PackageName }}
+
+import (
+	"context"
+
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
+)
+
+// OptionsFunc defines the signature for an option function to set entrypoint attributes
+type OptionsFunc func(opts *{{ .EntrypointObject }})
+
+// {{ .EntrypointObject }} defines the entrypoint for the application
+type {{ .EntrypointObject }} struct{}
+
+// New{{ .EntrypointObject }} returns a new entrypoint
+func New{{ .EntrypointObject }}(opts ...OptionsFunc) *{{ .EntrypointObject }} {
+	e := &{{ .EntrypointObject }}{}
+	e.Options(opts...)
+
+	return e
+}
+
+// Options provides the options for the entrypoint
+func (e *{{ .EntrypointObject }}) Options(opts ...OptionsFunc) {
+	for _, opt := range opts {
+		opt(e)
+	}
+}
+
+// Execute is a pseudo-main method for the command
+func (e *{{ .EntrypointObject }}) Execute(ctx context.Context, args []string, conf *configuration.Configuration) error {
+	return nil
+}

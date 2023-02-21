@@ -1,80 +1,86 @@
 # ROADMAP
 
+## v0.12.0
+- [ ] Apply Levenshtein distances on the image name to identify which image the user wants to build
+- [ ] Enable builds over HTTP
+- [ ] Multi-platform builds
+- [ ] Build an image as well as all its parent until root
+- [ ] Execute build plan to show the build intentions
+- [ ] Cleanup compatibilities
+  
 ## v0.11.0
-- [ ] refactor github.com/gostevedore/stevedore/internal/promote to support test
-- [ ] inject dockerfiles --> v0.11.0
+- [x] Fix: promote images with subnamespaces fails example myregistry/mynamesapce/grafana/tempo:1.0.0
+- [x] Fix: wildcard images could not use {{ .Name }} on images definition
+- [x] Fix: wildcarded images do not inherit parent persistent_vars
+- [ ] Fix: container builders must match to  [a-zA-Z0-9][a-zA-Z0-9_.-]*
+- [x] Credentials from env-vars
+- [x] Promote local and remote images
+- [x] Testing promote package
+- [x] Inject Dockerfiles
+- [x] Git context should accept authentication
+- [x] Generate images_tree from multiples files located in a folder
+- [x] Define parents on image definitions
+- [x] Clean: remove image CheckCompatibility
+- [x] Rewrite tree package
+- [x] Remove-promote-tag to remove-local-images-after-push
 
 ## v0.10.1
-- [x] stevedore init creates configuration file with execution permissions
-- [x] promote does not uses -S flag to generate semantic version tags
-- [x] tags defined on the image are ignored
+- [x] Stevedore init creates a configuration file with execution permissions
+- [x] Promote does not use -S flag to generate semantic version tags
+- [x] Tags defined on the image are ignored
 
 ## v0.10.0
-- [x] create an init command
-- [x] automate semver tagging for images
-- [x] inline builder definition on image definition
-- [x] config precedence: current folder, user home, global folder
-- [x] console message when no images to build found
-- [x] define a depth to on cascade builds
-- [x] on buildWorker notify user that semver won't be created
-- [x] fix set image from details to build images
-- [x] accept nil builder
-- [x] update image childs to children
+- [x] Create an init command
+- [x] Automate semver tagging for images
+- [x] Inline builder definition on image definition
+- [x] Config precedence: current folder, user home, global folder
+- [x] Console message when no images to build are found
+- [x] Define a depth to cascade builds
+- [x] On buildWorker notify the user that semver won't be created
+- [x] Fix set image from details to build images
+- [x] Accept nil builder
+- [x] Update image children to children
 
 ## v0.9.1
-- [x] log_path is always writing on stdout when it is not overwrite.
-- [x] test promte
-- [x] when a build fails return an status code != 0 --> v0.9.1
-- [x] functional tests using os.Exec --> v0.9.1 (tests moved to command test)
-- [x] override the image name gave by argument with a flag --> v0.9.1
-- [x] improve get_test.go:118: Functional test to get builders --> v0.9.1 (tests moved to command test)
-- [x] imporve test builder_test.go:35: Testing array generation from a builder conf. Not always return the array elements in same order --> v0.9.1 (tests moved to command test)
-- [x] test command package
+- [x] Log_path is always written on stdout when it is not overwritten.
+- [x] Test promote
+- [x] When a build fails return a status code != 0 --> v0.9.1
+- [x] Functional tests using os.Exec --> v0.9.1 (tests moved to command test)
+- [x] Override the image name given by argument with a flag --> v0.9.1
+- [x] Improve get_test.go:118: Functional test to get builders --> v0.9.1 (tests moved to command test)
+- [x] Improve test builder_test.go:35: Testing array generation from a builder conf. Not always return the array elements in the same order --> v0.9.1 (tests moved to command test)
+- [x] Test command package
 
 ## v0.9.0
-- [x] define promote command
-- [x] fix application panics when vars or pesistent_vars are not strings on image_tree definition
-- [x] fix create complete path when creates a new credentials
+- [x] Define promote command
+- [x] Fix application panics when vars or pesistent_vars are not strings on image_tree definition
+- [x] Fix create a complete path when creating new credentials
 
 ## v0.8.1
-- [x] fix remove wildcarded version images when all images are listed  
-- [x] fix builders without options panics with a nil pointer exception
-- [x] prefixing docker builder output
-- [x] builders definition may accept remote repositories with definitions (git context)
-- [x] map build's command flags builder variables
-- [x] fix get builders to show non string options
+- [x] Fix remove wildcarded version images when all images are listed  
+- [x] Fix builders without options panics with a nil pointer exception
+- [x] Prefixing docker builder output
+- [x] Builders definition may accept remote repositories with definitions (git context)
+- [x] Map build's command flags builder variables
+- [x] Fix get builders to show non-string options
 
 ## v0.8.0
-- [x] new builders which uses docker as a driver
-- [x] fix load persistent var from root node to leaf
+- [x] New builders which use docker as a driver
+- [x] Fix load persistent var from root node to leaf
 
 ## v0.7.1
-- [x] accept cascade for wildcard version
-- [x] Include tags and childs on copy image method
+- [x] Accept cascade for wildcard version
+- [x] Include tags and children on copy image method
 
 ## v0.7.0
-- [x] use copy Image method
-- [x] test for wildcard version. even find methods
-- [x] manage interruption
-- [x] wildcard version
-- [x] persistent vars
-- [x] use context with interruptions --> v0.7.0
-
-### issues
-n/a
-
-## scheduled
-- [ ] inject dockerfiles --> v0.11.0
-- [ ] define parents on image definitions --> v0.11.0
-- [ ] remove image CheckCompatibility --> v0.11.0
-- [ ] documentation
+- [x] Use the copy Image method
+- [x] Test for the wildcard version. even find methods
+- [x] Manage interruption
+- [x] Wildcard version
+- [x] Persistent vars
+- [x] Use context with interruptions --> v0.7.0
 
 ## icebox
-- [ ] enable builds over http server
-- [ ] copy image from one regitry to another one (it could be a promote flag)
-- [ ] example on usage message
-- [ ] apply levenshtein distances on image name to identify which image the user want to build 
-- [ ] rewrite tree package
-  - engine::imagesEngine: findNodes has dependencies
-  - tree::renderizeGraphRec include to wildcard index nodes
-  - tree::imageIndex global
+- Promote images defined on the images tree
+- Sign images
+

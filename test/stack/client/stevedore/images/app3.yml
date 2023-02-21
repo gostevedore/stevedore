@@ -1,0 +1,42 @@
+images:
+  app3:
+    "1.2.3":
+      registry: registry.stevedore.test
+      namespace: stable
+      version: "{{ .Version }}"
+      builder:
+        driver: docker
+        options:
+          context:
+            - path: app3
+      parents:
+        busybox:
+          - latest
+    "*":
+      registry: registry.stevedore.test
+      namespace: stable
+      version: "{{ .Version }}"
+      builder:
+        driver: docker
+        options:
+          context:
+            - path: app3
+      vars:
+        message: "{{ .Name }} {{ .Version }}"
+      parents:
+        busybox:
+          - latest
+
+  app3-extended:
+    version:
+      registry: registry.stevedore.test
+      namespace: stable
+      version: "{{ .Parent.Version }}"
+      builder:
+        driver: docker
+        options:
+          context:
+            - path: app-extend
+      parents:
+        app3:
+          - "1.2.3"

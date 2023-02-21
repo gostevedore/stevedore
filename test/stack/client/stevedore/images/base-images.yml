@@ -1,0 +1,50 @@
+
+images:
+  scratch:
+    latest:
+      version: "{{ .Version }}"
+      persistent_vars:
+        image_from: "{{ .Name }}"
+      parents:
+        root:
+          - latest
+
+  busybox:
+    latest:
+      registry: docker-hub.stevedore.test:5000
+      namespace: library
+      persistent_vars:
+        image_from: "{{ .Image.RegistryHost }}/{{ .Image.RegistryNamespace }}/{{ .Name }}:{{ .Version }}"
+      parents:
+        root:
+          - latest
+
+  alpine:
+    "3.16":
+      registry: docker-hub.stevedore.test:5000
+      namespace: library
+      persistent_vars:
+        image_from: "{{ .Image.RegistryHost }}/{{ .Image.RegistryNamespace }}/{{ .Name }}:{{ .Version }}"
+      parents:
+        root:
+          - latest
+
+  ubuntu:
+    latest:
+      version: "{{ .Version }}"
+      registry: docker-hub.stevedore.test:5000
+      namespace: library
+      persistent_vars:
+        image_from: "{{ .Image.RegistryHost }}/{{ .Image.RegistryNamespace }}/{{ .Name }}:{{ .Version }}"
+      parents:
+        root:
+          - latest
+    "20.04":
+      version: "{{ .Version }}"
+      registry: docker-hub.stevedore.test:5000
+      namespace: library
+      persistent_vars:
+        image_from: "{{ .Image.RegistryHost }}/{{ .Image.RegistryNamespace }}/{{ .Name }}:{{ .Version }}"
+      parents:
+        root:
+          - latest

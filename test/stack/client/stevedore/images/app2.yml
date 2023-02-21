@@ -1,0 +1,26 @@
+images:
+  app2:
+    "v1":
+      registry: registry.stevedore.test
+      version: "{{ .Version }}-{{ .Parent.Name }}-{{ .Parent.Version }}"
+      namespace: stable
+      vars:
+        # it sets imaga_from build argument to Dockerfile defined on git repository git@gitserver:/git/repos/app2.git
+        image_from: "{{ .Parent.RegistryHost }}/{{ .Parent.RegistryNamespace }}/{{ .Parent.Name }}:{{ .Parent.Version }}"
+      builder:
+        driver: docker
+        options:
+          context:
+            - git:
+                repository: git@gitserver:/git/repos/app2.git
+                reference: master
+                auth:
+                  # /app/test/client/stevedore # stevedore create credentials gitserver --private-key-file /root/.ssh/id_rsa --private-key-password password
+                  # /app/test/client/stevedore # stevedore get credentials
+                  # ID                               TYPE              CRENDENTIALS
+                  # 82e99d42ee1191bb42fbfb444920104d username-password username=admin
+                  # bb0876e6bbd033a93e5242ec916a9c03 Private key file  private_key_file=/root/.ssh/id_rsa, protected by password
+                  credentials_id: gitserver.stevedore.test
+      parents:
+        alpine:
+          - "3.16"

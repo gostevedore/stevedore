@@ -1,0 +1,38 @@
+package {{ .PackageName }}
+
+import (
+	"context"
+	"testing"
+
+	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestNewCommand(t *testing.T) {
+	tests := []struct {
+		desc       string
+		config     *configuration.Configuration
+		entrypoint Entrypointer
+		prepareMockFunc func(Entrypointer, *configuration.Configuration)
+		args       []string
+		err        error
+	}{}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			if test.prepareMockFunc != nil {
+				test.prepareMockFunc(test.entrypoint, test.config)
+			}
+
+			cmd := NewCommand(context.TODO(), test.config, test.entrypoint)
+			cmd.Command.ParseFlags(test.args)
+			err := cmd.Command.RunE(cmd.Command, test.args)
+			if err != nil && assert.Error(t, err) {
+				assert.Equal(t, test.err.Error(), err.Error())
+			}
+		})
+	}
+	assert.True(t, false)
+}
