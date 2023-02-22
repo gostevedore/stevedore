@@ -30,7 +30,7 @@ Finally, Stevedore provides a **credentials store** to authenticate on your beha
 
 You can use the script provided on the Stevedore's repository to install it.
 ```sh
-curl -sL https://raw.githubusercontent.com/gostevedore/stevedore/main/scripts/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/gostevedore/stevedore/main/scripts/install.sh | sudo bash -
 ```
 Visit the [documentation](https://gostevedore.github.io/documentation/getting-started/quick-start/#download-and-install-stevedore) to see other installation methods.
 
