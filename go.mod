@@ -9,14 +9,14 @@ require (
 	github.com/apenella/go-common-utils/error v0.0.0-20221227202648-5452d804e940
 	github.com/apenella/go-common-utils/transformer/string v0.0.0-20221227202648-5452d804e940
 	github.com/apenella/go-data-structures/extendedTree v0.0.0-20221117064317-a3b6d9f69cda
-	github.com/apenella/go-docker-builder v0.7.4
+	github.com/apenella/go-docker-builder v0.7.5
 	github.com/aws/aws-sdk-go-v2 v1.17.2
 	github.com/aws/aws-sdk-go-v2/config v1.18.4
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.4
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.17.24
 	github.com/aws/aws-sdk-go-v2/service/sts v1.17.6
 	github.com/docker/distribution v2.8.1+incompatible
-	github.com/docker/docker v23.0.1+incompatible
+	github.com/docker/docker v20.10.23+incompatible
 	github.com/go-git/go-git/v5 v5.5.2
 	github.com/gruntwork-io/terratest v0.41.9
 	github.com/ryanuber/columnize v2.1.2+incompatible
@@ -74,6 +74,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
+	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect

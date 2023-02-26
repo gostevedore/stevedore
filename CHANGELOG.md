@@ -29,8 +29,8 @@
 - Bump up go to 1.19.6
 - Bump up yaml to yaml.v3
 - Bump up github.com/apenella/go-ansible to v1.1.7
-- Bump github.com/apenella/go-docker-builder to v0.7.4
-- Bump github.com/docker/docker to v23.0.1+incompatible
+- Bump github.com/apenella/go-docker-builder to v0.7.5
+- Bump github.com/docker/docker to v20.10.23+incompatible
 - Bump github.com/go-git/go-git/v5 to v5.5.2
 - Bump github.com/spf13/afero to v1.9.4
 - Bump github.com/stretchr/testify to v1.8.2
