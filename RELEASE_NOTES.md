@@ -26,10 +26,15 @@
   - `entrypoint`: The elements that initialize and execute each command subsystem
   - `handler`: Defines the handler for each subcommand
   - `infrastrucutre`: Implementation for the driven and driver actor
-- Bump to go1.19 
-- Bump to yaml.v3
-- Bump to `go-ansible` v1.1.7 version
-- Bump to `go-docker-builder` v0.7.2 version
+- Bump up go to 1.19.6
+- Bump up yaml to yaml.v3
+- Bump up github.com/apenella/go-ansible to v1.1.7
+- Bump github.com/apenella/go-docker-builder to v0.7.4
+- Bump github.com/docker/docker to v23.0.1+incompatible
+- Bump github.com/go-git/go-git/v5 to v5.5.2
+- Bump github.com/spf13/afero to v1.9.4
+- Bump github.com/stretchr/testify to v1.8.2
+- Bump golang.org/x/term to v0.5.0
 - [DEPRECATED FLAG] On the promote subcommand, use `remove-local-images-after-push` instead of `remove-promote-tags`
 - [DEPRECATED FLAG] On the build subcommand, use `ansible-connection-local` instead of `connection-local`
 - [DEPRECATED FLAG] On the build subcommand, use `ansible-intermediate-container-name` instead of `builder-name`
