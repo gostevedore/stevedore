@@ -1,11 +1,9 @@
 # ROADMAP
 
 ## v0.12.0
-- [ ] Apply Levenshtein distances on the image name to identify which image the user wants to build
-- [ ] Enable builds over HTTP
 - [ ] Multi-platform builds
-- [ ] Build an image as well as all its parent until root
-- [ ] Execute build plan to show the build intentions
+- [ ] Build an image as well as all its parent until the root image
+- [ ] Execute the build plan to show the build intentions
 - [ ] Cleanup compatibilities
   
 ## v0.11.0
@@ -81,6 +79,7 @@
 - [x] Use context with interruptions --> v0.7.0
 
 ## icebox
-- Promote images defined on the images tree
-- Sign images
-
+- [ ] ~~Promote images defined on the images tree~~
+- [ ] Signing Docker images
+- [ ] Apply Levenshtein distances on the image name to identify which image the user wants to build
+- [ ] Enable builds over HTTP
