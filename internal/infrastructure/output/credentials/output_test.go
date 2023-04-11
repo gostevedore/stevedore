@@ -41,7 +41,7 @@ func TestPrintAll(t *testing.T) {
 				method := o.methods[0]
 				method.(*output.MockOutput).On("Output", mock.Anything).Return("type", "details", nil)
 				o.write.(*write.MockConsole).On("PrintTable", [][]string{
-					{"ID", "TYPE", "CRENDENTIALS"},
+					{"ID", "TYPE", "CREDENTIALS"},
 					{"id", "type", "details"},
 				}).Return(nil)
 			},
