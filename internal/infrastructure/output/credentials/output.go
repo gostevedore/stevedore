@@ -29,7 +29,7 @@ func (o *Output) Print(badges []*credentials.Badge) error {
 	}
 
 	content := [][]string{}
-	content = append(content, []string{"ID", "TYPE", "CRENDENTIALS"})
+	content = append(content, []string{"ID", "TYPE", "CREDENTIALS"})
 
 	for _, badge := range badges {
 		for _, method := range o.methods {
