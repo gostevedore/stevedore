@@ -6,13 +6,13 @@ Stevedore is a tool for building Docker images at scale, and it is not intended 
 
 One of the key benefits of using Stevedore is that it provides a consistent way to build Docker images, which can be helpful when dealing with large and complex projects that require multiple images. By using a set of "workers" to perform specific tasks during the build process, you can create a more efficient and automated process for building and promoting Docker images.
 
-Overall, Stevedore is a useful tool for anyone who needs to build and manage large numbers of Docker images, and it can help to improve the overall experience of building and promoting Docker images at scale.
+Overall, Stevedore is a useful tool for anyone who needs to build and manage large numbers of Docker images, and it can help to improve the experience of building and promoting Docker images at scale.
 
 ## [Stevedore website](https://gostevedore.github.io/) - [Documentation](https://gostevedore.github.io/docs/)
 
 - [Stevedore website - Documentation](#stevedore-website---documentation)
 - [Why stevedore?](#why-stevedore)
-- [Getting started guide](#getting-started-guide)
+- [Quickstart guide](#quickstart-guide)
   - [Installation](#installation)
   - [Initial setup](#initial-setup)
   - [Build the Docker images for an application](#build-the-docker-images-for-an-application)
@@ -20,32 +20,39 @@ Overall, Stevedore is a useful tool for anyone who needs to build and manage lar
 - [Contributing](#contributing)
 
 ## Why stevedore?
-Stevedore simplifies the building of Docker images in a standardized way, with the ability to define relationships between them. You can build images from multiple sources, including local files and git repositories, and generate automatic tags for semantic versioning. Stevedore also offers a credentials store for easy authentication to Docker registries and AWS ECR, making image promotion and pushing seamless.
+Stevedore simplifies the building of Docker images in a standardized way, with the ability to define relationships between them. You can build images from multiple sources, including local files and git repositories, and generate automatic tags for semantic versioning.
 
-## Getting started guide
+Stevedore also offers a credentials store for easy authentication to Docker registries and AWS ECR, making image promotion and pushing seamless.
+
+## Quickstart guide
 
 ### Installation
 
-You can use the script provided on Stevedore's repository to install it.
+To install Stevedore, use the script provided on the repository:
 ```sh
 curl -fsSL https://raw.githubusercontent.com/gostevedore/stevedore/main/scripts/install.sh | sudo bash -
 ```
-Visit the [documentation](https://gostevedore.github.io/documentation/getting-started/quick-start/#download-and-install-stevedore) to see other installation methods.
+
+Alternatively, you can visit the [installation guide](https://gostevedore.github.io/docs/getting-started/install) for other methods.
 
 ### Initial setup
-- Create the folders structure to place the images' and builders' definitions.
+- Create a folder structure to store image definitions and builder configurations before building Docker images. 
+
 ```sh
 / $ mkdir -p /docker/images /docker/builders
 ```
 
-- Initialize Stevedore. We create a configuration file for this guide, but it can be also defined on environment variables.
+- Initialize Stevedore.
+
+We create a configuration file for this guide, but it can be also defined on environment variables.
 ```sh
 / $ cd /docker
 /docker $ stevedore initialize --builders-path builders --credentials-storage-type local --generate-credentials-encryption-key --images-path images --log-path-file /dev/null
 2023-02-03 21:57:20     INFO    Executing command 'stevedore [COMMAND] [OPTIONS] initialize'
 ```
 
-You can validate the configuration using the get configuration subcommand.
+After running this command, you can validate the configuration by using the _get configuration_ subcommand.
+
 ```sh
 /docker $ stevedore get configuration
 
@@ -63,30 +70,33 @@ You can validate the configuration using the get configuration subcommand.
    encryption_key: 1c591ac2d9c2664db265704052c17a67
 ```
 
-- Create credentials to log in to the Docker registry. Since you create basic auth credentials, it means using a username and password, you are asked to introduce the password.
+- Create credentials to log into the Docker registry.
+
+Since you create a credential using a username and password, Stevedore prompts you to enter a password for the specified username.
 ```sh
 /docker $ stevedore create credentials registry.stevedore.test --username admin
 Password:
 ```
 
-Validate that the credentials have been stored.
+- Validate that the credentials have been stored.
 ```sh
 /docker $ stevedore get credentials
-ID                      TYPE              CRENDENTIALS
+ID                      TYPE              CREDENTIALS
 registry.stevedore.test username-password username=admin
 ```
 
-Since Stevedore's configuration provides an encryption key, the credentials content is encrypted at rest.
+Stevedore's configuration encrypts the credentials content at rest by providing an encryption key.
 ```sh
 /docker $ cat credentials/82e99d42ee1191bb42fbfb444920104d
 2d067af765e8de39fd76b5cd1a430768a66464208bf8fe0c092bcb146a24feed377b916952494e6cea55187f397aee8c2d90a55ef9882cf85ee97ed5660700afa002767e028b4ea6bde274a524e7100f5729601f2d44caa08a1a102af7f79079723f35953133be56e31d0eaf44f52255a5c94512c74625dca3f00b77f9031d4f48f5cf38293f7a2a90f727c9a5eedf57e001ea8766a6d1e47d20354ad3ca6cf022ee70b97b3598e7377355a7b52f62fab8b6628b230c33cf0234ea1208c0d6ecef65e8e1206e7daf15acbbfb62d77650982c9f487129534b367a7fc2b519fd04538bffe87e57184adabc57e613be4b0e106480f9078c8c1c916b65de0039a3adc6cea70b962c0d93477e114e25a2a160db0218e9312d0df00d9b1044e0b4981982834094a36d8d9e4fd9ed766605c1a0b43ff11219d6e5bebb414e084102ce8cd57e86a658455de5fff927ba9be039be4afd393b7e8137cdefb268ed7c79ff37a60c1be3693372d7890b9f8f7c81fa559719ff83371e080efaee86b239e127a094136d056641a4a58245f71414b53dd96214149c6f54de055064163fa9dcb0a6b274d9269a49e1e4f76a9c0a89ec12d40c577ea1b5c1b3f9f8454f5473518c58e8c139a96335850a6415df7e2d41f5ab383f85d30281fd29493db0f0fb577aba35326cd5063b463a41161888514dbce09ccea5887494733256d74341e2623a5328c656/docker #
 ```
 
 ### Build the Docker images for an application
-The idea is to create an application that has multiple versions, and must also be built from multiple parents.
+In this section, we create an application that has multiple versions and needs to be built from multiple parents.
 
-First of all, we create the application.
-Take a look at the Dockerfile arguments `image_from_name` and `image_from_tag`. These arguments are automatically generated by Stevedore to provide information about the parent. However, you can also use any other argument set in the image definition through the `vars` or `persistent_vars` attributes.
+- Prepare the application.
+
+First, let's create the application directory and Dockerfile. Note that we use Dockerfile arguments `image_from_name` and `image_from_tag`, which are automatically generated by Stevedore to provide information about the parent image. You can also use arguments set in the image definition through the `vars` or `persistent_vars` attributes.
 
 ```sh
 / $ mkdir -p /apps/my-app
@@ -101,7 +111,9 @@ CMD ["echo","Hey there!"]
 EOF
 ```
 
-- Define the builders. Since we want to define multiple image versions for the application, we define a single builder to standardize the Docker build.
+- Define a builder.
+
+Next, we need to define the builder for our application. Take into account that to build all the versions in a standardized way, and use the same Dockerfile, we define only a single builder.
 ```sh
 / $ cd /docker/builders
 /docker/builders $ cat << EOF > apps.yaml
@@ -114,7 +126,7 @@ builders:
 EOF
 ```
 
-The builder is already defined.
+To confirm that the builder is already available, use the following command:
 ```sh
 / $ cd /docker
 /docker $ stevedore get builders
@@ -123,7 +135,8 @@ my-apps docker
 ```
 
 - Define the foundational images, the parent images.
-On the parent images, we define the `persistent labels`. Labels defined here are also set to all the images created from these parent images.
+
+Before creating the image definitions for our application, we define the base images that will serve as a starting point for building the Docker images.
 ```sh
 / $ cd /docker/images
 /docker/images $ cat << EOF > foundational.yaml
@@ -138,7 +151,13 @@ images:
 EOF
 ```
 
-- Define the images for our application.
+The `persistent_labels` attribute sets in key-value pairs the labels to add on all images built from the parent image. Currently, the `created_at` label sets the current date and time in RFC3339Nano format.
+
+> **NOTE**: Stevedore uses Go's `text/template` package to render the image definitions.
+
+- Specify the image definitions for the application.
+
+In this step, we define two versions of the application `my-app` in the `applications.yaml` file, version `2.1.0` and `3.2.1`.
 ```sh
 /docker/images $ cat << EOF > applications.yaml
 images:
@@ -163,7 +182,9 @@ images:
 EOF
 ```
 
-We ensure that images are already defined.
+The _name_ is set to `{{ .Name }}` which will be replaced by the actual name of the image. The _version_ is set to `{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}` which will be replaced by the actual version of the image and its parent name and version. The _builder_ is set to `my-app`, which is the _global-builder_ previously defined in the `/docker/builders/apps.yaml` file. The _parents_ are set to `busybox:1.35` for `2.1.0` version, `busybox:1.35` and `busybox:1.36` for the `3.2.1` version.
+
+You can use the following comand to ensure that images are already defined.
 ```sh
 / $ cd /docker
 /docker $ stevedore get images --tree
@@ -174,7 +195,9 @@ We ensure that images are already defined.
 │  ├─── registry.stevedore.test/my-app:3.2.1-busybox1.36
 ```
 
-- Start building the Docker images. It will create all `my-app` versions.
+- Build the Docker images.
+
+Create all the Docker images for our application at the same time, with just one command.
 ```sh
 /docker $ stevedore build my-app
 registry.stevedore.test/my-app:3.2.1-busybox1.35 Step 1/7 : ARG image_from_name
@@ -258,7 +281,7 @@ busybox                          1.35                 f68fa78323e7   6 weeks ago
 ```
 
 ### Promote the images to a Docker registry
-Now that we already have the images created, and since we did not set the push after the build, we promote the image to the Docker registry and push it to the `stable` namespace.
+Now that we already have the images created, and since we did not set the push after the build flag, we promote the images to the Docker registry and push them to the `stable` namespace.
 ```sh
 /docker $ stevedore promote registry.stevedore.test/my-app:3.2.1-busybox1.36 --promote-image-registry-namespace stable
 registry.stevedore.test/my-app:3.2.1-busybox1.36 ‣  The push refers to repository [registry.stevedore.test/stable/my-app]
