@@ -17,25 +17,25 @@ func NewUsernamePasswordWithSecretsOutput(o *UsernamePasswordOutput) *UsernamePa
 	}
 }
 
-func (o *UsernamePasswordWithSecretsOutput) Output(badge *credentials.Badge) (string, string, error) {
+func (o *UsernamePasswordWithSecretsOutput) Output(credential *credentials.Credential) (string, string, error) {
 	errContext := "(output::credentials::types::UsernamePasswordWithSecretsOutput::Output)"
 
 	if o.output == nil {
 		return "", "", errors.New(errContext, "Username-password with secret output requieres an output")
 	}
 
-	badgeType, details, err := o.output.Output(badge)
+	credentialType, details, err := o.output.Output(credential)
 	if err != nil {
 		return "", "", errors.New(errContext, "", err)
 	}
 
-	if badge.Password != "" {
+	if credential.Password != "" {
 		if details != "" {
 			details = fmt.Sprintf("%s,", details)
 		}
-		details = fmt.Sprintf("%s password=%s", details, badge.Password)
+		details = fmt.Sprintf("%s password=%s", details, credential.Password)
 	}
 
-	return badgeType, details, nil
+	return credentialType, details, nil
 
 }

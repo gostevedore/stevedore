@@ -23,9 +23,9 @@ func NewCommand(ctx context.Context, config *configuration.Configuration, e Entr
 			"i",
 			"img",
 		},
-		Short: "Stevedore subcommand that show detail about images definition",
+		Short: "Stevedore subcommand that shows detail about the defined images",
 		Long: `
-Stevedore subcommand that show detail about images definition
+Stevedore subcommand that shows detail about the defined images
 `,
 		Example: `
 Get images filtered by name:

@@ -15,20 +15,19 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	buildhandler "github.com/gostevedore/stevedore/internal/handler/build"
 	handler "github.com/gostevedore/stevedore/internal/handler/build"
+	authfactory "github.com/gostevedore/stevedore/internal/infrastructure/auth/factory"
+	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/auth/method/basic"
+	authmethodkeyfile "github.com/gostevedore/stevedore/internal/infrastructure/auth/method/keyfile"
+	authmethodsshagent "github.com/gostevedore/stevedore/internal/infrastructure/auth/method/sshagent"
+	authproviderawsecr "github.com/gostevedore/stevedore/internal/infrastructure/auth/provider/awsecr"
+	"github.com/gostevedore/stevedore/internal/infrastructure/auth/provider/awsecr/token"
+	"github.com/gostevedore/stevedore/internal/infrastructure/auth/provider/awsecr/token/awscredprovider"
+	authproviderstore "github.com/gostevedore/stevedore/internal/infrastructure/auth/provider/store"
+	credentialscompatibility "github.com/gostevedore/stevedore/internal/infrastructure/compatibility/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	buildersconfiguration "github.com/gostevedore/stevedore/internal/infrastructure/configuration/builders"
 	imagesconfiguration "github.com/gostevedore/stevedore/internal/infrastructure/configuration/images"
 	imagesgraphtemplate "github.com/gostevedore/stevedore/internal/infrastructure/configuration/images/graph"
-	credentialscompatibility "github.com/gostevedore/stevedore/internal/infrastructure/credentials/compatibility"
-	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
-	credentialsformatfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/formater/factory"
-	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
-	authmethodkeyfile "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/keyfile"
-	authmethodsshagent "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/sshagent"
-	authproviderawsecr "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr"
-	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr/token"
-	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr/token/awscredprovider"
-	authproviderbadge "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/badge"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible/goansible"
 	driverdefault "github.com/gostevedore/stevedore/internal/infrastructure/driver/default"
@@ -38,6 +37,7 @@ import (
 	gitauth "github.com/gostevedore/stevedore/internal/infrastructure/driver/docker/godockerbuilder/context/git/auth"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
+	credentialsformatfactory "github.com/gostevedore/stevedore/internal/infrastructure/format/credentials/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/graph"
 	"github.com/gostevedore/stevedore/internal/infrastructure/now"
 	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
@@ -121,7 +121,7 @@ func (e *Entrypoint) Execute(
 	var buildHandler *buildhandler.Handler
 	var buildService *application.Application
 	var commandFactory *command.BuildCommandFactory
-	var credentialsFactory repository.CredentialsFactorier
+	var credentialsFactory repository.AuthFactorier
 	var dispatcher *dispatch.Dispatch
 	var entrypointOptions *Options
 	var err error
@@ -152,7 +152,7 @@ func (e *Entrypoint) Execute(
 		return errors.New(errContext, "", err)
 	}
 
-	credentialsFactory, err = e.createCredentialsFactory(conf)
+	credentialsFactory, err = e.createAuthFactory(conf)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -391,8 +391,8 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.CredentialsConfi
 	return store, nil
 }
 
-func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration) (repository.CredentialsFactorier, error) {
-	errContext := "(entrypoint::build::createCredentialsFactory)"
+func (e *Entrypoint) createAuthFactory(conf *configuration.Configuration) (repository.AuthFactorier, error) {
+	errContext := "(entrypoint::build::createAuthFactory)"
 
 	if e.fs == nil {
 		return nil, errors.New(errContext, "To create the credentials store in build entrypoint, a file system is required")
@@ -425,7 +425,7 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 	sshagent := authmethodsshagent.NewSSHAgentAuthMethod()
 
 	// create authorization badge provider
-	badge := authproviderbadge.NewBadgeCredentialsProvider(basic, keyfile, sshagent)
+	badge := authproviderstore.NewStoreAuthProvider(basic, keyfile, sshagent)
 
 	// create authorization aws ecr provider
 	tokenProvider := token.NewAWSECRToken(
@@ -441,10 +441,10 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 		),
 	)
 
-	awsecr := authproviderawsecr.NewAWSECRCredentialsProvider(tokenProvider)
+	awsecr := authproviderawsecr.NewAWSECRAuthProvider(tokenProvider)
 
 	// create credentials factory
-	factory := credentialsfactory.NewCredentialsFactory(store, badge, awsecr)
+	factory := authfactory.NewAuthFactory(store, badge, awsecr)
 
 	return factory, nil
 }
@@ -551,7 +551,7 @@ func (e *Entrypoint) createGraphTemplateFactory() (*graph.GraphTemplateFactory, 
 	return graph.NewGraphTemplateFactory(false), nil
 }
 
-func (e *Entrypoint) createBuildDriverFactory(credentialsFactory repository.CredentialsFactorier, options *Options) (factory.BuildDriverFactory, error) {
+func (e *Entrypoint) createBuildDriverFactory(credentialsFactory repository.AuthFactorier, options *Options) (factory.BuildDriverFactory, error) {
 
 	var ansiblePlaybookDriver factory.BuildDriverFactoryFunc
 	var defaultDriver factory.BuildDriverFactoryFunc
@@ -656,7 +656,7 @@ func (e *Entrypoint) createAnsibleDriver(options *Options) (factory.BuildDriverF
 	return f, nil
 }
 
-func (e *Entrypoint) createDockerDriver(credentialsFactory repository.CredentialsFactorier, options *Options) (factory.BuildDriverFactoryFunc, error) {
+func (e *Entrypoint) createDockerDriver(credentialsFactory repository.AuthFactorier, options *Options) (factory.BuildDriverFactoryFunc, error) {
 	var dockerClient *dockerclient.Client
 	var dockerDriver *docker.DockerDriver
 	var dockerDriverBuldContext *dockercontext.DockerBuildContextFactory

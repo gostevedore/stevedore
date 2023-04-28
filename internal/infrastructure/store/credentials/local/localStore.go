@@ -72,7 +72,7 @@ func (s *LocalStore) Options(opts ...OptionsFunc) {
 	}
 }
 
-func (s *LocalStore) SafeStore(id string, badge *credentials.Badge) error {
+func (s *LocalStore) SafeStore(id string, credential *credentials.Credential) error {
 	errContext := "(store::credentials::local::SafeStore)"
 	var err error
 	var credentialsStat os.FileInfo
@@ -88,7 +88,7 @@ func (s *LocalStore) SafeStore(id string, badge *credentials.Badge) error {
 		return errors.New(errContext, fmt.Sprintf("Credentials '%s' already exist", id))
 	}
 
-	err = s.Store(id, badge)
+	err = s.Store(id, credential)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -96,29 +96,29 @@ func (s *LocalStore) SafeStore(id string, badge *credentials.Badge) error {
 	return nil
 }
 
-// Store save a badge in the local store
-func (s *LocalStore) Store(id string, badge *credentials.Badge) error {
+// Store save a credential in the local store
+func (s *LocalStore) Store(id string, credential *credentials.Credential) error {
 
 	var err error
-	var formatedBadge string
+	var formatedCredential string
 	var credentialFile afero.File
 
 	errContext := "(store::credentials::local::Store)"
 
 	if s.path == "" {
-		return errors.New(errContext, "To store a badge into local store, local store path must be provided")
+		return errors.New(errContext, "To store a credential into local store, local store path must be provided")
 	}
 
 	if id == "" {
-		return errors.New(errContext, "To store a badge into local store, id must be provided")
+		return errors.New(errContext, "To store a credential into local store, id must be provided")
 	}
 
-	if badge == nil {
-		return errors.New(errContext, fmt.Sprintf("To store a badge for '%s' into local store, credentials badge must be provided", id))
+	if credential == nil {
+		return errors.New(errContext, fmt.Sprintf("To store a credential for '%s' into local store, credentials credential must be provided", id))
 	}
 
-	if badge.ID == "" {
-		badge.ID = id
+	if credential.ID == "" {
+		credential.ID = id
 	}
 
 	hashedID, err := encryption.HashID(id)
@@ -134,24 +134,24 @@ func (s *LocalStore) Store(id string, badge *credentials.Badge) error {
 	credentialFile, err = s.fs.OpenFile(filepath.Join(s.path, hashedID), os.O_RDWR|os.O_CREATE, 0600)
 	defer credentialFile.Close()
 
-	err = s.compatibility.CheckCompatibility(badge)
+	err = s.compatibility.CheckCompatibility(credential)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
 
-	formatedBadge, err = s.formater.Marshal(badge)
+	formatedCredential, err = s.formater.Marshal(credential)
 	if err != nil {
-		return errors.New(errContext, fmt.Sprintf("Error formatting '%s' badge before to be persisted on '%s'", id, s.path), err)
+		return errors.New(errContext, fmt.Sprintf("Error formatting '%s' credential before to be persisted on '%s'", id, s.path), err)
 	}
 
 	if s.encryption != nil {
-		formatedBadge, err = s.encryption.Encrypt(formatedBadge)
+		formatedCredential, err = s.encryption.Encrypt(formatedCredential)
 		if err != nil {
 			return errors.New(errContext, "", err)
 		}
 	}
 
-	_, err = credentialFile.WriteString(formatedBadge)
+	_, err = credentialFile.WriteString(formatedCredential)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -159,15 +159,15 @@ func (s *LocalStore) Store(id string, badge *credentials.Badge) error {
 	return nil
 }
 
-// Get returns a auth for the badge id
-func (s *LocalStore) Get(id string) (*credentials.Badge, error) {
+// Get returns a auth for the credential id
+func (s *LocalStore) Get(id string) (*credentials.Credential, error) {
 	var err error
-	var badge *credentials.Badge
+	var credential *credentials.Credential
 
 	errContext := "(store::credentials::local::Get)"
 
 	if id == "" {
-		return nil, errors.New(errContext, "To get a badge from the store, id must be provided")
+		return nil, errors.New(errContext, "To get a credential from the store, id must be provided")
 	}
 
 	hashedID, err := encryption.HashID(id)
@@ -175,20 +175,20 @@ func (s *LocalStore) Get(id string) (*credentials.Badge, error) {
 		return nil, errors.New(errContext, "", err)
 	}
 
-	badge, err = s.get(hashedID)
+	credential, err = s.get(hashedID)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
 
-	return badge, nil
+	return credential, nil
 }
 
-// get return a badge from the store using the hashed id
-func (s *LocalStore) get(id string) (*credentials.Badge, error) {
+// get return a credential from the store using the hashed id
+func (s *LocalStore) get(id string) (*credentials.Credential, error) {
 	var err error
 	var fileData []byte
 	var strFileData string
-	var badge *credentials.Badge
+	var credential *credentials.Credential
 
 	errContext := "(store::credentials::local::get)"
 
@@ -205,28 +205,28 @@ func (s *LocalStore) get(id string) (*credentials.Badge, error) {
 		fileData = []byte(strFileData)
 	}
 
-	badge, err = s.formater.Unmarshal(fileData)
+	credential, err = s.formater.Unmarshal(fileData)
 	if err != nil {
 		return nil, errors.New(errContext, fmt.Sprintf("Error unmarshaling credentials from file '%s'", filepath.Join(s.path, id)), err)
 	}
 
-	if badge.ID == "" {
-		badge.ID = id
+	if credential.ID == "" {
+		credential.ID = id
 	}
 
-	err = s.compatibility.CheckCompatibility(badge)
+	err = s.compatibility.CheckCompatibility(credential)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
 
-	return badge, nil
+	return credential, nil
 }
 
-// All returns all badges from the store
-func (s *LocalStore) All() ([]*credentials.Badge, error) {
+// All returns all credentials from the store
+func (s *LocalStore) All() ([]*credentials.Credential, error) {
 
-	var badge *credentials.Badge
-	badges := []*credentials.Badge{}
+	var credential *credentials.Credential
+	credentials := []*credentials.Credential{}
 
 	afero.Walk(s.fs, s.path, func(path string, info os.FileInfo, err error) error {
 
@@ -238,12 +238,12 @@ func (s *LocalStore) All() ([]*credentials.Badge, error) {
 		}
 
 		if !info.IsDir() {
-			badge, _ = s.get(info.Name())
-			badges = append(badges, badge)
+			credential, _ = s.get(info.Name())
+			credentials = append(credentials, credential)
 		}
 
 		return nil
 	})
 
-	return badges, nil
+	return credentials, nil
 }

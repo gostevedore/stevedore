@@ -7,8 +7,8 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/console"
-	credentialsjsonformater "github.com/gostevedore/stevedore/internal/infrastructure/credentials/formater/json"
-	credentialsformater "github.com/gostevedore/stevedore/internal/infrastructure/credentials/formater/mock"
+	credentialsjsonformater "github.com/gostevedore/stevedore/internal/infrastructure/format/credentials/json"
+	credentialsformater "github.com/gostevedore/stevedore/internal/infrastructure/format/credentials/mock"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/encryption"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/envvars/backend"
 	"github.com/stretchr/testify/assert"
@@ -21,21 +21,21 @@ func TestStore(t *testing.T) {
 		desc              string
 		id                string
 		store             *EnvvarsStore
-		badge             *credentials.Badge
+		credential        *credentials.Credential
 		prepareAssertFunc func(*EnvvarsStore)
 		err               error
 	}{
 		{
 			desc:  "Testing error storing envvars credentials when console is not provided",
 			store: NewEnvvarsStore(),
-			err:   errors.New(errContext, "Envvars credentials store requires a console writer to store a badge"),
+			err:   errors.New(errContext, "Envvars credentials store requires a console writer to store a credential"),
 		},
 		{
 			desc: "Testing error storing envvars credentials when env vars formater is not provided",
 			store: NewEnvvarsStore(
 				WithConsole(console.NewMockConsole()),
 			),
-			err: errors.New(errContext, "Envvars credentials store requires a formater to store a badge"),
+			err: errors.New(errContext, "Envvars credentials store requires a formater to store a credential"),
 		},
 		{
 			desc: "Testing error storing envvars credentials when encryption is not provided",
@@ -43,7 +43,7 @@ func TestStore(t *testing.T) {
 				WithConsole(console.NewMockConsole()),
 				WithFormater(credentialsformater.NewMockFormater()),
 			),
-			err: errors.New(errContext, "Envvars credentials store requires encryption to store a badge"),
+			err: errors.New(errContext, "Envvars credentials store requires encryption to store a credential"),
 		},
 		{
 			desc: "Testing error storing envvars credentials when ID is not provided",
@@ -62,14 +62,14 @@ func TestStore(t *testing.T) {
 				WithEncryption(encryption.NewMockEncryption()),
 			),
 			id: "myregistry.test:5000",
-			badge: &credentials.Badge{
+			credential: &credentials.Credential{
 				Username: "username",
 				Password: "password",
 			},
 			prepareAssertFunc: func(s *EnvvarsStore) {
 
 				s.formater.(*credentialsformater.MockFormater).On("Marshal",
-					&credentials.Badge{
+					&credentials.Credential{
 						ID:       "myregistry.test:5000",
 						Username: "username",
 						Password: "password",
@@ -128,7 +128,7 @@ func TestStore(t *testing.T) {
 				test.prepareAssertFunc(test.store)
 			}
 
-			err := test.store.Store(test.id, test.badge)
+			err := test.store.Store(test.id, test.credential)
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {
@@ -154,20 +154,20 @@ func TestGet(t *testing.T) {
 		id                string
 		prepareAssertFunc func(*EnvvarsStore)
 		cleanupFunc       func()
-		res               *credentials.Badge
+		res               *credentials.Credential
 		err               error
 	}{
 		{
 			desc:  "Testing error getting envvars credentials when ID is not provided",
 			store: NewEnvvarsStore(),
-			err:   errors.New(errContextGet, "To get credentials badge, is required an ID"),
+			err:   errors.New(errContextGet, "To get credentials credential, is required an ID"),
 		},
 		{
 			desc:  "Testing error getting envvars credentials when backend is not provided",
 			store: NewEnvvarsStore(),
 			id:    "myregistry.test:5000",
-			err: errors.New(errContextGet, "Error getting credentials badge 'myregistry.test:5000'",
-				errors.New(errContextPrivGet, "Envvars credentials store requires a backend to get credentials badge")),
+			err: errors.New(errContextGet, "Error getting credentials credential 'myregistry.test:5000'",
+				errors.New(errContextPrivGet, "Envvars credentials store requires a backend to get credentials credential")),
 		},
 		{
 			desc: "Testing error getting envvars credentials when env vars formater is not provided",
@@ -175,8 +175,8 @@ func TestGet(t *testing.T) {
 				WithBackend(backend.NewMockEnvvarsBackend()),
 			),
 			id: "myregistry.test:5000",
-			err: errors.New(errContextGet, "Error getting credentials badge 'myregistry.test:5000'",
-				errors.New(errContextPrivGet, "Envvars credentials store requires a formater to get credentials badge")),
+			err: errors.New(errContextGet, "Error getting credentials credential 'myregistry.test:5000'",
+				errors.New(errContextPrivGet, "Envvars credentials store requires a formater to get credentials credential")),
 		},
 		{
 			desc: "Testing error getting envvars credentials when encryption is not provided",
@@ -185,11 +185,11 @@ func TestGet(t *testing.T) {
 				WithFormater(credentialsformater.NewMockFormater()),
 			),
 			id: "myregistry.test:5000",
-			err: errors.New(errContextGet, "Error getting credentials badge 'myregistry.test:5000'",
-				errors.New(errContextPrivGet, "Envvars credentials store requires encryption to get credentials badge")),
+			err: errors.New(errContextGet, "Error getting credentials credential 'myregistry.test:5000'",
+				errors.New(errContextPrivGet, "Envvars credentials store requires encryption to get credentials credential")),
 		},
 		{
-			desc: "Testing get envvars credentials badge",
+			desc: "Testing get envvars credentials credential",
 			store: NewEnvvarsStore(
 				WithBackend(backend.NewMockEnvvarsBackend()),
 				WithFormater(credentialsjsonformater.NewJSONFormater()),
@@ -202,7 +202,7 @@ func TestGet(t *testing.T) {
 			prepareAssertFunc: func(s *EnvvarsStore) {
 				s.backend.(*backend.MockEnvvarsBackend).On("Getenv", "STEVEDORE_ENVVARS_CREDENTIALS_E3A70918293EEFC49419599C9D8B5ABC").Return("3e2e6af012fa7712fcfa268363801aa4bba063ca4f8ed59dcdb30fd2da215575a22b84dbf24c17e6872ec04ac8b48e40da7e97267fcc761dd0993e483b1e6de0d2967a8e96c3054ec2f06c0126d43b6029067a1cf51ea870fc92746ddeb4eaa5df556263cf67af89a2e6fb45218d7619eff5a2abcd29856e1fd79972a0d54b9eaa085df2e8d49de2b147c7ed11c5130f6d988b7fc2b43652733c691b12e96e7715e797eb96cf45bedd48da2b7ea22ca50d18f86bc7d318fcb76924e94b88f539b3896356e71c9e0f2a8cb83fc34d26159c2f8dac2eef044be8f3ee369b41f04c7c5a0e433f0839be052ce2fa3af9b917ac7c34ea56722ca16e66c3e4dea43389db6b15d0ec10b9218365a202f7083e65ec7c150f0736b52c52accf58bfff905575f53318594b7bc0558b7f330ca7bdf306e042f15166955e9b2fd77ed981a913a6e0fa111986705856d6fccedb693a08cee5e8cfa85a45d2c702a2389b6e3ae0f88884e835bf709c327bbb0d60f43caa07ab3df576227d2797b2a97d6b55d774a8d9c3002c884b12bfe0ecb6fc6e8912b7cb886c9a85cfb319a1d8204aa091ca449f8c3bcda7d4ff4e26ca6f73633d9ff5c2ceaaff77c8700816856434dd7bf6c057cda7fb6bb0014dcba110ab7887f1edaa15f4fdd4383b5a53d1635fb50e7fb5ec9cd0a7c4162a6c18ffe8ebef5aa7df93bbc329801f46fc044a94e3d5203a796079bab07c665252d61419a34c994db38373f0175ff57261f1")
 			},
-			res: &credentials.Badge{
+			res: &credentials.Credential{
 				ID:                            "myregistry.test:5000",
 				AllowUseSSHAgent:              false,
 				AWSAccessKeyID:                "",
@@ -242,11 +242,11 @@ func TestAll(t *testing.T) {
 		desc              string
 		store             *EnvvarsStore
 		prepareAssertFunc func(*EnvvarsStore)
-		res               []*credentials.Badge
+		res               []*credentials.Credential
 		err               error
 	}{
 		{
-			desc: "Testing achieving all badges from envvars store",
+			desc: "Testing achieving all credentials from envvars store",
 			store: NewEnvvarsStore(
 				WithFormater(credentialsjsonformater.NewJSONFormater()),
 				WithBackend(backend.NewMockEnvvarsBackend()),
@@ -269,7 +269,7 @@ func TestAll(t *testing.T) {
 
 			},
 			err: &errors.Error{},
-			res: []*credentials.Badge{
+			res: []*credentials.Credential{
 				{
 					ID:                            "myregistry.test:5000",
 					AllowUseSSHAgent:              false,
@@ -373,7 +373,7 @@ func TestGenerateResult(t *testing.T) {
 	)
 
 	id := "id"
-	badge := &credentials.Badge{
+	credential := &credentials.Credential{
 		AllowUseSSHAgent:              false,
 		AWSAccessKeyID:                "",
 		AWSProfile:                    "",
@@ -389,7 +389,7 @@ func TestGenerateResult(t *testing.T) {
 		PrivateKeyPassword:            "",
 		Username:                      "username",
 	}
-	err := store.Store(id, badge)
+	err := store.Store(id, credential)
 	if err != nil {
 		t.Error(err)
 	}

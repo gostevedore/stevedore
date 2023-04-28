@@ -18,7 +18,7 @@ func NewMockCreateCredentialsApplication() *MockCreateCredentialsApplication {
 }
 
 // Build provides a mock function with given fields: ctx, buildPlan, name, version, options, optionsFunc
-func (m *MockCreateCredentialsApplication) Run(ctx context.Context, id string, badge *credentials.Badge, optionsFunc ...OptionsFunc) error {
-	args := m.Called(ctx, id, badge, optionsFunc)
+func (m *MockCreateCredentialsApplication) Run(ctx context.Context, id string, credential *credentials.Credential, optionsFunc ...OptionsFunc) error {
+	args := m.Called(ctx, id, credential, optionsFunc)
 	return args.Error(0)
 }

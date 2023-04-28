@@ -19,10 +19,10 @@ func NewLocalStoreWithSafeStore(opts ...OptionsFunc) *LocalStoreWithSafeStore {
 	return s
 }
 
-func (s *LocalStoreWithSafeStore) Store(id string, badge *credentials.Badge) error {
+func (s *LocalStoreWithSafeStore) Store(id string, credential *credentials.Credential) error {
 	errContext := "(store::credentials::local::LocalStoreWithSafeStore)"
 
-	err := s.store.SafeStore(id, badge)
+	err := s.store.SafeStore(id, credential)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}

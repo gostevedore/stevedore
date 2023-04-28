@@ -15,23 +15,23 @@ func TestOutput(t *testing.T) {
 	tests := []struct {
 		desc            string
 		output          *AWSStaticCredentialsOutput
-		badge           *credentials.Badge
+		credential      *credentials.Credential
 		detail          string
 		credentialsType string
 		err             error
 	}{
 		{
-			desc:            "Testing error when creating the output for AWSStaticCredentialsOutput and badge is nil",
+			desc:            "Testing error when creating the output for AWSStaticCredentialsOutput and credential is nil",
 			output:          NewAWSStaticCredentialsOutput(),
-			badge:           nil,
+			credential:      nil,
 			detail:          "",
 			credentialsType: "",
-			err:             errors.New(errContext, "To show badge output, badge must be provided"),
+			err:             errors.New(errContext, "To show credential output, credential must be provided"),
 		},
 		{
 			desc:   "Testing generate output for AWSStaticCredentialsOutput",
 			output: NewAWSStaticCredentialsOutput(),
-			badge: &credentials.Badge{
+			credential: &credentials.Credential{
 				AWSAccessKeyID:     "accessKeyID",
 				AWSSecretAccessKey: "secretAccessKey",
 				AWSRegion:          "region",
@@ -46,7 +46,7 @@ func TestOutput(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			credentialsType, detail, err := test.output.Output(test.badge)
+			credentialsType, detail, err := test.output.Output(test.credential)
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {

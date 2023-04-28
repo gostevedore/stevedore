@@ -18,19 +18,19 @@ func NewAWSStaticCredentialsOutput() *AWSStaticCredentialsOutput {
 	return &AWSStaticCredentialsOutput{}
 }
 
-func (o *AWSStaticCredentialsOutput) Output(badge *credentials.Badge) (string, string, error) {
+func (o *AWSStaticCredentialsOutput) Output(credential *credentials.Credential) (string, string, error) {
 
 	errContext := "(output::credentials::types::AWSStaticCredentialsOutput::Output)"
 
-	if badge == nil {
-		return "", "", errors.New(errContext, "To show badge output, badge must be provided")
+	if credential == nil {
+		return "", "", errors.New(errContext, "To show credential output, credential must be provided")
 	}
 
-	if badge.AWSAccessKeyID != "" && badge.AWSSecretAccessKey != "" {
-		detail := fmt.Sprintf("aws_access_key_id=%s", badge.AWSAccessKeyID)
+	if credential.AWSAccessKeyID != "" && credential.AWSSecretAccessKey != "" {
+		detail := fmt.Sprintf("aws_access_key_id=%s", credential.AWSAccessKeyID)
 
-		if badge.AWSRegion != "" {
-			detail = fmt.Sprintf("%s, region=%s", detail, badge.AWSRegion)
+		if credential.AWSRegion != "" {
+			detail = fmt.Sprintf("%s, region=%s", detail, credential.AWSRegion)
 		}
 
 		return AWSStaticCredentialsType, detail, nil

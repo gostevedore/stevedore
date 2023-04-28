@@ -10,18 +10,18 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
-	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
-	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/keyfile"
-	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/sshagent"
+	"github.com/gostevedore/stevedore/internal/infrastructure/auth/method/basic"
+	"github.com/gostevedore/stevedore/internal/infrastructure/auth/method/keyfile"
+	"github.com/gostevedore/stevedore/internal/infrastructure/auth/method/sshagent"
 )
 
 // GitAuthFactory is a factory for creating GitAuther
 type GitAuthFactory struct {
-	Credentials repository.CredentialsFactorier
+	Credentials repository.AuthFactorier
 }
 
 // NewGitAuthFactory creates a new GitAuthFactory
-func NewGitAuthFactory(credentials repository.CredentialsFactorier) *GitAuthFactory {
+func NewGitAuthFactory(credentials repository.AuthFactorier) *GitAuthFactory {
 	return &GitAuthFactory{
 		Credentials: credentials,
 	}

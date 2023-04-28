@@ -15,17 +15,17 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	handler "github.com/gostevedore/stevedore/internal/handler/promote"
+	authfactory "github.com/gostevedore/stevedore/internal/infrastructure/auth/factory"
+	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/auth/method/basic"
+	authmethodkeyfile "github.com/gostevedore/stevedore/internal/infrastructure/auth/method/keyfile"
+	authmethodsshagent "github.com/gostevedore/stevedore/internal/infrastructure/auth/method/sshagent"
+	authproviderawsecr "github.com/gostevedore/stevedore/internal/infrastructure/auth/provider/awsecr"
+	"github.com/gostevedore/stevedore/internal/infrastructure/auth/provider/awsecr/token"
+	"github.com/gostevedore/stevedore/internal/infrastructure/auth/provider/awsecr/token/awscredprovider"
+	authproviderstore "github.com/gostevedore/stevedore/internal/infrastructure/auth/provider/store"
+	credentialscompatibility "github.com/gostevedore/stevedore/internal/infrastructure/compatibility/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
-	credentialscompatibility "github.com/gostevedore/stevedore/internal/infrastructure/credentials/compatibility"
-	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
-	credentialsformatfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/formater/factory"
-	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
-	authmethodkeyfile "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/keyfile"
-	authmethodsshagent "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/sshagent"
-	authproviderawsecr "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr"
-	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr/token"
-	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/awsecr/token/awscredprovider"
-	authproviderbadge "github.com/gostevedore/stevedore/internal/infrastructure/credentials/provider/badge"
+	credentialsformatfactory "github.com/gostevedore/stevedore/internal/infrastructure/format/credentials/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker/godockerbuilder"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
@@ -90,7 +90,7 @@ func (e *Entrypoint) Options(opts ...OptionsFunc) {
 func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configuration.Configuration, entrypointOptions *Options, handlerOptions *handler.Options) error {
 	var err error
 	var promoteRepoFactory factory.PromoteFactory
-	var credentialsFactory repository.CredentialsFactorier
+	var credentialsFactory repository.AuthFactorier
 	var semverGenerator *semver.SemVerGenerator
 	var options *handler.Options
 	var referenceName repository.ImageReferenceNamer
@@ -107,7 +107,7 @@ func (e *Entrypoint) Execute(ctx context.Context, args []string, conf *configura
 		return errors.New(errContext, "", err)
 	}
 
-	credentialsFactory, err = e.createCredentialsFactory(conf)
+	credentialsFactory, err = e.createAuthFactory(conf)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -254,8 +254,8 @@ func (e *Entrypoint) createCredentialsStore(conf *configuration.CredentialsConfi
 	return store, nil
 }
 
-func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration) (repository.CredentialsFactorier, error) {
-	errContext := "(promote::entrypoint::createCredentialsFactory)"
+func (e *Entrypoint) createAuthFactory(conf *configuration.Configuration) (repository.AuthFactorier, error) {
+	errContext := "(promote::entrypoint::createAuthFactory)"
 
 	if e.fs == nil {
 		return nil, errors.New(errContext, "To create the credentials store in the promote entrypoint, a file system is required")
@@ -281,7 +281,7 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 	sshagent := authmethodsshagent.NewSSHAgentAuthMethod()
 
 	// create auth providers
-	badge := authproviderbadge.NewBadgeCredentialsProvider(basic, keyfile, sshagent)
+	badge := authproviderstore.NewStoreAuthProvider(basic, keyfile, sshagent)
 
 	// create authorization aws ecr provider
 	tokenProvider := token.NewAWSECRToken(
@@ -297,10 +297,10 @@ func (e *Entrypoint) createCredentialsFactory(conf *configuration.Configuration)
 		),
 	)
 
-	awsecr := authproviderawsecr.NewAWSECRCredentialsProvider(tokenProvider)
+	awsecr := authproviderawsecr.NewAWSECRAuthProvider(tokenProvider)
 
 	// create credentials factory
-	factory := credentialsfactory.NewCredentialsFactory(store, badge, awsecr)
+	factory := authfactory.NewAuthFactory(store, badge, awsecr)
 
 	return factory, nil
 }

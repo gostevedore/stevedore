@@ -15,25 +15,25 @@ func NewMockStore() *MockStore {
 	return &MockStore{}
 }
 
-// Store stores a badge
-func (m *MockStore) Store(id string, badge *credentials.Badge) error {
-	args := m.Mock.Called(id, badge)
+// Store stores a credential
+func (m *MockStore) Store(id string, credential *credentials.Credential) error {
+	args := m.Mock.Called(id, credential)
 	return args.Error(0)
 }
 
-// Get returns a auth for the badge id
-func (m *MockStore) Get(id string) (*credentials.Badge, error) {
+// Get returns a auth for the credential id
+func (m *MockStore) Get(id string) (*credentials.Credential, error) {
 	args := m.Mock.Called(id)
 
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	} else {
-		return args.Get(0).(*credentials.Badge), args.Error(1)
+		return args.Get(0).(*credentials.Credential), args.Error(1)
 	}
 }
 
-// All returns all badges
-func (m *MockStore) All() ([]*credentials.Badge, error) {
+// All returns all credentials
+func (m *MockStore) All() ([]*credentials.Credential, error) {
 	args := m.Mock.Called()
-	return args.Get(0).([]*credentials.Badge), args.Error(1)
+	return args.Get(0).([]*credentials.Credential), args.Error(1)
 }

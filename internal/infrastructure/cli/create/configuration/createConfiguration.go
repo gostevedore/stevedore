@@ -25,9 +25,9 @@ func NewCommand(ctx context.Context, e Entrypointer) *command.StevedoreCommand {
 			"conf",
 			"cfg",
 		},
-		Short: "Stevedore subcommand to create and initizalize the configuration",
+		Short: "Stevedore subcommand to create and initialize the configuration",
 		Long: `
-Stevedore subcommand to create and initizalize the configuration
+Stevedore subcommand to create and initialize the configuration
 `,
 		Example: `
 Example setting all configuration parameters:

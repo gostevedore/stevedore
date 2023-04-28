@@ -35,7 +35,7 @@ func TestHandler(t *testing.T) {
 					"Run",
 					context.TODO(),
 					"id",
-					&credentials.Badge{
+					&credentials.Credential{
 						Username:                  "username",
 						Password:                  "password",
 						AWSSharedConfigFiles:      []string{},
@@ -65,11 +65,11 @@ func TestHandler(t *testing.T) {
 	}
 }
 
-func TestCreateBadgeFromOptions(t *testing.T) {
+func TestCreateCredentialFromOptions(t *testing.T) {
 	tests := []struct {
 		desc    string
 		options *Options
-		res     *credentials.Badge
+		res     *credentials.Credential
 	}{
 		{
 			desc: "Testing create credentials from options",
@@ -89,7 +89,7 @@ func TestCreateBadgeFromOptions(t *testing.T) {
 				PrivateKeyPassword:            "PrivateKeyPassword",
 				Username:                      "Username",
 			},
-			res: &credentials.Badge{
+			res: &credentials.Credential{
 				AWSAccessKeyID:                "AWSAccessKeyID",
 				AWSRegion:                     "AWSRegion",
 				AWSRoleARN:                    "AWSRoleARN",
@@ -112,8 +112,8 @@ func TestCreateBadgeFromOptions(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			badge := createBadgeFromOptions(test.options)
-			assert.Equal(t, test.res, badge)
+			credential := createCredentialFromOptions(test.options)
+			assert.Equal(t, test.res, credential)
 		})
 	}
 }

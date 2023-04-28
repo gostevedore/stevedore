@@ -20,7 +20,7 @@ func NewOutput(write OutputWriter, output ...Outputter) *Output {
 }
 
 // Output prints the credentials
-func (o *Output) Print(badges []*credentials.Badge) error {
+func (o *Output) Print(credentials []*credentials.Credential) error {
 
 	errContext := "(output::credentials::Output::PrintAll)"
 
@@ -31,15 +31,15 @@ func (o *Output) Print(badges []*credentials.Badge) error {
 	content := [][]string{}
 	content = append(content, []string{"ID", "TYPE", "CREDENTIALS"})
 
-	for _, badge := range badges {
+	for _, credential := range credentials {
 		for _, method := range o.methods {
-			credentialsType, detail, err := method.Output(badge)
+			credentialsType, detail, err := method.Output(credential)
 			if err != nil {
 				continue
 			}
 
 			if detail != "" && credentialsType != "" {
-				content = append(content, []string{badge.ID, credentialsType, detail})
+				content = append(content, []string{credential.ID, credentialsType, detail})
 				break
 			}
 		}

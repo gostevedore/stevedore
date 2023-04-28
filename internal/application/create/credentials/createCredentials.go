@@ -40,7 +40,7 @@ func (a *CreateCredentialsApplication) Options(opts ...OptionsFunc) {
 }
 
 // Run method carries out the application tasks
-func (a *CreateCredentialsApplication) Run(ctx context.Context, id string, badge *credentials.Badge, optionsFunc ...OptionsFunc) error {
+func (a *CreateCredentialsApplication) Run(ctx context.Context, id string, credential *credentials.Credential, optionsFunc ...OptionsFunc) error {
 	var err error
 
 	errContext := "(application::create::credentials::Run)"
@@ -49,20 +49,20 @@ func (a *CreateCredentialsApplication) Run(ctx context.Context, id string, badge
 		return errors.New(errContext, "To run the create credentials application, a credentials storer must be provided")
 	}
 
-	if badge == nil {
-		return errors.New(errContext, "To run the create credentials application, a badge must be provided")
+	if credential == nil {
+		return errors.New(errContext, "To run the create credentials application, a credential must be provided")
 	}
 
 	if id == "" {
 		return errors.New(errContext, "To run the create credentials application, a id for credentials must be provided")
 	}
 
-	_, err = badge.IsValid()
+	_, err = credential.IsValid()
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
 
-	err = a.store.Store(id, badge)
+	err = a.store.Store(id, credential)
 	if err != nil {
 		return errors.New(errContext, fmt.Sprintf("Error storing '%s' credentials", id), err)
 	}

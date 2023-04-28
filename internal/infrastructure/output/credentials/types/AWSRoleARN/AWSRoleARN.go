@@ -18,27 +18,27 @@ func NewAWSRoleARNOutput() *AWSRoleARNOutput {
 	return &AWSRoleARNOutput{}
 }
 
-func (o *AWSRoleARNOutput) Output(badge *credentials.Badge) (string, string, error) {
+func (o *AWSRoleARNOutput) Output(credential *credentials.Credential) (string, string, error) {
 
 	errContext := "(output::credentials::types::AWSRoleARNOutput::Output)"
 
-	if badge == nil {
-		return "", "", errors.New(errContext, "To show badge output, badge must be provided")
+	if credential == nil {
+		return "", "", errors.New(errContext, "To show credential output, credential must be provided")
 	}
 
-	if badge.AWSRoleARN != "" {
-		detail := fmt.Sprintf("role_arn=%s", badge.AWSRoleARN)
+	if credential.AWSRoleARN != "" {
+		detail := fmt.Sprintf("role_arn=%s", credential.AWSRoleARN)
 
-		if badge.AWSRegion != "" {
-			detail = fmt.Sprintf("%s, region=%s", detail, badge.AWSRegion)
+		if credential.AWSRegion != "" {
+			detail = fmt.Sprintf("%s, region=%s", detail, credential.AWSRegion)
 		}
 
-		if badge.AWSProfile != "" {
-			detail = fmt.Sprintf("%s, profile=%s", detail, badge.AWSProfile)
+		if credential.AWSProfile != "" {
+			detail = fmt.Sprintf("%s, profile=%s", detail, credential.AWSProfile)
 		}
 
-		if badge.AWSAccessKeyID != "" && badge.AWSSecretAccessKey != "" {
-			detail = fmt.Sprintf("%s, aws_access_key_id=%s", detail, badge.AWSAccessKeyID)
+		if credential.AWSAccessKeyID != "" && credential.AWSSecretAccessKey != "" {
+			detail = fmt.Sprintf("%s, aws_access_key_id=%s", detail, credential.AWSAccessKeyID)
 		}
 
 		return AWSRoleARNType, detail, nil

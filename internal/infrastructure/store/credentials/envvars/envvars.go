@@ -70,41 +70,41 @@ func (s *EnvvarsStore) Options(opts ...OptionsFunc) {
 	}
 }
 
-// Store stores a badge
-func (s *EnvvarsStore) Store(id string, badge *credentials.Badge) error {
+// Store stores a credential
+func (s *EnvvarsStore) Store(id string, credential *credentials.Credential) error {
 
 	errContext := "(store::credentials::envvars::Store)"
 
 	var err error
 	var hashedID string
-	var strBadge string
+	var strCredential string
 
 	if s.console == nil {
-		return errors.New(errContext, "Envvars credentials store requires a console writer to store a badge")
+		return errors.New(errContext, "Envvars credentials store requires a console writer to store a credential")
 	}
 
 	if s.formater == nil {
-		return errors.New(errContext, "Envvars credentials store requires a formater to store a badge")
+		return errors.New(errContext, "Envvars credentials store requires a formater to store a credential")
 	}
 
 	if s.encryption == nil {
-		return errors.New(errContext, "Envvars credentials store requires encryption to store a badge")
+		return errors.New(errContext, "Envvars credentials store requires encryption to store a credential")
 	}
 
 	if id == "" {
 		return errors.New(errContext, "To store credentials badege, is required an ID")
 	}
 
-	if badge.ID == "" {
-		badge.ID = id
+	if credential.ID == "" {
+		credential.ID = id
 	}
 
-	strBadge, err = s.formater.Marshal(badge)
+	strCredential, err = s.formater.Marshal(credential)
 	if err != nil {
 		return errors.New(errContext, fmt.Sprintf("Error formating '%s''s badege", id), err)
 	}
 
-	strBadge, err = s.encryption.Encrypt(strBadge)
+	strCredential, err = s.encryption.Encrypt(strCredential)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -116,21 +116,21 @@ func (s *EnvvarsStore) Store(id string, badge *credentials.Badge) error {
 
 	key := generateEnvvarKey(envvarsCredentialsPrefix, hashedID)
 	s.console.Warn("You must create the following environment variable to use the recently created credentials:")
-	s.console.Warn(fmt.Sprintf(" %s=%s", key, strBadge))
+	s.console.Warn(fmt.Sprintf(" %s=%s", key, strCredential))
 
 	return nil
 }
 
-// Get returns a auth for the badge id
-func (s *EnvvarsStore) Get(id string) (*credentials.Badge, error) {
+// Get returns a auth for the credential id
+func (s *EnvvarsStore) Get(id string) (*credentials.Credential, error) {
 	errContext := "(store::credentials::envvars::Get)"
 
 	var err error
 	var hashedID string
-	var badge *credentials.Badge
+	var credential *credentials.Credential
 
 	if id == "" {
-		return nil, errors.New(errContext, "To get credentials badge, is required an ID")
+		return nil, errors.New(errContext, "To get credentials credential, is required an ID")
 	}
 
 	hashedID, err = encryption.HashID(id)
@@ -138,56 +138,56 @@ func (s *EnvvarsStore) Get(id string) (*credentials.Badge, error) {
 		return nil, errors.New(errContext, fmt.Sprintf("Error hashing the id '%s'", id), err)
 	}
 
-	badge, err = s.get(hashedID)
+	credential, err = s.get(hashedID)
 	if err != nil {
-		return nil, errors.New(errContext, fmt.Sprintf("Error getting credentials badge '%s'", id), err)
+		return nil, errors.New(errContext, fmt.Sprintf("Error getting credentials credential '%s'", id), err)
 	}
 
-	return badge, nil
+	return credential, nil
 }
 
-func (s *EnvvarsStore) get(hashedID string) (*credentials.Badge, error) {
+func (s *EnvvarsStore) get(hashedID string) (*credentials.Credential, error) {
 	var err error
-	var key, encryptedBadge, strBadge string
-	var badge *credentials.Badge
+	var key, encryptedCredential, strCredential string
+	var credential *credentials.Credential
 
 	errContext := "(store::credentials::envvars::get)"
 	if s.backend == nil {
-		return nil, errors.New(errContext, "Envvars credentials store requires a backend to get credentials badge")
+		return nil, errors.New(errContext, "Envvars credentials store requires a backend to get credentials credential")
 	}
 
 	if s.formater == nil {
-		return nil, errors.New(errContext, "Envvars credentials store requires a formater to get credentials badge")
+		return nil, errors.New(errContext, "Envvars credentials store requires a formater to get credentials credential")
 	}
 
 	if s.encryption == nil {
-		return nil, errors.New(errContext, "Envvars credentials store requires encryption to get credentials badge")
+		return nil, errors.New(errContext, "Envvars credentials store requires encryption to get credentials credential")
 	}
 
 	key = generateEnvvarKey(envvarsCredentialsPrefix, hashedID)
-	encryptedBadge = s.backend.Getenv(key)
+	encryptedCredential = s.backend.Getenv(key)
 
-	if encryptedBadge == "" {
+	if encryptedCredential == "" {
 		return nil, nil
 	}
 
-	strBadge, err = s.encryption.Decrypt(encryptedBadge)
+	strCredential, err = s.encryption.Decrypt(encryptedCredential)
 	if err != nil {
-		return nil, errors.New(errContext, fmt.Sprintf("Error decrypting the '%s''s badge", hashedID), err)
+		return nil, errors.New(errContext, fmt.Sprintf("Error decrypting the '%s''s credential", hashedID), err)
 	}
 
-	badge, err = s.formater.Unmarshal([]byte(strBadge))
+	credential, err = s.formater.Unmarshal([]byte(strCredential))
 	if err != nil {
-		return nil, errors.New(errContext, fmt.Sprintf("Error unmarshaling the '%s''s badge", hashedID), err)
+		return nil, errors.New(errContext, fmt.Sprintf("Error unmarshaling the '%s''s credential", hashedID), err)
 	}
 
-	return badge, nil
+	return credential, nil
 }
 
-// All returns all badges
-func (s *EnvvarsStore) All() ([]*credentials.Badge, error) {
+// All returns all credentials
+func (s *EnvvarsStore) All() ([]*credentials.Credential, error) {
 	errContext := "(store::credentials::envvars::All)"
-	badges := []*credentials.Badge{}
+	credentials := []*credentials.Credential{}
 	IDs := map[string]struct{}{}
 	allVars := s.backend.Environ()
 	prefix := generateEnvvarKey(envvarsCredentialsPrefix)
@@ -205,14 +205,14 @@ func (s *EnvvarsStore) All() ([]*credentials.Badge, error) {
 	}
 
 	for id := range IDs {
-		badge, err := s.get(id)
+		credential, err := s.get(id)
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}
-		badges = append(badges, badge)
+		credentials = append(credentials, credential)
 	}
 
-	return badges, nil
+	return credentials, nil
 }
 
 func generateEnvvarKey(items ...string) string {

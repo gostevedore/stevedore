@@ -10,7 +10,7 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
-	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
+	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/auth/method/basic"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/plan"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
@@ -29,7 +29,7 @@ type Application struct {
 	jobFactory     JobFactorier
 	dispatch       Dispatcher
 	semver         Semverser
-	credentials    repository.CredentialsFactorier
+	credentials    repository.AuthFactorier
 }
 
 // NewApplication creates a Service to build docker images
@@ -83,7 +83,7 @@ func WithSemver(semver Semverser) OptionsFunc {
 	}
 }
 
-func WithCredentials(credentials repository.CredentialsFactorier) OptionsFunc {
+func WithCredentials(credentials repository.AuthFactorier) OptionsFunc {
 	return func(a *Application) {
 		a.credentials = credentials
 	}

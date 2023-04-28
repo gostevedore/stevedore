@@ -17,25 +17,25 @@ func NewPrivateKeyFileWithSecretsOutput(o *PrivateKeyFileOutput) *PrivateKeyFile
 	}
 }
 
-func (o *PrivateKeyFileWithSecretsOutput) Output(badge *credentials.Badge) (string, string, error) {
+func (o *PrivateKeyFileWithSecretsOutput) Output(credential *credentials.Credential) (string, string, error) {
 	errContext := "(output::credentials::types::PrivateKeyFileWithSecretsOutput::Output)"
 
 	if o.output == nil {
 		return "", "", errors.New(errContext, "Private key file with secret output requieres an output")
 	}
 
-	badgeType, details, err := o.output.Output(badge)
+	credentialType, details, err := o.output.Output(credential)
 	if err != nil {
 		return "", "", errors.New(errContext, "", err)
 	}
 
-	if badge.PrivateKeyPassword != "" {
+	if credential.PrivateKeyPassword != "" {
 		if details != "" {
 			details = fmt.Sprintf("%s,", details)
 		}
-		details = fmt.Sprintf("%s private_key_password=%s", details, badge.PrivateKeyPassword)
+		details = fmt.Sprintf("%s private_key_password=%s", details, credential.PrivateKeyPassword)
 	}
 
-	return badgeType, details, nil
+	return credentialType, details, nil
 
 }

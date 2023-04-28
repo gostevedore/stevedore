@@ -7,9 +7,9 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
-	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
-	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
-	authmethodkeyfile "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/keyfile"
+	authfactory "github.com/gostevedore/stevedore/internal/infrastructure/auth/factory"
+	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/auth/method/basic"
+	authmethodkeyfile "github.com/gostevedore/stevedore/internal/infrastructure/auth/method/keyfile"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/dryrun"
 	"github.com/gostevedore/stevedore/internal/infrastructure/promote/factory"
@@ -33,7 +33,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote application source image from local",
 			service: NewApplication(
-				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
+				WithCredentials(authfactory.NewMockAuthFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
 				WithReferenceNamer(reference.NewDefaultReferenceName()),
@@ -65,7 +65,7 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "password",
 				}
 
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username",
 					Password: "password",
 				}, nil)
@@ -79,7 +79,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote application source image from remote",
 			service: NewApplication(
-				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
+				WithCredentials(authfactory.NewMockAuthFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
 				WithReferenceNamer(reference.NewDefaultReferenceName()),
@@ -117,7 +117,7 @@ func TestPromote(t *testing.T) {
 				factory.Register(image.DockerPromoterName, mock)
 				p.factory = factory
 
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username",
 					Password: "password",
 				}, nil)
@@ -127,7 +127,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote application source image using empty target values",
 			service: NewApplication(
-				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
+				WithCredentials(authfactory.NewMockAuthFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
 				WithReferenceNamer(reference.NewDefaultReferenceName()),
@@ -163,7 +163,7 @@ func TestPromote(t *testing.T) {
 				factory.Register(image.DockerPromoterName, mock)
 				p.factory = factory
 
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username",
 					Password: "password",
 				}, nil)
@@ -173,7 +173,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing error promoting source image using an empty target image name",
 			service: NewApplication(
-				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
+				WithCredentials(authfactory.NewMockAuthFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
 				WithReferenceNamer(reference.NewDefaultReferenceName()),
@@ -209,7 +209,7 @@ func TestPromote(t *testing.T) {
 				factory.Register(image.DockerPromoterName, mock)
 				p.factory = factory
 
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username",
 					Password: "password",
 				}, nil)
@@ -219,7 +219,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote application source image with all options",
 			service: NewApplication(
-				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
+				WithCredentials(authfactory.NewMockAuthFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
 				WithReferenceNamer(reference.NewDefaultReferenceName()),
@@ -255,12 +255,12 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "password_push",
 				}
 
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username_pull",
 					Password: "password_pull",
 				}, nil)
 
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "targetregistry.test").Return(&authmethodbasic.BasicAuthMethod{
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "targetregistry.test").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username_push",
 					Password: "password_push",
 				}, nil)
@@ -277,7 +277,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote application source image with no credentials",
 			service: NewApplication(
-				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
+				WithCredentials(authfactory.NewMockAuthFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
 				WithReferenceNamer(reference.NewDefaultReferenceName()),
@@ -313,8 +313,8 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "",
 				}
 
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{}, nil)
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "targetregistry.test").Return(&authmethodbasic.BasicAuthMethod{}, nil)
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{}, nil)
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "targetregistry.test").Return(&authmethodbasic.BasicAuthMethod{}, nil)
 
 				mock := mock.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
@@ -328,7 +328,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote application source image with all options and using semver configuration parameters",
 			service: NewApplication(
-				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
+				WithCredentials(authfactory.NewMockAuthFactory()),
 				WithSemver(semver.NewSemVerGenerator()),
 				WithPromoteFactory(factory.NewPromoteFactory()),
 				WithReferenceNamer(reference.NewDefaultReferenceName()),
@@ -364,12 +364,12 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "password_push",
 				}
 
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username_pull",
 					Password: "password_pull",
 				}, nil)
 
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "targetregistry.test").Return(&authmethodbasic.BasicAuthMethod{
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "targetregistry.test").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username_push",
 					Password: "password_push",
 				}, nil)
@@ -386,7 +386,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing promote application source image with all options, using semver configuration parameters overridden by service options",
 			service: &Application{
-				credentials:    credentialsfactory.NewMockCredentialsFactory(),
+				credentials:    authfactory.NewMockAuthFactory(),
 				semver:         semver.NewSemVerGenerator(),
 				referenceNamer: reference.NewDefaultReferenceName(),
 			},
@@ -421,12 +421,12 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "password_push",
 				}
 
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username_pull",
 					Password: "password_pull",
 				}, nil)
 
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "targetregistry.test").Return(&authmethodbasic.BasicAuthMethod{
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "targetregistry.test").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username_push",
 					Password: "password_push",
 				}, nil)
@@ -443,7 +443,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing error promote when push credentials are invalid",
 			service: &Application{
-				credentials:    credentialsfactory.NewMockCredentialsFactory(),
+				credentials:    authfactory.NewMockAuthFactory(),
 				semver:         semver.NewSemVerGenerator(),
 				referenceNamer: reference.NewDefaultReferenceName(),
 			},
@@ -478,12 +478,12 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "password_push",
 				}
 
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username_pull",
 					Password: "password_pull",
 				}, nil)
 
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "targetregistry.test").Return(&authmethodkeyfile.KeyFileAuthMethod{}, nil)
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "targetregistry.test").Return(&authmethodkeyfile.KeyFileAuthMethod{}, nil)
 
 				mock := mock.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
@@ -497,7 +497,7 @@ func TestPromote(t *testing.T) {
 		{
 			desc: "Testing error promote when pull credentials are invalid",
 			service: &Application{
-				credentials:    credentialsfactory.NewMockCredentialsFactory(),
+				credentials:    authfactory.NewMockAuthFactory(),
 				semver:         semver.NewSemVerGenerator(),
 				referenceNamer: reference.NewDefaultReferenceName(),
 			},
@@ -532,12 +532,12 @@ func TestPromote(t *testing.T) {
 					PushAuthPassword:      "password_push",
 				}
 
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "targetregistry.test").Return(&authmethodbasic.BasicAuthMethod{
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "targetregistry.test").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username_push",
 					Password: "password_push",
 				}, nil)
 
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodkeyfile.KeyFileAuthMethod{}, nil)
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "registry.test").Return(&authmethodkeyfile.KeyFileAuthMethod{}, nil)
 
 				mock := mock.NewMockPromote()
 				mock.On("Promote", context.TODO(), options).Return(nil)
@@ -588,11 +588,11 @@ func TestGetCredentials(t *testing.T) {
 		{
 			desc: "Testing get credentials",
 			service: &Application{
-				credentials: credentialsfactory.NewMockCredentialsFactory(),
+				credentials: authfactory.NewMockAuthFactory(),
 			},
 			registry: "myregistry",
 			prepareMockFunc: func(p *Application) {
-				p.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "myregistry").Return(&authmethodbasic.BasicAuthMethod{
+				p.credentials.(*authfactory.MockAuthFactory).On("Get", "myregistry").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username",
 					Password: "password",
 				}, nil)
