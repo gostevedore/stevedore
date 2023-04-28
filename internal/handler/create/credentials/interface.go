@@ -9,5 +9,5 @@ import (
 
 // Applicationer is the service for build commands
 type Applicationer interface {
-	Run(ctx context.Context, id string, badge *credentials.Badge, optionsFunc ...application.OptionsFunc) error
+	Run(ctx context.Context, id string, credential *credentials.Credential, optionsFunc ...application.OptionsFunc) error
 }

@@ -18,16 +18,16 @@ func NewUsernamePasswordOutput() *UsernamePasswordOutput {
 	return &UsernamePasswordOutput{}
 }
 
-func (o *UsernamePasswordOutput) Output(badge *credentials.Badge) (string, string, error) {
+func (o *UsernamePasswordOutput) Output(credential *credentials.Credential) (string, string, error) {
 
 	errContext := "(output::credentials::types::UsernamePasswordOutput::Output)"
 
-	if badge == nil {
-		return "", "", errors.New(errContext, "To show badge output, badge must be provided")
+	if credential == nil {
+		return "", "", errors.New(errContext, "To show credential output, credential must be provided")
 	}
 
-	if badge.Username != "" && badge.Password != "" {
-		return UsernamePasswordType, fmt.Sprintf("username=%s", badge.Username), nil
+	if credential.Username != "" && credential.Password != "" {
+		return UsernamePasswordType, fmt.Sprintf("username=%s", credential.Username), nil
 	} else {
 		return "", "", nil
 	}

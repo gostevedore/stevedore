@@ -8,12 +8,12 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	handler "github.com/gostevedore/stevedore/internal/handler/build"
+	authfactory "github.com/gostevedore/stevedore/internal/infrastructure/auth/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/compatibility"
 	"github.com/gostevedore/stevedore/internal/infrastructure/configuration"
 	imagesconfiguration "github.com/gostevedore/stevedore/internal/infrastructure/configuration/images"
 	imagesgraphtemplate "github.com/gostevedore/stevedore/internal/infrastructure/configuration/images/graph"
 	"github.com/gostevedore/stevedore/internal/infrastructure/console"
-	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible"
 	defaultdriver "github.com/gostevedore/stevedore/internal/infrastructure/driver/default"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/docker"
@@ -421,8 +421,8 @@ func TestCreateCredentialsStore(t *testing.T) {
 	}
 }
 
-func TestCreateCredentialsFactory(t *testing.T) {
-	errContext := "(entrypoint::build::createCredentialsFactory)"
+func TestCreateAuthFactory(t *testing.T) {
+	errContext := "(entrypoint::build::createAuthFactory)"
 
 	baseDir := "/credentials"
 	testFs := afero.NewMemMapFs()
@@ -443,7 +443,7 @@ func TestCreateCredentialsFactory(t *testing.T) {
 		entrypoint    *Entrypoint
 		conf          *configuration.Configuration
 		compatibility Compatibilitier
-		res           repository.CredentialsFactorier
+		res           repository.AuthFactorier
 		err           error
 	}{
 		{
@@ -479,7 +479,7 @@ func TestCreateCredentialsFactory(t *testing.T) {
 					Format:           credentials.JSONFormat,
 				},
 			},
-			res: &credentialsfactory.CredentialsFactory{},
+			res: &authfactory.AuthFactory{},
 			err: &errors.Error{},
 		},
 	}
@@ -488,7 +488,7 @@ func TestCreateCredentialsFactory(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			credentials, err := test.entrypoint.createCredentialsFactory(test.conf)
+			credentials, err := test.entrypoint.createAuthFactory(test.conf)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
@@ -865,7 +865,7 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 	tests := []struct {
 		desc        string
 		entrypoint  *Entrypoint
-		credentials repository.CredentialsFactorier
+		credentials repository.AuthFactorier
 		options     *Options
 		err         error
 		assertions  func(t *testing.T, driverFactory factory.BuildDriverFactory)
@@ -880,21 +880,21 @@ func TestCreateBuildDriverFactory(t *testing.T) {
 		{
 			desc:        "Testing create build driver factory in build entrypoint with empty options",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentialsfactory.NewMockCredentialsFactory(),
+			credentials: authfactory.NewMockAuthFactory(),
 			options:     nil,
 			err:         errors.New(errContext, "Register drivers requires options in build entrypoint"),
 		},
 		{
 			desc:        "Testing create build driver factory in build entrypoint with nil writer",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentialsfactory.NewMockCredentialsFactory(),
+			credentials: authfactory.NewMockAuthFactory(),
 			options:     &Options{},
 			err:         errors.New(errContext, "Register drivers requires a writer in build entrypoint"),
 		},
 		{
 			desc:        "Testing create build driver factory in build entrypoint",
 			entrypoint:  NewEntrypoint(WithWriter(console.NewMockConsole())),
-			credentials: credentialsfactory.NewMockCredentialsFactory(),
+			credentials: authfactory.NewMockAuthFactory(),
 			options:     &Options{},
 			err:         &errors.Error{},
 			assertions: func(t *testing.T, f factory.BuildDriverFactory) {
@@ -1076,7 +1076,7 @@ func TestCreateDockerDriver(t *testing.T) {
 	tests := []struct {
 		desc        string
 		entrypoint  *Entrypoint
-		credentials repository.CredentialsFactorier
+		credentials repository.AuthFactorier
 		options     *Options
 		res         repository.BuildDriverer
 		err         error
@@ -1090,14 +1090,14 @@ func TestCreateDockerDriver(t *testing.T) {
 		{
 			desc:        "Testing error creating docker driver in build entrypoint when options are empty",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentialsfactory.NewMockCredentialsFactory(),
+			credentials: authfactory.NewMockAuthFactory(),
 			options:     nil,
 			err:         errors.New(errContext, "Build entrypoint options are required to create docker driver"),
 		},
 		{
 			desc:        "Testing create docker driver in build entrypoint",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentialsfactory.NewMockCredentialsFactory(),
+			credentials: authfactory.NewMockAuthFactory(),
 			options:     &Options{},
 			res:         &docker.DockerDriver{},
 			err:         &errors.Error{},
@@ -1105,7 +1105,7 @@ func TestCreateDockerDriver(t *testing.T) {
 		{
 			desc:        "Testing create docker driver in build entrypoint with dryrun enabled",
 			entrypoint:  NewEntrypoint(),
-			credentials: credentialsfactory.NewMockCredentialsFactory(),
+			credentials: authfactory.NewMockAuthFactory(),
 			options: &Options{
 				DryRun: true,
 			},

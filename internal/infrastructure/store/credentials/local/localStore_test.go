@@ -7,9 +7,9 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/credentials"
 	"github.com/gostevedore/stevedore/internal/infrastructure/compatibility"
-	credentialscompatibility "github.com/gostevedore/stevedore/internal/infrastructure/credentials/compatibility"
-	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/formater/json"
-	"github.com/gostevedore/stevedore/internal/infrastructure/credentials/formater/mock"
+	credentialscompatibility "github.com/gostevedore/stevedore/internal/infrastructure/compatibility/credentials"
+	"github.com/gostevedore/stevedore/internal/infrastructure/format/credentials/json"
+	"github.com/gostevedore/stevedore/internal/infrastructure/format/credentials/mock"
 	"github.com/gostevedore/stevedore/internal/infrastructure/store/credentials/encryption"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -24,13 +24,13 @@ func TestStore(t *testing.T) {
 		desc              string
 		store             *LocalStore
 		id                string
-		badge             *credentials.Badge
+		credential        *credentials.Credential
 		prepareAssertFunc func(*LocalStore)
 		res               string
 		err               error
 	}{
 		{
-			desc: "Testing error when storing to local store a badge without local path",
+			desc: "Testing error when storing to local store a credential without local path",
 			store: NewLocalStore(
 				WithFilesystem(afero.NewMemMapFs()),
 				WithPath(""),
@@ -41,10 +41,10 @@ func TestStore(t *testing.T) {
 					),
 				),
 			),
-			err: errors.New(errContext, "To store a badge into local store, local store path must be provided"),
+			err: errors.New(errContext, "To store a credential into local store, local store path must be provided"),
 		},
 		{
-			desc: "Testing error when storing to local store a badge without an id",
+			desc: "Testing error when storing to local store a credential without an id",
 			store: NewLocalStore(
 				WithFilesystem(afero.NewMemMapFs()),
 				WithPath(credentialsPath),
@@ -55,10 +55,10 @@ func TestStore(t *testing.T) {
 					),
 				),
 			),
-			err: errors.New(errContext, "To store a badge into local store, id must be provided"),
+			err: errors.New(errContext, "To store a credential into local store, id must be provided"),
 		},
 		{
-			desc: "Testing error when storing to local store a badge with a nil badge",
+			desc: "Testing error when storing to local store a credential with a nil credential",
 			store: NewLocalStore(
 				WithFilesystem(afero.NewMemMapFs()),
 				WithPath(credentialsPath),
@@ -70,10 +70,10 @@ func TestStore(t *testing.T) {
 				),
 			),
 			id:  "id",
-			err: errors.New(errContext, "To store a badge for 'id' into local store, credentials badge must be provided"),
+			err: errors.New(errContext, "To store a credential for 'id' into local store, credentials credential must be provided"),
 		},
 		{
-			desc: "Testing persist a badge into local store",
+			desc: "Testing persist a credential into local store",
 			store: NewLocalStore(
 				WithFilesystem(afero.NewMemMapFs()),
 				WithPath(credentialsPath),
@@ -85,13 +85,13 @@ func TestStore(t *testing.T) {
 				),
 			),
 			id: "id",
-			badge: &credentials.Badge{
+			credential: &credentials.Credential{
 				Username: "username",
 				Password: "password",
 			},
 			prepareAssertFunc: func(s *LocalStore) {
 				s.formater.(*mock.MockFormater).On("Marshal",
-					&credentials.Badge{
+					&credentials.Credential{
 						ID:       "id",
 						Username: "username",
 						Password: "password",
@@ -101,7 +101,7 @@ func TestStore(t *testing.T) {
 			err: &errors.Error{},
 		},
 		{
-			desc: "Testing persist a badge into local store using encryption",
+			desc: "Testing persist a credential into local store using encryption",
 			store: NewLocalStore(
 				WithFilesystem(afero.NewMemMapFs()),
 				WithPath(credentialsPath),
@@ -114,13 +114,13 @@ func TestStore(t *testing.T) {
 				WithEncryption(encryption.NewMockEncryption()),
 			),
 			id: "id",
-			badge: &credentials.Badge{
+			credential: &credentials.Credential{
 				Username: "username",
 				Password: "password",
 			},
 			prepareAssertFunc: func(s *LocalStore) {
 				s.formater.(*mock.MockFormater).On("Marshal",
-					&credentials.Badge{
+					&credentials.Credential{
 						ID:       "id",
 						Username: "username",
 						Password: "password",
@@ -177,7 +177,7 @@ func TestStore(t *testing.T) {
 				test.prepareAssertFunc(test.store)
 			}
 
-			err := test.store.Store(test.id, test.badge)
+			err := test.store.Store(test.id, test.credential)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
@@ -216,13 +216,13 @@ func TestSafeStore(t *testing.T) {
 		desc              string
 		store             *LocalStore
 		id                string
-		badge             *credentials.Badge
+		credential        *credentials.Credential
 		prepareAssertFunc func(*LocalStore)
 		res               string
 		err               error
 	}{
 		{
-			desc: "Testing error persisting a badge into local store that already exist",
+			desc: "Testing error persisting a credential into local store that already exist",
 			id:   "existing_id",
 			store: NewLocalStore(
 				WithFilesystem(testFs),
@@ -237,7 +237,7 @@ func TestSafeStore(t *testing.T) {
 			err: errors.New(errContext, "Credentials 'existing_id' already exist"),
 		},
 		{
-			desc: "Testing persist a badge into local store",
+			desc: "Testing persist a credential into local store",
 			store: NewLocalStore(
 				WithFilesystem(testFs),
 				WithPath(credentialsPath),
@@ -249,13 +249,13 @@ func TestSafeStore(t *testing.T) {
 				),
 			),
 			id: "id",
-			badge: &credentials.Badge{
+			credential: &credentials.Credential{
 				Username: "username",
 				Password: "password",
 			},
 			prepareAssertFunc: func(s *LocalStore) {
 				s.formater.(*mock.MockFormater).On("Marshal",
-					&credentials.Badge{
+					&credentials.Credential{
 						ID:       "id",
 						Username: "username",
 						Password: "password",
@@ -274,7 +274,7 @@ func TestSafeStore(t *testing.T) {
 				test.prepareAssertFunc(test.store)
 			}
 
-			err := test.store.SafeStore(test.id, test.badge)
+			err := test.store.SafeStore(test.id, test.credential)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
@@ -317,11 +317,11 @@ func TestGet(t *testing.T) {
 		desc  string
 		store *LocalStore
 		id    string
-		res   *credentials.Badge
+		res   *credentials.Credential
 		err   error
 	}{
 		{
-			desc: "Testing error when getting a badge from local store without giving an id",
+			desc: "Testing error when getting a credential from local store without giving an id",
 			store: NewLocalStore(
 				WithFilesystem(afero.NewMemMapFs()),
 				WithPath(credentialsPath),
@@ -332,10 +332,10 @@ func TestGet(t *testing.T) {
 					),
 				),
 			),
-			err: errors.New(errContext, "To get a badge from the store, id must be provided"),
+			err: errors.New(errContext, "To get a credential from the store, id must be provided"),
 		},
 		{
-			desc: "Testing get credentials badge from local store",
+			desc: "Testing get credentials credential from local store",
 			store: NewLocalStore(
 				WithFilesystem(testFs),
 				WithPath(credentialsPath),
@@ -347,7 +347,7 @@ func TestGet(t *testing.T) {
 				),
 			),
 			id: "id",
-			res: &credentials.Badge{
+			res: &credentials.Credential{
 				ID:       "b80bb7740288fda1f201890375a60c8f",
 				Username: "username",
 				Password: "password",
@@ -355,7 +355,7 @@ func TestGet(t *testing.T) {
 			err: &errors.Error{},
 		},
 		{
-			desc: "Testing get encrypted credentials badge from local store",
+			desc: "Testing get encrypted credentials credential from local store",
 			store: NewLocalStore(
 				WithFilesystem(testFs),
 				WithPath(encryptedCredentialsPath),
@@ -370,7 +370,7 @@ func TestGet(t *testing.T) {
 				)),
 			),
 			id: "id",
-			res: &credentials.Badge{
+			res: &credentials.Credential{
 				ID:                        "id",
 				Username:                  "username",
 				Password:                  "password",
@@ -385,11 +385,11 @@ func TestGet(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			badge, err := test.store.Get(test.id)
+			credential, err := test.store.Get(test.id)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
-				assert.Equal(t, test.res, badge)
+				assert.Equal(t, test.res, credential)
 			}
 		})
 	}
@@ -418,11 +418,11 @@ func TestAll(t *testing.T) {
 	tests := []struct {
 		desc  string
 		store *LocalStore
-		res   []*credentials.Badge
+		res   []*credentials.Credential
 		err   error
 	}{
 		{
-			desc: "Testing get all credentials badges from local store",
+			desc: "Testing get all credentials credentials from local store",
 			store: NewLocalStore(
 				WithFilesystem(testFs),
 				WithPath(credentialsPath),
@@ -433,7 +433,7 @@ func TestAll(t *testing.T) {
 					),
 				),
 			),
-			res: []*credentials.Badge{
+			res: []*credentials.Credential{
 				{
 					ID:       "b80bb7740288fda1f201890375a60c8f",
 					Username: "username",
@@ -443,7 +443,7 @@ func TestAll(t *testing.T) {
 			err: &errors.Error{},
 		},
 		{
-			desc: "Testing get all credentials badges from an empty local store",
+			desc: "Testing get all credentials credentials from an empty local store",
 			store: NewLocalStore(
 				WithFilesystem(testFs),
 				WithPath(emptyPath),
@@ -454,7 +454,7 @@ func TestAll(t *testing.T) {
 					),
 				),
 			),
-			res: []*credentials.Badge{},
+			res: []*credentials.Credential{},
 			err: &errors.Error{},
 		},
 	}
@@ -463,11 +463,11 @@ func TestAll(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			badges, err := test.store.All()
+			credentials, err := test.store.All()
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {
-				assert.Equal(t, test.res, badges)
+				assert.Equal(t, test.res, credentials)
 			}
 		})
 	}

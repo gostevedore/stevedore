@@ -18,23 +18,23 @@ func NewPrivateKeyFileOutput() *PrivateKeyFileOutput {
 	return &PrivateKeyFileOutput{}
 }
 
-func (o *PrivateKeyFileOutput) Output(badge *credentials.Badge) (string, string, error) {
+func (o *PrivateKeyFileOutput) Output(credential *credentials.Credential) (string, string, error) {
 
 	errContext := "(output::credentials::types::PrivateKeyFileOutput::Output)"
 
-	if badge == nil {
-		return "", "", errors.New(errContext, "To show badge output, badge must be provided")
+	if credential == nil {
+		return "", "", errors.New(errContext, "To show credential output, credential must be provided")
 	}
 
-	if badge.PrivateKeyFile != "" {
-		detail := fmt.Sprintf("private_key_file=%s", badge.PrivateKeyFile)
+	if credential.PrivateKeyFile != "" {
+		detail := fmt.Sprintf("private_key_file=%s", credential.PrivateKeyFile)
 
-		if badge.PrivateKeyPassword != "" {
+		if credential.PrivateKeyPassword != "" {
 			detail = fmt.Sprintf("%s, protected by password", detail)
 		}
 
-		if badge.GitSSHUser != "" {
-			detail = fmt.Sprintf("%s, with git user '%s'", detail, badge.GitSSHUser)
+		if credential.GitSSHUser != "" {
+			detail = fmt.Sprintf("%s, with git user '%s'", detail, credential.GitSSHUser)
 		}
 
 		return PrivateKeyFileType, detail, nil

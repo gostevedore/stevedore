@@ -18,7 +18,7 @@ func TestRun(t *testing.T) {
 		desc              string
 		app               *CreateCredentialsApplication
 		id                string
-		badge             *credentials.Badge
+		credential        *credentials.Credential
 		prepareAssertFunc func(CredentialsStorer)
 		err               error
 	}{
@@ -28,26 +28,26 @@ func TestRun(t *testing.T) {
 			err:  errors.New(errContext, "To run the create credentials application, a credentials storer must be provided"),
 		},
 		{
-			desc: "Testing run create credentials application without badge",
+			desc: "Testing run create credentials application without credential",
 			app:  NewCreateCredentialsApplication(WithCredentialsStore(mock.NewMockStore())),
-			err:  errors.New(errContext, "To run the create credentials application, a badge must be provided"),
+			err:  errors.New(errContext, "To run the create credentials application, a credential must be provided"),
 		},
 		{
-			desc:  "Testing run create credentials application without badge id",
-			app:   NewCreateCredentialsApplication(WithCredentialsStore(mock.NewMockStore())),
-			badge: &credentials.Badge{},
-			err:   errors.New(errContext, "To run the create credentials application, a id for credentials must be provided"),
+			desc:       "Testing run create credentials application without credential id",
+			app:        NewCreateCredentialsApplication(WithCredentialsStore(mock.NewMockStore())),
+			credential: &credentials.Credential{},
+			err:        errors.New(errContext, "To run the create credentials application, a id for credentials must be provided"),
 		},
 		{
 			desc: "Testing run create credentials application",
 			app:  NewCreateCredentialsApplication(WithCredentialsStore(mock.NewMockStore())),
-			badge: &credentials.Badge{
+			credential: &credentials.Credential{
 				Username: "username",
 				Password: "password",
 			},
 			id: "id",
 			prepareAssertFunc: func(store CredentialsStorer) {
-				store.(*mock.MockStore).On("Store", "id", &credentials.Badge{
+				store.(*mock.MockStore).On("Store", "id", &credentials.Credential{
 					Username: "username",
 					Password: "password",
 				}).Return(nil)
@@ -64,7 +64,7 @@ func TestRun(t *testing.T) {
 				test.prepareAssertFunc(test.app.store)
 			}
 
-			err := test.app.Run(context.TODO(), test.id, test.badge)
+			err := test.app.Run(context.TODO(), test.id, test.credential)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {

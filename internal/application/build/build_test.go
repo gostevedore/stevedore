@@ -9,9 +9,9 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
-	credentialsfactory "github.com/gostevedore/stevedore/internal/infrastructure/credentials/factory"
-	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
-	authmethodkeyfile "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/keyfile"
+	authfactory "github.com/gostevedore/stevedore/internal/infrastructure/auth/factory"
+	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/auth/method/basic"
+	authmethodkeyfile "github.com/gostevedore/stevedore/internal/infrastructure/auth/method/keyfile"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/docker"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/factory"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/mock"
@@ -67,7 +67,7 @@ func TestBuild(t *testing.T) {
 				WithJobFactory(job.NewMockJobFactory()),
 				WithDispatch(dispatch.NewMockDispatch()),
 				WithSemver(semver.NewSemVerGenerator()),
-				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
+				WithCredentials(authfactory.NewMockAuthFactory()),
 			),
 			buildPlan: plan.NewMockPlan(),
 			name:      "parent",
@@ -92,7 +92,7 @@ func TestBuild(t *testing.T) {
 			},
 			err: &errors.Error{},
 			assertFunc: func(service *Application) bool {
-				return service.credentials.(*credentialsfactory.MockCredentialsFactory).AssertExpectations(t) &&
+				return service.credentials.(*authfactory.MockAuthFactory).AssertExpectations(t) &&
 					service.commandFactory.(*command.MockBuildCommandFactory).AssertExpectations(t) &&
 					service.dispatch.(*dispatch.MockDispatch).AssertExpectations(t) &&
 					service.jobFactory.(*job.MockJobFactory).AssertExpectations(t)
@@ -134,7 +134,7 @@ func TestBuild(t *testing.T) {
 					stepChild,
 				}, nil)
 
-				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry").Return(&authmethodbasic.BasicAuthMethod{
+				service.credentials.(*authfactory.MockAuthFactory).On("Get", "registry").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username",
 					Password: "password",
 				}, nil)
@@ -274,7 +274,7 @@ func TestBuildWorker(t *testing.T) {
 				WithJobFactory(job.NewMockJobFactory()),
 				WithDispatch(dispatch.NewMockDispatch()),
 				WithSemver(semver.NewSemVerGenerator()),
-				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
+				WithCredentials(authfactory.NewMockAuthFactory()),
 			),
 			options: &Options{
 				EnableSemanticVersionTags:    true,
@@ -322,7 +322,7 @@ func TestBuildWorker(t *testing.T) {
 			},
 			err: &errors.Error{},
 			assertFunc: func(service *Application) bool {
-				return service.credentials.(*credentialsfactory.MockCredentialsFactory).AssertExpectations(t) &&
+				return service.credentials.(*authfactory.MockAuthFactory).AssertExpectations(t) &&
 					service.commandFactory.(*command.MockBuildCommandFactory).AssertExpectations(t) &&
 					service.dispatch.(*dispatch.MockDispatch).AssertExpectations(t) &&
 					service.jobFactory.(*job.MockJobFactory).AssertExpectations(t)
@@ -332,12 +332,12 @@ func TestBuildWorker(t *testing.T) {
 				mockJob := job.NewMockJob()
 				mockJob.On("Wait").Return(nil)
 
-				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry").Return(&authmethodbasic.BasicAuthMethod{
+				service.credentials.(*authfactory.MockAuthFactory).On("Get", "registry").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username",
 					Password: "password",
 				}, nil)
 
-				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "parent_registry").Return(&authmethodbasic.BasicAuthMethod{
+				service.credentials.(*authfactory.MockAuthFactory).On("Get", "parent_registry").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username_parent",
 					Password: "password_parent",
 				}, nil)
@@ -404,7 +404,7 @@ func TestBuildWorker(t *testing.T) {
 				WithJobFactory(job.NewMockJobFactory()),
 				WithDispatch(dispatch.NewMockDispatch()),
 				WithSemver(semver.NewSemVerGenerator()),
-				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
+				WithCredentials(authfactory.NewMockAuthFactory()),
 			),
 			options: &Options{
 				EnableSemanticVersionTags:    true,
@@ -454,12 +454,12 @@ func TestBuildWorker(t *testing.T) {
 				mockJob := job.NewMockJob()
 				mockJob.On("Wait").Return(nil)
 
-				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "parent_registry").Return(&authmethodbasic.BasicAuthMethod{
+				service.credentials.(*authfactory.MockAuthFactory).On("Get", "parent_registry").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username",
 					Password: "password",
 				}, nil)
 
-				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry").Return(&authmethodkeyfile.KeyFileAuthMethod{}, nil)
+				service.credentials.(*authfactory.MockAuthFactory).On("Get", "registry").Return(&authmethodkeyfile.KeyFileAuthMethod{}, nil)
 			},
 		},
 		{
@@ -477,7 +477,7 @@ func TestBuildWorker(t *testing.T) {
 				WithJobFactory(job.NewMockJobFactory()),
 				WithDispatch(dispatch.NewMockDispatch()),
 				WithSemver(semver.NewSemVerGenerator()),
-				WithCredentials(credentialsfactory.NewMockCredentialsFactory()),
+				WithCredentials(authfactory.NewMockAuthFactory()),
 			),
 			options: &Options{
 				ImageFromName:                image.UndefinedStringValue,
@@ -527,12 +527,12 @@ func TestBuildWorker(t *testing.T) {
 				mockJob := job.NewMockJob()
 				mockJob.On("Wait").Return(nil)
 
-				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry").Return(&authmethodbasic.BasicAuthMethod{
+				service.credentials.(*authfactory.MockAuthFactory).On("Get", "registry").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username",
 					Password: "password",
 				}, nil)
 
-				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "parent_registry").Return(&authmethodkeyfile.KeyFileAuthMethod{}, nil)
+				service.credentials.(*authfactory.MockAuthFactory).On("Get", "parent_registry").Return(&authmethodkeyfile.KeyFileAuthMethod{}, nil)
 			},
 		},
 	}
@@ -866,7 +866,7 @@ func TestGetCredentials(t *testing.T) {
 			desc: "Testing get credentials",
 			service: NewApplication(
 				WithCredentials(
-					credentialsfactory.NewMockCredentialsFactory(),
+					authfactory.NewMockAuthFactory(),
 				),
 			),
 			registry: "registry.test",
@@ -875,7 +875,7 @@ func TestGetCredentials(t *testing.T) {
 				Password: "password",
 			},
 			prepareAssertFunc: func(service *Application) {
-				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
+				service.credentials.(*authfactory.MockAuthFactory).On("Get", "registry.test").Return(&authmethodbasic.BasicAuthMethod{
 					Username: "username",
 					Password: "password",
 				}, nil)
@@ -886,13 +886,13 @@ func TestGetCredentials(t *testing.T) {
 			desc: "Testing get unexisting credentials",
 			service: NewApplication(
 				WithCredentials(
-					credentialsfactory.NewMockCredentialsFactory(),
+					authfactory.NewMockAuthFactory(),
 				),
 			),
 			registry: "registry.test",
 			res:      nil,
 			prepareAssertFunc: func(service *Application) {
-				service.credentials.(*credentialsfactory.MockCredentialsFactory).On("Get", "registry.test").Return(nil, errors.New(errContext, "Credentials not found"))
+				service.credentials.(*authfactory.MockAuthFactory).On("Get", "registry.test").Return(nil, errors.New(errContext, "Credentials not found"))
 			},
 			err: errors.New(errContext, "Credentials not found"),
 		},

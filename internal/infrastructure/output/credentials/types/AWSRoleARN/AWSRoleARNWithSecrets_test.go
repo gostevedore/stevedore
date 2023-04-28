@@ -15,15 +15,15 @@ func TestOutputWithSecrets(t *testing.T) {
 	tests := []struct {
 		desc            string
 		output          *AWSRoleARNWithSecretsOutput
-		badge           *credentials.Badge
+		credential      *credentials.Credential
 		detail          string
 		credentialsType string
 		err             error
 	}{
 		{
-			desc:            "Testing error when creating the output for AWSRoleARNWithSecretsOutput and badge is nil",
+			desc:            "Testing error when creating the output for AWSRoleARNWithSecretsOutput and credential is nil",
 			output:          NewAWSRoleARNWithSecretsOutput(nil),
-			badge:           nil,
+			credential:      nil,
 			detail:          "",
 			credentialsType: "",
 			err:             errors.New(errContext, "AWS role arn with secret output requieres an output"),
@@ -33,7 +33,7 @@ func TestOutputWithSecrets(t *testing.T) {
 			output: NewAWSRoleARNWithSecretsOutput(
 				NewAWSRoleARNOutput(),
 			),
-			badge: &credentials.Badge{
+			credential: &credentials.Credential{
 				AWSRoleARN:         "arn:aws:iam::123456789012:role/stevedore-role",
 				AWSRegion:          "eu-west-1",
 				AWSProfile:         "default",
@@ -50,7 +50,7 @@ func TestOutputWithSecrets(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			credentialsType, detail, err := test.output.Output(test.badge)
+			credentialsType, detail, err := test.output.Output(test.credential)
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {

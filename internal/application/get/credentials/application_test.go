@@ -30,14 +30,14 @@ func TestRun(t *testing.T) {
 				),
 			),
 			prepareAssertFunc: func(app *Application) {
-				app.credentials.(*mockstore.MockStore).On("All").Return([]*credentials.Badge{
+				app.credentials.(*mockstore.MockStore).On("All").Return([]*credentials.Credential{
 					{
 						ID:       "id",
 						Username: "username",
 						Password: "password",
 					},
 				}, nil)
-				app.output.(*mockoutput.MockOutput).On("Print", []*credentials.Badge{
+				app.output.(*mockoutput.MockOutput).On("Print", []*credentials.Credential{
 					{
 						ID:       "id",
 						Username: "username",

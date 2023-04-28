@@ -15,7 +15,7 @@ func TestOutputWithSecret(t *testing.T) {
 	tests := []struct {
 		desc            string
 		output          *UsernamePasswordWithSecretsOutput
-		badge           *credentials.Badge
+		credential      *credentials.Credential
 		detail          string
 		credentialsType string
 		err             error
@@ -23,7 +23,7 @@ func TestOutputWithSecret(t *testing.T) {
 		{
 			desc:            "Testing error when creating the output for UsernamePasswordWithSecretsOutput and output is nil",
 			output:          NewUsernamePasswordWithSecretsOutput(nil),
-			badge:           nil,
+			credential:      nil,
 			detail:          "",
 			credentialsType: "",
 			err:             errors.New(errContext, "Username-password with secret output requieres an output"),
@@ -33,7 +33,7 @@ func TestOutputWithSecret(t *testing.T) {
 			output: NewUsernamePasswordWithSecretsOutput(
 				NewUsernamePasswordOutput(),
 			),
-			badge: &credentials.Badge{
+			credential: &credentials.Credential{
 				Username: "user",
 				Password: "pass",
 			},
@@ -47,7 +47,7 @@ func TestOutputWithSecret(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			credentialsType, detail, err := test.output.Output(test.badge)
+			credentialsType, detail, err := test.output.Output(test.credential)
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {

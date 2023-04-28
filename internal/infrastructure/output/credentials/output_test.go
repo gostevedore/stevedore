@@ -18,7 +18,7 @@ func TestPrintAll(t *testing.T) {
 	tests := []struct {
 		desc              string
 		output            *Output
-		badges            []*credentials.Badge
+		credentials       []*credentials.Credential
 		prepareAssertFunc func(output *Output)
 		err               error
 	}{
@@ -30,7 +30,7 @@ func TestPrintAll(t *testing.T) {
 				},
 				write: write.NewMockConsole(),
 			},
-			badges: []*credentials.Badge{
+			credentials: []*credentials.Credential{
 				{
 					ID:       "id",
 					Username: "username",
@@ -56,7 +56,7 @@ func TestPrintAll(t *testing.T) {
 				test.prepareAssertFunc(test.output)
 			}
 
-			err := test.output.Print(test.badges)
+			err := test.output.Print(test.credentials)
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {

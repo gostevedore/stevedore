@@ -16,7 +16,7 @@ func NewMockOutput() *MockOutput {
 }
 
 // MockOutput prints the credentials
-func (o *MockOutput) Print(badges []*credentials.Badge) error {
-	args := o.Mock.Called(badges)
+func (o *MockOutput) Print(credentials []*credentials.Credential) error {
+	args := o.Mock.Called(credentials)
 	return args.Error(0)
 }

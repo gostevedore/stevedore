@@ -7,7 +7,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
-	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/credentials/method/basic"
+	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/auth/method/basic"
 )
 
 // OptionsFunc is a function used to configure the application
@@ -15,7 +15,7 @@ type OptionsFunc func(*Application)
 
 // Application is the application used to promote images
 type Application struct {
-	credentials    repository.CredentialsFactorier
+	credentials    repository.AuthFactorier
 	factory        PromoteFactorier
 	referenceNamer repository.ImageReferenceNamer
 	semver         Semverser
@@ -30,7 +30,7 @@ func NewApplication(options ...OptionsFunc) *Application {
 }
 
 // WitCredentials sets credentials for the application
-func WithCredentials(c repository.CredentialsFactorier) OptionsFunc {
+func WithCredentials(c repository.AuthFactorier) OptionsFunc {
 	return func(a *Application) {
 		a.credentials = c
 	}

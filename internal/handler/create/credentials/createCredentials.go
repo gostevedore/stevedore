@@ -42,9 +42,9 @@ func (h *CreateCredentialsHandler) Handler(ctx context.Context, id string, optio
 
 	errContext := "(create/credentials::Handler)"
 
-	badge := createBadgeFromOptions(options)
+	credential := createCredentialFromOptions(options)
 
-	err = h.app.Run(ctx, id, badge)
+	err = h.app.Run(ctx, id, credential)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -52,23 +52,23 @@ func (h *CreateCredentialsHandler) Handler(ctx context.Context, id string, optio
 	return nil
 }
 
-func createBadgeFromOptions(options *Options) *credentials.Badge {
-	badge := &credentials.Badge{}
+func createCredentialFromOptions(options *Options) *credentials.Credential {
+	credential := &credentials.Credential{}
 
-	badge.AllowUseSSHAgent = options.AllowUseSSHAgent
-	badge.AWSAccessKeyID = options.AWSAccessKeyID
-	badge.AWSProfile = options.AWSProfile
-	badge.AWSRegion = options.AWSRegion
-	badge.AWSRoleARN = options.AWSRoleARN
-	badge.AWSSecretAccessKey = options.AWSSecretAccessKey
-	badge.AWSSharedConfigFiles = append([]string{}, options.AWSSharedConfigFiles...)
-	badge.AWSSharedCredentialsFiles = append([]string{}, options.AWSSharedCredentialsFiles...)
-	badge.AWSUseDefaultCredentialsChain = options.AWSUseDefaultCredentialsChain
-	badge.GitSSHUser = options.GitSSHUser
-	badge.Password = options.Password
-	badge.PrivateKeyFile = options.PrivateKeyFile
-	badge.PrivateKeyPassword = options.PrivateKeyPassword
-	badge.Username = options.Username
+	credential.AllowUseSSHAgent = options.AllowUseSSHAgent
+	credential.AWSAccessKeyID = options.AWSAccessKeyID
+	credential.AWSProfile = options.AWSProfile
+	credential.AWSRegion = options.AWSRegion
+	credential.AWSRoleARN = options.AWSRoleARN
+	credential.AWSSecretAccessKey = options.AWSSecretAccessKey
+	credential.AWSSharedConfigFiles = append([]string{}, options.AWSSharedConfigFiles...)
+	credential.AWSSharedCredentialsFiles = append([]string{}, options.AWSSharedCredentialsFiles...)
+	credential.AWSUseDefaultCredentialsChain = options.AWSUseDefaultCredentialsChain
+	credential.GitSSHUser = options.GitSSHUser
+	credential.Password = options.Password
+	credential.PrivateKeyFile = options.PrivateKeyFile
+	credential.PrivateKeyPassword = options.PrivateKeyPassword
+	credential.Username = options.Username
 
-	return badge
+	return credential
 }

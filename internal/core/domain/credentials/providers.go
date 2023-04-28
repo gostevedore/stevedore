@@ -1,10 +1,10 @@
 package credentials
 
 const (
-	// BadgeCredentialsProvider provider which reads credentials directly from badge
-	BadgeCredentialsProvider = "badge"
-	// AWSECRSCredentialsProvider provider which uses aws ecr get-login-password to get user/password credentials
-	AWSECRSCredentialsProvider = "aws-ecr"
-	// MockCredentialsProvider is a mocked credentials provider
-	MockCredentialsProvider = "mock"
+	// StoreAuthProvider provider which reads auth directly from the credential
+	StoreAuthProvider = "store"
+	// AWSECRSAuthProvider provider which uses aws ecr get-login-password to get user/password auth
+	AWSECRSAuthProvider = "aws-ecr"
+	// MockAuthProvider is a mocked auth provider
+	MockAuthProvider = "mock"
 )

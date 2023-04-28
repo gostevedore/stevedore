@@ -21,7 +21,7 @@ func NewCommand(ctx context.Context, config *configuration.Configuration, entryp
 		},
 		Short: "Stevedore subcommand to get configuration information",
 		Long: `
-		Stevedore subcommand to get configuration information
+Stevedore subcommand to get configuration information
 `,
 		Example: `
   stevedore get configuration

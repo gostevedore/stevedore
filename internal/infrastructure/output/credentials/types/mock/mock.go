@@ -16,7 +16,7 @@ func NewMockOutput() *MockOutput {
 }
 
 // Output is a mock implementation of the Outputter interface
-func (o *MockOutput) Output(badge *credentials.Badge) (string, string, error) {
-	args := o.Called(badge)
+func (o *MockOutput) Output(credential *credentials.Credential) (string, string, error) {
+	args := o.Called(credential)
 	return args.String(0), args.String(1), args.Error(2)
 }

@@ -18,19 +18,19 @@ func NewSSHAgentOutput() *SSHAgentOutput {
 	return &SSHAgentOutput{}
 }
 
-func (o *SSHAgentOutput) Output(badge *credentials.Badge) (string, string, error) {
+func (o *SSHAgentOutput) Output(credential *credentials.Credential) (string, string, error) {
 
 	errContext := "(output::credentials::types::SSHAgentOutput::Output)"
 
-	if badge == nil {
-		return "", "", errors.New(errContext, "To show badge output, badge must be provided")
+	if credential == nil {
+		return "", "", errors.New(errContext, "To show credential output, credential must be provided")
 	}
 
-	if badge.AllowUseSSHAgent {
+	if credential.AllowUseSSHAgent {
 		detail := "Use SSH agent"
 
-		if badge.GitSSHUser != "" {
-			detail = fmt.Sprintf("%s, with git user '%s'", detail, badge.GitSSHUser)
+		if credential.GitSSHUser != "" {
+			detail = fmt.Sprintf("%s, with git user '%s'", detail, credential.GitSSHUser)
 		}
 
 		return SSHAgentType, detail, nil

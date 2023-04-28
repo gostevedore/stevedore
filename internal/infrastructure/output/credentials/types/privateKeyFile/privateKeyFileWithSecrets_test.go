@@ -15,7 +15,7 @@ func TestOutputWithSecrets(t *testing.T) {
 	tests := []struct {
 		desc            string
 		output          *PrivateKeyFileWithSecretsOutput
-		badge           *credentials.Badge
+		credential      *credentials.Credential
 		detail          string
 		credentialsType string
 		err             error
@@ -23,7 +23,7 @@ func TestOutputWithSecrets(t *testing.T) {
 		{
 			desc:            "Testing error when creating the output for PrivateKeyFileWithSecretsOutput and output is nil",
 			output:          NewPrivateKeyFileWithSecretsOutput(nil),
-			badge:           nil,
+			credential:      nil,
 			detail:          "",
 			credentialsType: "",
 			err:             errors.New(errContext, "Private key file with secret output requieres an output"),
@@ -33,7 +33,7 @@ func TestOutputWithSecrets(t *testing.T) {
 			output: NewPrivateKeyFileWithSecretsOutput(
 				NewPrivateKeyFileOutput(),
 			),
-			badge: &credentials.Badge{
+			credential: &credentials.Credential{
 				PrivateKeyFile:     "privateKeyFile",
 				PrivateKeyPassword: "privateKeyPassword",
 				GitSSHUser:         "gitSSHUser",
@@ -48,7 +48,7 @@ func TestOutputWithSecrets(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			credentialsType, detail, err := test.output.Output(test.badge)
+			credentialsType, detail, err := test.output.Output(test.credential)
 			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {

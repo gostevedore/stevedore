@@ -23,7 +23,7 @@ func NewCommand(ctx context.Context, config *configuration.Configuration, entryp
 		},
 		Short: "Stevedore subcommand to get builders information",
 		Long: `
-		Stevedore subcommand to get builders information
+Stevedore subcommand to get builders information
 `,
 		Example: `
 Get builder filtered by name:

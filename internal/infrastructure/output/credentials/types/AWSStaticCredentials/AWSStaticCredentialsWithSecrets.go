@@ -17,25 +17,25 @@ func NewAWSStaticCredentialsWithSecretsOutput(o *AWSStaticCredentialsOutput) *AW
 	}
 }
 
-func (o *AWSStaticCredentialsWithSecretsOutput) Output(badge *credentials.Badge) (string, string, error) {
+func (o *AWSStaticCredentialsWithSecretsOutput) Output(credential *credentials.Credential) (string, string, error) {
 	errContext := "(output::credentials::types::AWSStaticCredentialsWithSecretsOutput::Output)"
 
 	if o.output == nil {
 		return "", "", errors.New(errContext, "AWS static credentials with secret output requieres an output")
 	}
 
-	badgeType, details, err := o.output.Output(badge)
+	credentialType, details, err := o.output.Output(credential)
 	if err != nil {
 		return "", "", errors.New(errContext, "", err)
 	}
 
-	if badge.AWSSecretAccessKey != "" {
+	if credential.AWSSecretAccessKey != "" {
 		if details != "" {
 			details = fmt.Sprintf("%s,", details)
 		}
-		details = fmt.Sprintf("%s aws_secret_access_key=%s", details, badge.AWSSecretAccessKey)
+		details = fmt.Sprintf("%s aws_secret_access_key=%s", details, credential.AWSSecretAccessKey)
 	}
 
-	return badgeType, details, nil
+	return credentialType, details, nil
 
 }
