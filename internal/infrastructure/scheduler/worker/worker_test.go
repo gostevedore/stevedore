@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"testing"
+	"time"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/infrastructure/scheduler"
@@ -29,6 +30,7 @@ func TestNewWorker(t *testing.T) {
 
 		worker := NewWorker(test.workerPool)
 
+		assert.NotNil(t, worker)
 		assert.NotNil(t, worker.JobChannel)
 		assert.NotNil(t, worker.WorkerPool)
 		assert.NotNil(t, worker.quit)
@@ -86,27 +88,45 @@ func TestRunJobOnAWorker(t *testing.T) {
 	t.Run(desc, func(t *testing.T) {
 		t.Log(desc)
 
-		worker := &Worker{
-			WorkerPool: make(chan chan scheduler.Jobber),
-			JobChannel: make(chan scheduler.Jobber),
-			quit:       make(chan bool),
-		}
+		workerPool := make(chan chan scheduler.Jobber, 1)
+		worker := NewWorker(workerPool)
 		testJob := job.NewMockJob()
 		testJob.Mock.On("Run", context.TODO()).Return(nil)
 
-		go func() {
-			// Pretask: it reads the worker jobchannel regsitration and voids to block the worker
-			<-worker.WorkerPool
-		}()
-
-		go func() {
-			worker.Start(context.TODO())
-		}()
 		defer worker.Stop()
+		go func() {
+			err := worker.Start(context.TODO())
+			assert.Nil(t, err)
+		}()
 
-		worker.JobChannel <- testJob
+		workerPool <- worker.JobChannel
+		jobChannel := <-workerPool
+		jobChannel <- testJob
+
+		time.Sleep(200 * time.Millisecond)
 
 		assert.True(t, testJob.Mock.AssertExpectations(t))
 
 	})
 }
+
+// func TestWorkerStart(t *testing.T) {
+// 	workerPool := make(chan chan scheduler.Jobber, 1)
+// 	worker := NewWorker(workerPool)
+// 	defer worker.Stop()
+
+// 	go func() {
+// 		err := worker.Start(context.TODO())
+// 		assert.Nil(t, err)
+// 	}()
+
+// 	workerPool <- worker.JobChannel
+// 	jobChannel := <-workerPool
+// 	testJob := job.NewMockJob()
+// 	testJob.Mock.On("Run", context.TODO()).Return(nil)
+// 	jobChannel <- testJob
+
+// 	time.Sleep(200 * time.Millisecond)
+
+// 	assert.True(t, testJob.Mock.AssertExpectations(t))
+// }
