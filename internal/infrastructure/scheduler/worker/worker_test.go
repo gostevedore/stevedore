@@ -109,24 +109,3 @@ func TestRunJobOnAWorker(t *testing.T) {
 
 	})
 }
-
-// func TestWorkerStart(t *testing.T) {
-// 	workerPool := make(chan chan scheduler.Jobber, 1)
-// 	worker := NewWorker(workerPool)
-// 	defer worker.Stop()
-
-// 	go func() {
-// 		err := worker.Start(context.TODO())
-// 		assert.Nil(t, err)
-// 	}()
-
-// 	workerPool <- worker.JobChannel
-// 	jobChannel := <-workerPool
-// 	testJob := job.NewMockJob()
-// 	testJob.Mock.On("Run", context.TODO()).Return(nil)
-// 	jobChannel <- testJob
-
-// 	time.Sleep(200 * time.Millisecond)
-
-// 	assert.True(t, testJob.Mock.AssertExpectations(t))
-// }

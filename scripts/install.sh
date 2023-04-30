@@ -5,6 +5,7 @@
 # running the install script https://github.com/gostevedore/stevedore/scripts/install.sh
 
 set -eo pipefail
+set -x
 
 CURL_CMD="curl"
 WGET_CMD="wget"
@@ -15,7 +16,7 @@ BINARY_PATH=/usr/local/bin/stevedore
 alternatives() {
     echo "
 If you have some problems installing Stevedore using the install script, look for installation alternatives in the documentation.
-https://gostevedore.github.io/documentation/getting-started/quick-start/#download-and-install-stevedore
+https://gostevedore.github.io/docs/getting-started/install/
     "
 }
 
@@ -98,7 +99,7 @@ curl_download_file_cmd() {
 
     create_dir "$(must dirname "${dest}")"
 
-    echo "${CURL_CMD} -sOL ${url} --output-dir ${dest}"
+    echo "${CURL_CMD} -fsSLO ${url} --output-dir ${dest}"
     return
 }
 
@@ -140,7 +141,7 @@ http_client_factory() {
         echo "wget_get_http_cmd" "wget_download_file_cmd"
         return
     else
-        err "You require either curl or wget to install Stevedore"
+        fail "You require either curl or wget to install Stevedore"
     fi 
 }
 
@@ -177,7 +178,7 @@ generate_artefact_name() {
     arch="$(must get_arch)"
     kernel="$(must get_kernel_name)"
 
-    echo "stevedore_$(echo "${release}" | sed 's/^v//' )_${kernel}-${arch}.tar.gz"
+    echo "stevedore_$(echo "${release}" | sed 's/^v//' )_${kernel}_${arch}.tar.gz"
     return
 }
 

@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## [Unreleased]
+- Fix install script to use the artefact name updated on v0.11.0
+
 ## [v0.11.0]
 
 ### Added
