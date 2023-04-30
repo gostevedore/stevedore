@@ -5,7 +5,6 @@
 # running the install script https://github.com/gostevedore/stevedore/scripts/install.sh
 
 set -eo pipefail
-set -x
 
 CURL_CMD="curl"
 WGET_CMD="wget"
