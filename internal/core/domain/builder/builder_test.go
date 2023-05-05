@@ -159,6 +159,29 @@ options:
 			err: &errors.Error{},
 		},
 		{
+			desc: "Testing create builder from byte array with empty variables data",
+			data: []byte(`
+driver: docker
+options:
+  context:
+    - path: path
+variables_mapping: {}
+`),
+			res: &Builder{
+				Name:   "",
+				Driver: "docker",
+				Options: &BuilderOptions{
+					Context: []interface{}{
+						map[string]interface{}{
+							"path": "path",
+						},
+					},
+				},
+				VarMapping: varsmap.New(),
+			},
+			err: &errors.Error{},
+		},
+		{
 			desc: "Testing create builder from byte array with a list of Docker driver context data",
 			data: []byte(`
 driver: docker
@@ -194,19 +217,6 @@ options:
 							},
 						},
 					},
-					// Context: []*DockerDriverContextOptions{
-					// 	{
-					// 		Git: &DockerDriverGitContextOptions{
-					// 			Path:       "path",
-					// 			Repository: "repository",
-					// 			Reference:  "reference",
-					// 			Auth: &DockerDriverGitContextAuthOptions{
-					// 				Username: "username",
-					// 				Password: "password",
-					// 			},
-					// 		},
-					// 	},
-					// },
 					Dockerfile: "Dockerfile.test",
 				},
 				VarMapping: varsmap.New(),
@@ -293,7 +303,7 @@ func TestNewBuilderFromIOReader(t *testing.T) {
 		err  error
 	}{
 		{
-			desc: "Testing create builder from byte array with ansible-playbook data",
+			desc: "Testing create builder from IO reader with ansible-playbook data",
 			data: `
 driver: ansible-playbook
 options:
@@ -312,7 +322,30 @@ options:
 			err: &errors.Error{},
 		},
 		{
-			desc: "Testing create builder from byte array with docker data",
+			desc: "Testing create builder from IO reader with empty variables data",
+			data: `
+driver: docker
+options:
+  context:
+    - path: path
+variables_mapping: {}
+`,
+			res: &Builder{
+				Name:   "",
+				Driver: "docker",
+				Options: &BuilderOptions{
+					Context: []interface{}{
+						map[string]interface{}{
+							"path": "path",
+						},
+					},
+				},
+				VarMapping: varsmap.New(),
+			},
+			err: &errors.Error{},
+		},
+		{
+			desc: "Testing create builder from IO reader with docker data",
 			data: `
 driver: docker
 options:
@@ -364,7 +397,7 @@ options:
 		},
 
 		{
-			desc: "Testing create builder from byte array with docker data",
+			desc: "Testing create builder from IO reader with docker data",
 			data: `
 	driver: docker
 `,

@@ -59,7 +59,7 @@ func NewBuilderFromByteArray(data []byte) (*Builder, error) {
 		return nil, errors.New(errContext, fmt.Sprintf("Builder could not be created.\nfound:\n'%s'\n", string(data)), err)
 	}
 
-	if builder.VarMapping == nil {
+	if builder.VarMapping == nil || len(builder.VarMapping) <= 0 {
 		builder.VarMapping = varsmap.New()
 	}
 
@@ -84,7 +84,7 @@ func NewBuilderFromIOReader(reader io.Reader) (*Builder, error) {
 		return nil, errors.New(errContext, fmt.Sprintf("Builder could not be created.\nfound:\n'%s'\n", buff.String()), err)
 	}
 
-	if builder.VarMapping == nil {
+	if builder.VarMapping == nil || len(builder.VarMapping) <= 0 {
 		builder.VarMapping = varsmap.New()
 	}
 

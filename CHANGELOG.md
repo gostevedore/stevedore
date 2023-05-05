@@ -1,7 +1,9 @@
 # CHANGELOG
 
 ## [Unreleased]
+### Fixed
 - Fix install script to use the artefact name updated on v0.11.0
+- Fix use the default variables mapping definition when in the builder its is defined as empty
 
 ## [v0.11.0]
 
