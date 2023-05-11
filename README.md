@@ -17,6 +17,7 @@ Overall, Stevedore is a useful tool for anyone who needs to build and manage lar
   - [Initial setup](#initial-setup)
   - [Build the Docker images for an application](#build-the-docker-images-for-an-application)
   - [Promote the images to a Docker registry](#promote-the-images-to-a-docker-registry)
+- [Examples](#examples)
 - [Contributing](#contributing)
 
 ## Why stevedore?
@@ -289,6 +290,9 @@ registry.stevedore.test/my-app:3.2.1-busybox1.36 ‣  The push refers to reposit
 registry.stevedore.test/my-app:3.2.1-busybox1.36 ‣  b64792c17e4a:  Pushed
 registry.stevedore.test/my-app:3.2.1-busybox1.36 ‣  3.2.1-busybox1.36: digest: sha256:b1aa5de2f4bf9c031a2047a87fb5c556d0d436123316cad81078462648e58d4b size: 528
 ```
+
+## Examples
+The Stevedore project offers a collection of illustrative examples showcasing the usage of Stevedore. These examples can be found in the [examples](examples) folder, providing practical insights and guidance on utilizing Stevedore effectively.
 
 ## Contributing
 Thank you for your interest in contributing to Stevedore! All contributions are welcome, whether they are bug reports, feature requests, or code contributions. Please read the [contributor's guide in Stevedore documentation](https://gostevedore.github.io/docs/contribution-guidelines/) to know more about how to contribute.

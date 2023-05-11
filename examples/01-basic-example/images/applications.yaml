@@ -1,0 +1,23 @@
+images:
+  my-app:
+    "2.1.0":
+      name: "{{ .Name }}"
+      version: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
+      registry: registry.stevedore.test
+      builder: my-app
+      parents:
+        busybox:
+          - "1.35"
+      vars:
+        whoami: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
+    "3.2.1":
+      name: "{{ .Name }}"
+      version: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
+      registry: registry.stevedore.test
+      builder: my-app
+      parents:
+        busybox:
+          - "1.35"
+          - "1.36"
+      vars:
+        whoami: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
