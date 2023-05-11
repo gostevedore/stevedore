@@ -1,0 +1,6 @@
+builders:
+  my-app:
+    driver: docker
+    options:
+      context:
+        - path: ./my-app
