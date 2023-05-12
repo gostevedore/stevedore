@@ -292,7 +292,7 @@ registry.stevedore.test/my-app:3.2.1-busybox1.36 ‣  3.2.1-busybox1.36: digest:
 ```
 
 ## Examples
-The Stevedore project offers a collection of illustrative examples showcasing the usage of Stevedore. These examples can be found in the [examples](examples) folder, providing practical insights and guidance on utilizing Stevedore effectively.
+The Stevedore project offers a collection of illustrative examples showcasing the usage of Stevedore. These examples can be found in the [examples](https://github.com/gostevedore/stevedore/tree/main/examples) folder, providing practical insights and guidance on utilizing Stevedore effectively.
 
 ## Contributing
 Thank you for your interest in contributing to Stevedore! All contributions are welcome, whether they are bug reports, feature requests, or code contributions. Please read the [contributor's guide in Stevedore documentation](https://gostevedore.github.io/docs/contribution-guidelines/) to know more about how to contribute.

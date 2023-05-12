@@ -261,7 +261,7 @@ The example uses a [global builder](https://gostevedore.github.io/docs/reference
 
 ### Credentials
 The current example uses the credentials [local store](https://gostevedore.github.io/docs/reference-guide/credentials/credentials-store/#local-storage). It is the default backend storage for the credentials which stores them locally, on your local system disk.
-You can see the credentials store configuration on Stevedore's configuration file `./stevedore.yaml`, within the example's folder.
+You can see the credentials store configuration on Stevedore's configuration file [./stevedore.yaml](stevedore.yaml), within the example's folder.
 
 The example already provides the `./credentials` folder with the credentials to log in to the Docker registry available.
 Using the command `stevedore get credentials` and the `--show-secrets` flag, you can see all the details about the stored credentials.
@@ -277,8 +277,8 @@ stevedore create credentials registry.stevedore.test --username admin
 ```
 
 ### Images
-The example includes image definitions for different versions of the application `my-app`. These image definitions are being built from the Docker images `busybox:1.35` and `busybox:1.36`. You can find these foundational image definitions in the file `./images/foundational.yaml`.
+The example includes image definitions for different versions of the application `my-app`. These image definitions are being built from the Docker images `busybox:1.35` and `busybox:1.36`. You can find these foundational image definitions in the file [./images/foundational.yaml](images/foundational.yaml).
 
 It is important to note that the foundational image definitions include a persistent label named `created_at`, which is inherited by all images defined below them.
 
-For the specific image definitions of `my-app`, you can refer to the file `./images/applications.yaml`.
+For the specific image definitions of `my-app`, you can refer to the file [./images/applications.yaml](images/applications.yaml).
