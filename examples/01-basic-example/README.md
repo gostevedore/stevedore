@@ -143,6 +143,8 @@ To view the images in tree format, run `stevedore get images --tree`.
 ### Building images
 The example uses the command `stevedore build my-app --push-after-build` to build and automatically promote the images to the Docker registry. Because the three defined images are being built at the same time, the output shows these outputs mixed.
 
+If you review the builder definition, you will notice that the source code for `my-app` is located in the [./builders/apps.yaml](builders/apps.yaml) file. This folder contains the necessary resources required for building the `my-app` Docker image.
+
 ```sh
  [basic-example] Build my-app and push images after build
  Waiting for dockerd to be ready...
