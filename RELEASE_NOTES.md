@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 ### Added
-- Included a basic example
+- Included examples
 
 ### Bumped
 - Bump up github.com/apenella/go-docker-builder to v0.7.7
