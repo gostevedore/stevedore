@@ -1,7 +1,0 @@
-{
-    "auths": {
-            "registry.stevedore.test": {
-                    "auth": "YWRtaW46YWRtaW4="
-            }
-    }
-}
