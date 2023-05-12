@@ -65,7 +65,7 @@ services:
     build:
       context: ../..
       dockerfile: test/stack/client/Dockerfile
-    working_dir: /app/examples/01-basic-example
+    working_dir: /app/examples/02-wildcard-version-example
     command:
       - tail
       - -f
