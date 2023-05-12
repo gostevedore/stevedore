@@ -15,4 +15,4 @@ subjectAltName = @alt_names
 [alt_names]
 DNS.1 = registry.stevedore.test
 DNS.2 = auth.stevedore.test
-DNS.3 = *..stevedore.test
+DNS.3 = *.stevedore.test
