@@ -5,4 +5,4 @@ Explore a variety of practical examples that demonstrate the capabilities and us
 ## List of examples
 | Example | Description |
 |---|---|
-| [01-basic-example](01-basic-example) | This example aims to introduce you to Stevedore and its basic concepts and commands. It follows the [quickstart guide](https://gostevedore.github.io/docs/getting-started/quickstart/) from the documentation, which serves as a starting point to get familiar with Stevedore |
+| [01-basic-example](https://github.com/gostevedore/stevedore/tree/main/examples/01-basic-example) | This example aims to introduce you to Stevedore and its basic concepts and commands. It follows the [quickstart guide](https://gostevedore.github.io/docs/getting-started/quickstart/) from the documentation, which serves as a starting point to get familiar with Stevedore |
