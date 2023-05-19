@@ -13,8 +13,6 @@ This example showcases how to define and manage multiple applications in Stevedo
       - [app2](#app2)
       - [app3](#app3)
     - [Cleaning the stack](#cleaning-the-stack)
->>>>>>> 4ec0703 (add example 04-multiple-apps-example)
-
 
 ## Requirements
 - Docker. _Tested on Docker server 20.10.21 and Docker API 1.41_
@@ -238,10 +236,7 @@ registry.stevedore.test/app3:v1-busybox1.36 ‣  1f1d08b81bbe:  Pushed
 registry.stevedore.test/app3:v1-busybox1.36 ‣  v1-busybox1.36: digest: sha256:5086c7e5f3b4d2b3e31a89b944cda09c625eadef2127fc49ef0eff92c302bbcd size: 735 
 ```
 
-<<<<<<< HEAD
 ### Cleaning the stack
-=======
->>>>>>> 4ec0703 (add example 04-multiple-apps-example)
 ```sh
 Stopping the stack to run 04-multiple-apps-example
 
