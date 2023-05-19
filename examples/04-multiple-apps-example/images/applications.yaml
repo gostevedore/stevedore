@@ -1,0 +1,41 @@
+images:
+  app1:
+    v1:
+      # name: "{{ .Name }}"
+      version: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
+      registry: registry.stevedore.test
+      builder:
+        driver: docker
+        options:
+          context:
+            - path: apps/app1
+      parents:
+        busybox:
+          - "1.35"
+  app2:
+    v1:
+      # name: "{{ .Name }}"
+      version: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
+      registry: registry.stevedore.test
+      builder:
+        driver: docker
+        options:
+          context:
+            - path: apps/app2
+      parents:
+        busybox:
+          - "1.35"
+          - "1.36"
+  app3:
+    v1:
+      # name: "{{ .Name }}"
+      version: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
+      registry: registry.stevedore.test
+      builder:
+        driver: docker
+        options:
+          context:
+            - path: apps/app3
+      parents:
+        busybox:
+          - "1.36"

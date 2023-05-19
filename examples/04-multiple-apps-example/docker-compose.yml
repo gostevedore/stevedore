@@ -1,0 +1,94 @@
+
+services:
+  registry:
+    image: registry:2
+    # ports:
+    #   - 443:443
+    restart: always
+    environment:
+      - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/data
+      - REGISTRY_AUTH=token
+      - REGISTRY_AUTH_TOKEN_REALM=https://auth.stevedore.test:5001/auth
+      - REGISTRY_AUTH_TOKEN_SERVICE="Docker registry"
+      - REGISTRY_AUTH_TOKEN_ISSUER="stevedore"
+      - REGISTRY_HTTP_ADDR=0.0.0.0:443
+      - REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/ssl/stevedore.test.crt
+      - REGISTRY_HTTP_TLS_CERTIFICATE=/ssl/stevedore.test.crt
+      - REGISTRY_HTTP_TLS_KEY=/ssl/stevedore.test.key
+    volumes:
+      - ./fixtures/ssl:/ssl:ro
+    networks:
+      default:
+        aliases:
+          - registry.stevedore.test
+          - example.docker.com
+    depends_on: 
+      - dockerauth
+    deploy:
+      resources:
+        limits:
+          memory: 60M
+    healthcheck:
+      test: ["CMD", "nc", "-vz", "localhost","443"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  dockerauth:
+    image: cesanta/docker_auth:1
+    restart: always
+    # ports:
+    #   - "5001:5001"
+    volumes:
+      - ./fixtures/docker_auth:/config:ro
+      - ./fixtures/ssl:/ssl:ro
+    command: 
+      - -logtostderr
+      - /config/config.yml
+    networks:
+      default:
+        aliases:
+          - auth.stevedore.test
+    deploy:
+      resources:
+        limits:
+          memory: 10M
+    healthcheck:
+      test: ["CMD", "nc", "-vz", "localhost","5001"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  stevedore:
+    build:
+      context: ../..
+      dockerfile: test/stack/client/Dockerfile
+    working_dir: /app/examples/04-multiple-apps-example
+    command:
+      - tail
+      - -f
+      - /dev/null
+    privileged: true
+    environment:
+      - GIT_KEYS=/git/keys
+      - CGO_ENABLED=0
+      ## The encryption key for the credentials store is provided through an environment variable
+      - STEVEDORE_CREDENTIALS_ENCRYPTION_KEY=12345asdfg
+      ## The following credentials has been created by executing `stevedore create credentials registry.stevedore.test --username admin`
+      - STEVEDORE_ENVVARS_CREDENTIALS_82E99D42EE1191BB42FBFB444920104D=adee358c1be79793bae7328c750f29ec4fe77dcaeefc1807b969bdfd086f1db2051bab4225b5bfcc2c8f6dd88ad8d88abe0f04d70959c71a27c6e40e701307f9bfc4ba9120697c9d4162b94620c3ad5c7ec22a0314f6aecbd768cce71ba4ef1f558b29f9ec11d8dce96a30004647155e454807f730c0abb0d17399025c20ca20bb589071d7806a3879153a2c48e72ff01cc26f50dabc2855350fd27fd483ecf31356c4a28ec3e6c869d3b92a554f02e9dd510744af8319f428df95a34835fa0aa8ac2ccef2d4572d4099f20f7c2a640c68f2e0ff8edda84303caab1c7456c482510b0d2766cdd57351e3619083c75007c2f64d9c27455c7198803c397d188c7d6e8ce1a96451e39b60c25dd8d77647c0ffeb94cf074c6d1d9815669c35a3f2e2ebd227b316b843a07b3ad4114816bd4a5d43f101d7aa98e085d7046572404701ce8d4f0ab4d01177d27dac8dd99feeb3692fa2588d8a120e089f561eaeb732dd0d26c408ba2c11a4c42f2e2e171a74dc8815fd90c3619ff7e58c602b2c077c1231acffe542e2a576b3e9e43138fd68a8cfd2ddc96b7beba371ef4c5fc615bbdfebda1d01d2b9df32c354d73c55aa6764257e9d480188127407015f6bd62f768f8af6531723113cc71504ede4175f69c2e63e6080f216a109ff58bf7b09ed45263caabf30fd4857d19bf8c678de7c5b1664b7686e675702b5c46b9329ff53f8f2abf2b0
+    volumes:
+      - ../..:/app
+      - ./fixtures/ssl:/ssl
+      - ./fixtures/docker/daemon.json:/etc/docker/daemon.json
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "nc", "-vz", "localhost","2376"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
