@@ -2,7 +2,6 @@ package promote
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	errors "github.com/apenella/go-common-utils/error"
@@ -83,7 +82,7 @@ func TestNewCommand(t *testing.T) {
 			err: &errors.Error{},
 		},
 		{
-			desc:          "Testing run promote command with deprecated commands",
+			desc:          "Testing run promote command with deprecated flags",
 			handler:       handler.NewHandlerMock(),
 			compatibility: compatibility.NewMockCompatibility(),
 			config:        &configuration.Configuration{},
@@ -96,13 +95,13 @@ func TestNewCommand(t *testing.T) {
 				"--dry-run",
 				"--promote-image-name",
 				"promote-image-name",
-				"--promote-image-registry-host",
+				"--promote-image-host",
 				"promote-registry-host.com",
-				"--promote-image-registry-namespace",
+				"--promote-image-namespace",
 				"promote-registry-namespace",
 				"--promote-image-tag",
 				"promote-image-tag",
-				"--remove-local-images-after-push",
+				"--remove-promote-tags",
 				"--force-promote-source-image",
 				"--use-source-image-from-remote",
 			},
@@ -134,7 +133,75 @@ func TestNewCommand(t *testing.T) {
 					entrypointOptions,
 					handlerOptions,
 				).Return(nil)
+
 				comp.(*compatibility.MockCompatibility).On("AddDeprecated", []string{DeprecatedFlagMessageRemoveTargetImageTags}).Return(nil)
+				comp.(*compatibility.MockCompatibility).On("AddDeprecated", []string{DeprecatedFlagMessageTargetImageRegistryHost}).Return(nil)
+				comp.(*compatibility.MockCompatibility).On("AddDeprecated", []string{DeprecatedFlagMessageTargetImageRegistryNamespace}).Return(nil)
+			},
+			err: &errors.Error{},
+		},
+		{
+			desc:          "Testing run promote command with deprecated flags and values overwritten by the new ones",
+			handler:       handler.NewHandlerMock(),
+			compatibility: compatibility.NewMockCompatibility(),
+			config:        &configuration.Configuration{},
+			entrypoint:    entrypoint.NewMockEntrypoint(),
+			args: []string{
+				"source-registry-host.com/source-namespace/source-image:source-tag",
+				"--enable-semver-tags",
+				"--semver-tags-template",
+				"{{ .Major }}",
+				"--dry-run",
+				"--promote-image-name",
+				"promote-image-name",
+				"--promote-image-host",
+				"promote-registry-host.com",
+				"--promote-image-namespace",
+				"promote-registry-namespace",
+				"--promote-image-tag",
+				"promote-image-tag",
+				"--remove-promote-tags",
+				"--force-promote-source-image",
+				"--use-source-image-from-remote",
+				// Flags with precedence
+				"--promote-image-registry-namespace",
+				"promote-image-registry-namespace",
+				"--promote-image-registry-host",
+				"promote-image-registry-host.com",
+				"--remove-local-images-after-push",
+			},
+			prepareMockFunc: func(comp Compatibilitier, promote Entrypointer, config *configuration.Configuration) {
+
+				entrypointOptions := &entrypoint.Options{
+					UseDockerNormalizedName: false,
+				}
+				handlerOptions := &handler.Options{
+					DryRun:                       true,
+					EnableSemanticVersionTags:    true,
+					TargetImageName:              "promote-image-name",
+					TargetImageRegistryNamespace: "promote-image-registry-namespace",
+					TargetImageRegistryHost:      "promote-image-registry-host.com",
+					TargetImageTags:              []string{"promote-image-tag"},
+					RemoveTargetImageTags:        true,
+					SemanticVersionTagsTemplates: []string{"{{ .Major }}"},
+					PromoteSourceImageTag:        true,
+					RemoteSourceImage:            true,
+				}
+
+				promote.(*entrypoint.MockEntrypoint).On(
+					"Execute",
+					context.TODO(),
+					[]string{
+						"source-registry-host.com/source-namespace/source-image:source-tag",
+					},
+					config,
+					entrypointOptions,
+					handlerOptions,
+				).Return(nil)
+
+				comp.(*compatibility.MockCompatibility).On("AddDeprecated", []string{DeprecatedFlagMessageRemoveTargetImageTags}).Return(nil)
+				comp.(*compatibility.MockCompatibility).On("AddDeprecated", []string{DeprecatedFlagMessageTargetImageRegistryHost}).Return(nil)
+				comp.(*compatibility.MockCompatibility).On("AddDeprecated", []string{DeprecatedFlagMessageTargetImageRegistryNamespace}).Return(nil)
 			},
 			err: &errors.Error{},
 		},
@@ -245,11 +312,13 @@ func TestNewCommand(t *testing.T) {
 			cmd.Command.ParseFlags(test.args)
 			err := cmd.Command.RunE(cmd.Command, test.args)
 
-			if err != nil && assert.Error(t, err) {
-				fmt.Println(err.Error())
+			if err != nil {
 				assert.Equal(t, test.err, err)
 			} else {
 				test.handler.(*handler.HandlerMock).AssertExpectations(t)
+				if test.compatibility != nil {
+					test.compatibility.(*compatibility.MockCompatibility).AssertExpectations(t)
+				}
 			}
 
 		})

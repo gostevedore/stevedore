@@ -29,4 +29,8 @@ type promoteFlagOptions struct {
 
 	// DEPRECATEDRemoveTargetImageTags is a flag to indicate whether to remove from local generated image tags
 	DEPRECATEDRemoveTargetImageTags bool
+	// DEPRECATEDTargetImageRegistryHost is a flag to indicate the registry host to use as target
+	DEPRECATEDTargetImageRegistryHost string
+	// DEPRECATEDTargetImageRegistryNamespace  is a flag to indicate the namespace of the registry to use as target
+	DEPRECATEDTargetImageRegistryNamespace string
 }

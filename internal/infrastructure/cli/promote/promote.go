@@ -13,7 +13,9 @@ import (
 )
 
 const (
-	DeprecatedFlagMessageRemoveTargetImageTags = "[DEPRECATED FLAG] use `remove-local-images-after-push` instead of `remove-promote-tags`"
+	DeprecatedFlagMessageRemoveTargetImageTags        = "[DEPRECATED FLAG] use `remove-local-images-after-push` instead of `remove-promote-tags`"
+	DeprecatedFlagMessageTargetImageRegistryHost      = "[DEPRECATED FLAG] use `promote-image-registry-host` instead of `promote-image-registry`"
+	DeprecatedFlagMessageTargetImageRegistryNamespace = "[DEPRECATED FLAG] use `promote-image-registry-namespace` instead of `promote-image-namespace`"
 )
 
 // NewCommand returns a new command to promote images
@@ -26,7 +28,7 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 		Aliases: []string{"publish", "copy"},
 		Short:   "Stevedore command to promote, publish or copy images to a docker registry or namespace",
 		Long:    "Stevedore command to promote, publish or copy images to a docker registry or namespace",
-		Example: "stevedore promote ubuntu:impish --romote-image-registry myregistry.example.com --promote-image-namespace mynamespace",
+		Example: "stevedore promote ubuntu:impish --promote-image-registry myregistry.example.com --promote-image-namespace mynamespace",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
@@ -35,9 +37,25 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 			entrypointOptions := &entrypoint.Options{}
 
 			// Transitorial flags
-			if promoteFlagOptions.DEPRECATEDRemoveTargetImageTags && !handlerOptions.RemoveTargetImageTags {
-				promoteFlagOptions.RemoveTargetImageTags = promoteFlagOptions.DEPRECATEDRemoveTargetImageTags
+			if promoteFlagOptions.DEPRECATEDRemoveTargetImageTags {
 				compatibility.AddDeprecated(DeprecatedFlagMessageRemoveTargetImageTags)
+				if !promoteFlagOptions.RemoveTargetImageTags {
+					promoteFlagOptions.RemoveTargetImageTags = promoteFlagOptions.DEPRECATEDRemoveTargetImageTags
+				}
+			}
+
+			if promoteFlagOptions.DEPRECATEDTargetImageRegistryHost != image.UndefinedStringValue {
+				compatibility.AddDeprecated(DeprecatedFlagMessageTargetImageRegistryHost)
+				if promoteFlagOptions.TargetImageRegistryHost == image.UndefinedStringValue {
+					promoteFlagOptions.TargetImageRegistryHost = promoteFlagOptions.DEPRECATEDTargetImageRegistryHost
+				}
+			}
+
+			if promoteFlagOptions.DEPRECATEDTargetImageRegistryNamespace != image.UndefinedStringValue {
+				compatibility.AddDeprecated(DeprecatedFlagMessageTargetImageRegistryNamespace)
+				if promoteFlagOptions.TargetImageRegistryNamespace == image.UndefinedStringValue {
+					promoteFlagOptions.TargetImageRegistryNamespace = promoteFlagOptions.DEPRECATEDTargetImageRegistryNamespace
+				}
 			}
 
 			entrypointOptions.UseDockerNormalizedName = promoteFlagOptions.UseDockerNormalizedName
@@ -63,6 +81,8 @@ func NewCommand(ctx context.Context, compatibility Compatibilitier, conf *config
 	}
 
 	promoteCmd.Flags().BoolVar(&promoteFlagOptions.DEPRECATEDRemoveTargetImageTags, "remove-promote-tags", false, DeprecatedFlagMessageRemoveTargetImageTags)
+	promoteCmd.Flags().StringVar(&promoteFlagOptions.DEPRECATEDTargetImageRegistryHost, "promote-image-host", image.UndefinedStringValue, DeprecatedFlagMessageTargetImageRegistryNamespace)
+	promoteCmd.Flags().StringVar(&promoteFlagOptions.DEPRECATEDTargetImageRegistryNamespace, "promote-image-namespace", image.UndefinedStringValue, DeprecatedFlagMessageTargetImageRegistryNamespace)
 
 	promoteCmd.Flags().BoolVarP(&promoteFlagOptions.EnableSemanticVersionTags, "enable-semver-tags", "S", false, "When this flag is enabled, and main version is semver 2.0.0 compliance extra tag are created based on the semantic version tree")
 	promoteCmd.Flags().StringSliceVarP(&promoteFlagOptions.SemanticVersionTagsTemplates, "semver-tags-template", "T", []string{}, "List templates to generate tags following semantic version expression")
