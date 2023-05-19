@@ -5,7 +5,12 @@
 - [ ] Build an image as well as all its parent until the root image
 - [ ] Execute the build plan to show the build intentions
 - [ ] Cleanup compatibilities
-  
+- [ ] Create a variable mapping with the normalized parent image name
+
+## v0.11.1
+- [x] Fix on promote command, the flags --promote-image-namespace and --promote-image-registry are not marked as deprecated
+- [x] Fix typos on promote command
+
 ## v0.11.0
 - [x] Fix: promote images with subnamespaces fails example myregistry/mynamesapce/grafana/tempo:1.0.0
 - [x] Fix: wildcard images could not use {{ .Name }} on images definition

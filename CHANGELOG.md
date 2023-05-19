@@ -13,8 +13,9 @@
 - Bump up github.com/go-git/go-git/v5 to v5.6.1
 
 ### Fixed
-- Fix install script to use the artefact name updated on v0.11.0
-- Fix use the default variables mapping definition when in the builder its is defined as empty
+- Install script uses the artefact name updated on v0.11.0
+- Use the default variables mapping definition when in the builder is defined as empty
+- On promote command, mark as deprecated the flags --promote-image-namespace and --promote-image-registry
 
 ## [v0.11.0]
 
