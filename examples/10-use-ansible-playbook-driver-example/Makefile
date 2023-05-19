@@ -26,7 +26,7 @@ clean: ## Stops the stack required to run the example
 	@echo
 	@echo "$(GREEN)Stopping the stack to run $(EXAMPLE)$(NC)"
 	@echo
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans --timeout 3 || true
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans || true
 
 status: ## Displays the status of the stack
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) ps || true
@@ -42,23 +42,10 @@ example: ## Executes the example (requires the stack to be started)
 	@echo "$(GREEN) Run example $(EXAMPLE)$(NC)"
 	@echo
 
-<<<<<<< HEAD
-	@echo " [$(EXAMPLE)]$(GREEN) Sync$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore /usr/local/bin/wait-for-dockerd.sh || { echo " Error synchronizing $(EXAMPLE)"; exit 1; }
-	@echo
-
-	@echo " [$(EXAMPLE)]$(GREEN) Get credentials$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore get credentials --show-secrets || { echo " Error getting credentials $(EXAMPLE)"; exit 1; }
+	@echo " [$(EXAMPLE)]$(GREEN) Get images$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore get images || { echo " Error getting images $(EXAMPLE)"; exit 1; }
 	@echo
 
 	@echo " [$(EXAMPLE)]$(GREEN) Build my-app and push images after build$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore build my-app --image-version 3.2.1 --push-after-build || { echo " Error runnig example $(EXAMPLE)"; exit 1; }
-=======
-	@echo " [$(EXAMPLE)]$(GREEN) Get credentials$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore get credentials --show-secrets || { echo " Error getting credentials $(EXAMPLE)"; exit 1; }
-	@echo
-
-	@echo " [$(EXAMPLE)]$(GREEN) Build my-app and push images after build$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore build my-app --image-version 3.2.1 --push-after-build || { echo " Error runnig example $(EXAMPLE)"; exit 1; }
->>>>>>> d38e48a (create example 03-envvars-credentials-store-example)
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore build my-app --image-version example --push-after-build || { echo " Error runnig example $(EXAMPLE)"; exit 1; }
 	@echo
