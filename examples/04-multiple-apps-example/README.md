@@ -12,6 +12,7 @@ This example showcases how to define and manage multiple applications in Stevedo
       - [app1](#app1)
       - [app2](#app2)
       - [app3](#app3)
+    - [Cleaning the stack](#cleaning-the-stack)
 
 
 ## Requirements
@@ -236,6 +237,7 @@ registry.stevedore.test/app3:v1-busybox1.36 ‣  1f1d08b81bbe:  Pushed
 registry.stevedore.test/app3:v1-busybox1.36 ‣  v1-busybox1.36: digest: sha256:5086c7e5f3b4d2b3e31a89b944cda09c625eadef2127fc49ef0eff92c302bbcd size: 735 
 ```
 
+### Cleaning the stack
 ```sh
 Stopping the stack to run 04-multiple-apps-example
 
