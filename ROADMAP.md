@@ -6,6 +6,7 @@
 - [ ] Execute the build plan to show the build intentions
 - [ ] Cleanup compatibilities
 - [ ] Create a variable mapping with the normalized parent image name
+- [ ] build tries to pull from Docker registry by default
 
 ## v0.11.1
 - [x] Fix on promote command, the flags --promote-image-namespace and --promote-image-registry are not marked as deprecated
