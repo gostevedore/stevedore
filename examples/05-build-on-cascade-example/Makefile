@@ -24,11 +24,19 @@ start: ## Starts the stack for required to run the example
 	@echo
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) up --detach --build || { echo " Error starting the stack to run $(EXAMPLE)"; exit 1; }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4ed65d5 (add example 05-build-on-cascade-example)
 clean: ## Stops the stack required to run the example
 	@echo
 	@echo "$(GREEN)Stopping the stack to run $(EXAMPLE)$(NC)"
 	@echo
+<<<<<<< HEAD
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans --timeout 3 || true
+=======
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans || true
+>>>>>>> 4ed65d5 (add example 05-build-on-cascade-example)
 
 status: ## Show the status of the stack
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) ps || true
