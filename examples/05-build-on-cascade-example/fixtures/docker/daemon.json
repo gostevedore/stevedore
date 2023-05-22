@@ -1,0 +1,3 @@
+{
+    "insecure-registries" : ["docker-hub.stevedore.test:5000","registry.stevedore.test"]
+}  
