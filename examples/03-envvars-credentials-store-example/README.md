@@ -1,7 +1,7 @@
 # Envvars Credentials Store Example
 
 The example demonstrates the utilization of environment variables as the [credentials store](https://gostevedore.github.io/docs/reference-guide/credentials/credentials-store/) in Stevedore. 
-To accomplish this, the Docker Compose file (docker-compose.yml) includes the service `stevedore` with specific environment variables defined. The `STEVEDORE_CREDENTIALS_ENCRYPTION_KEY` environment variable is set with the encryption key, and the `STEVEDORE_ENVVARS_CREDENTIALS_82E99D42EE1191BB42FBFB444920104D` environment variable contains the credentials for the `registry.stevedore.test`.
+To accomplish this, the [Docker Compose file](./docker-compose.yml) includes the service `stevedore` with specific environment variables defined. The `STEVEDORE_CREDENTIALS_ENCRYPTION_KEY` environment variable is set with the encryption key, and the `STEVEDORE_ENVVARS_CREDENTIALS_82E99D42EE1191BB42FBFB444920104D` environment variable contains the credentials for the `registry.stevedore.test`.
 
 - [Envvars Credentials Store Example](#envvars-credentials-store-example)
   - [Requirements](#requirements)
@@ -23,7 +23,7 @@ To accomplish this, the Docker Compose file (docker-compose.yml) includes the se
 - `make` utility. _Tested on version 4.3-4.1build1_
 
 ## Stack
-The stack required to run this example is defined in a Docker Compose file (docker-compose.yml). The stack consists of three services: a Docker Registry, a Docker Registry authorization and a Stevedore service. The Docker registry is used to store the Docker images built by Stevedore during the example execution. The Stevedore service is where the example is executed.
+The stack required to run this example is defined in that [Docker Compose file](./docker-compose.yml). The stack consists of three services: a Docker Registry, a Docker Registry authorization and a Stevedore service. The Docker registry is used to store the Docker images built by Stevedore during the example execution. The Stevedore service is where the example is executed.
 
 The Stevedore service is built from a container which is defined in the [Dockerfile](https://github.com/gostevedore/stevedore/blob/main/test/stack/client/Dockerfile) present in the `test/stack/client` directory.
 
