@@ -21,7 +21,7 @@ This example showcases how to define and manage multiple applications in Stevedo
 - `make` utility. _Tested on version 4.3-4.1build1_
 
 ## Stack
-The stack required to run this example is defined in a Docker Compose file (docker-compose.yml). The stack consists of three services: a Docker Registry, a Docker Registry authorization and a Stevedore service. The Docker registry is used to store the Docker images built by Stevedore during the example execution. The Stevedore service is where the example is executed.
+The stack required to run this example is defined in a [Docker Compose file](./docker-compose.yml). The stack consists of three services: a Docker Registry, a Docker Registry authorization and a Stevedore service. The Docker registry is used to store the Docker images built by Stevedore during the example execution. The Stevedore service is where the example is executed.
 
 The Stevedore service is built from a container which is defined in the [Dockerfile](https://github.com/gostevedore/stevedore/blob/main/test/stack/client/Dockerfile) present in the `test/stack/client` directory.
 
