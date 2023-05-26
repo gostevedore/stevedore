@@ -15,12 +15,19 @@ help: ## Lists allowed targets
 
 run: start example clean ## Runs start, example, and clean targets together
 
-start: ## Starts the stack required to run the example
+start: clean ## Starts the stack required to run the example
+	@echo " [$(EXAMPLE)]$(GREEN) Create SSH keys$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run --rm --workdir /ssh ssh-keygen /usr/bin/ssh-keygen -t rsa -q -N "password" -f id_rsa -C "apenella@stevedore.test" || { echo " Error creating the SSH keys $(EXAMPLE)"; exit 1; }
+	@echo
+
 	@echo
 	@echo "$(GREEN)Starting the stack to run $(EXAMPLE)$(NC)"
 	@echo
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) up --detach --build || { echo " Error starting the stack to run $(EXAMPLE)"; exit 1; }
 
+	@echo " [$(EXAMPLE)]$(GREEN) Create known_hosts file$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec --workdir /ssh ssh-keygen bash -c '/usr/bin/ssh-keyscan -H gitserver.stevedore.test > known_hosts' || { echo " Error creating the known_host keys $(EXAMPLE)"; exit 1; }
+	@echo
 
 clean: ## Stops the stack required to run the example
 	@echo
@@ -42,10 +49,14 @@ example: ## Executes the example. It expects that the required stack is already 
 	@echo "$(GREEN) Run example $(EXAMPLE)$(NC)"
 	@echo
 
+	@echo " [$(EXAMPLE)]$(GREEN) Sync$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore version || { echo " Error synchronizing $(EXAMPLE)"; exit 1; }
+	@echo
+
 	@echo " [$(EXAMPLE)]$(GREEN) Get images$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run --rm stevedore stevedore get images --tree || { echo " Error getting images $(EXAMPLE)"; exit 1; }
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore get images --tree || { echo " Error getting images $(EXAMPLE)"; exit 1; }
 	@echo
 
 	@echo " [$(EXAMPLE)]$(GREEN) Build the base image and its descendaant, and push the images after build$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run --rm stevedore stevedore build base --build-on-cascade --push-after-build || { echo " Error runnig example $(EXAMPLE)"; exit 1; }
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore build base --build-on-cascade --push-after-build || { echo " Error runnig example $(EXAMPLE)"; exit 1; }
 	@echo
