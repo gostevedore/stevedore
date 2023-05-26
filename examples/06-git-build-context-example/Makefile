@@ -57,6 +57,6 @@ example: ## Executes the example. It expects that the required stack is already 
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore get images --tree || { echo " Error getting images $(EXAMPLE)"; exit 1; }
 	@echo
 
-	@echo " [$(EXAMPLE)]$(GREEN) Build the base image and its descendaant, and push the images after build$(NC)"
+	@echo " [$(EXAMPLE)]$(GREEN) Build the base image and its descendants, and push the images after build$(NC)"
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore build base --build-on-cascade --push-after-build || { echo " Error runnig example $(EXAMPLE)"; exit 1; }
 	@echo
