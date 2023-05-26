@@ -160,10 +160,14 @@ Note that each Docker image is built independently of one another.
 
 ```sh
 <<<<<<< HEAD
+<<<<<<< HEAD
  [06-git-build-context-example] Build the base image and its descendants, and push the images after build
 =======
  [06-git-build-context-example] Build the base image and its descendaant, and push the images after build
 >>>>>>> 034e86d (example 06-git-build-context-example)
+=======
+ [06-git-build-context-example] Build the base image and its descendants, and push the images after build
+>>>>>>> d4f799e (fix typo)
 [+] Building 0.0s (0/0)
 [+] Creating 1/0
  ✔ Container 06-git-build-context-example-gitserver-1  Running                                                                                                       0.0s
