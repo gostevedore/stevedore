@@ -72,7 +72,6 @@ services:
       - /dev/null
     privileged: true
     environment:
-      - GIT_KEYS=/git/keys
       - CGO_ENABLED=0
       ## The encryption key for the credentials store is provided through an environment variable
       - STEVEDORE_CREDENTIALS_ENCRYPTION_KEY=12345asdfg
@@ -85,14 +84,12 @@ services:
     volumes:
       - ../..:/app
       - ./fixtures/docker/daemon.json:/etc/docker/daemon.json
-      - ./fixtures/ssh:/root/.ssh
       - ./fixtures/ssl:/ssl
+      - ssh:/root/.ssh
     deploy:
       resources:
         limits:
           memory: 256M
-    depends_on:
-      - gitserver
     healthcheck:
       test: ["CMD", "nc", "-vz", "localhost","2376"]
       interval: 30s
@@ -103,7 +100,7 @@ services:
   worker:
     image: ubuntu:22.04
     volumes:
-      - ./fixtures/ssh:/root/.ssh
+      - ssh:/root/.ssh
 
   gitserver:
     build:
@@ -112,7 +109,7 @@ services:
       - GIT_KEYS=/git/keys
     volumes:
       - ./fixtures/gitserver/repos:/git/repos
-      - ./fixtures/ssh:/git/keys
+      - ssh:/git/keys
     networks:
       default:
         aliases:
@@ -127,3 +124,21 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+
+  ssh-keygen:
+    build:
+      context: ./stack/openssh-client
+    command:
+      - tail
+      - -f
+      - /dev/null
+    working_dir: /ssh
+    volumes:
+      - ssh:/ssh
+    deploy:
+      resources:
+        limits:
+          memory: 10M
+
+volumes:
+  ssh:
