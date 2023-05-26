@@ -14,7 +14,7 @@ images:
         driver: docker
         options:
           context:
-            - path: apps/base
+            - path: images-src/base
       parents:
         busybox:
           - "1.35"
@@ -24,7 +24,7 @@ images:
         driver: docker
         options:
           context:
-            - path: apps/base
+            - path: images-src/base
       parents:
         busybox:
           - "1.36"
