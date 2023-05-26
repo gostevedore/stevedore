@@ -1,0 +1,51 @@
+images:
+  app1:
+    v1:
+      version: "{{ .Version }}-{{ .Parent.Name }}-{{ .Parent.Version }}"
+      registry: registry.stevedore.test
+      builder:
+        driver: docker
+        options:
+          context:
+            - git:
+                repository: http://gitserver.stevedore.test:/git/repos/app1.git
+                reference: main
+                auth:
+                  credentials_id: https_gitserver.stevedore.test
+
+      parents:
+        base:
+          - busybox-1.35
+  app2:
+    v1:
+      version: "{{ .Version }}-{{ .Parent.Name }}-{{ .Parent.Version }}"
+      registry: registry.stevedore.test
+      builder:
+        driver: docker
+        options:
+          context:
+            - git:
+                repository: git@gitserver.stevedore.test:/git/repos/app2.git
+                reference: main
+                auth:
+                  credentials_id: ssh_gitserver.stevedore.test
+      parents:
+        base:
+          - busybox-1.35
+          - busybox-1.36
+  app3:
+    v1:
+      version: "{{ .Version }}-{{ .Parent.Name }}-{{ .Parent.Version }}"
+      registry: registry.stevedore.test
+      builder:
+        driver: docker
+        options:
+          context:
+            - git:
+                repository: http://gitserver.stevedore.test:/git/repos/app3.git
+                reference: main
+                auth:
+                  credentials_id: https_gitserver.stevedore.test
+      parents:
+        base:
+          - busybox-1.36
