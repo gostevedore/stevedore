@@ -1,4 +1,4 @@
-# Filse for Stevedore functional test
+# Notes for Stevedore functional test
 
 ## SSL
 
@@ -83,6 +83,7 @@ docker compose exec gitserver sh
 ```
 
 ```sh
+/git # git config --global init.defaultBranch main
 /git # cd repos
 /git/repos # git init --bare /git/repos/app2.git
 Initialized empty Git repository in /git/repos/app2.git/
