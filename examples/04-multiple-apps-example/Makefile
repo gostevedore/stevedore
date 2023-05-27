@@ -29,7 +29,7 @@ clean: ## Stops the stack required to run the example
 	@echo
 	@echo "$(GREEN)Stopping the stack to run $(EXAMPLE)$(NC)"
 	@echo
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans || true
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans --timeout 3 || true
 
 status: ## Show the status of the stack
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) ps || true
@@ -41,18 +41,22 @@ attach: ## Attach the the stevedore container
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore sh
 
 example: ## Executes the example. It expects that the required stack is already running
+	@echo " [$(EXAMPLE)]$(GREEN) Sync$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore /usr/local/bin/wait-for-dockerd.sh || { echo " Error synchronizing $(EXAMPLE)"; exit 1; }
+	@echo
+
 	@echo " [$(EXAMPLE)]$(GREEN) Get images$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore get images --tree || { echo " Error getting images $(EXAMPLE)"; exit 1; }
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore get images --tree || { echo " Error getting images $(EXAMPLE)"; exit 1; }
 	@echo
 
 	@echo " [$(EXAMPLE)]$(GREEN) Build app1 and push images after build$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore build app1 --push-after-build || { echo " Error building app1 $(EXAMPLE)"; exit 1; }
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore build app1 --push-after-build || { echo " Error building app1 $(EXAMPLE)"; exit 1; }
 	@echo
 
 	@echo " [$(EXAMPLE)]$(GREEN) Build app2 and push images after build$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore build app2 --push-after-build || { echo " Error building app2 $(EXAMPLE)"; exit 1; }
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore build app2 --push-after-build || { echo " Error building app2 $(EXAMPLE)"; exit 1; }
 	@echo
 
 	@echo " [$(EXAMPLE)]$(GREEN) Build app3 and push images after build$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore build app3 --push-after-build || { echo " Error building app3 $(EXAMPLE)"; exit 1; }
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore build app3 --push-after-build || { echo " Error building app3 $(EXAMPLE)"; exit 1; }
 	@echo

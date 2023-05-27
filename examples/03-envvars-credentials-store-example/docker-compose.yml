@@ -64,7 +64,7 @@ services:
   stevedore:
     build:
       context: ../..
-      dockerfile: test/stack/client/Dockerfile
+      dockerfile: examples/03-envvars-credentials-store-example/stack/stevedore/Dockerfile
     working_dir: /app/examples/03-envvars-credentials-store-example
     command:
       - tail

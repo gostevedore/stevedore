@@ -24,12 +24,11 @@ start: ## Starts the stack for required to run the example
 	@echo
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) up --detach --build || { echo " Error starting the stack to run $(EXAMPLE)"; exit 1; }
 
-
 clean: ## Stops the stack required to run the example
 	@echo
 	@echo "$(GREEN)Stopping the stack to run $(EXAMPLE)$(NC)"
 	@echo
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans || true
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans --timeout 3 || true
 
 status: ## Show the status of the stack
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) ps || true
@@ -45,10 +44,14 @@ example: ## Executes the example. It expects that the required stack is already 
 	@echo "$(GREEN) Run example $(EXAMPLE)$(NC)"
 	@echo
 
+	@echo " [$(EXAMPLE)]$(GREEN) Sync$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore /usr/local/bin/wait-for-dockerd.sh || { echo " Error synchronizing $(EXAMPLE)"; exit 1; }
+	@echo
+
 	@echo " [$(EXAMPLE)]$(GREEN) Get images$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore get images --tree || { echo " Error getting images $(EXAMPLE)"; exit 1; }
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore get images --tree || { echo " Error getting images $(EXAMPLE)"; exit 1; }
 	@echo
 
 	@echo " [$(EXAMPLE)]$(GREEN) Build the base image and its descendants, and push the images after build$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore build base --build-on-cascade --push-after-build || { echo " Error runnig example $(EXAMPLE)"; exit 1; }
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore build base --build-on-cascade --push-after-build || { echo " Error runnig example $(EXAMPLE)"; exit 1; }
 	@echo

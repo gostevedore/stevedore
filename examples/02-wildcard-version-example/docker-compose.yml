@@ -64,7 +64,7 @@ services:
   stevedore:
     build:
       context: ../..
-      dockerfile: test/stack/client/Dockerfile
+      dockerfile: examples/02-wildcard-version-example/stack/stevedore/Dockerfile
     working_dir: /app/examples/02-wildcard-version-example
     command:
       - tail
