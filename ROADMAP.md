@@ -11,6 +11,7 @@
 ## v0.11.1
 - [x] Fix on promote command, the flags --promote-image-namespace and --promote-image-registry are not marked as deprecated
 - [x] Fix typos on promote command examples
+- [ ] --enable-semver-tags tags has no effect in the promote
 
 ## v0.11.0
 - [x] Fix: promote images with subnamespaces fails example myregistry/mynamesapce/grafana/tempo:1.0.0
