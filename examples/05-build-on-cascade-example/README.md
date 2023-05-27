@@ -22,7 +22,7 @@ This example demonstrates the concept of building images on a cascade in Stevedo
 ## Stack
 The stack required to run this example is defined in a [Docker Compose file](./docker-compose.yml). The stack consists of three services: a Docker Registry, a Docker Registry authorization and a Stevedore service. The Docker registry is used to store the Docker images built by Stevedore during the example execution. The Stevedore service is where the example is executed.
 
-The Stevedore service is built from a container which is defined in the [Dockerfile](https://github.com/gostevedore/stevedore/blob/main/test/stack/client/Dockerfile) present in the `test/stack/client` directory.
+The Stevedore service is built from a container which is defined in that [Dockerfile](https://github.com/gostevedore/stevedore/blob/main/examples/05-build-on-cascade-example/stack/stevedore/Dockerfile).
 
 ## Usage
 The example comes with a Makefile that can help you execute common actions, like starting the stack to run the example or attaching to a container in the stack to perform specific tasks.
@@ -47,7 +47,7 @@ To execute the entire example, including starting and cleaning the stack, run th
 ```
 
 ## Expected Output
-Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes a Docker images using Stevedore, and then cleans the stack up.
+Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes Docker images using Stevedore, and then cleans the stack up.
 
 ```sh
 Starting the stack to run 05-build-on-cascade-example
