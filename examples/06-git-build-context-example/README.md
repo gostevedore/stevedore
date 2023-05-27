@@ -31,7 +31,7 @@ The stack required to run this example is defined in a [Docker Compose file](./d
 
 The Docker registry is used to store the Docker images built by Stevedore during the example execution.
 The Git server service is used to store the source code of the applications that we pretend to build during this example.
-The Stevedore service is where the example is executed and it is built from a container which is defined in the [Dockerfile](https://github.com/gostevedore/stevedore/blob/main/test/stack/client/Dockerfile) present in the `test/stack/client` directory.
+The Stevedore service is built from a container which is defined in that [Dockerfile](https://github.com/gostevedore/stevedore/blob/main/examples/06-git-build-context-example/stack/stevedore/Dockerfile).
 
 ## Usage
 The example comes with a Makefile that can help you execute common actions, like starting the stack to run the example or attaching to a container in the stack to perform specific tasks.

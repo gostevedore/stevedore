@@ -15,7 +15,7 @@ help: ## Lists allowed targets
 
 run: start example clean ## Runs start, example, and clean targets together
 
-start: clean ## Starts the stack required to run the example
+start: ## Starts the stack required to run the example
 	@echo " [$(EXAMPLE)]$(GREEN) Create SSH keys$(NC)"
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run --rm --workdir /ssh ssh-keygen /usr/bin/ssh-keygen -t rsa -q -N "password" -f id_rsa -C "apenella@stevedore.test" || { echo " Error creating the SSH keys $(EXAMPLE)"; exit 1; }
 	@echo
@@ -33,7 +33,7 @@ clean: ## Stops the stack required to run the example
 	@echo
 	@echo "$(GREEN)Stopping the stack to run $(EXAMPLE)$(NC)"
 	@echo
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans || true
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans --timeout 3 || true
 
 status: ## Displays the status of the stack
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) ps || true
@@ -50,7 +50,7 @@ example: ## Executes the example. It expects that the required stack is already 
 	@echo
 
 	@echo " [$(EXAMPLE)]$(GREEN) Sync$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore version || { echo " Error synchronizing $(EXAMPLE)"; exit 1; }
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore /usr/local/bin/wait-for-dockerd.sh || { echo " Error synchronizing $(EXAMPLE)"; exit 1; }
 	@echo
 
 	@echo " [$(EXAMPLE)]$(GREEN) Get images$(NC)"

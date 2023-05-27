@@ -64,7 +64,7 @@ services:
   stevedore:
     build:
       context: ../..
-      dockerfile: test/stack/client/Dockerfile
+      dockerfile: examples/06-git-build-context-example/stack/stevedore/Dockerfile
     working_dir: /app/examples/06-git-build-context-example
     command:
       - tail
