@@ -41,7 +41,7 @@ attach: ## Attach the the stevedore container
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore sh
 
 example: ## Executes the example. It expects that the required stack is already running
-	@echo " [$(EXAMPLE)]$(GREEN) Sync$(NC)"
+	@echo " [$(EXAMPLE)]$(GREEN) Waiting for dockerd$(NC)"
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore /usr/local/bin/wait-for-dockerd.sh || { echo " Error synchronizing $(EXAMPLE)"; exit 1; }
 	@echo
 
