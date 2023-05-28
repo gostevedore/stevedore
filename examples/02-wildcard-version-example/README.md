@@ -22,7 +22,7 @@ This example serves as an introduction to the [wildcard version](https://gosteve
 ## Stack
 The stack required to run this example is defined in that [Docker Compose file](./docker-compose.yml). The stack consists of three services: a Docker Registry, a Docker Registry authorization and a Stevedore service. The Docker registry is used to store the Docker images built by Stevedore during the example execution. The Stevedore service is where the example is executed.
 
-The Stevedore service is built from a container which is defined in that [Dockerfile](https://github.com/gostevedore/stevedore/blob/main/examples/02-wildcard-version-example/stack/stevedore/Dockerfile).
+The Stevedore service is built from a container which is defined in that [Dockerfile](stack/stevedore/Dockerfile).
 
 ## Usage
 The example comes with a Makefile that can help you execute common actions, like starting the stack to run the example or attaching to a container in the stack to perform specific tasks.
