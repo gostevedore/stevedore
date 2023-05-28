@@ -42,7 +42,7 @@ example: ## Executes the example (requires the stack to be started)
 	@echo "$(GREEN) Run example $(EXAMPLE)$(NC)"
 	@echo
 
-	@echo " [$(EXAMPLE)]$(GREEN) Sync$(NC)"
+	@echo " [$(EXAMPLE)]$(GREEN) Waiting for dockerd$(NC)"
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore /usr/local/bin/wait-for-dockerd.sh || { echo " Error synchronizing $(EXAMPLE)"; exit 1; }
 	@echo
 
