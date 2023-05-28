@@ -64,8 +64,8 @@ services:
   stevedore:
     build:
       context: ../..
-      dockerfile: examples/01-basic-example/stack/stevedore/Dockerfile
-    working_dir: /app/examples/01-basic-example
+      dockerfile: examples/${EXAMPLE_NAME}/stack/stevedore/Dockerfile
+    working_dir: /app/examples/${EXAMPLE_NAME}
     command:
       - tail
       - -f

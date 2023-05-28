@@ -30,6 +30,7 @@ clean: ## Stops the stack required to run the example
 	@echo
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans --timeout 3 || true
 
+
 status: ## Show the status of the stack
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) ps || true
 

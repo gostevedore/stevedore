@@ -52,4 +52,10 @@ example: ## Executes the example (requires the stack to be started)
 
 	@echo " [$(EXAMPLE)]$(GREEN) Build my-app and push images after build$(NC)"
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore build my-app --image-version 3.2.1 --push-after-build || { echo " Error runnig example $(EXAMPLE)"; exit 1; }
+	@echo " [$(EXAMPLE)]$(GREEN) Get credentials$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore get credentials --show-secrets || { echo " Error getting credentials $(EXAMPLE)"; exit 1; }
+	@echo
+
+	@echo " [$(EXAMPLE)]$(GREEN) Build my-app and push images after build$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore build my-app --image-version 3.2.1 --push-after-build || { echo " Error runnig example $(EXAMPLE)"; exit 1; }
 	@echo
