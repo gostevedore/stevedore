@@ -6,6 +6,8 @@ This example illustrates how to utilize the [Git build context](https://gosteved
   - [Stack](#stack)
   - [Usage](#usage)
   - [Expected Output](#expected-output)
+    - [Starting the Stack](#starting-the-stack)
+    - [Waiting for Dockerd to be Ready](#waiting-for-dockerd-to-be-ready)
     - [Getting images](#getting-images)
     - [Building images](#building-images)
     - [Cleaning the stack](#cleaning-the-stack)
@@ -17,7 +19,7 @@ This example illustrates how to utilize the [Git build context](https://gosteved
         - [Creating the Basic Auth Password](#creating-the-basic-auth-password)
         - [Creating the SSH Key Pair](#creating-the-ssh-key-pair)
         - [Creating the known\_hosts File](#creating-the-known_hosts-file)
-        - [Preparing the Application Source Code Repository code](#preparing-the-application-source-code-repository-code)
+        - [Preparing the Git Repository and the Application's Source Code](#preparing-the-git-repository-and-the-applications-source-code)
         - [Clone the application](#clone-the-application)
 
 
@@ -58,19 +60,44 @@ To execute the entire example, including starting and cleaning the stack, run th
 ## Expected Output
 Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes Docker images using Stevedore, and then cleans the stack up.
 
+### Starting the Stack
+When the run starts, it generates an SSH key pair.
+```sh
+ [06-git-build-context-example] Create SSH keys
+[+] Building 0.0s (0/0)
+[+] Creating 2/0
+ ✔ Network 06-git-build-context-example_default  Created                                                                                                             0.1s
+ ✔ Volume "06-git-build-context-example_ssh"     Created                                                                                                             0.0s
+[+] Building 0.0s (0/0)
+```
+
+Once the SSH key pair is generated, the services are started.
 ```sh
 Starting the stack to run 06-git-build-context-example
 
-[+] Building 13.5s (33/33) FINISHED
- => [gitserver internal] load build definition from Dockerfile                                                                                                       0.0s
- => => transferring dockerfile: 1.41kB                                                                                                                               0.0s
+[+] Building 6.4s (37/37) FINISHED
+ => [stevedore internal] load build definition from Dockerfile                                                                                                       0.0s
+ => => transferring dockerfile: 912B                                                                                                                                 0.0s
+ => [stevedore internal] load .dockerignore                                                                                                                          0.0s
+ => => transferring context: 2B                                                                                                                                      0.0s
+ => [stevedore internal] load metadata for docker.io/library/docker:20.10-dind                                                                                       0.8s
+ => [stevedore internal] load metadata for docker.io/library/golang:1.19-alpine                                                                                      0.8s
+ => [ssh-keygen internal] load .dockerignore                                                                                                                         0.0s
+ => => transferring context: 2B                                                                                                                                      0.0s
+ => [ssh-keygen internal] load build definition from Dockerfile                                                                                                      0.0s
+ => => transferring dockerfile: 129B                                                                                                                                 0.0s
  => [gitserver internal] load .dockerignore                                                                                                                          0.0s
  => => transferring context: 2B                                                                                                                                      0.0s
- => [gitserver internal] load metadata for docker.io/library/alpine:3.16                                                                                             5.5s
- => [gitserver internal] load build context                                                                                                                          0.0s
- => => transferring context: 96B                                                                                                                                     0.0s
+ => [gitserver internal] load build definition from Dockerfile                                                                                                       0.0s
+ => => transferring dockerfile: 1.41kB                                                                                                                               0.0s
+ => [ssh-keygen internal] load metadata for docker.io/library/ubuntu:22.04                                                                                           0.6s
+ => [gitserver internal] load metadata for docker.io/library/alpine:3.16                                                                                             0.6s
  => [gitserver 1/6] FROM docker.io/library/alpine:3.16@sha256:c2b622f6e510a0d25bccaffa9e67b75a6860cb09b74bb58cfc36a9ef4331109f                                       0.0s
  => => resolve docker.io/library/alpine:3.16@sha256:c2b622f6e510a0d25bccaffa9e67b75a6860cb09b74bb58cfc36a9ef4331109f                                                 0.0s
+ => [gitserver internal] load build context                                                                                                                          0.0s
+ => => transferring context: 1.41kB                                                                                                                                  0.0s
+ => [ssh-keygen 1/2] FROM docker.io/library/ubuntu:22.04@sha256:dfd64a3b4296d8c9b62aa3309984f8620b98d87e47492599ee20739e8eb54fbf                                     0.0s
+ => => resolve docker.io/library/ubuntu:22.04@sha256:dfd64a3b4296d8c9b62aa3309984f8620b98d87e47492599ee20739e8eb54fbf                                                0.0s
  => CACHED [gitserver 2/6] WORKDIR /git                                                                                                                              0.0s
  => CACHED [gitserver 3/6] RUN apk add --no-cache         openssh         git     && rm -rf /var/cache/apk/*     && ssh-keygen -A     && adduser -D --home /home/gi  0.0s
  => CACHED [gitserver 4/6] RUN apk add  --no-cache         nginx         git-daemon         fcgiwrap         spawn-fcgi     && rm -rf /var/cache/apk/*               0.0s
@@ -81,69 +108,68 @@ Starting the stack to run 06-git-build-context-example
  => => exporting manifest sha256:ed529a96d72d0665a203d57b724f81cd6fcf6ff6a2a3b289e47edf0646deef72                                                                    0.0s
  => => exporting config sha256:35f4e457081993060a2c212564c2b87dd5baf601b57e5b780fb2c30786b04fb9                                                                      0.0s
  => => sending tarball                                                                                                                                               0.1s
- => [gitserver gitserver] importing to docker                                                                                                                        0.0s
- => [stevedore internal] load build definition from Dockerfile                                                                                                       0.0s
- => => transferring dockerfile: 989B                                                                                                                                 0.0s
- => [stevedore internal] load .dockerignore                                                                                                                          0.0s
- => => transferring context: 2B                                                                                                                                      0.0s
- => [stevedore internal] load metadata for docker.io/library/docker:20.10-dind                                                                                       0.2s
- => [stevedore internal] load metadata for docker.io/library/golang:1.19-alpine                                                                                      0.4s
- => [stevedore internal] load build context                                                                                                                          0.0s
- => => transferring context: 218.87kB                                                                                                                                0.0s
- => [stevedore stage-1 1/6] FROM docker.io/library/docker:20.10-dind@sha256:af96c680a7e1f853ebdd50c1e0577e5df4089b033102546dd6417419564df3b5                         0.0s
- => => resolve docker.io/library/docker:20.10-dind@sha256:af96c680a7e1f853ebdd50c1e0577e5df4089b033102546dd6417419564df3b5                                           0.0s
- => [stevedore golang 1/8] FROM docker.io/library/golang:1.19-alpine@sha256:4147c2ad24a347e53a8a361b663dcf82fca4157a3f9a5136d696a4e53dd22b65                         0.0s
- => => resolve docker.io/library/golang:1.19-alpine@sha256:4147c2ad24a347e53a8a361b663dcf82fca4157a3f9a5136d696a4e53dd22b65                                          0.0s
- => CACHED [stevedore golang 2/8] WORKDIR /usr/src/app                                                                                                               0.0s
- => CACHED [stevedore golang 3/8] RUN apk add --no-cache make build-base                                                                                             0.0s
- => CACHED [stevedore golang 4/8] COPY go.mod ./                                                                                                                     0.0s
- => CACHED [stevedore golang 5/8] COPY go.sum ./                                                                                                                     0.0s
- => CACHED [stevedore golang 6/8] RUN go mod download && go mod verify                                                                                               0.0s
- => [stevedore golang 7/8] COPY . ./                                                                                                                                 0.4s
- => [stevedore golang 8/8] RUN go build -ldflags "-s -w" -v -o /usr/local/bin/stevedore ./cmd/stevedore.go                                                           4.8s
- => CACHED [stevedore stage-1 2/6] COPY --from=golang /usr/local/go /usr/local/go                                                                                    0.0s
- => CACHED [stevedore stage-1 3/6] COPY --from=golang /usr/local/bin/stevedore /usr/local/bin/stevedore                                                              0.0s
- => CACHED [stevedore stage-1 4/6] WORKDIR /go                                                                                                                       0.0s
- => CACHED [stevedore stage-1 5/6] RUN mkdir -p "/go/src" "/go/bin" && chmod -R 777 "/go"                                                                            0.0s
- => CACHED [stevedore stage-1 6/6] COPY test/stack/client/entrypoint.sh /usr/local/bin/entrypoint.sh                                                                 0.0s
- => [stevedore] exporting to docker image format                                                                                                                     0.9s
+ => CACHED [ssh-keygen 2/2] RUN apt-get update     && apt-get install -y         openssh-client                                                                      0.0s
+ => [ssh-keygen] exporting to docker image format                                                                                                                    0.2s
  => => exporting layers                                                                                                                                              0.0s
- => => exporting manifest sha256:4fccbb1e18be27632f7bfbf50912c465a8dcb6535fa0ac41021ef76070c378a0                                                                    0.0s
- => => exporting config sha256:19e63d4df31a13d448f723680c52828091eaeaa47079c1438da20fefbe9d855b                                                                      0.0s
- => => sending tarball                                                                                                                                               0.9s
+ => => exporting manifest sha256:f4f6163e5f92e30135e2e9cf81d655098288082af34addc4789d958aa93de5cd                                                                    0.0s
+ => => exporting config sha256:8eb337ed09d3afa6a01a3a35e1523542fbe30cb6a661ca994dd8ca84521e4a28                                                                      0.0s
+ => => sending tarball                                                                                                                                               0.2s
+ => [gitserver gitserver] importing to docker                                                                                                                        0.0s
+ => [stevedore internal] load build context                                                                                                                          0.1s
+ => => transferring context: 348.82kB                                                                                                                                0.1s
+ => [stevedore golang 1/7] FROM docker.io/library/golang:1.19-alpine@sha256:4147c2ad24a347e53a8a361b663dcf82fca4157a3f9a5136d696a4e53dd22b65                         0.0s
+ => => resolve docker.io/library/golang:1.19-alpine@sha256:4147c2ad24a347e53a8a361b663dcf82fca4157a3f9a5136d696a4e53dd22b65                                          0.0s
+ => [stevedore stage-1 1/4] FROM docker.io/library/docker:20.10-dind@sha256:af96c680a7e1f853ebdd50c1e0577e5df4089b033102546dd6417419564df3b5                         0.0s
+ => => resolve docker.io/library/docker:20.10-dind@sha256:af96c680a7e1f853ebdd50c1e0577e5df4089b033102546dd6417419564df3b5                                           0.0s
+ => [ssh-keygen ssh-keygen] importing to docker                                                                                                                      0.0s
+ => CACHED [stevedore golang 2/7] WORKDIR /usr/src/app                                                                                                               0.0s
+ => CACHED [stevedore golang 3/7] RUN apk add --no-cache make build-base                                                                                             0.0s
+ => CACHED [stevedore golang 4/7] COPY go.mod go.sum ./                                                                                                              0.0s
+ => CACHED [stevedore golang 5/7] RUN go mod download                                                                                                                0.0s
+ => [stevedore golang 6/7] COPY . ./                                                                                                                                 0.5s
+ => [stevedore golang 7/7] RUN go build -ldflags "-s -w" -v -o /usr/local/bin/stevedore ./cmd/stevedore.go                                                           4.6s
+ => CACHED [stevedore stage-1 2/4] COPY --from=golang /usr/local/bin/stevedore /usr/local/bin/stevedore                                                              0.0s
+ => CACHED [stevedore stage-1 3/4] COPY examples/06-git-build-context-example/stack/stevedore/entrypoint.sh /usr/local/bin/entrypoint.sh                             0.0s
+ => CACHED [stevedore stage-1 4/4] COPY examples/06-git-build-context-example/stack/stevedore/wait-for-dockerd.sh /usr/local/bin/wait-for-dockerd.sh                 0.0s
+ => [stevedore] exporting to docker image format                                                                                                                     0.4s
+ => => exporting layers                                                                                                                                              0.0s
+ => => exporting manifest sha256:37501a85dd34a8740bd2b22b2adc35b055abdfdd8c65120c983011f5c12ff10d                                                                    0.0s
+ => => exporting config sha256:835c3e7dc1597999596540ed0509ca34f20cda7765152ec4761d453dcf06511a                                                                      0.0s
+ => => sending tarball                                                                                                                                               0.4s
  => [stevedore stevedore] importing to docker                                                                                                                        0.0s
 [+] Running 6/6
- ✔ Network 06-git-build-context-example_default         Created                                                                                                      0.1s
- ✔ Container 06-git-build-context-example-worker-1      Started                                                                                                      0.6s
- ✔ Container 06-git-build-context-example-gitserver-1   Started                                                                                                      0.6s
- ✔ Container 06-git-build-context-example-dockerauth-1  Started                                                                                                      0.6s
+ ✔ Container 06-git-build-context-example-ssh-keygen-1  Started                                                                                                      0.5s
+ ✔ Container 06-git-build-context-example-gitserver-1   Started                                                                                                      1.0s
+ ✔ Container 06-git-build-context-example-stevedore-1   Started                                                                                                      1.0s
+ ✔ Container 06-git-build-context-example-dockerauth-1  Started                                                                                                      0.9s
  ✔ Container 06-git-build-context-example-registry-1    Started                                                                                                      1.1s
- ✔ Container 06-git-build-context-example-stevedore-1   Started                                                                                                      1.2s
- ```
+```
+
+And finally, it generates a `known_hosts` file based on the SSH keys.
+```sh
+ [06-git-build-context-example] Create known_hosts file
+# gitserver.stevedore.test:22 SSH-2.0-OpenSSH_9.0
+# gitserver.stevedore.test:22 SSH-2.0-OpenSSH_9.0
+# gitserver.stevedore.test:22 SSH-2.0-OpenSSH_9.0
+# gitserver.stevedore.test:22 SSH-2.0-OpenSSH_9.0
+# gitserver.stevedore.test:22 SSH-2.0-OpenSSH_9.0
+```
+
+### Waiting for Dockerd to be Ready
+Before starting the execution of the Stevedore command, it is important to ensure that the Docker daemon (dockerd) is ready. The stevedore service Docker image includes a script, [wait-for-dockerd.sh]((./stack/stevedore/wait-for-dockerd.sh)), which can be used to ensure the readiness of the Docker daemon.
+```sh
+ Run example 06-git-build-context-example
+
+ [06-git-build-context-example] Waiting for dockerd
+ Waiting for dockerd to be ready...
+ Waiting for dockerd to be ready...
+```
 
 ### Getting images
 To view the images in tree format, run `stevedore get images --tree`.
 
 ```sh
- Run example 06-git-build-context-example
-
  [06-git-build-context-example] Get images
-[+] Building 0.0s (0/0)
-[+] Creating 1/1
- ✔ Container 06-git-build-context-example-gitserver-1  Recreated                                                                                                    10.4s
-[+] Running 1/1
- ✔ Container 06-git-build-context-example-gitserver-1  Started                                                                                                       0.3s
-[+] Building 0.0s (0/0)
-# gitserver:22 SSH-2.0-OpenSSH_9.0
-# gitserver:22 SSH-2.0-OpenSSH_9.0
-# gitserver:22 SSH-2.0-OpenSSH_9.0
-# gitserver:22 SSH-2.0-OpenSSH_9.0
-# gitserver:22 SSH-2.0-OpenSSH_9.0
- Waiting for dockerd to be ready...
- Waiting for dockerd to be ready...
-/certs/server/cert.pem: OK
- Waiting for dockerd to be ready...
-/certs/client/cert.pem: OK
 ├─── busybox:1.35
 │  ├─── registry.stevedore.test/base:busybox-1.35
 │  │  ├─── registry.stevedore.test/app1:v1-base-busybox-1.35
@@ -160,172 +186,160 @@ Note that each Docker image is built independently of one another.
 
 ```sh
  [06-git-build-context-example] Build the base image and its descendants, and push the images after build
-[+] Building 0.0s (0/0)
-[+] Creating 1/0
- ✔ Container 06-git-build-context-example-gitserver-1  Running                                                                                                       0.0s
-[+] Building 0.0s (0/0)
-# gitserver:22 SSH-2.0-OpenSSH_9.0
-# gitserver:22 SSH-2.0-OpenSSH_9.0
-# gitserver:22 SSH-2.0-OpenSSH_9.0
-# gitserver:22 SSH-2.0-OpenSSH_9.0
-# gitserver:22 SSH-2.0-OpenSSH_9.0
- Waiting for dockerd to be ready...
-/certs/server/cert.pem: OK
- Waiting for dockerd to be ready...
-/certs/client/cert.pem: OK
 registry.stevedore.test/base:busybox-1.35 Step 1/7 : ARG image_from_name
 registry.stevedore.test/base:busybox-1.35 Step 2/7 : ARG image_from_tag
 registry.stevedore.test/base:busybox-1.35 Step 3/7 : FROM ${image_from_name}:${image_from_tag}
 registry.stevedore.test/base:busybox-1.36 Step 1/7 : ARG image_from_name
 registry.stevedore.test/base:busybox-1.36 Step 2/7 : ARG image_from_tag
 registry.stevedore.test/base:busybox-1.36 Step 3/7 : FROM ${image_from_name}:${image_from_tag}
-registry.stevedore.test/base:busybox-1.36 ‣  1.36:  Pulling from library/busybox
-registry.stevedore.test/base:busybox-1.36 ‣  325d69979d33:  Pull complete
-registry.stevedore.test/base:busybox-1.36 ‣  Digest: sha256:560af6915bfc8d7630e50e212e08242d37b63bd5c1ccf9bd4acccf116e262d5b
-registry.stevedore.test/base:busybox-1.36 ‣  Status: Downloaded newer image for busybox:1.36
-registry.stevedore.test/base:busybox-1.36 ---> 8135583d97fe
-registry.stevedore.test/base:busybox-1.36 Step 4/7 : RUN echo "anonymous:x:10001:10001:,,,:/app:/bin/sh" >> /etc/passwd &&     echo "anonymous:x:10001:" >> /etc/group &&     mkdir -p /app &&     chown 10001:10001 /app
-registry.stevedore.test/base:busybox-1.36 ---> Running in 370a35bb6c83
-registry.stevedore.test/base:busybox-1.36 ---> 22e37b81fe8c
-registry.stevedore.test/base:busybox-1.36 Step 5/7 : USER anonymous
-registry.stevedore.test/base:busybox-1.36 ---> Running in 73c3521c3031
-registry.stevedore.test/base:busybox-1.36 ---> 6a3c1bc863b2
-registry.stevedore.test/base:busybox-1.36 Step 6/7 : WORKDIR /app
-registry.stevedore.test/base:busybox-1.36 ---> Running in 867392b8528c
-registry.stevedore.test/base:busybox-1.36 ---> 266ecfbcf5fa
-registry.stevedore.test/base:busybox-1.36 Step 7/7 : LABEL created_at=2023-05-23T16:14:59.043679729Z
-registry.stevedore.test/base:busybox-1.36 ---> Running in f10235741c70
-registry.stevedore.test/base:busybox-1.36 ---> 91e6f924c3fb
-registry.stevedore.test/base:busybox-1.36  ‣ sha256:91e6f924c3fb41d6c92e9ecb597e67aa9e54d5df935fe9314094ac8c2c796dd5
-registry.stevedore.test/base:busybox-1.36 Successfully built 91e6f924c3fb
-registry.stevedore.test/base:busybox-1.36 Successfully tagged registry.stevedore.test/base:busybox-1.36
-registry.stevedore.test/base:busybox-1.36 ‣  The push refers to repository [registry.stevedore.test/base]
-registry.stevedore.test/base:busybox-1.36 ‣  14a9c01685cb:  Pushed
-registry.stevedore.test/base:busybox-1.36 ‣  9547b4c33213:  Pushed
-registry.stevedore.test/base:busybox-1.36 ‣  busybox-1.36: digest: sha256:0259c988d53535a243c4135f444edc4622d45c1d2b1ed8ae9818525d0ec7e4b4 size: 735
-registry.stevedore.test/app3:v1-base-busybox-1.36 Step 1/7 : ARG image_from_name
-registry.stevedore.test/app3:v1-base-busybox-1.36 Step 2/7 : ARG image_from_tag
-registry.stevedore.test/app3:v1-base-busybox-1.36 Step 3/7 : ARG image_from_registry_host
-registry.stevedore.test/app3:v1-base-busybox-1.36 Step 4/7 : FROM ${image_from_registry_host}/${image_from_name}:${image_from_tag}
-registry.stevedore.test/app3:v1-base-busybox-1.36 ---> 91e6f924c3fb
-registry.stevedore.test/app3:v1-base-busybox-1.36 Step 5/7 : COPY ./${app_name}/app.sh /app/run.sh
-registry.stevedore.test/app3:v1-base-busybox-1.36 ---> 76a2921067fe
-registry.stevedore.test/app3:v1-base-busybox-1.36 Step 6/7 : CMD ["/app/run.sh"]
-registry.stevedore.test/app3:v1-base-busybox-1.36 ---> Running in 2f538893af8e
-registry.stevedore.test/app3:v1-base-busybox-1.36 ---> 6eb1a5539e9c
-registry.stevedore.test/app3:v1-base-busybox-1.36 Step 7/7 : LABEL created_at=2023-05-23T16:14:59.043679729Z
-registry.stevedore.test/app3:v1-base-busybox-1.36 ---> Running in 08431b029d5d
-registry.stevedore.test/app3:v1-base-busybox-1.36 ---> cae9264d8769
-registry.stevedore.test/app3:v1-base-busybox-1.36  ‣ sha256:cae9264d8769272112eb72696123239164639d3341af64df145c793423a70e47
-registry.stevedore.test/app3:v1-base-busybox-1.36 Successfully built cae9264d8769
-registry.stevedore.test/app3:v1-base-busybox-1.36 Successfully tagged registry.stevedore.test/app3:v1-base-busybox-1.36
-registry.stevedore.test/app3:v1-base-busybox-1.36 ‣  The push refers to repository [registry.stevedore.test/app3]
-registry.stevedore.test/app3:v1-base-busybox-1.36 ‣  325fa5d553b3:  Pushed
-registry.stevedore.test/app3:v1-base-busybox-1.36 ‣  14a9c01685cb:  Mounted from base
-registry.stevedore.test/app3:v1-base-busybox-1.36 ‣  9547b4c33213:  Mounted from base
-registry.stevedore.test/app2:v1-base-busybox-1.36 Step 1/7 : ARG image_from_name
-registry.stevedore.test/app2:v1-base-busybox-1.36 Step 2/7 : ARG image_from_tag
-registry.stevedore.test/app2:v1-base-busybox-1.36 Step 3/7 : ARG image_from_registry_host
-registry.stevedore.test/app2:v1-base-busybox-1.36 Step 4/7 : FROM ${image_from_registry_host}/${image_from_name}:${image_from_tag}
-registry.stevedore.test/app2:v1-base-busybox-1.36 ---> 91e6f924c3fb
-registry.stevedore.test/app2:v1-base-busybox-1.36 Step 5/7 : COPY ./${app_name}/app.sh /app/run.sh
-registry.stevedore.test/app3:v1-base-busybox-1.36 ‣  v1-base-busybox-1.36: digest: sha256:41b67331b4961ed525aa3b98293d73ef2def20d0f9f29742300dbf3cfc1efdc8 size: 942
-registry.stevedore.test/app2:v1-base-busybox-1.36 ---> 84fa8c05368b
-registry.stevedore.test/app2:v1-base-busybox-1.36 Step 6/7 : CMD ["/app/run.sh"]
-registry.stevedore.test/app2:v1-base-busybox-1.36 ---> Running in 1672c065c001
-registry.stevedore.test/app2:v1-base-busybox-1.36 ---> fc55544dc1f3
-registry.stevedore.test/app2:v1-base-busybox-1.36 Step 7/7 : LABEL created_at=2023-05-23T16:14:59.043679729Z
-registry.stevedore.test/app2:v1-base-busybox-1.36 ---> Running in cffbc8e08be1
-registry.stevedore.test/app2:v1-base-busybox-1.36 ---> 02ad7ca8fd37
-registry.stevedore.test/app2:v1-base-busybox-1.36  ‣ sha256:02ad7ca8fd37df07a9ac029db3010c2a07b4ab8d2cf41335f34048ea01ed9c60
-registry.stevedore.test/app2:v1-base-busybox-1.36 Successfully built 02ad7ca8fd37
-registry.stevedore.test/app2:v1-base-busybox-1.36 Successfully tagged registry.stevedore.test/app2:v1-base-busybox-1.36
-registry.stevedore.test/app2:v1-base-busybox-1.36 ‣  The push refers to repository [registry.stevedore.test/app2]
-registry.stevedore.test/app2:v1-base-busybox-1.36 ‣  9bacd26a0896:  Pushed
-registry.stevedore.test/app2:v1-base-busybox-1.36 ‣  14a9c01685cb:  Mounted from app3
-registry.stevedore.test/app2:v1-base-busybox-1.36 ‣  9547b4c33213:  Mounted from app3
-registry.stevedore.test/app2:v1-base-busybox-1.36 ‣  v1-base-busybox-1.36: digest: sha256:48bd716e778d18f412572e2d746b326dbcaa0433ea609f3da0e2f3873a296145 size: 942
 registry.stevedore.test/base:busybox-1.35 ‣  1.35:  Pulling from library/busybox
 registry.stevedore.test/base:busybox-1.35 ‣  c15cbdab5f8e:  Pull complete
 registry.stevedore.test/base:busybox-1.35 ‣  Digest: sha256:b4e4a06de46acc0958cd93e2eeb769077d255f06a7c3a91196509c16b7bc989e
 registry.stevedore.test/base:busybox-1.35 ‣  Status: Downloaded newer image for busybox:1.35
 registry.stevedore.test/base:busybox-1.35 ---> dddc7578369a
 registry.stevedore.test/base:busybox-1.35 Step 4/7 : RUN echo "anonymous:x:10001:10001:,,,:/app:/bin/sh" >> /etc/passwd &&     echo "anonymous:x:10001:" >> /etc/group &&     mkdir -p /app &&     chown 10001:10001 /app
-registry.stevedore.test/base:busybox-1.35 ---> Running in e30d2d089c17
-registry.stevedore.test/base:busybox-1.35 ---> 34d524b928c0
+registry.stevedore.test/base:busybox-1.36 ‣  1.36:  Pulling from library/busybox
+registry.stevedore.test/base:busybox-1.36 ‣  325d69979d33:  Pull complete
+registry.stevedore.test/base:busybox-1.36 ‣  Digest: sha256:560af6915bfc8d7630e50e212e08242d37b63bd5c1ccf9bd4acccf116e262d5b
+registry.stevedore.test/base:busybox-1.36 ‣  Status: Downloaded newer image for busybox:1.36
+registry.stevedore.test/base:busybox-1.36 ---> 8135583d97fe
+registry.stevedore.test/base:busybox-1.36 Step 4/7 : RUN echo "anonymous:x:10001:10001:,,,:/app:/bin/sh" >> /etc/passwd &&     echo "anonymous:x:10001:" >> /etc/group &&     mkdir -p /app &&     chown 10001:10001 /app
+registry.stevedore.test/base:busybox-1.36 ---> Running in 4897b128abb7
+registry.stevedore.test/base:busybox-1.35 ---> e01093e4e79e
 registry.stevedore.test/base:busybox-1.35 Step 5/7 : USER anonymous
-registry.stevedore.test/base:busybox-1.35 ---> Running in 2a552e33da99
-registry.stevedore.test/base:busybox-1.35 ---> 85d20392a1cb
+registry.stevedore.test/base:busybox-1.35 ---> Running in 103f68bfd395
+registry.stevedore.test/base:busybox-1.35 ---> f8b49d41d230
 registry.stevedore.test/base:busybox-1.35 Step 6/7 : WORKDIR /app
-registry.stevedore.test/base:busybox-1.35 ---> Running in 4181365b1441
-registry.stevedore.test/base:busybox-1.35 ---> 1e838f1213a3
-registry.stevedore.test/base:busybox-1.35 Step 7/7 : LABEL created_at=2023-05-23T16:14:59.044265696Z
-registry.stevedore.test/base:busybox-1.35 ---> Running in b17c4d9e7647
-registry.stevedore.test/base:busybox-1.35 ---> 4893e409d6fb
-registry.stevedore.test/base:busybox-1.35  ‣ sha256:4893e409d6fb65196ec422d3f5156a121ebff78be4427f2b6f503c11a161aff9
-registry.stevedore.test/base:busybox-1.35 Successfully built 4893e409d6fb
+registry.stevedore.test/base:busybox-1.35 ---> Running in da21646683a8
+registry.stevedore.test/base:busybox-1.35 ---> 44afb4267261
+registry.stevedore.test/base:busybox-1.35 Step 7/7 : LABEL created_at=2023-05-28T20:20:57.787559256Z
+registry.stevedore.test/base:busybox-1.35 ---> Running in c42a29c67797
+registry.stevedore.test/base:busybox-1.35 ---> ac09c9b5e8c5
+registry.stevedore.test/base:busybox-1.35  ‣ sha256:ac09c9b5e8c54dca5df67db8f695494329f8ae8952ed6eec2fb23941c90628df
+registry.stevedore.test/base:busybox-1.35 Successfully built ac09c9b5e8c5
 registry.stevedore.test/base:busybox-1.35 Successfully tagged registry.stevedore.test/base:busybox-1.35
 registry.stevedore.test/base:busybox-1.35 ‣  The push refers to repository [registry.stevedore.test/base]
-registry.stevedore.test/base:busybox-1.35 ‣  9ef89241914f:  Pushed
-registry.stevedore.test/base:busybox-1.35 ‣  42ef21f45b9a:  Pushed
-registry.stevedore.test/base:busybox-1.35 ‣  busybox-1.35: digest: sha256:d151271cedfb1de502d4cfee11cce79b13cec61e1076f63163379564efa36208 size: 735
+registry.stevedore.test/base:busybox-1.35 ‣  58f17356d7ad:  Pushed
+registry.stevedore.test/base:busybox-1.35 ‣  42ef21f45b9a:  Pushing [>                                                  ]  66.56kB/4.855MB
+registry.stevedore.test/base:busybox-1.36 ---> e661c471d4e0
+registry.stevedore.test/base:busybox-1.36 Step 5/7 : USER anonymous
+registry.stevedore.test/base:busybox-1.36 ---> Running in 6287cb58960d
+registry.stevedore.test/base:busybox-1.36 ---> 3083923d0d19
+registry.stevedore.test/base:busybox-1.36 Step 6/7 : WORKDIR /app
+registry.stevedore.test/base:busybox-1.35 ‣  58f17356d7ad:  Pushed
+registry.stevedore.test/base:busybox-1.35 ‣  42ef21f45b9a:  Pushing [==================================>                ]  3.391MB/4.855MB
+registry.stevedore.test/base:busybox-1.36 ---> 901a5a5b245d
+registry.stevedore.test/base:busybox-1.36 Step 7/7 : LABEL created_at=2023-05-28T20:20:57.788632771Z
+registry.stevedore.test/base:busybox-1.36 ---> Running in c85f73fef38d
+registry.stevedore.test/base:busybox-1.36 ---> b5186750224a
+registry.stevedore.test/base:busybox-1.36  ‣ sha256:b5186750224aab94d12bbdb532e39125824a08a84ffb25db9b9aaa9b99e446e7
+registry.stevedore.test/base:busybox-1.36 Successfully built b5186750224a
+registry.stevedore.test/base:busybox-1.36 Successfully tagged registry.stevedore.test/base:busybox-1.36
+registry.stevedore.test/base:busybox-1.36 ‣  The push refers to repository [registry.stevedore.test/base]
+registry.stevedore.test/base:busybox-1.35 ‣  58f17356d7ad:  Pushed
+registry.stevedore.test/base:busybox-1.36 ‣  c7434056d8ca:  Pushed
+registry.stevedore.test/base:busybox-1.36 ‣  9547b4c33213:  Pushing [>                                                  ]  66.56kB/4.863MB
 registry.stevedore.test/app1:v1-base-busybox-1.35 Step 1/7 : ARG image_from_name
 registry.stevedore.test/app1:v1-base-busybox-1.35 Step 2/7 : ARG image_from_tag
 registry.stevedore.test/app1:v1-base-busybox-1.35 Step 3/7 : ARG image_from_registry_host
 registry.stevedore.test/app1:v1-base-busybox-1.35 Step 4/7 : FROM ${image_from_registry_host}/${image_from_name}:${image_from_tag}
-registry.stevedore.test/app1:v1-base-busybox-1.35 ---> 4893e409d6fb
+registry.stevedore.test/app1:v1-base-busybox-1.35 ---> ac09c9b5e8c5
 registry.stevedore.test/app1:v1-base-busybox-1.35 Step 5/7 : COPY ./${app_name}/app.sh /app/run.sh
-registry.stevedore.test/app1:v1-base-busybox-1.35 ---> 6c3fbab23afd
+registry.stevedore.test/app1:v1-base-busybox-1.35 ---> 5fa7f6e59200
 registry.stevedore.test/app1:v1-base-busybox-1.35 Step 6/7 : CMD ["/app/run.sh"]
-registry.stevedore.test/app1:v1-base-busybox-1.35 ---> Running in 6ce0fd8c0f50
-registry.stevedore.test/app1:v1-base-busybox-1.35 ---> ad9b04491ff5
-registry.stevedore.test/app1:v1-base-busybox-1.35 Step 7/7 : LABEL created_at=2023-05-23T16:14:59.044265696Z
-registry.stevedore.test/app1:v1-base-busybox-1.35 ---> Running in d8747e3842e6
-registry.stevedore.test/app1:v1-base-busybox-1.35 ---> b539d0f618aa
-registry.stevedore.test/app1:v1-base-busybox-1.35  ‣ sha256:b539d0f618aa9801943dee45fe2553c171cb8ef64da420d98709be2ae0149d30
-registry.stevedore.test/app1:v1-base-busybox-1.35 Successfully built b539d0f618aa
+registry.stevedore.test/app1:v1-base-busybox-1.35 ---> Running in b27ae7c51fcb
+registry.stevedore.test/app1:v1-base-busybox-1.35 ---> 694226a77072
+registry.stevedore.test/app1:v1-base-busybox-1.35 Step 7/7 : LABEL created_at=2023-05-28T20:20:57.787559256Z
+registry.stevedore.test/base:busybox-1.36 ‣  c7434056d8ca:  Pushed
+registry.stevedore.test/base:busybox-1.36 ‣  9547b4c33213:  Pushing [============================>                      ]  2.809MB/4.863MB
+registry.stevedore.test/app1:v1-base-busybox-1.35 ---> ce22012aaa67
+registry.stevedore.test/app1:v1-base-busybox-1.35  ‣ sha256:ce22012aaa678b15f0e028327a5a6676b3408125f1aab9ee7ca2c1bbd3f38677
+registry.stevedore.test/app1:v1-base-busybox-1.35 Successfully built ce22012aaa67
 registry.stevedore.test/app1:v1-base-busybox-1.35 Successfully tagged registry.stevedore.test/app1:v1-base-busybox-1.35
 registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  The push refers to repository [registry.stevedore.test/app1]
-registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  55b603b59147:  Pushed
-registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  9ef89241914f:  Mounted from base
-registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  42ef21f45b9a:  Mounted from base
-registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  v1-base-busybox-1.35: digest: sha256:153a184f64e62b942fc3f1f595db69f103ab7342a4fbec3e5a78542f527e294c size: 942
+registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  955d71cf9c97:  Pushing [==================================================>]     512B
+registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  58f17356d7ad:  Preparing
+registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  42ef21f45b9a:  Preparing
 registry.stevedore.test/app2:v1-base-busybox-1.35 Step 1/7 : ARG image_from_name
 registry.stevedore.test/app2:v1-base-busybox-1.35 Step 2/7 : ARG image_from_tag
 registry.stevedore.test/app2:v1-base-busybox-1.35 Step 3/7 : ARG image_from_registry_host
 registry.stevedore.test/app2:v1-base-busybox-1.35 Step 4/7 : FROM ${image_from_registry_host}/${image_from_name}:${image_from_tag}
-registry.stevedore.test/app2:v1-base-busybox-1.35 ---> 4893e409d6fb
+registry.stevedore.test/app2:v1-base-busybox-1.35 ---> ac09c9b5e8c5
 registry.stevedore.test/app2:v1-base-busybox-1.35 Step 5/7 : COPY ./${app_name}/app.sh /app/run.sh
-registry.stevedore.test/app2:v1-base-busybox-1.35 ---> 8324840d198e
+registry.stevedore.test/base:busybox-1.36 ‣  busybox-1.36: digest: sha256:b483e41fdb4bc876e11cbf6dcd5d71e1fd6ef470584bb890cd77b7617a877bce size: 735
+registry.stevedore.test/app3:v1-base-busybox-1.36 Step 1/7 : ARG image_from_name
+registry.stevedore.test/app3:v1-base-busybox-1.36 Step 2/7 : ARG image_from_tag
+registry.stevedore.test/app3:v1-base-busybox-1.36 Step 3/7 : ARG image_from_registry_host
+registry.stevedore.test/app3:v1-base-busybox-1.36 Step 4/7 : FROM ${image_from_registry_host}/${image_from_name}:${image_from_tag}
+registry.stevedore.test/app3:v1-base-busybox-1.36 ---> b5186750224a
+registry.stevedore.test/app3:v1-base-busybox-1.36 Step 5/7 : COPY ./${app_name}/app.sh /app/run.sh
+registry.stevedore.test/app2:v1-base-busybox-1.35 ---> 8c9b65ceb2c5
 registry.stevedore.test/app2:v1-base-busybox-1.35 Step 6/7 : CMD ["/app/run.sh"]
-registry.stevedore.test/app2:v1-base-busybox-1.35 ---> Running in d94074c2b986
-registry.stevedore.test/app2:v1-base-busybox-1.35 ---> 97247f28394b
-registry.stevedore.test/app2:v1-base-busybox-1.35 Step 7/7 : LABEL created_at=2023-05-23T16:14:59.044265696Z
-registry.stevedore.test/app2:v1-base-busybox-1.35 ---> Running in 37e8d81cc919
-registry.stevedore.test/app2:v1-base-busybox-1.35 ---> bbfd64928232
-registry.stevedore.test/app2:v1-base-busybox-1.35  ‣ sha256:bbfd6492823204de670b9ae6193c4de7fbe812edab3509f62d2b24d4cf6aa595
-registry.stevedore.test/app2:v1-base-busybox-1.35 Successfully built bbfd64928232
+registry.stevedore.test/app2:v1-base-busybox-1.35 ---> Running in 68e3f34527e3
+registry.stevedore.test/app2:v1-base-busybox-1.35 ---> 81cf47e506b0
+registry.stevedore.test/app2:v1-base-busybox-1.35 Step 7/7 : LABEL created_at=2023-05-28T20:20:57.787559256Z
+registry.stevedore.test/app3:v1-base-busybox-1.36 ---> 0996329d3973
+registry.stevedore.test/app3:v1-base-busybox-1.36 Step 6/7 : CMD ["/app/run.sh"]
+registry.stevedore.test/app2:v1-base-busybox-1.35 ---> Running in 62ec6e7a4dbd
+registry.stevedore.test/app3:v1-base-busybox-1.36 ---> Running in e5530b398a8c
+registry.stevedore.test/app2:v1-base-busybox-1.35 ---> 728b00624e8c
+registry.stevedore.test/app2:v1-base-busybox-1.35  ‣ sha256:728b00624e8c6da328b909765393cb930ea47a86249df4446590cbf94753417a
+registry.stevedore.test/app2:v1-base-busybox-1.35 Successfully built 728b00624e8c
 registry.stevedore.test/app2:v1-base-busybox-1.35 Successfully tagged registry.stevedore.test/app2:v1-base-busybox-1.35
+registry.stevedore.test/app3:v1-base-busybox-1.36 ---> dfcd7f30a04b
+registry.stevedore.test/app3:v1-base-busybox-1.36 Step 7/7 : LABEL created_at=2023-05-28T20:20:57.788632771Z
 registry.stevedore.test/app2:v1-base-busybox-1.35 ‣  The push refers to repository [registry.stevedore.test/app2]
-registry.stevedore.test/app2:v1-base-busybox-1.35 ‣  d22a8ac4e949:  Pushed
-registry.stevedore.test/app2:v1-base-busybox-1.35 ‣  9ef89241914f:  Mounted from app1
-registry.stevedore.test/app2:v1-base-busybox-1.35 ‣  42ef21f45b9a:  Mounted from app1
-registry.stevedore.test/app2:v1-base-busybox-1.35 ‣  v1-base-busybox-1.35: digest: sha256:953e0442ffc3441362bb37fe9e7d8ce487f836cb59768795302a65c5a7b413fd size: 942
+registry.stevedore.test/app2:v1-base-busybox-1.35 ‣  1aae2243f5ff:  Preparing
+registry.stevedore.test/app2:v1-base-busybox-1.35 ‣  58f17356d7ad:  Preparing
+registry.stevedore.test/app2:v1-base-busybox-1.35 ‣  42ef21f45b9a:  Waiting
+registry.stevedore.test/app3:v1-base-busybox-1.36 ---> Running in 36b055b4f793
+registry.stevedore.test/app3:v1-base-busybox-1.36 ---> 8f22004e05a6
+registry.stevedore.test/app3:v1-base-busybox-1.36  ‣ sha256:8f22004e05a68fd7e064392697403cd1c172c5d03f074066df96b1dc12ea3935
+registry.stevedore.test/app3:v1-base-busybox-1.36 Successfully built 8f22004e05a6
+registry.stevedore.test/app3:v1-base-busybox-1.36 Successfully tagged registry.stevedore.test/app3:v1-base-busybox-1.36
+registry.stevedore.test/app3:v1-base-busybox-1.36 ‣  The push refers to repository [registry.stevedore.test/app3]
+registry.stevedore.test/app2:v1-base-busybox-1.35 ‣  1aae2243f5ff:  Pushing [==================================================>]     512B
+registry.stevedore.test/app2:v1-base-busybox-1.35 ‣  58f17356d7ad:  Preparing
+registry.stevedore.test/app2:v1-base-busybox-1.35 ‣  42ef21f45b9a:  Waiting
+registry.stevedore.test/app2:v1-base-busybox-1.36 Step 1/7 : ARG image_from_name
+registry.stevedore.test/app2:v1-base-busybox-1.36 Step 2/7 : ARG image_from_tag
+registry.stevedore.test/app2:v1-base-busybox-1.36 Step 3/7 : ARG image_from_registry_host
+registry.stevedore.test/app2:v1-base-busybox-1.36 Step 4/7 : FROM ${image_from_registry_host}/${image_from_name}:${image_from_tag}
+registry.stevedore.test/app2:v1-base-busybox-1.36 ---> b5186750224a
+registry.stevedore.test/app2:v1-base-busybox-1.36 Step 5/7 : COPY ./${app_name}/app.sh /app/run.sh
+registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  v1-base-busybox-1.35: digest: sha256:f8a3d658d997f5799511613cea26785403672afb39b344373c2dd970ac954414 size: 942
+registry.stevedore.test/app2:v1-base-busybox-1.36 ---> 4b509844da96
+registry.stevedore.test/app3:v1-base-busybox-1.36 ‣  c712f1b34602:  Pushing [==================================================>]     512B
+registry.stevedore.test/app3:v1-base-busybox-1.36 ‣  c7434056d8ca:  Waiting
+registry.stevedore.test/app3:v1-base-busybox-1.36 ‣  9547b4c33213:  Waiting
+registry.stevedore.test/app2:v1-base-busybox-1.36 ---> 250c1451f40d
+registry.stevedore.test/app2:v1-base-busybox-1.36 Step 7/7 : LABEL created_at=2023-05-28T20:20:57.788632771Z
+registry.stevedore.test/app2:v1-base-busybox-1.36 ---> Running in f9f08b40e436
+registry.stevedore.test/app2:v1-base-busybox-1.36 ---> c7750130bc1c
+registry.stevedore.test/app2:v1-base-busybox-1.36  ‣ sha256:c7750130bc1c8bad3e22c4fb58874ebe7339deac33d02e414368dfcb1d01d0b7
+registry.stevedore.test/app2:v1-base-busybox-1.36 Successfully built c7750130bc1c
+registry.stevedore.test/app2:v1-base-busybox-1.36 Successfully tagged registry.stevedore.test/app2:v1-base-busybox-1.36
+registry.stevedore.test/app2:v1-base-busybox-1.36 ‣  The push refers to repository [registry.stevedore.test/app2]
+registry.stevedore.test/app2:v1-base-busybox-1.35 ‣  1aae2243f5ff:  Pushed
+registry.stevedore.test/app3:v1-base-busybox-1.36 ‣  c712f1b34602:  Pushed
+registry.stevedore.test/app2:v1-base-busybox-1.36 ‣  b4db87d02fe9:  Pushed
+registry.stevedore.test/app2:v1-base-busybox-1.36 ‣  c7434056d8ca:  Mounted from app3
+registry.stevedore.test/app2:v1-base-busybox-1.36 ‣  9547b4c33213:  Mounted from base
+registry.stevedore.test/app2:v1-base-busybox-1.36 ‣  v1-base-busybox-1.36: digest: sha256:868e355fe911ae284c71f8a7736ed532172458995c354e224074c043a0e75ea8 size: 942
 ```
 
 ### Cleaning the stack
 ```sh
 Stopping the stack to run 06-git-build-context-example
 
-[+] Running 8/8
- ✔ Container 06-git-build-context-example-worker-1                    Removed                                                                                        0.0s
- ✔ Container 06-git-build-context-example-stevedore-run-9bf1e474dd60  Removed                                                                                        0.0s
- ✔ Container 06-git-build-context-example-stevedore-1                 Removed                                                                                       10.3s
- ✔ Container 06-git-build-context-example-registry-1                  Removed                                                                                        0.3s
- ✔ Container 06-git-build-context-example-stevedore-run-a51dc04cf27b  Removed                                                                                        0.0s
- ✔ Container 06-git-build-context-example-dockerauth-1                Removed                                                                                        0.2s
- ✔ Container 06-git-build-context-example-gitserver-1                 Removed                                                                                       10.3s
- ✔ Network 06-git-build-context-example_default                       Removed                                                                                        0.4s
+[+] Running 7/7
+ ✔ Container 06-git-build-context-example-gitserver-1   Removed                                                                                                      3.6s
+ ✔ Container 06-git-build-context-example-stevedore-1   Removed                                                                                                      3.6s
+ ✔ Container 06-git-build-context-example-ssh-keygen-1  Removed                                                                                                      3.4s
+ ✔ Container 06-git-build-context-example-registry-1    Removed                                                                                                      0.2s
+ ✔ Container 06-git-build-context-example-dockerauth-1  Removed                                                                                                      0.3s
+ ✔ Volume 06-git-build-context-example_ssh              Removed                                                                                                      0.0s
+ ✔ Network 06-git-build-context-example_default         Removed                                                                                                      0.5s
 ```
 
 ## Additional Information
@@ -393,7 +407,7 @@ These different approaches showcase the flexibility of using Git repositories as
 
 ### Git Server
 The example utilizes a Git server with three repositories, each containing the source code of an individual application, `app1`, `app2` and `app3`. These repositories can be found in the [fixtures](./fixtures/gitserver/repos) folder.
-Access to the Git server is available via the host `gitserver.stevedeore.test`. You can authenticate using either the basic auth method with the credentials user=`admin` and password=`admin` or by utilizing SSH keys. If using SSH keys, the necessary keys are stored in the [fixtures](./fixtures/ssh) folder as well. It is important to note that the private key is password-protected, with the password set to `password`.
+Access to the Git server is available via the host `gitserver.stevedeore.test`. You can authenticate using either the basic auth method with the credentials user=`admin` and password=`admin` or by utilizing SSH keys. The necessary keys are created automatically executing the `make start` command. It is important to note that the private key is password-protected, with the password set to `password`.
 
 #### Preparing the Git Fixtures Required to Execute the Example
 The Git server uses a set of fixed configurations prepared in advance. The [fixtures](./fixtures/) folder contains the pre-configured elements such as the authorization mechanisms and the repositories.
@@ -410,7 +424,7 @@ Adding password for user admin
 
 You can find the resulting `.gitpasswd` file [here](./fixtures/gitserver/repos/.gitpasswd).
 
-An Nginx running within the Git server container that uses the `.gitpasswd` fix to manage the authorizations.
+An Nginx running within the Git server container that uses the `.gitpasswd` to manage the authorizations.
 
 ##### Creating the SSH Key Pair
 Executing the command `/usr/bin/ssh-keygen -t rsa -q -N "password" -f id_rsa -C "apenella@stevedore.test"` you can create an SSH key pair used for authentication in the example. It generates an RSA key pair with a passphrase or `password` and saves the private key in the `id_rsa` file and the public key in the `id_rsa.pub`.
@@ -418,10 +432,8 @@ Executing the command `/usr/bin/ssh-keygen -t rsa -q -N "password" -f id_rsa -C 
 root@6a88123e81cc:/$ /usr/bin/ssh-keygen  -t rsa -q -N "password" -f id_rsa -C "apenella@stevedore.test"
 ```
 
-You can find the used keys [here](./fixtures/ssh/).
-
 ##### Creating the known_hosts File
-This example provides a preconfigured `known_hosts` file that enables seamless and secure access to Git repositories, eliminating the need for manual host key verification. By including this file, you can establish a connection to the Git server without encountering any host verification prompts, ensuring a smooth and secure workflow.
+This example creates a `known_hosts` file that enables seamless and secure access to Git repositories, eliminating the need for manual host key verification. By including this file, you can establish a connection to the Git server without encountering any host verification prompts, ensuring a smooth and secure workflow.
 
 ```sh
 $ ssh-keyscan -H gitserver.stevedore.test > ~/.ssh/known_hosts
@@ -432,7 +444,7 @@ gitserver.stevedore.test:22 SSH-2.0-OpenSSH_9.0
 gitserver.stevedore.test:22 SSH-2.0-OpenSSH_9.0  
 ```
 
-##### Preparing the Application Source Code Repository code
+##### Preparing the Git Repository and the Application's Source Code
 The first step involves creating the bare repositories on the Git server and configuring the necessary permissions. This can be accomplished by following these commands:
 ```sh
 /git/repos $ git config --global init.defaultBranch main

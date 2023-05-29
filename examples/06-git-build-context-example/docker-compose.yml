@@ -97,11 +97,6 @@ services:
       retries: 3
       start_period: 10s
 
-  worker:
-    image: ubuntu:22.04
-    volumes:
-      - ssh:/root/.ssh
-
   gitserver:
     build:
       context: ./stack/gitserver
