@@ -261,7 +261,6 @@ registry.stevedore.test/app2:v1-base-busybox-1.35 Step 4/8 : FROM ${image_from_r
 registry.stevedore.test/app2:v1-base-busybox-1.35 ---> 06e19bde9972
 registry.stevedore.test/app2:v1-base-busybox-1.35 Step 5/8 : ARG app_name
 registry.stevedore.test/app2:v1-base-busybox-1.35 ---> Using cache
-
 registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  f8f99cbf0a5a:  Pushing [==================================================>]     512B
 registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  4e8c7e0e829f:  Preparing
 registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  42ef21f45b9a:  Preparing
@@ -286,18 +285,15 @@ registry.stevedore.test/app2:v1-base-busybox-1.35 ‣  4e8c7e0e829f:  Preparing
 registry.stevedore.test/app2:v1-base-busybox-1.35 ‣  42ef21f45b9a:  Waiting
 registry.stevedore.test/base:busybox-1.36 ---> Running in 269ef244f44e
 registry.stevedore.test/base:busybox-1.36 ---> 03bb6486d509
-
 registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  f8f99cbf0a5a:  Pushing [==================================================>]     512B
 registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  4e8c7e0e829f:  Mounted from base
 registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  42ef21f45b9a:  Mounted from base
 registry.stevedore.test/base:busybox-1.36 ---> ca0cb73b3a77
-
 registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  f8f99cbf0a5a:  Pushed
 registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  4e8c7e0e829f:  Mounted from base
 registry.stevedore.test/app1:v1-base-busybox-1.35 ‣  42ef21f45b9a:  Mounted from base
 registry.stevedore.test/base:busybox-1.36 Successfully tagged registry.stevedore.test/base:busybox-1.36
 registry.stevedore.test/base:busybox-1.36 ‣  The push refers to repository [registry.stevedore.test/base]
-
 registry.stevedore.test/app2:v1-base-busybox-1.35 ‣  99516c98f205:  Pushed
 registry.stevedore.test/app2:v1-base-busybox-1.35 ‣  4e8c7e0e829f:  Mounted from base
 registry.stevedore.test/base:busybox-1.36 ‣  475721f5c964:  Pushed
