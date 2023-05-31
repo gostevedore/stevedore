@@ -1,0 +1,144 @@
+
+services:
+  registry:
+    image: registry:2
+    # ports:
+    #   - 443:443
+    restart: always
+    environment:
+      - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/data
+      - REGISTRY_AUTH=token
+      - REGISTRY_AUTH_TOKEN_REALM=https://auth.stevedore.test:5001/auth
+      - REGISTRY_AUTH_TOKEN_SERVICE="Docker registry"
+      - REGISTRY_AUTH_TOKEN_ISSUER="stevedore"
+      - REGISTRY_HTTP_ADDR=0.0.0.0:443
+      - REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/ssl/stevedore.test.crt
+      - REGISTRY_HTTP_TLS_CERTIFICATE=/ssl/stevedore.test.crt
+      - REGISTRY_HTTP_TLS_KEY=/ssl/stevedore.test.key
+    volumes:
+      - ./fixtures/ssl:/ssl:ro
+    networks:
+      default:
+        aliases:
+          - registry.stevedore.test
+          - example.docker.com
+    depends_on: 
+      - dockerauth
+    deploy:
+      resources:
+        limits:
+          memory: 60M
+    healthcheck:
+      test: ["CMD", "nc", "-vz", "localhost","443"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  dockerauth:
+    image: cesanta/docker_auth:1
+    restart: always
+    # ports:
+    #   - "5001:5001"
+    volumes:
+      - ./fixtures/docker_auth:/config:ro
+      - ./fixtures/ssl:/ssl:ro
+    command: 
+      - -logtostderr
+      - /config/config.yml
+    networks:
+      default:
+        aliases:
+          - auth.stevedore.test
+    deploy:
+      resources:
+        limits:
+          memory: 10M
+    healthcheck:
+      test: ["CMD", "nc", "-vz", "localhost","5001"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  stevedore:
+    build:
+      context: ../..
+      dockerfile: examples/${EXAMPLE_NAME}/stack/stevedore/Dockerfile
+    working_dir: /app/examples/${EXAMPLE_NAME}
+    command:
+      - tail
+      - -f
+      - /dev/null
+    privileged: true
+    environment:
+      - CGO_ENABLED=0
+      ## The encryption key for the credentials store is provided through an environment variable
+      - STEVEDORE_CREDENTIALS_ENCRYPTION_KEY=12345asdfg
+      ## The following credentials has been created by executing `stevedore create credentials registry.stevedore.test --username admin`
+      - STEVEDORE_ENVVARS_CREDENTIALS_82E99D42EE1191BB42FBFB444920104D=adee358c1be79793bae7328c750f29ec4fe77dcaeefc1807b969bdfd086f1db2051bab4225b5bfcc2c8f6dd88ad8d88abe0f04d70959c71a27c6e40e701307f9bfc4ba9120697c9d4162b94620c3ad5c7ec22a0314f6aecbd768cce71ba4ef1f558b29f9ec11d8dce96a30004647155e454807f730c0abb0d17399025c20ca20bb589071d7806a3879153a2c48e72ff01cc26f50dabc2855350fd27fd483ecf31356c4a28ec3e6c869d3b92a554f02e9dd510744af8319f428df95a34835fa0aa8ac2ccef2d4572d4099f20f7c2a640c68f2e0ff8edda84303caab1c7456c482510b0d2766cdd57351e3619083c75007c2f64d9c27455c7198803c397d188c7d6e8ce1a96451e39b60c25dd8d77647c0ffeb94cf074c6d1d9815669c35a3f2e2ebd227b316b843a07b3ad4114816bd4a5d43f101d7aa98e085d7046572404701ce8d4f0ab4d01177d27dac8dd99feeb3692fa2588d8a120e089f561eaeb732dd0d26c408ba2c11a4c42f2e2e171a74dc8815fd90c3619ff7e58c602b2c077c1231acffe542e2a576b3e9e43138fd68a8cfd2ddc96b7beba371ef4c5fc615bbdfebda1d01d2b9df32c354d73c55aa6764257e9d480188127407015f6bd62f768f8af6531723113cc71504ede4175f69c2e63e6080f216a109ff58bf7b09ed45263caabf30fd4857d19bf8c678de7c5b1664b7686e675702b5c46b9329ff53f8f2abf2b0
+      ## stevedore create credentials https_gitserver.stevedore.test --username admin (Password: admin)
+      - STEVEDORE_ENVVARS_CREDENTIALS_1F8A705113AA3AA1F6979264207F7A8E=2e6f5cefec50eabd0bcbfe516fea4cc0b6311d59449582bec37d09a54453892bc61ad6280cb53148c64067876d7375376dc642520daa0f25447eca7216bc6da84dcbfeec2164ff176f4ef35ef21a9774157dbfbdd93fb1d6423113b2e3c97bc21ca3c0051c737f9926d2be9b8c3c0984680f3b608d2a4cc55ff381e4269b868c6e0af9b639d97bcef215653cd1c64285454442f3bca5831db47179b835e6f39c908a5d24b8856b749c01f5984d34cc05d8f145672318b0521ff961325802b535a10282df0fca4e603f874170e165aad8d764ec93eaf3237bbc26e5eb26cd8688b3f56a1c6c5675acb4e6daae21493c0582dbc00abb94981a3086737ca57a5c54ee3aec9d831454f8e8419f1bc4c3a28d87cb130205bcc114caddb7a79368a12391af28dee834c9d3ab7d20d6f88d7978eac1c50491e9b02f031e782077eaaeea9e38f0d26610ec716df3f1a19464186cc9ed6e200d0aaf78657ddc875e272c5cd216ca60411b99926d1500fec76daf70ad2e452bbdc936f54cb11aa3c18d4fd7d9d8001cca1bcab70a1d10196768f991af24c38ef2612198e692812e5f28b4a94c3083daca0f6b3bcdc62a03ae392c594def4b00e2e016420e83e62b707dc57c9f6d37691dc3c3711514930b1158508418d08250e265bc91a08e8278ab03a6276a4cd0b9af104c3df4a8500c457cfd30a83d5ac19b9e2b60fd95e84793e337ea1dd8dee69756bc235e48
+      ## stevedore create credentials ssh_gitserver.stevedore.test --private-key-file /root/.ssh/id_rsa --ask-private-key-password (Password: password)
+      - STEVEDORE_ENVVARS_CREDENTIALS_AF4CCCACF16E94F6B21AC0993BE1A849=dca96d15a3d03e108b35bd29bcb2321f199d6142ce44816bc9eabd597978d7045b3c89c8d7b2a4fc065a2fce178c687211054ed5bdb4fbd6d168cd3bfd1486c34647d466edcb159a28e5443c52efae35cef516c25fbb94c27cc4cf31cfb41987abc96ba769193d6e14a00a7179ccb0329a141576828e62e45c95994015661427862d0c49c8c86fe94a6c483d93b554ed1c341dfb13b7ba585523badc4919d4a29c98288fae08741b3ef35f76a0745ae66be8401baa7d39c1d9713958d61db3591a74dc9abe76cd6a3cf16218db7e224c971f3eadb32d3554c091166073a75bc762381d709f02c9a2aaebf24ed59bd366cdbf1192d64c55044a79fb0f7d96521e4820b4f87b96d3fe6ef180f4b3589f7d1321eaaf48c7f33d4803c0631dd7ed69c6a071ed3794cea8a625a042ab32d4748c7a25c9d16517013f55cbd8acc5b33826afbe3f464e140d5e92ed65ca06bdaddf8cc689d40780d1565a3bc29204c846cf2f688f5719412496e49bba29f0f591351677065798da3817990bcf73f70e0f21512a4a442597dd41ebd0d0aef90894b2bdf9031abf0873555a4ab64a6bca1ca9d7bb0cd115b5121dfe7b3e2c55aaa389ef477360a937becdf5f6e1beb765187ce437981330eae52d810a7fa1b12585cf2ca1bd197977360d6c67ac2dd0c051563b8cff184b753369a890ad61b04d839013ed7ba943754e024b63ead5e53ee3e783cc98a4e892b406bd89acfa9aa79c1c20f0dc15397e
+    volumes:
+      - ../..:/app
+      - ./fixtures/docker/daemon.json:/etc/docker/daemon.json
+      - ./fixtures/ssl:/ssl
+      - ssh:/root/.ssh
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "nc", "-vz", "localhost","2376"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  worker:
+    image: ubuntu:22.04
+    volumes:
+      - ssh:/root/.ssh
+
+  gitserver:
+    build:
+      context: ./stack/gitserver
+    environment:
+      - GIT_KEYS=/git/keys
+    volumes:
+      - ./fixtures/gitserver/repos:/git/repos
+      - ssh:/git/keys
+    networks:
+      default:
+        aliases:
+          - gitserver.stevedore.test
+    deploy:
+      resources:
+        limits:
+          memory: 10M
+    healthcheck:
+      test: ["CMD", "nc", "-vz", "localhost","80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  ssh-keygen:
+    build:
+      context: ./stack/openssh-client
+    command:
+      - tail
+      - -f
+      - /dev/null
+    working_dir: /ssh
+    volumes:
+      - ssh:/ssh
+    deploy:
+      resources:
+        limits:
+          memory: 10M
+
+volumes:
+  ssh:

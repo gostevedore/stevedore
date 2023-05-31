@@ -6,7 +6,7 @@ EXAMPLE := $(shell basename ${PWD})
 GREEN := "\\033[32m"
 NC := "\\033[0m"
 
-.PHONY: start run clean example
+.PHONY: start run clean example status follow-logs attach
 
 help: ## Lists allowed targets
 	@echo "$(GREEN) Example $(EXAMPLE):$(NC)"
@@ -16,17 +16,24 @@ help: ## Lists allowed targets
 run: start example clean ## Runs start, example, and clean targets together
 
 start: ## Starts the stack required to run the example
+	@echo " [$(EXAMPLE)]$(GREEN) Create SSH keys$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run --rm --workdir /ssh ssh-keygen /usr/bin/ssh-keygen -t rsa -q -N "password" -f id_rsa -C "apenella@stevedore.test" || { echo " Error creating the SSH keys $(EXAMPLE)"; exit 1; }
+	@echo
+
 	@echo
 	@echo "$(GREEN)Starting the stack to run $(EXAMPLE)$(NC)"
 	@echo
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) up --detach --build || { echo " Error starting the stack to run $(EXAMPLE)"; exit 1; }
 
+	@echo " [$(EXAMPLE)]$(GREEN) Create known_hosts file$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec --workdir /ssh ssh-keygen bash -c '/usr/bin/ssh-keyscan -H gitserver.stevedore.test > known_hosts' || { echo " Error creating the known_host keys $(EXAMPLE)"; exit 1; }
+	@echo
 
 clean: ## Stops the stack required to run the example
 	@echo
 	@echo "$(GREEN)Stopping the stack to run $(EXAMPLE)$(NC)"
 	@echo
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans || true
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans --timeout 3 || true
 
 status: ## Displays the status of the stack
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) ps || true
@@ -37,15 +44,23 @@ follow-logs: ## Shows the stack logs in follow mode
 attach: ## Attaches to the Stevedore container
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore sh
 
-example: ## Executes the example (requires the stack to be started)
+example: ## Executes the example. It expects that the required stack is already running
 	@echo
 	@echo "$(GREEN) Run example $(EXAMPLE)$(NC)"
 	@echo
 
-	@echo " [$(EXAMPLE)]$(GREEN) Get images$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore get images || { echo " Error getting images $(EXAMPLE)"; exit 1; }
+	@echo " [$(EXAMPLE)]$(GREEN) Waiting for dockerd$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore /usr/local/bin/wait-for-dockerd.sh || { echo " Error synchronizing $(EXAMPLE)"; exit 1; }
 	@echo
 
-	@echo " [$(EXAMPLE)]$(GREEN) Build my-app and push images after build$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore build my-app --image-version example --push-after-build || { echo " Error runnig example $(EXAMPLE)"; exit 1; }
+	@echo " [$(EXAMPLE)]$(GREEN) Get images$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore get images --tree || { echo " Error getting images $(EXAMPLE)"; exit 1; }
+	@echo
+
+	@echo " [$(EXAMPLE)]$(GREEN) Build the base image, and push the images after build$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore  build base --push-after-build || { echo " Error runnig example $(EXAMPLE)"; exit 1; }
+	@echo
+
+	@echo " [$(EXAMPLE)]$(GREEN) Build the app1 image, and push the images after build$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore  build app1 --enable-semver-tags --image-version 0.1.2-rc1+$$(date -u +"%a%d%m%Y%H%M") --push-after-build || { echo " Error runnig example $(EXAMPLE)"; exit 1; }
 	@echo

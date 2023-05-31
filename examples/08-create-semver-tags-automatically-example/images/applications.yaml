@@ -1,0 +1,34 @@
+images:
+  app1:
+    "0.1.2":
+      version: "{{ .Version }}"
+      registry: registry.stevedore.test
+      builder:
+        driver: docker
+        options:
+          context:
+            - path: images-src/build
+            - git:
+                repository: http://gitserver.stevedore.test:/git/repos/app1.git
+                reference: main
+                auth:
+                  credentials_id: https_gitserver.stevedore.test
+      parents:
+        base:
+          - busybox-1.35
+    "*":
+      version: "{{ .Version }}"
+      registry: registry.stevedore.test
+      builder:
+        driver: docker
+        options:
+          context:
+            - path: images-src/build
+            - git:
+                repository: http://gitserver.stevedore.test:/git/repos/app1.git
+                reference: main
+                auth:
+                  credentials_id: https_gitserver.stevedore.test
+      parents:
+        base:
+          - busybox-1.35
