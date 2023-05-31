@@ -1,0 +1,18 @@
+[ req ]
+default_bits = 2048
+default_md = sha256
+distinguished_name=req_distinguished_name
+req_extensions = req_ext
+prompt = no
+
+[ req_distinguished_name ]
+organizationName    = stevedore
+commonName = *.stevedore.test
+
+[ req_ext ]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = registry.stevedore.test
+DNS.2 = auth.stevedore.test
+DNS.3 = *..stevedore.test
