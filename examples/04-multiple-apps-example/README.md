@@ -6,7 +6,7 @@ This example showcases how to define and manage multiple applications in Stevedo
   - [Requirements](#requirements)
   - [Stack](#stack)
   - [Usage](#usage)
-  - [Expected Output](#expected-output)
+  - [Example Execution Insights](#example-execution-insights)
     - [Getting images](#getting-images)
     - [Building images](#building-images)
       - [app1](#app1)
@@ -46,7 +46,7 @@ To execute the entire example, including starting and cleaning the stack, run th
 ❯ make run
 ```
 
-## Expected Output
+## Example Execution Insights
 Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes a Docker image using Stevedore, and then cleans the stack up.
 
 ```sh

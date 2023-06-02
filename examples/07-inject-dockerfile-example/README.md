@@ -6,7 +6,7 @@ This example demonstrates how to create a unified build context using different 
   - [Requirements](#requirements)
   - [Stack](#stack)
   - [Usage](#usage)
-  - [Expected Output](#expected-output)
+  - [Example Execution Insights](#example-execution-insights)
     - [Starting the Stack](#starting-the-stack)
     - [Waiting for Dockerd to be Ready](#waiting-for-dockerd-to-be-ready)
     - [Getting Credentials](#getting-credentials)
@@ -51,7 +51,7 @@ To execute the entire example, including starting and cleaning the stack, run th
 ❯ make run
 ```
 
-## Expected Output
+## Example Execution Insights
 Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes Docker images using Stevedore, and then cleans the stack up.
 
 ### Starting the Stack

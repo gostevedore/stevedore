@@ -5,7 +5,7 @@ This example aims to introduce you to Stevedore and its basic concepts and comma
   - [Requirements](#requirements)
   - [Stack](#stack)
   - [Usage](#usage)
-  - [Expected Output](#expected-output)
+  - [Example Execution Insights](#example-execution-insights)
     - [Starting the stack](#starting-the-stack)
     - [Getting Credentials](#getting-credentials)
     - [Getting Builders](#getting-builders)
@@ -50,7 +50,7 @@ To execute the entire example, including starting and cleaning the stack, run th
 ❯ make run
 ```
 
-## Expected Output
+## Example Execution Insights
 Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes a Docker image using Stevedore, and then cleans the stack up.
 
 ### Starting the stack
