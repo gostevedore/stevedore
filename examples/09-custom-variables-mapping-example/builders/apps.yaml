@@ -1,0 +1,9 @@
+builders:
+  my-app:
+    driver: docker
+    options:
+      context:
+        - path: ./my-app
+    variables_mapping:
+      image_from_name_key: parent_name
+      image_from_tag_key: parent_version
