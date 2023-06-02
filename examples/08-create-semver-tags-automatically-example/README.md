@@ -2,6 +2,19 @@
 
 This example showcases how to use the SemVer specification to create automatically new image tags for a Docker image.
 
+- [Create SemVer Tags Automatically](#create-semver-tags-automatically)
+  - [Requirements](#requirements)
+  - [Stack](#stack)
+  - [Usage](#usage)
+  - [Example Execution Insights](#example-execution-insights)
+    - [Starting the Stack](#starting-the-stack)
+    - [Waiting for Dockerd to be Ready](#waiting-for-dockerd-to-be-ready)
+    - [Getting Images](#getting-images)
+    - [Building images](#building-images)
+    - [Cleaning the stack](#cleaning-the-stack)
+  - [Additional Information](#additional-information)
+    - [Stevedore Configuration](#stevedore-configuration)
+
 ## Requirements
 - Docker. _Tested on Docker server 20.10.21 and Docker API 1.41_
 - Docker's Compose plugin or `docker-compose`. _Tested on Docker Compose version v2.17.3_
@@ -35,7 +48,7 @@ To execute the entire example, including starting and cleaning the stack, run th
 ```sh
 ❯ make run
 ```
-## Expected Output
+## Example Execution Insights
 Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes Docker images using Stevedore, and then cleans the stack up.
 
 ### Starting the Stack
