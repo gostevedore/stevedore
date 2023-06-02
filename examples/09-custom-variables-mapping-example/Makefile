@@ -47,7 +47,7 @@ example: ## Executes the example (requires the stack to be started)
 	@echo
 
 	@echo " [$(EXAMPLE)]$(GREEN) Build my-app and push images after build$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore build my-app --dry-run || { echo " Error runnig example $(EXAMPLE) in dry-run mode"; exit 1; }
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore build my-app --image-version 3.2.1-busybox1.36 --dry-run || { echo " Error runnig example $(EXAMPLE) in dry-run mode"; exit 1; }
 	@echo
 
 	@echo " [$(EXAMPLE)]$(GREEN) Build my-app and push images after build$(NC)"
