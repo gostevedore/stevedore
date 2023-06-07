@@ -16,3 +16,4 @@
 - Install script uses the artefact name updated on v0.11.0
 - Use the default variables mapping definition when in the builder is defined as empty
 - On promote command, mark as deprecated the flags --promote-image-namespace and --promote-image-registry
+- On promote command, enable semver tag is aware of the source image tag
