@@ -1,0 +1,19 @@
+images:
+  busybox:
+    "1.35":
+      persistent_labels:
+        created_at: "{{ .DateRFC3339Nano }}"
+
+  base:
+    "2.4.6":
+      registry: registry.stevedore.test
+      tags:
+        - "{{ .Parent.Name }}{{ .Parent.Version }}"
+      builder:
+        driver: docker
+        options:
+          context:
+            - path: images-src/base
+      parents:
+        busybox:
+          - "1.35"

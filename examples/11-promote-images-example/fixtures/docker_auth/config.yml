@@ -1,0 +1,27 @@
+# A simple example. See reference.yml for explanation for explanation of all options.
+#
+#  auth:
+#    token:
+#      realm: "https://127.0.0.1:5001/auth"
+#      service: "Docker registry"
+#      issuer: "Acme auth server"
+#      rootcertbundle: "/path/to/server.pem"
+
+server:
+  addr: ":5001"
+  certificate: /ssl/stevedore.test.crt
+  key: /ssl/stevedore.test.key
+
+token:
+  issuer: "stevedore"  # Must match issuer in the Registry config.
+  expiration: 900
+
+users:
+  # Password is specified as a BCrypt hash. Use `htpasswd -nB USERNAME` to generate.
+  admin:
+    password: "$2y$05$vNNOVM308WQ2dQMT.9fsZu09Bg1notEP72A9zJ2qPycCVeZYOozma"  # admin
+
+acl:
+  - match: {account: "admin"}
+    actions: ["*"]
+    comment: "Admin has full access to everything."
