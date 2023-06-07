@@ -169,7 +169,7 @@ Take note of the usage of the `--pull-parent-image` flag, which ensures that the
 The resulting image, `registry.stevedore.test/app1:0.1.0-base2.4.6`, is now stored locally and pending promotion.
 
 ### Promoting the app1 image
-Finally, to promote the image `registry.stevedore.test/app1:0.1.0-base2.4.6`, execute the command `stevedore promote registry.stevedore.test/app1:0.1.0-base2.4.6 --promote-image-tag latest --force-promote-source-image --enable-semver-tags`. This promotion involves several actions:
+Finally, to promote the image `registry.stevedore.test/app1:0.1.0-base2.4.6`, you can execute the command `stevedore promote registry.stevedore.test/app1:0.1.0-base2.4.6 --promote-image-tag latest --force-promote-source-image --enable-semver-tags`. This promotion involves several actions:
 - The `--promote-image-tag` flag overwrites the source image tag with the specified tag `latest`.
 - The `--force-promote-source-image` flag ensures that the tag of the source image is pushed.
 - The `--enable-semver-tags` flag enables automatic tag generation based on the semantic version.
