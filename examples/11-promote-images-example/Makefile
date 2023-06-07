@@ -26,7 +26,7 @@ clean: ## Stops the stack required to run the example
 	@echo
 	@echo "$(GREEN)Stopping the stack to run $(EXAMPLE)$(NC)"
 	@echo
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans || true
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans --timeout 3 || true
 
 status: ## Displays the status of the stack
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) ps || true
@@ -42,10 +42,22 @@ example: ## Executes the example (requires the stack to be started)
 	@echo "$(GREEN) Run example $(EXAMPLE)$(NC)"
 	@echo
 
-	@echo " [$(EXAMPLE)]$(GREEN) Get images$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore get images || { echo " Error getting images $(EXAMPLE)"; exit 1; }
+	@echo " [$(EXAMPLE)]$(GREEN) Waiting for dockerd$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore /usr/local/bin/wait-for-dockerd.sh || { echo " Error synchronizing $(EXAMPLE)"; exit 1; }
 	@echo
 
-	@echo " [$(EXAMPLE)]$(GREEN) Build my-app and push images after build$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore build my-app --image-version example --push-after-build || { echo " Error runnig example $(EXAMPLE)"; exit 1; }
+	@echo " [$(EXAMPLE)]$(GREEN) Building base image$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore build base || { echo " Error building base $(EXAMPLE)"; exit 1; }
+	@echo
+
+	@echo " [$(EXAMPLE)]$(GREEN) Promoting building image$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore promote registry.stevedore.test/base:2.4.6 --promote-image-registry-namespace stable || { echo " Error building and promoting the base image $(EXAMPLE)"; exit 1; }
+	@echo
+
+	@echo " [$(EXAMPLE)]$(GREEN) Building app1 image$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore build app1 --image-version 0.1.0 --image-from-namespace stable  --pull-parent-image || { echo " Error building app1 image $(EXAMPLE)"; exit 1; }
+	@echo
+
+	@echo " [$(EXAMPLE)]$(GREEN) Promoting app1 image$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore promote registry.stevedore.test/app1:0.1.0-base2.4.6 --promote-image-tag latest --force-promote-source-image --enable-semver-tags || { echo " Error promoting app1 image $(EXAMPLE)"; exit 1; }
 	@echo
