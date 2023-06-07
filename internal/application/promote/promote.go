@@ -3,11 +3,13 @@ package promote
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	authmethodbasic "github.com/gostevedore/stevedore/internal/infrastructure/auth/method/basic"
+	"github.com/gostevedore/stevedore/internal/infrastructure/types/list"
 )
 
 // OptionsFunc is a function used to configure the application
@@ -135,34 +137,32 @@ func (a *Application) Promote(ctx context.Context, options *Options) error {
 		targetImage.Name = options.TargetImageName
 	}
 
-	if options.PromoteSourceImageTag {
-		tags, err := a.generateReferenceNameList(targetImage, []string{sourceImage.Version})
-		if err != nil {
-			return errors.New(errContext, "", err)
-		}
+	auxTargetImageTagsMap := map[string]struct{}{}
 
-		promoteOptions.TargetImageTags = append(promoteOptions.TargetImageTags, tags...)
+	if options.PromoteSourceImageTag {
+		auxTargetImageTagsMap[sourceImage.Version] = struct{}{}
 	}
 
 	if len(options.TargetImageTags) > 0 {
 		targetImage.Version = options.TargetImageTags[0]
 
-		tags, err := a.generateReferenceNameList(targetImage, options.TargetImageTags[1:])
-		if err != nil {
-			return errors.New(errContext, "", err)
+		for _, tag := range options.TargetImageTags[1:] {
+			auxTargetImageTagsMap[tag] = struct{}{}
 		}
-		promoteOptions.TargetImageTags = append(promoteOptions.TargetImageTags, tags...)
 	}
 
 	if options.EnableSemanticVersionTags {
-		semVerTags, _ := a.semver.GenerateSemverList(options.TargetImageTags, options.SemanticVersionTagsTemplates)
-		if len(semVerTags) > 0 {
+		auxTargetImageTagsMap[targetImage.Version] = struct{}{}
+		auxTargetImageSemVerList := []string{}
+		for tag := range auxTargetImageTagsMap {
+			auxTargetImageSemVerList = append(auxTargetImageSemVerList, tag)
+		}
 
-			tags, err := a.generateReferenceNameList(targetImage, semVerTags)
-			if err != nil {
-				return errors.New(errContext, "", err)
+		semVerTags, _ := a.semver.GenerateSemverList(auxTargetImageSemVerList, options.SemanticVersionTagsTemplates)
+		if len(semVerTags) > 0 {
+			for _, tag := range semVerTags {
+				auxTargetImageTagsMap[tag] = struct{}{}
 			}
-			promoteOptions.TargetImageTags = append(promoteOptions.TargetImageTags, tags...)
 		}
 	}
 
@@ -171,6 +171,19 @@ func (a *Application) Promote(ctx context.Context, options *Options) error {
 		return errors.New(errContext, fmt.Sprintf("Error generating target image reference name for '%s'", promoteOptions.SourceImageName), err)
 	}
 	promoteOptions.TargetImageName = referenceName
+
+	auxTargetImageTagsList := []string{}
+	for tag := range auxTargetImageTagsMap {
+		if tag != targetImage.Version {
+			auxTargetImageTagsList = append(auxTargetImageTagsList, tag)
+		}
+	}
+	promoteOptions.TargetImageTags, err = a.generateReferenceNameList(targetImage, auxTargetImageTagsList)
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
+
+	sort.Sort(list.SortedStringList(promoteOptions.TargetImageTags))
 
 	// Registry host must be defined explicitly to achive the host credentials
 	if targetImage.RegistryHost != "" {
@@ -206,23 +219,26 @@ func (a *Application) Promote(ctx context.Context, options *Options) error {
 	return nil
 }
 
+// generateReferenceNameList return a list of reference names
 func (a *Application) generateReferenceNameList(i *image.Image, tags []string) ([]string, error) {
 
 	errContext := "(application::promote::generateReferenceNameList)"
 	list := []string{}
 
 	for _, tag := range tags {
-		var auxReferenceName string
-		var err error
-		var auxImage *image.Image
+		if i.Version != tag {
+			var auxReferenceName string
+			var err error
+			var auxImage *image.Image
 
-		auxImage, err = i.Copy()
-		if err != nil {
-			return nil, errors.New(errContext, "", err)
+			auxImage, err = i.Copy()
+			if err != nil {
+				return nil, errors.New(errContext, "", err)
+			}
+			auxImage.Version = tag
+			auxReferenceName, err = a.referenceNamer.GenerateName(auxImage)
+			list = append(list, auxReferenceName)
 		}
-		auxImage.Version = tag
-		auxReferenceName, err = a.referenceNamer.GenerateName(auxImage)
-		list = append(list, auxReferenceName)
 	}
 
 	return list, nil
