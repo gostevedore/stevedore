@@ -26,8 +26,7 @@ func (h *Handler) Handler(ctx context.Context, options *Options) error {
 	}
 
 	applicationOptions := &promote.Options{
-		SourceImageName:       options.SourceImageName,
-		RemoveTargetImageTags: options.RemoveTargetImageTags,
+		SourceImageName: options.SourceImageName,
 	}
 
 	applicationOptions.DryRun = options.DryRun
