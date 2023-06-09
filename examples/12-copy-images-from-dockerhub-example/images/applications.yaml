@@ -1,0 +1,14 @@
+images:
+  app1:
+    v1:
+      # name: "{{ .Name }}"
+      version: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
+      registry: registry.stevedore.test
+      builder:
+        driver: docker
+        options:
+          context:
+            - path: images-src/app1
+      parents:
+        busybox:
+          - "1.35"
