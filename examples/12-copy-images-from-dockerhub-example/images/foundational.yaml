@@ -1,0 +1,7 @@
+images:
+  busybox:
+    "1.35":
+      registry: registry.stevedore.test
+      namespace:  library
+      persistent_labels:
+        created_at: "{{ .DateRFC3339Nano }}"
