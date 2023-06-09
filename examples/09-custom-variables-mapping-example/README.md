@@ -92,7 +92,7 @@ Starting the stack to run 09-custom-variables-mapping-example
 ```
 
 ### Waiting for Dockerd to be Ready
-Before starting the execution of the Stevedore command, it is important to ensure that the Docker daemon (dockerd) is ready. The stevedore service Docker image includes a script, [wait-for-dockerd.sh]((./stack/stevedore/wait-for-dockerd.sh)), which can be used to ensure the readiness of the Docker daemon.
+Before starting the execution of the Stevedore command, it is important to ensure that the Docker daemon (dockerd) is ready. The stevedore service Docker image includes a script, [wait-for-dockerd.sh](./stack/stevedore/wait-for-dockerd.sh), which can be used to ensure the readiness of the Docker daemon.
 ```sh
  Run example 09-custom-variables-mapping-example
 
