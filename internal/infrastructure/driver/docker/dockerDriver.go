@@ -133,6 +133,14 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *image
 	}
 
 	// add docker build arguments
+	if i.Parent != nil {
+		parentFullyQualifiedName, err := d.referenceName.GenerateName(i.Parent)
+		if err != nil {
+			return errors.New(errContext, "", err)
+		}
+		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromFullyQualifiedNameKey], parentFullyQualifiedName)
+	}
+
 	if i.Parent != nil && i.Parent.RegistryNamespace != "" {
 		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromRegistryNamespaceKey], i.Parent.RegistryNamespace)
 	}

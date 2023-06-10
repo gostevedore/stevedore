@@ -5,41 +5,43 @@ import (
 )
 
 const (
-	VarMappingImageBuilderNameKey              = "image_builder_name_key"               // Not comming from build's command flag
-	VarMappingImageBuilderTagKey               = "image_builder_tag_key"                // Not comming from build's command flag
-	VarMappingImageBuilderRegistryNamespaceKey = "image_builder_registry_namespace_key" // Not comming from build's command flag
-	VarMappingImageBuilderRegistryHostKey      = "image_builder_registry_host_key"      // Not comming from build's command flag
 	VarMappingImageBuilderLabelKey             = "image_builder_label_key"
+	VarMappingImageBuilderNameKey              = "image_builder_name_key"               // Not comming from build's command flag
+	VarMappingImageBuilderRegistryHostKey      = "image_builder_registry_host_key"      // Not comming from build's command flag
+	VarMappingImageBuilderRegistryNamespaceKey = "image_builder_registry_namespace_key" // Not comming from build's command flag
+	VarMappingImageBuilderTagKey               = "image_builder_tag_key"                // Not comming from build's command flag
+	VarMappingImageExtraTagsKey                = "image_extra_tags_key"
+	VarMappingImageFromFullyQualifiedNameKey   = "image_from_fully_qualified_name_key"
 	VarMappingImageFromNameKey                 = "image_from_name_key"
-	VarMappingImageFromTagKey                  = "image_from_tag_key"
-	VarMappingImageFromRegistryNamespaceKey    = "image_from_registry_namespace_key"
 	VarMappingImageFromRegistryHostKey         = "image_from_registry_host_key"
+	VarMappingImageFromRegistryNamespaceKey    = "image_from_registry_namespace_key"
+	VarMappingImageFromTagKey                  = "image_from_tag_key"
+	VarMappingImageLabelsKey                   = "image_lables_key"
 	VarMappingImageNameKey                     = "image_name_key"
 	VarMappingImageTagKey                      = "image_tag_key"
-	VarMappingImageExtraTagsKey                = "image_extra_tags_key"
-	VarMappingImageLabelsKey                   = "image_lables_key"
-	VarMappingRegistryNamespaceKey             = "image_registry_namespace_key"
-	VarMappingRegistryHostKey                  = "image_registry_host_key"
 	VarMappingPullParentImageKey               = "pull_parent_image_key"
 	VarMappingPushImagetKey                    = "push_image_key"
+	VarMappingRegistryHostKey                  = "image_registry_host_key"
+	VarMappingRegistryNamespaceKey             = "image_registry_namespace_key"
 
-	VarMappingImageBuilderNameDefaultValue              = "image_builder_name"               // Not comming from build's command flag
-	VarMappingImageBuilderTagDefaultValue               = "image_builder_tag"                // Not comming from build's command flag
-	VarMappingImageBuilderRegistryNamespaceDefaultValue = "image_builder_registry_namespace" // Not comming from build's command flag
-	VarMappingImageBuilderRegistryHostDefaultValue      = "image_builder_registry_host"      // Not comming from build's command flag
 	VarMappingImageBuilderLabelDefaultValue             = "image_builder_label"
+	VarMappingImageBuilderNameDefaultValue              = "image_builder_name"               // Not comming from build's command flag
+	VarMappingImageBuilderRegistryHostDefaultValue      = "image_builder_registry_host"      // Not comming from build's command flag
+	VarMappingImageBuilderRegistryNamespaceDefaultValue = "image_builder_registry_namespace" // Not comming from build's command flag
+	VarMappingImageBuilderTagDefaultValue               = "image_builder_tag"                // Not comming from build's command flag
+	VarMappingImageExtraTagsDefaultValue                = "image_extra_tags"
+	VarMappingImageFromFullyQualifiedNameValue          = "image_from_fully_qualified_name"
 	VarMappingImageFromNameDefaultValue                 = "image_from_name"
-	VarMappingImageFromTagDefaultValue                  = "image_from_tag"
-	VarMappingImageFromRegistryNamespaceDefaultValue    = "image_from_registry_namespace"
 	VarMappingImageFromRegistryHostDefaultValue         = "image_from_registry_host"
+	VarMappingImageFromRegistryNamespaceDefaultValue    = "image_from_registry_namespace"
+	VarMappingImageFromTagDefaultValue                  = "image_from_tag"
+	VarMappingImageLabelsDefaultValue                   = "image_labels"
 	VarMappingImageNameDefaultValue                     = "image_name"
 	VarMappingImageTagDefaultValue                      = "image_tag"
-	VarMappingImageExtraTagsDefaultValue                = "image_extra_tags"
-	VarMappingImageLabelsDefaultValue                   = "image_labels"
-	VarMappingRegistryNamespaceDefaultValue             = "image_registry_namespace"
-	VarMappingRegistryHostDefaultValue                  = "image_registry_host"
 	VarMappingPullParentImageDefaultValue               = "pull_parent_image"
 	VarMappingPushImagetDefaultValue                    = "push_image"
+	VarMappingRegistryHostDefaultValue                  = "image_registry_host"
+	VarMappingRegistryNamespaceDefaultValue             = "image_registry_namespace"
 )
 
 // Varsmap is a map[string]string that defines the variables names passed from builder to build drivers
@@ -48,23 +50,24 @@ type Varsmap map[string]string
 // New return a Varsmap object
 func New() Varsmap {
 	return Varsmap{
-		VarMappingImageBuilderNameKey:              VarMappingImageBuilderNameDefaultValue,
-		VarMappingImageBuilderTagKey:               VarMappingImageBuilderTagDefaultValue,
-		VarMappingImageBuilderRegistryNamespaceKey: VarMappingImageBuilderRegistryNamespaceDefaultValue,
-		VarMappingImageBuilderRegistryHostKey:      VarMappingImageBuilderRegistryHostDefaultValue,
 		VarMappingImageBuilderLabelKey:             VarMappingImageBuilderLabelDefaultValue,
+		VarMappingImageBuilderNameKey:              VarMappingImageBuilderNameDefaultValue,
+		VarMappingImageBuilderRegistryHostKey:      VarMappingImageBuilderRegistryHostDefaultValue,
+		VarMappingImageBuilderRegistryNamespaceKey: VarMappingImageBuilderRegistryNamespaceDefaultValue,
+		VarMappingImageBuilderTagKey:               VarMappingImageBuilderTagDefaultValue,
+		VarMappingImageExtraTagsKey:                VarMappingImageExtraTagsDefaultValue,
+		VarMappingImageFromFullyQualifiedNameKey:   VarMappingImageFromFullyQualifiedNameValue,
 		VarMappingImageFromNameKey:                 VarMappingImageFromNameDefaultValue,
-		VarMappingImageFromTagKey:                  VarMappingImageFromTagDefaultValue,
-		VarMappingImageFromRegistryNamespaceKey:    VarMappingImageFromRegistryNamespaceDefaultValue,
 		VarMappingImageFromRegistryHostKey:         VarMappingImageFromRegistryHostDefaultValue,
+		VarMappingImageFromRegistryNamespaceKey:    VarMappingImageFromRegistryNamespaceDefaultValue,
+		VarMappingImageFromTagKey:                  VarMappingImageFromTagDefaultValue,
+		VarMappingImageLabelsKey:                   VarMappingImageLabelsDefaultValue,
 		VarMappingImageNameKey:                     VarMappingImageNameDefaultValue,
 		VarMappingImageTagKey:                      VarMappingImageTagDefaultValue,
-		VarMappingImageExtraTagsKey:                VarMappingImageExtraTagsDefaultValue,
-		VarMappingImageLabelsKey:                   VarMappingImageLabelsDefaultValue,
-		VarMappingRegistryNamespaceKey:             VarMappingRegistryNamespaceDefaultValue,
-		VarMappingRegistryHostKey:                  VarMappingRegistryHostDefaultValue,
 		VarMappingPullParentImageKey:               VarMappingPullParentImageDefaultValue,
 		VarMappingPushImagetKey:                    VarMappingPushImagetDefaultValue,
+		VarMappingRegistryHostKey:                  VarMappingRegistryHostDefaultValue,
+		VarMappingRegistryNamespaceKey:             VarMappingRegistryNamespaceDefaultValue,
 	}
 }
 
@@ -90,6 +93,10 @@ func (v Varsmap) Combine(c Varsmap) error {
 
 	if v == nil {
 		return errors.New(errContext, "Variables mapping is nil")
+	}
+
+	if c == nil {
+		return errors.New(errContext, "Variables mapping to combine is nil")
 	}
 
 	auxV := v.GetUnderlyingMap()
@@ -132,6 +139,14 @@ func (v Varsmap) Combine(c Varsmap) error {
 		_, existsC = auxC[VarMappingImageBuilderLabelKey]
 		if existsC {
 			auxV[VarMappingImageBuilderLabelKey] = auxC[VarMappingImageBuilderLabelKey]
+		}
+	}
+
+	_, existsV = auxV[VarMappingImageFromFullyQualifiedNameKey]
+	if !existsV {
+		_, existsC = auxC[VarMappingImageFromFullyQualifiedNameKey]
+		if existsC {
+			auxV[VarMappingImageFromFullyQualifiedNameKey] = auxC[VarMappingImageFromFullyQualifiedNameKey]
 		}
 	}
 
