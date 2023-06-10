@@ -5,19 +5,21 @@
 - [ ] Build an image as well as all its parent until the root image
 - [ ] Execute the build plan to show the build intentions
 - [ ] Cleanup compatibilities
-- [ ] Create a variable mapping with the normalized parent image name
 - [ ] build tries to pull from Docker registry by default
 
 ## v0.11.1
+- [ ] Create a variable mapping with the normalized parent image name
 - [x] Fix on promote command, the flags --promote-image-namespace and --promote-image-registry are not marked as deprecated
 - [x] Fix typos on promote command examples
-- [x] --enable-semver-tags tags has no effect in the promote
+- [x] --enable-semver-tags tags have no effect in the promote
+- [x] on promote command, remove local images after push keep the images there
+- [x] build pull-parent-image does not forces to pull the parent image
+- [ ] Fix container builders must match to [a-zA-Z0-9][a-zA-Z0-9_.-]*
 
 ## v0.11.0
 - [x] Fix: promote images with subnamespaces fails example myregistry/mynamesapce/grafana/tempo:1.0.0
 - [x] Fix: wildcard images could not use {{ .Name }} on images definition
 - [x] Fix: wildcarded images do not inherit parent persistent_vars
-- [ ] Fix: container builders must match to  [a-zA-Z0-9][a-zA-Z0-9_.-]*
 - [x] Credentials from env-vars
 - [x] Promote local and remote images
 - [x] Testing promote package

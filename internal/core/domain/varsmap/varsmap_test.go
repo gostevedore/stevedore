@@ -3,28 +3,30 @@ package varsmap
 import (
 	"testing"
 
+	errors "github.com/apenella/go-common-utils/error"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
 	v := Varsmap{
-		VarMappingImageBuilderNameKey:              VarMappingImageBuilderNameDefaultValue,
-		VarMappingImageBuilderTagKey:               VarMappingImageBuilderTagDefaultValue,
-		VarMappingImageBuilderRegistryNamespaceKey: VarMappingImageBuilderRegistryNamespaceDefaultValue,
-		VarMappingImageBuilderRegistryHostKey:      VarMappingImageBuilderRegistryHostDefaultValue,
 		VarMappingImageBuilderLabelKey:             VarMappingImageBuilderLabelDefaultValue,
+		VarMappingImageBuilderNameKey:              VarMappingImageBuilderNameDefaultValue,
+		VarMappingImageBuilderRegistryHostKey:      VarMappingImageBuilderRegistryHostDefaultValue,
+		VarMappingImageBuilderRegistryNamespaceKey: VarMappingImageBuilderRegistryNamespaceDefaultValue,
+		VarMappingImageBuilderTagKey:               VarMappingImageBuilderTagDefaultValue,
+		VarMappingImageExtraTagsKey:                VarMappingImageExtraTagsDefaultValue,
+		VarMappingImageFromFullyQualifiedNameKey:   VarMappingImageFromFullyQualifiedNameValue,
 		VarMappingImageFromNameKey:                 VarMappingImageFromNameDefaultValue,
-		VarMappingImageFromTagKey:                  VarMappingImageFromTagDefaultValue,
-		VarMappingImageFromRegistryNamespaceKey:    VarMappingImageFromRegistryNamespaceDefaultValue,
 		VarMappingImageFromRegistryHostKey:         VarMappingImageFromRegistryHostDefaultValue,
+		VarMappingImageFromRegistryNamespaceKey:    VarMappingImageFromRegistryNamespaceDefaultValue,
+		VarMappingImageFromTagKey:                  VarMappingImageFromTagDefaultValue,
+		VarMappingImageLabelsKey:                   VarMappingImageLabelsDefaultValue,
 		VarMappingImageNameKey:                     VarMappingImageNameDefaultValue,
 		VarMappingImageTagKey:                      VarMappingImageTagDefaultValue,
-		VarMappingImageExtraTagsKey:                VarMappingImageExtraTagsDefaultValue,
-		VarMappingImageLabelsKey:                   VarMappingImageLabelsDefaultValue,
-		VarMappingRegistryNamespaceKey:             VarMappingRegistryNamespaceDefaultValue,
-		VarMappingRegistryHostKey:                  VarMappingRegistryHostDefaultValue,
 		VarMappingPullParentImageKey:               VarMappingPullParentImageDefaultValue,
 		VarMappingPushImagetKey:                    VarMappingPushImagetDefaultValue,
+		VarMappingRegistryHostKey:                  VarMappingRegistryHostDefaultValue,
+		VarMappingRegistryNamespaceKey:             VarMappingRegistryNamespaceDefaultValue,
 	}
 
 	t.Log("Testing create a new varsmap")
@@ -34,23 +36,24 @@ func TestNew(t *testing.T) {
 func TestGetUnderlyingMap(t *testing.T) {
 	a := New()
 	expected := map[string]string{
-		VarMappingImageBuilderNameKey:              VarMappingImageBuilderNameDefaultValue,
-		VarMappingImageBuilderTagKey:               VarMappingImageBuilderTagDefaultValue,
-		VarMappingImageBuilderRegistryNamespaceKey: VarMappingImageBuilderRegistryNamespaceDefaultValue,
-		VarMappingImageBuilderRegistryHostKey:      VarMappingImageBuilderRegistryHostDefaultValue,
 		VarMappingImageBuilderLabelKey:             VarMappingImageBuilderLabelDefaultValue,
+		VarMappingImageBuilderNameKey:              VarMappingImageBuilderNameDefaultValue,
+		VarMappingImageBuilderRegistryHostKey:      VarMappingImageBuilderRegistryHostDefaultValue,
+		VarMappingImageBuilderRegistryNamespaceKey: VarMappingImageBuilderRegistryNamespaceDefaultValue,
+		VarMappingImageBuilderTagKey:               VarMappingImageBuilderTagDefaultValue,
+		VarMappingImageExtraTagsKey:                VarMappingImageExtraTagsDefaultValue,
+		VarMappingImageFromFullyQualifiedNameKey:   VarMappingImageFromFullyQualifiedNameValue,
 		VarMappingImageFromNameKey:                 VarMappingImageFromNameDefaultValue,
-		VarMappingImageFromTagKey:                  VarMappingImageFromTagDefaultValue,
-		VarMappingImageFromRegistryNamespaceKey:    VarMappingImageFromRegistryNamespaceDefaultValue,
 		VarMappingImageFromRegistryHostKey:         VarMappingImageFromRegistryHostDefaultValue,
+		VarMappingImageFromRegistryNamespaceKey:    VarMappingImageFromRegistryNamespaceDefaultValue,
+		VarMappingImageFromTagKey:                  VarMappingImageFromTagDefaultValue,
+		VarMappingImageLabelsKey:                   VarMappingImageLabelsDefaultValue,
 		VarMappingImageNameKey:                     VarMappingImageNameDefaultValue,
 		VarMappingImageTagKey:                      VarMappingImageTagDefaultValue,
-		VarMappingImageExtraTagsKey:                VarMappingImageExtraTagsDefaultValue,
-		VarMappingImageLabelsKey:                   VarMappingImageLabelsDefaultValue,
-		VarMappingRegistryNamespaceKey:             VarMappingRegistryNamespaceDefaultValue,
-		VarMappingRegistryHostKey:                  VarMappingRegistryHostDefaultValue,
 		VarMappingPullParentImageKey:               VarMappingPullParentImageDefaultValue,
 		VarMappingPushImagetKey:                    VarMappingPushImagetDefaultValue,
+		VarMappingRegistryHostKey:                  VarMappingRegistryHostDefaultValue,
+		VarMappingRegistryNamespaceKey:             VarMappingRegistryNamespaceDefaultValue,
 	}
 
 	t.Log("Testing get underlying map")
@@ -63,42 +66,44 @@ func TestSetUnderlyingMap(t *testing.T) {
 
 	a := New()
 	newMapA := map[string]string{
-		VarMappingImageBuilderNameKey:              "expectedVarMappingImageBuilderNameDefaultValue",
-		VarMappingImageBuilderTagKey:               "expectedVarMappingImageBuilderTagDefaultValue",
-		VarMappingImageBuilderRegistryNamespaceKey: "expectedVarMappingImageBuilderRegistryNamespaceDefaultValue",
-		VarMappingImageBuilderRegistryHostKey:      "expectedVarMappingImageBuilderRegistryHostDefaultValue",
 		VarMappingImageBuilderLabelKey:             "expectedVarMappingImageBuilderLabelDefaultValue",
+		VarMappingImageBuilderNameKey:              "expectedVarMappingImageBuilderNameDefaultValue",
+		VarMappingImageBuilderRegistryHostKey:      "expectedVarMappingImageBuilderRegistryHostDefaultValue",
+		VarMappingImageBuilderRegistryNamespaceKey: "expectedVarMappingImageBuilderRegistryNamespaceDefaultValue",
+		VarMappingImageBuilderTagKey:               "expectedVarMappingImageBuilderTagDefaultValue",
+		VarMappingImageExtraTagsKey:                "expectedVarMappingImageExtraTagsDefaultValue",
+		VarMappingImageFromFullyQualifiedNameKey:   "expectedVarMappingImageFromFullyQualifiedNameValue",
 		VarMappingImageFromNameKey:                 "expectedVarMappingImageFromNameDefaultValue",
-		VarMappingImageFromTagKey:                  "expectedVarMappingImageFromTagDefaultValue",
-		VarMappingImageFromRegistryNamespaceKey:    "expectedVarMappingImageFromRegistryNamespaceDefaultValue",
 		VarMappingImageFromRegistryHostKey:         "expectedVarMappingImageFromRegistryHostDefaultValue",
+		VarMappingImageFromRegistryNamespaceKey:    "expectedVarMappingImageFromRegistryNamespaceDefaultValue",
+		VarMappingImageFromTagKey:                  "expectedVarMappingImageFromTagDefaultValue",
+		VarMappingImageLabelsKey:                   "expectedVarMappingImageLabelsDefaultValue",
 		VarMappingImageNameKey:                     "expectedVarMappingImageNameDefaultValue",
 		VarMappingImageTagKey:                      "expectedVarMappingImageTagDefaultValue",
-		VarMappingImageExtraTagsKey:                "expectedVarMappingImageExtraTagsDefaultValue",
-		VarMappingRegistryNamespaceKey:             "expectedVarMappingRegistryNamespaceDefaultValue",
-		VarMappingRegistryHostKey:                  "expectedVarMappingRegistryHostDefaultValue",
 		VarMappingPullParentImageKey:               "expectedVarMappingPullParentImageDefaultValue",
 		VarMappingPushImagetKey:                    "expectedVarMappingPushImagetDefaultValue",
-		VarMappingImageLabelsKey:                   "expectedVarMappingImageLabelsDefaultValue",
+		VarMappingRegistryHostKey:                  "expectedVarMappingRegistryHostDefaultValue",
+		VarMappingRegistryNamespaceKey:             "expectedVarMappingRegistryNamespaceDefaultValue",
 	}
 	expected := Varsmap{
-		VarMappingImageBuilderNameKey:              "expectedVarMappingImageBuilderNameDefaultValue",
-		VarMappingImageBuilderTagKey:               "expectedVarMappingImageBuilderTagDefaultValue",
-		VarMappingImageBuilderRegistryNamespaceKey: "expectedVarMappingImageBuilderRegistryNamespaceDefaultValue",
-		VarMappingImageBuilderRegistryHostKey:      "expectedVarMappingImageBuilderRegistryHostDefaultValue",
 		VarMappingImageBuilderLabelKey:             "expectedVarMappingImageBuilderLabelDefaultValue",
+		VarMappingImageBuilderNameKey:              "expectedVarMappingImageBuilderNameDefaultValue",
+		VarMappingImageBuilderRegistryHostKey:      "expectedVarMappingImageBuilderRegistryHostDefaultValue",
+		VarMappingImageBuilderRegistryNamespaceKey: "expectedVarMappingImageBuilderRegistryNamespaceDefaultValue",
+		VarMappingImageBuilderTagKey:               "expectedVarMappingImageBuilderTagDefaultValue",
+		VarMappingImageExtraTagsKey:                "expectedVarMappingImageExtraTagsDefaultValue",
+		VarMappingImageFromFullyQualifiedNameKey:   "expectedVarMappingImageFromFullyQualifiedNameValue",
 		VarMappingImageFromNameKey:                 "expectedVarMappingImageFromNameDefaultValue",
-		VarMappingImageFromTagKey:                  "expectedVarMappingImageFromTagDefaultValue",
-		VarMappingImageFromRegistryNamespaceKey:    "expectedVarMappingImageFromRegistryNamespaceDefaultValue",
 		VarMappingImageFromRegistryHostKey:         "expectedVarMappingImageFromRegistryHostDefaultValue",
+		VarMappingImageFromRegistryNamespaceKey:    "expectedVarMappingImageFromRegistryNamespaceDefaultValue",
+		VarMappingImageFromTagKey:                  "expectedVarMappingImageFromTagDefaultValue",
+		VarMappingImageLabelsKey:                   "expectedVarMappingImageLabelsDefaultValue",
 		VarMappingImageNameKey:                     "expectedVarMappingImageNameDefaultValue",
 		VarMappingImageTagKey:                      "expectedVarMappingImageTagDefaultValue",
-		VarMappingImageExtraTagsKey:                "expectedVarMappingImageExtraTagsDefaultValue",
-		VarMappingRegistryNamespaceKey:             "expectedVarMappingRegistryNamespaceDefaultValue",
-		VarMappingRegistryHostKey:                  "expectedVarMappingRegistryHostDefaultValue",
 		VarMappingPullParentImageKey:               "expectedVarMappingPullParentImageDefaultValue",
 		VarMappingPushImagetKey:                    "expectedVarMappingPushImagetDefaultValue",
-		VarMappingImageLabelsKey:                   "expectedVarMappingImageLabelsDefaultValue",
+		VarMappingRegistryHostKey:                  "expectedVarMappingRegistryHostDefaultValue",
+		VarMappingRegistryNamespaceKey:             "expectedVarMappingRegistryNamespaceDefaultValue",
 	}
 
 	t.Log("Testing set underlying map")
@@ -107,32 +112,79 @@ func TestSetUnderlyingMap(t *testing.T) {
 }
 
 func TestCombine(t *testing.T) {
-	a := New()
-	newMapA := Varsmap{
-		VarMappingImageBuilderNameKey: "expectedVarMappingImageBuilderNameDefaultValue",
-		VarMappingImageBuilderTagKey:  "expectedVarMappingImageBuilderTagDefaultValue",
-	}
-	expected := Varsmap{
-		VarMappingImageBuilderNameKey:              "expectedVarMappingImageBuilderNameDefaultValue",
-		VarMappingImageBuilderTagKey:               "expectedVarMappingImageBuilderTagDefaultValue",
-		VarMappingImageBuilderRegistryNamespaceKey: VarMappingImageBuilderRegistryNamespaceDefaultValue,
-		VarMappingImageBuilderRegistryHostKey:      VarMappingImageBuilderRegistryHostDefaultValue,
-		VarMappingImageBuilderLabelKey:             VarMappingImageBuilderLabelDefaultValue,
-		VarMappingImageFromNameKey:                 VarMappingImageFromNameDefaultValue,
-		VarMappingImageFromTagKey:                  VarMappingImageFromTagDefaultValue,
-		VarMappingImageFromRegistryNamespaceKey:    VarMappingImageFromRegistryNamespaceDefaultValue,
-		VarMappingImageFromRegistryHostKey:         VarMappingImageFromRegistryHostDefaultValue,
-		VarMappingImageNameKey:                     VarMappingImageNameDefaultValue,
-		VarMappingImageTagKey:                      VarMappingImageTagDefaultValue,
-		VarMappingImageExtraTagsKey:                VarMappingImageExtraTagsDefaultValue,
-		VarMappingRegistryNamespaceKey:             VarMappingRegistryNamespaceDefaultValue,
-		VarMappingRegistryHostKey:                  VarMappingRegistryHostDefaultValue,
-		VarMappingPullParentImageKey:               VarMappingPullParentImageDefaultValue,
-		VarMappingPushImagetKey:                    VarMappingPushImagetDefaultValue,
-		VarMappingImageLabelsKey:                   VarMappingImageLabelsDefaultValue,
-	}
 
-	t.Log("Testing combine maps")
-	newMapA.Combine(a)
-	assert.Equal(t, expected, newMapA)
+	t.Run("Testing Combine case A", func(t *testing.T) {
+		a := New()
+		newMapA := Varsmap{
+			VarMappingImageBuilderNameKey: "expectedVarMappingImageBuilderNameDefaultValue",
+			VarMappingImageBuilderTagKey:  "expectedVarMappingImageBuilderTagDefaultValue",
+		}
+		expected := Varsmap{
+			VarMappingImageBuilderLabelKey:             VarMappingImageBuilderLabelDefaultValue,
+			VarMappingImageBuilderNameKey:              "expectedVarMappingImageBuilderNameDefaultValue",
+			VarMappingImageBuilderRegistryHostKey:      VarMappingImageBuilderRegistryHostDefaultValue,
+			VarMappingImageBuilderRegistryNamespaceKey: VarMappingImageBuilderRegistryNamespaceDefaultValue,
+			VarMappingImageBuilderTagKey:               "expectedVarMappingImageBuilderTagDefaultValue",
+			VarMappingImageExtraTagsKey:                VarMappingImageExtraTagsDefaultValue,
+			VarMappingImageFromFullyQualifiedNameKey:   VarMappingImageFromFullyQualifiedNameValue,
+			VarMappingImageFromNameKey:                 VarMappingImageFromNameDefaultValue,
+			VarMappingImageFromRegistryHostKey:         VarMappingImageFromRegistryHostDefaultValue,
+			VarMappingImageFromRegistryNamespaceKey:    VarMappingImageFromRegistryNamespaceDefaultValue,
+			VarMappingImageFromTagKey:                  VarMappingImageFromTagDefaultValue,
+			VarMappingImageLabelsKey:                   VarMappingImageLabelsDefaultValue,
+			VarMappingImageNameKey:                     VarMappingImageNameDefaultValue,
+			VarMappingImageTagKey:                      VarMappingImageTagDefaultValue,
+			VarMappingPullParentImageKey:               VarMappingPullParentImageDefaultValue,
+			VarMappingPushImagetKey:                    VarMappingPushImagetDefaultValue,
+			VarMappingRegistryHostKey:                  VarMappingRegistryHostDefaultValue,
+			VarMappingRegistryNamespaceKey:             VarMappingRegistryNamespaceDefaultValue,
+		}
+
+		t.Log("Testing combine case A")
+		newMapA.Combine(a)
+		assert.Equal(t, expected, newMapA)
+	})
+
+	t.Run("Testing Combine case B", func(t *testing.T) {
+		b := New()
+		newMapB := Varsmap{
+			VarMappingRegistryHostKey:      "expectedVarMappingRegistryHostDefaultValue",
+			VarMappingRegistryNamespaceKey: "expectedVarMappingRegistryNamespaceDefaultValue",
+		}
+		expected := Varsmap{
+			VarMappingImageBuilderLabelKey:             VarMappingImageBuilderLabelDefaultValue,
+			VarMappingImageBuilderNameKey:              VarMappingImageBuilderNameDefaultValue,
+			VarMappingImageBuilderRegistryHostKey:      VarMappingImageBuilderRegistryHostDefaultValue,
+			VarMappingImageBuilderRegistryNamespaceKey: VarMappingImageBuilderRegistryNamespaceDefaultValue,
+			VarMappingImageBuilderTagKey:               VarMappingImageBuilderTagDefaultValue,
+			VarMappingImageExtraTagsKey:                VarMappingImageExtraTagsDefaultValue,
+			VarMappingImageFromFullyQualifiedNameKey:   VarMappingImageFromFullyQualifiedNameValue,
+			VarMappingImageFromNameKey:                 VarMappingImageFromNameDefaultValue,
+			VarMappingImageFromRegistryHostKey:         VarMappingImageFromRegistryHostDefaultValue,
+			VarMappingImageFromRegistryNamespaceKey:    VarMappingImageFromRegistryNamespaceDefaultValue,
+			VarMappingImageFromTagKey:                  VarMappingImageFromTagDefaultValue,
+			VarMappingImageLabelsKey:                   VarMappingImageLabelsDefaultValue,
+			VarMappingImageNameKey:                     VarMappingImageNameDefaultValue,
+			VarMappingImageTagKey:                      VarMappingImageTagDefaultValue,
+			VarMappingPullParentImageKey:               VarMappingPullParentImageDefaultValue,
+			VarMappingPushImagetKey:                    VarMappingPushImagetDefaultValue,
+			VarMappingRegistryHostKey:                  "expectedVarMappingRegistryHostDefaultValue",
+			VarMappingRegistryNamespaceKey:             "expectedVarMappingRegistryNamespaceDefaultValue",
+		}
+
+		t.Log("Testing combine case B")
+		newMapB.Combine(b)
+		assert.Equal(t, expected, newMapB)
+	})
+
+	t.Run("Testing error on Combine when input vars map is nil", func(t *testing.T) {
+		var b Varsmap
+		newMapB := New()
+
+		errContext := "(core::domain::varsmap::Combine)"
+
+		t.Log("Testing error on Combine when input vars map is nil")
+		err := newMapB.Combine(b)
+		assert.Error(t, errors.New(errContext, "Variables mapping to combine is nil"), err)
+	})
 }

@@ -14,6 +14,8 @@ This example showcases the image promotion feature in Stevedore, demonstrating h
     - [Building the app1 image](#building-the-app1-image)
     - [Promoting the app1 image](#promoting-the-app1-image)
     - [Cleaning the stack](#cleaning-the-stack)
+  - [Additional Information](#additional-information)
+    - [Variables Mapping](#variables-mapping)
 
 ## Requirements
 - Docker. _Tested on Docker server 20.10.21 and Docker API 1.41_
@@ -209,4 +211,20 @@ Stopping the stack to run 11-promote-images-example
  ✔ Container 11-promote-images-example-registry-1    Removed                                                                                                         0.2s
  ✔ Container 11-promote-images-example-dockerauth-1  Removed                                                                                                         0.3s
  ✔ Network 11-promote-images-example_default         Removed                                                                                                         0.5s
+```
+
+## Additional Information
+
+### Variables Mapping
+In this example, the `image_from_fully_qualified_name` variable is used as part of the [variable-mapping](https://gostevedore.github.io/docs/getting-started/concepts/#variables-mapping) feature. This variable provides the fully qualified name of the parent Docker image.
+
+Here is the Dockerfile code used in the example:
+```dockerfile
+ARG image_from_fully_qualified_name
+
+FROM ${image_from_fully_qualified_name}
+
+COPY ./${app_name}/app.sh /app.sh
+
+CMD ["/app.sh"]
 ```

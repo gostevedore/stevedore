@@ -174,17 +174,18 @@ func TestBuild(t *testing.T) {
 				OutputPrefix:          "output-prefix",
 				BuilderVarMappings: map[string]string{
 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
-					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
-					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
 					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
+					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
+					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
+					varsmap.VarMappingImageFromFullyQualifiedNameKey:   varsmap.VarMappingImageFromFullyQualifiedNameValue,
 					varsmap.VarMappingImageFromNameKey:                 varsmap.VarMappingImageFromNameDefaultValue,
-					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
-					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
 					varsmap.VarMappingImageFromRegistryHostKey:         varsmap.VarMappingImageFromRegistryHostDefaultValue,
+					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
+					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
 					varsmap.VarMappingImageNameKey:                     varsmap.VarMappingImageNameDefaultValue,
 					varsmap.VarMappingImageTagKey:                      varsmap.VarMappingImageTagDefaultValue,
-					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
 					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
+					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
 				},
 				PullAuthUsername: "pull-user",
 				PullAuthPassword: "pull-pass",
@@ -224,6 +225,7 @@ func TestBuild(t *testing.T) {
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_name", "image-from-name").Return(nil)
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_tag", "image-from-version").Return(nil)
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_registry_host", "image-from-registry-host.test").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_fully_qualified_name", "image-from-registry-host.test/image-from-registry-namespace/image-from-name:image-from-version").Return(nil)
 
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddAuth", "pull-user", "pull-pass", "image-from-registry-host.test").Return(nil)
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddAuth", "push-user", "push-pass", "myregistry.test").Return(nil)
@@ -289,17 +291,18 @@ func TestBuild(t *testing.T) {
 				PushImageAfterBuild: true,
 				BuilderVarMappings: map[string]string{
 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
-					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
-					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
 					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
+					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
+					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
+					varsmap.VarMappingImageFromFullyQualifiedNameKey:   varsmap.VarMappingImageFromFullyQualifiedNameValue,
 					varsmap.VarMappingImageFromNameKey:                 varsmap.VarMappingImageFromNameDefaultValue,
-					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
-					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
 					varsmap.VarMappingImageFromRegistryHostKey:         varsmap.VarMappingImageFromRegistryHostDefaultValue,
+					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
+					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
 					varsmap.VarMappingImageNameKey:                     varsmap.VarMappingImageNameDefaultValue,
 					varsmap.VarMappingImageTagKey:                      varsmap.VarMappingImageTagDefaultValue,
-					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
 					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
+					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
 				},
 				PullAuthUsername: "pull-user",
 				PullAuthPassword: "pull-pass",
@@ -322,6 +325,7 @@ func TestBuild(t *testing.T) {
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_name", "image-from-name").Return(nil)
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_tag", "image-from-version").Return(nil)
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_registry_host", "image-from-registry-host.test").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_fully_qualified_name", "image-from-registry-host.test/image-from-registry-namespace/image-from-name:image-from-version").Return(nil)
 
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddAuth", "pull-user", "pull-pass", "image-from-registry-host.test").Return(nil)
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddAuth", "push-user", "push-pass", "myregistry.test").Return(nil)
@@ -364,17 +368,18 @@ func TestBuild(t *testing.T) {
 				PushImageAfterBuild: true,
 				BuilderVarMappings: map[string]string{
 					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
-					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
-					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
 					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
+					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
+					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
+					varsmap.VarMappingImageFromFullyQualifiedNameKey:   varsmap.VarMappingImageFromFullyQualifiedNameValue,
 					varsmap.VarMappingImageFromNameKey:                 varsmap.VarMappingImageFromNameDefaultValue,
-					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
-					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
 					varsmap.VarMappingImageFromRegistryHostKey:         varsmap.VarMappingImageFromRegistryHostDefaultValue,
+					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
+					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
 					varsmap.VarMappingImageNameKey:                     varsmap.VarMappingImageNameDefaultValue,
 					varsmap.VarMappingImageTagKey:                      varsmap.VarMappingImageTagDefaultValue,
-					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
 					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
+					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
 				},
 				PullAuthUsername: "pull-user",
 				PullAuthPassword: "pull-pass",
@@ -398,6 +403,7 @@ func TestBuild(t *testing.T) {
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_name", "image-from-name").Return(nil)
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_tag", "image-from-version").Return(nil)
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_registry_host", "image-from-registry-host.test").Return(nil)
+				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddBuildArgs", "image_from_fully_qualified_name", "image-from-registry-host.test/image-from-registry-namespace/image-from-name:image-from-version").Return(nil)
 
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddAuth", "pull-user", "pull-pass", "image-from-registry-host.test").Return(nil)
 				driver.(*godockerbuilder.MockGoDockerBuildDriver).On("AddAuth", "push-user", "push-pass", "myregistry.test").Return(nil)
