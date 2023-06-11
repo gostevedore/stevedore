@@ -11,8 +11,7 @@ func TestStepSecuence(t *testing.T) {
 	desc := "Testing plan steps secuence"
 
 	t.Run(desc, func(t *testing.T) {
-		//t.Log(desc)
-		var wg sync.WaitGroup
+		t.Log(desc)
 
 		stepPlan1 := make(chan struct{})
 		step1 := NewStep(&image.Image{}, "plan1", stepPlan1)
@@ -30,8 +29,10 @@ func TestStepSecuence(t *testing.T) {
 		step1.Subscribe(stepPlan3)
 		step3.Subscribe(stepPlan4)
 
+		wg := &sync.WaitGroup{}
+		wg.Add(4)
+
 		stepFunc := func(step *Step) {
-			wg.Add(1)
 			step.Wait()
 			step.Notify()
 			wg.Done()
