@@ -8,7 +8,7 @@
 - [ ] build tries to pull from Docker registry by default
 
 ## v0.11.1
-- [ ] Create a variable mapping with the normalized parent image name
+- [x] Create a variable mapping with the normalized parent image name
 - [x] Fix on promote command, the flags --promote-image-namespace and --promote-image-registry are not marked as deprecated
 - [x] Fix typos on promote command examples
 - [x] --enable-semver-tags tags have no effect in the promote
