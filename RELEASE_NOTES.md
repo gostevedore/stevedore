@@ -4,6 +4,7 @@
 
 ### Added
 - Included examples
+- New variable mapping named `image_from_fully_qualified_name` that provides the fully qualified name of the parent Docker image as a build argument.
 
 ### Bumped
 - Bump up github.com/apenella/go-docker-builder to v0.7.8
