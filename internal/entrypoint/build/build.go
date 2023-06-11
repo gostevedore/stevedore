@@ -630,7 +630,8 @@ func (e *Entrypoint) createDryRunDriver() (factory.BuildDriverFactoryFunc, error
 }
 
 func (e *Entrypoint) createAnsibleDriver(options *Options) (factory.BuildDriverFactoryFunc, error) {
-
+	var referenceName repository.ImageReferenceNamer
+	var err error
 	errContext := "(entrypoint::build::createAnsibleDriver)"
 
 	if options == nil {
@@ -641,11 +642,16 @@ func (e *Entrypoint) createAnsibleDriver(options *Options) (factory.BuildDriverF
 		return e.createDryRunDriver()
 	}
 
+	referenceName, err = e.createReferenceName(options)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
 	f := func() (repository.BuildDriverer, error) {
 
 		errContext := "(entrypoint::build::createAnsibleDriver::BuildDriverFactoryFunc)"
 
-		ansiblePlaybookDriver, err := ansible.NewAnsiblePlaybookDriver(goansible.NewGoAnsibleDriver(), e.writer)
+		ansiblePlaybookDriver, err := ansible.NewAnsiblePlaybookDriver(goansible.NewGoAnsibleDriver(), referenceName, e.writer)
 		if err != nil {
 			return nil, errors.New(errContext, "", err)
 		}

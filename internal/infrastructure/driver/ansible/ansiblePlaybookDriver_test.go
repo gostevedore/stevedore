@@ -12,7 +12,9 @@ import (
 	"github.com/gostevedore/stevedore/internal/core/domain/builder"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 	"github.com/gostevedore/stevedore/internal/infrastructure/driver/ansible/goansible"
+	reference "github.com/gostevedore/stevedore/internal/infrastructure/reference/image/default"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,25 +23,36 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 	errContext := "(ansibledriver::NewAnsiblePlaybookDriver)"
 
 	tests := []struct {
-		desc   string
-		driver AnsibleDriverer
-		writer io.Writer
-		res    *AnsiblePlaybookDriver
-		err    error
+		desc          string
+		driver        AnsibleDriverer
+		writer        io.Writer
+		referenceName repository.ImageReferenceNamer
+		res           *AnsiblePlaybookDriver
+		err           error
 	}{
 		{
-			desc:   "Testing error creating an ansible-playbook driver with nil driver",
-			driver: nil,
-			writer: nil,
-			err:    errors.New(errContext, "To create an AnsiblePlaybookDriver is required a driver"),
+			desc:          "Testing error creating an ansible-playbook driver with nil driver",
+			driver:        nil,
+			referenceName: nil,
+			writer:        nil,
+			err:           errors.New(errContext, "To create an AnsiblePlaybookDriver is required a driver"),
 		},
 		{
-			desc:   "Testing create and ansible-playbook driver",
-			driver: goansible.NewMockAnsibleDriver(),
-			writer: nil,
+			desc:          "Testing error creating an ansible-playbook driver with nil reference name",
+			driver:        goansible.NewMockAnsibleDriver(),
+			referenceName: nil,
+			writer:        nil,
+			err:           errors.New(errContext, "To create an AnsiblePlaybookDriver is required a reference name"),
+		},
+		{
+			desc:          "Testing create and ansible-playbook driver",
+			driver:        goansible.NewMockAnsibleDriver(),
+			writer:        nil,
+			referenceName: reference.NewDefaultReferenceName(),
 			res: &AnsiblePlaybookDriver{
-				driver: goansible.NewMockAnsibleDriver(),
-				writer: os.Stdout,
+				driver:        goansible.NewMockAnsibleDriver(),
+				referenceName: reference.NewDefaultReferenceName(),
+				writer:        os.Stdout,
 			},
 			err: &errors.Error{},
 		},
@@ -49,7 +62,7 @@ func TestNewAnsiblePlaybookDriver(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			res, err := NewAnsiblePlaybookDriver(test.driver, test.writer)
+			res, err := NewAnsiblePlaybookDriver(test.driver, test.referenceName, test.writer)
 			if err != nil && assert.Error(t, err) {
 				assert.Equal(t, test.err, err)
 			} else {
@@ -68,6 +81,7 @@ func TestBuild(t *testing.T) {
 	tests := []struct {
 		desc              string
 		driver            *AnsiblePlaybookDriver
+		ref               repository.ImageReferenceNamer
 		image             *image.Image
 		options           *image.BuildDriverOptions
 		err               error
@@ -83,10 +97,21 @@ func TestBuild(t *testing.T) {
 			err:     errors.New(errContext, "To build an image is required a driver"),
 		},
 		{
+			desc: "Testing error building an image with nil reference name",
+			driver: &AnsiblePlaybookDriver{
+				driver:        goansible.NewMockAnsibleDriver(),
+				referenceName: nil,
+				writer:        nil,
+			},
+			options: nil,
+			err:     errors.New(errContext, "To build an image is required a reference name"),
+		},
+		{
 			desc: "Testing error building an image with nil image",
 			driver: &AnsiblePlaybookDriver{
-				driver: goansible.NewMockAnsibleDriver(),
-				writer: nil,
+				driver:        goansible.NewMockAnsibleDriver(),
+				referenceName: reference.NewDefaultReferenceName(),
+				writer:        nil,
 			},
 			options: nil,
 			err:     errors.New(errContext, "To build an image is required a image"),
@@ -95,8 +120,9 @@ func TestBuild(t *testing.T) {
 			desc:  "Testing error building an image with nil options",
 			image: &image.Image{},
 			driver: &AnsiblePlaybookDriver{
-				driver: goansible.NewMockAnsibleDriver(),
-				writer: nil,
+				driver:        goansible.NewMockAnsibleDriver(),
+				referenceName: reference.NewDefaultReferenceName(),
+				writer:        nil,
 			},
 			options: nil,
 			err:     errors.New(errContext, "To build an image is required a build options"),
@@ -105,8 +131,9 @@ func TestBuild(t *testing.T) {
 			desc:  "Testing error building without options from the builder",
 			image: &image.Image{},
 			driver: &AnsiblePlaybookDriver{
-				driver: goansible.NewMockAnsibleDriver(),
-				writer: nil,
+				driver:        goansible.NewMockAnsibleDriver(),
+				referenceName: reference.NewDefaultReferenceName(),
+				writer:        nil,
 			},
 			options: &image.BuildDriverOptions{},
 			err:     errors.New(errContext, "To build an image are required the options from the builder"),
@@ -115,8 +142,9 @@ func TestBuild(t *testing.T) {
 			desc:  "Testing error building without a playbook defined on builder options",
 			image: &image.Image{},
 			driver: &AnsiblePlaybookDriver{
-				driver: goansible.NewMockAnsibleDriver(),
-				writer: nil,
+				driver:        goansible.NewMockAnsibleDriver(),
+				referenceName: reference.NewDefaultReferenceName(),
+				writer:        nil,
 			},
 			options: &image.BuildDriverOptions{
 				BuilderOptions: &builder.BuilderOptions{},
@@ -127,8 +155,9 @@ func TestBuild(t *testing.T) {
 			desc:  "Testing error building an image with undefined image name",
 			image: &image.Image{},
 			driver: &AnsiblePlaybookDriver{
-				driver: goansible.NewMockAnsibleDriver(),
-				writer: nil,
+				driver:        goansible.NewMockAnsibleDriver(),
+				referenceName: reference.NewDefaultReferenceName(),
+				writer:        nil,
 			},
 			options: &image.BuildDriverOptions{
 				BuilderOptions: &builder.BuilderOptions{
@@ -141,8 +170,9 @@ func TestBuild(t *testing.T) {
 			desc:  "Testing error building an image with undefined image name",
 			image: &image.Image{},
 			driver: &AnsiblePlaybookDriver{
-				driver: goansible.NewMockAnsibleDriver(),
-				writer: nil,
+				driver:        goansible.NewMockAnsibleDriver(),
+				referenceName: reference.NewDefaultReferenceName(),
+				writer:        nil,
 			},
 			options: &image.BuildDriverOptions{
 				BuilderOptions: &builder.BuilderOptions{
@@ -153,10 +183,11 @@ func TestBuild(t *testing.T) {
 			err: errors.New(errContext, "Image name is not defined"),
 		},
 		{
-			desc: "Testing build an image",
+			desc: "Testing build an image without parent",
 			driver: &AnsiblePlaybookDriver{
-				driver: goansible.NewMockAnsibleDriver(),
-				writer: os.Stdout,
+				driver:        goansible.NewMockAnsibleDriver(),
+				referenceName: reference.NewDefaultReferenceName(),
+				writer:        os.Stdout,
 			},
 			image: &image.Image{
 				Name:              "image_name",
@@ -171,20 +202,21 @@ func TestBuild(t *testing.T) {
 				},
 				AnsibleConnectionLocal: true,
 				BuilderVarMappings: map[string]string{
-					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
-					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
-					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
-					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
 					varsmap.VarMappingImageBuilderLabelKey:             varsmap.VarMappingImageBuilderLabelDefaultValue,
+					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
+					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
+					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
+					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
+					varsmap.VarMappingImageFromFullyQualifiedNameKey:   varsmap.VarMappingImageFromFullyQualifiedNameValue,
 					varsmap.VarMappingImageFromNameKey:                 varsmap.VarMappingImageFromNameDefaultValue,
-					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
-					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
 					varsmap.VarMappingImageFromRegistryHostKey:         varsmap.VarMappingImageFromRegistryHostDefaultValue,
+					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
+					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
 					varsmap.VarMappingImageNameKey:                     varsmap.VarMappingImageNameDefaultValue,
 					varsmap.VarMappingImageTagKey:                      varsmap.VarMappingImageTagDefaultValue,
-					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
-					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
 					varsmap.VarMappingPushImagetKey:                    varsmap.VarMappingPushImagetDefaultValue,
+					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
+					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
 				},
 			},
 			prepareAssertFunc: func(driver AnsibleDriverer) {
@@ -219,10 +251,11 @@ func TestBuild(t *testing.T) {
 			},
 		},
 		{
-			desc: "Testing build an image with all build options",
+			desc: "Testing build an image with parent and all the build options defined",
 			driver: &AnsiblePlaybookDriver{
-				driver: goansible.NewMockAnsibleDriver(),
-				writer: os.Stdout,
+				driver:        goansible.NewMockAnsibleDriver(),
+				referenceName: reference.NewDefaultReferenceName(),
+				writer:        os.Stdout,
 			},
 			image: &image.Image{
 				Name:              "image_name",
@@ -259,21 +292,22 @@ func TestBuild(t *testing.T) {
 				AnsibleInventoryPath:             "override-inventory.yml",
 				AnsibleLimit:                     "limit",
 				BuilderVarMappings: map[string]string{
-					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
-					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
-					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
-					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
 					varsmap.VarMappingImageBuilderLabelKey:             varsmap.VarMappingImageBuilderLabelDefaultValue,
+					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
+					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
+					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
+					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
+					varsmap.VarMappingImageExtraTagsKey:                varsmap.VarMappingImageExtraTagsDefaultValue,
+					varsmap.VarMappingImageFromFullyQualifiedNameKey:   varsmap.VarMappingImageFromFullyQualifiedNameValue,
 					varsmap.VarMappingImageFromNameKey:                 varsmap.VarMappingImageFromNameDefaultValue,
-					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
-					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
 					varsmap.VarMappingImageFromRegistryHostKey:         varsmap.VarMappingImageFromRegistryHostDefaultValue,
+					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
+					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
 					varsmap.VarMappingImageNameKey:                     varsmap.VarMappingImageNameDefaultValue,
 					varsmap.VarMappingImageTagKey:                      varsmap.VarMappingImageTagDefaultValue,
-					varsmap.VarMappingImageExtraTagsKey:                varsmap.VarMappingImageExtraTagsDefaultValue,
-					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
-					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
 					varsmap.VarMappingPushImagetKey:                    varsmap.VarMappingPushImagetDefaultValue,
+					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
+					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
 				},
 			},
 			prepareAssertFunc: func(driver AnsibleDriverer) {
@@ -281,21 +315,22 @@ func TestBuild(t *testing.T) {
 					Inventory: "override-inventory.yml",
 					Limit:     "limit",
 					ExtraVars: map[string]interface{}{
-						"image_builder_label":           "intermediate_container",
-						"image_name":                    "image_name",
-						"image_registry_host":           "registry",
-						"image_registry_namespace":      "namespace",
-						"image_tag":                     "version",
-						"image_from_name":               "from_image",
-						"image_from_tag":                "from_version",
-						"image_from_registry_host":      "from_registry",
-						"image_from_registry_namespace": "from_namespace",
-						"push_image":                    false,
-						"persistent_var1":               "value1",
-						"persistent_var2":               "value2",
-						"var1":                          "value1",
-						"var2":                          "value2",
-						"image_extra_tags":              []string{"tag1", "tag2"},
+						"image_builder_label":             "intermediate_container",
+						"image_extra_tags":                []string{"tag1", "tag2"},
+						"image_from_fully_qualified_name": "from_registry/from_namespace/from_image:from_version",
+						"image_from_name":                 "from_image",
+						"image_from_registry_host":        "from_registry",
+						"image_from_registry_namespace":   "from_namespace",
+						"image_from_tag":                  "from_version",
+						"image_name":                      "image_name",
+						"image_registry_host":             "registry",
+						"image_registry_namespace":        "namespace",
+						"image_tag":                       "version",
+						"persistent_var1":                 "value1",
+						"persistent_var2":                 "value2",
+						"push_image":                      false,
+						"var1":                            "value1",
+						"var2":                            "value2",
 					},
 				}
 				ansibleConnectionOptions := &options.AnsibleConnectionOptions{
@@ -319,8 +354,9 @@ func TestBuild(t *testing.T) {
 		{
 			desc: "Testing build an image with same variable defined either on persistent_vars and vars",
 			driver: &AnsiblePlaybookDriver{
-				driver: goansible.NewMockAnsibleDriver(),
-				writer: os.Stdout,
+				driver:        goansible.NewMockAnsibleDriver(),
+				referenceName: reference.NewDefaultReferenceName(),
+				writer:        os.Stdout,
 			},
 			image: &image.Image{
 				Name:              "image_name",
@@ -343,20 +379,21 @@ func TestBuild(t *testing.T) {
 				},
 				AnsibleConnectionLocal: true,
 				BuilderVarMappings: map[string]string{
-					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
-					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
-					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
-					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
 					varsmap.VarMappingImageBuilderLabelKey:             varsmap.VarMappingImageBuilderLabelDefaultValue,
+					varsmap.VarMappingImageBuilderNameKey:              varsmap.VarMappingImageBuilderNameDefaultValue,
+					varsmap.VarMappingImageBuilderRegistryHostKey:      varsmap.VarMappingImageBuilderRegistryHostDefaultValue,
+					varsmap.VarMappingImageBuilderRegistryNamespaceKey: varsmap.VarMappingImageBuilderRegistryNamespaceDefaultValue,
+					varsmap.VarMappingImageBuilderTagKey:               varsmap.VarMappingImageBuilderTagDefaultValue,
+					varsmap.VarMappingImageFromFullyQualifiedNameKey:   varsmap.VarMappingImageFromFullyQualifiedNameValue,
 					varsmap.VarMappingImageFromNameKey:                 varsmap.VarMappingImageFromNameDefaultValue,
-					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
-					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
 					varsmap.VarMappingImageFromRegistryHostKey:         varsmap.VarMappingImageFromRegistryHostDefaultValue,
+					varsmap.VarMappingImageFromRegistryNamespaceKey:    varsmap.VarMappingImageFromRegistryNamespaceDefaultValue,
+					varsmap.VarMappingImageFromTagKey:                  varsmap.VarMappingImageFromTagDefaultValue,
 					varsmap.VarMappingImageNameKey:                     varsmap.VarMappingImageNameDefaultValue,
 					varsmap.VarMappingImageTagKey:                      varsmap.VarMappingImageTagDefaultValue,
-					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
-					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
 					varsmap.VarMappingPushImagetKey:                    varsmap.VarMappingPushImagetDefaultValue,
+					varsmap.VarMappingRegistryHostKey:                  varsmap.VarMappingRegistryHostDefaultValue,
+					varsmap.VarMappingRegistryNamespaceKey:             varsmap.VarMappingRegistryNamespaceDefaultValue,
 				},
 			},
 			prepareAssertFunc: func(driver AnsibleDriverer) {
