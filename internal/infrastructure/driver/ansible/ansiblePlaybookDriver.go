@@ -11,6 +11,7 @@ import (
 	errors "github.com/apenella/go-common-utils/error"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 	"github.com/gostevedore/stevedore/internal/core/domain/varsmap"
+	"github.com/gostevedore/stevedore/internal/core/ports/repository"
 )
 
 const (
@@ -20,12 +21,13 @@ const (
 
 // AnsiblePlaybookDriver drives the build through ansible
 type AnsiblePlaybookDriver struct {
-	driver AnsibleDriverer
-	writer io.Writer
+	driver        AnsibleDriverer
+	referenceName repository.ImageReferenceNamer
+	writer        io.Writer
 }
 
 // NewAnsiblePlaybookDriver returns an AnsiblePlaybookDriver. In case driver is null, it returns an error
-func NewAnsiblePlaybookDriver(driver AnsibleDriverer, writer io.Writer) (*AnsiblePlaybookDriver, error) {
+func NewAnsiblePlaybookDriver(driver AnsibleDriverer, ref repository.ImageReferenceNamer, writer io.Writer) (*AnsiblePlaybookDriver, error) {
 
 	errContext := "(ansibledriver::NewAnsiblePlaybookDriver)"
 
@@ -33,13 +35,18 @@ func NewAnsiblePlaybookDriver(driver AnsibleDriverer, writer io.Writer) (*Ansibl
 		return nil, errors.New(errContext, "To create an AnsiblePlaybookDriver is required a driver")
 	}
 
+	if ref == nil {
+		return nil, errors.New(errContext, "To create an AnsiblePlaybookDriver is required a reference name")
+	}
+
 	if writer == nil {
 		writer = os.Stdout
 	}
 
 	return &AnsiblePlaybookDriver{
-		driver: driver,
-		writer: writer,
+		driver:        driver,
+		referenceName: ref,
+		writer:        writer,
 	}, nil
 }
 
@@ -51,6 +58,10 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *im
 
 	if d.driver == nil {
 		return errors.New(errContext, "To build an image is required a driver")
+	}
+
+	if d.referenceName == nil {
+		return errors.New(errContext, "To build an image is required a reference name")
 	}
 
 	if i == nil {
@@ -157,6 +168,14 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *im
 		if i.Version != "" {
 			o.OutputPrefix = strings.Join([]string{o.OutputPrefix, i.Version}, ":")
 		}
+	}
+
+	if i.Parent != nil {
+		parentFullyQualifiedName, err := d.referenceName.GenerateName(i.Parent)
+		if err != nil {
+			return errors.New(errContext, "", err)
+		}
+		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromFullyQualifiedNameKey], parentFullyQualifiedName)
 	}
 
 	if i.Parent != nil && i.Parent.Name != "" {
