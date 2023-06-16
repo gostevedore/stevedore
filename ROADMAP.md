@@ -5,9 +5,9 @@
 - [ ] Build an image as well as all its parent until the root image
 - [ ] Execute the build plan to show the build intentions
 - [ ] Cleanup compatibilities
-- [ ] build tries to pull from Docker registry by default
 
 ## v0.11.1
+- [ ] build tries to pull from Docker registry by default
 - [x] Create a variable mapping with the normalized parent image name
 - [x] Fix on promote command, the flags --promote-image-namespace and --promote-image-registry are not marked as deprecated
 - [x] Fix typos on promote command examples

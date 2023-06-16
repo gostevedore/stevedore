@@ -1,6 +1,6 @@
 images:
   app1:
-    "0.1.0":
+    v1:
       version: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
       registry: registry.stevedore.test
       builder:
@@ -9,5 +9,5 @@ images:
           context:
             - path: images-src/app1
       parents:
-        base:
-          - "2.4.6"
+        ubuntu:
+          - "focal"

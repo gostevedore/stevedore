@@ -1,0 +1,132 @@
+---
+
+#
+# On that stage is started the container which is going to be provisioned
+- name: Create builder stage
+  hosts: builder
+  tasks:
+  - name: "Creating container builder '{{ image_builder_label }}'"
+    community.docker.docker_container:
+      command: ["sleep","infinity"]
+      detach: True
+      image: ubuntu:focal
+      name: "{{ image_builder_label }}"
+      pull: True
+      recreate: True
+      stop_timeout: 2
+      volumes: []
+    register: build_output
+
+  - name: Creating container builder output message
+    ansible.builtin.debug:
+      msg: "{{ build_output.ansible_facts.docker_container.Output }}"
+    when:
+    - build_output is defined
+    - build_output.ansible_facts is defined
+    - build_output.ansible_facts.docker_container is defined
+    - build_output.ansible_facts.docker_container.Output is defined
+
+  - name: Add '{{ image_builder_label }}' to ansible inventory
+    add_host:
+      hostname: "{{ image_builder_label }}"
+      ansible_connection: docker
+      ansible_user: root
+      ansible_python_interpreter: /usr/bin/python3
+
+#
+# On that stage is provioned the container
+- name: Provision image container builder stage
+  hosts: "{{ image_builder_label }}"
+  strategy: linear
+  gather_facts: False
+  become_user: root
+  tasks:
+
+    - name: Include project variables
+      include_vars:
+        file: vars/ubuntu.yml
+
+    - name: "Install Python dependencies on {{ image_builder_label }}"
+      ansible.builtin.raw: "{{ item }}"
+      loop:
+        - test -e /usr/bin/python3 || (apt-get update && apt-get install -y python3-minimal python3-apt)
+
+    - name: Upgrade base packages
+      ansible.builtin.apt:
+        state: latest
+        upgrade: safe
+        install_recommends: no
+        only_upgrade: yes
+        update_cache: yes
+        force_apt_get: yes
+
+    - name: "Create User {{ ubuntu_user_name }}"
+      ansible.builtin.user:
+        name: "{{ ubuntu_user_name }}"
+        uid: "{{ ubuntu_user_id }}"
+        shell: /bin/sh
+
+    - name: "Uninstall Python package on container builder '{{ image_builder_label }}'"
+      ansible.builtin.raw: "{{ item }}"
+      loop:
+        - apt-get purge -y --auto-remove python3-minimal python3-apt
+
+    - name: "Clean packages and dependencies on container builder '{{ image_builder_label }}'"
+      ansible.builtin.raw: "{{ item }}"
+      loop:
+        - apt-get autoremove -y
+        - apt-get clean -y
+        - apt-get autoclean -y
+        - rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/*
+
+#
+# On that stage is commited the builder image
+- name: Create image stage
+  hosts: builder
+  tasks:
+
+    - name: Include project variables
+      include_vars:
+        file: vars/ubuntu.yml
+
+    - name: Extend dockerfile instructions
+      ansible.builtin.set_fact:
+        dockerfile_instructions:
+          - USER {{ ubuntu_user_name }}
+          - LABEL org.label-schema.schema-version=1.0
+          - LABEL org.label-schema.docker.cmd=/bin/bash
+          - LABEL org.label-schema.build-date={{ ansible_date_time.iso8601_micro }}
+          - CMD ["/bin/bash"]
+
+    - name: Set image name
+      ansible.builtin.set_fact:
+        commit_image: "{{ image_name }}"
+
+    - name: Set image tag
+      ansible.builtin.set_fact:
+        commit_image: "{{ commit_image }}:{{ image_tag }}"
+      when: image_tag is defined
+
+    - name: Set image registry namespace
+      ansible.builtin.set_fact:
+        commit_image: "{{ image_registry_namespace }}/{{ commit_image }}"
+      when: image_registry_namespace is defined
+
+    - name: Set image registry host
+      ansible.builtin.set_fact:
+        commit_image: "{{ image_registry_host }}/{{ commit_image }}"
+      when: image_registry_host is defined
+
+    - name: "Commit the container builder '{{ image_builder_label }}' to create {{ commit_image }}"
+      ansible.builtin.shell: |
+        docker commit \
+          -c '{{ dockerfile_instructions | join("' -c '") }}' \
+          {{ image_builder_label }} {{ commit_image }}
+      args:
+        executable: /bin/bash
+
+    - name: "Remove container builder '{{ image_builder_label }}'"
+      community.docker.docker_container:
+        name: "{{ image_builder_label }}"
+        state: absent
+        stop_timeout: 2
