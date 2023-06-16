@@ -3,10 +3,13 @@
 ## [Unreleased]
 
 ### Added
+
 - Included examples
 - New variable mapping named `image_from_fully_qualified_name` that provides the fully qualified name of the parent Docker image as a build argument.
+- New variable mapping named `image_fully_qualified_name` that provides the fully qualified name of current image as a build argument. It is used by the `ansible-plybook` driver.
 
 ### Bumped
+
 - Bump up github.com/apenella/go-docker-builder to v0.7.8
 - Bump up github.com/spf13/afero to v1.9.5
 - Bump up github.com/docker/distribution to v2.8.2+incompatible
@@ -14,6 +17,7 @@
 - Bump up github.com/go-git/go-git/v5 to v5.6.1
 
 ### Fixed
+
 - Install script uses the artefact name updated on v0.11.x
 - Use the default variables mapping definition when in the builder is defined as empty builder
 - On promote command, mark as deprecated the flags --promote-image-namespace and --promote-image-registry
@@ -24,6 +28,7 @@
 ## [v0.11.0]
 
 ### Added
+
 - Installation script
 - Create credentials local store
 - Create credentials environment variables store
@@ -40,6 +45,7 @@
 - Subcomand get builders accept filters
 
 ### Changed
+
 - Updated license to Apache 2.0
 - The whole project has been refactored following the ports-and-adapter architectonical design. Inside the `ìnternal` folder there are 5 main subfolders:
   - `application`: Use cases implementation
@@ -73,25 +79,30 @@
 - [DEPRECATED FLAG] On the create credentials subcommand, `credentials-dir` is deprecated and will be ignored. Credentials parameters are set through the `credentials` section of the configuration file or using the flag `local-storage-path`
 
 ### Removed
+
 - Image tags are not sanitized any more
 
 ## [0.10.3]
 
 ### Changed
+
 - The command descriptions has been updated
 
 ### Fixed
+
 - fix promote image with multiple tags and remove promoted tags enable. The image is deleted after first push.
 - fix promote command was hidden
 
 ## [0.10.2]
 
 ### Fixed
+
 - fix load semver templates from file on promote command
 
 ## [0.10.1]
 
 ### Fixed
+
 - fix stevedore init creates configuration file with execution permissions
 - fix promote does not uses -S flag to generate semantic version tags
 - fix tags defined on the image are ignored
@@ -99,6 +110,7 @@
 ## [0.10.0]
 
 ### Added
+
 - Make stevedore as public project
 - New command to initizalize stevedore configuration
 - Image builder could be defined as an string that identifies a global builder defined on `builders` configuration structure or could contain an in-line builder definition.
@@ -108,9 +120,11 @@
 - New package console to use a global console variable on a singleton mode
 
 ### Removed
+
 - Remove github.com/gostevedore/stevedore/internal/context package
 
 ### Changed
+
 - On image definition struct, rename Childs to Children
 - Default configuration location. Stevedore looks for default configuration file in: ./stevedore.yaml, ~/.config/stevedore/stevedore.yaml or ~/stevedore.yaml and loads the first configuration found.
 - Default credentials locations is ~/.config/stevedore/credentials
@@ -127,6 +141,7 @@
 - Update to github.com/apenella/go-data-structures v0.2.0 which support cycles detection
 
 ### Fixed
+
 - Fix raise an error when building a wildcarded image with an undefined version
 - Fix set image from details to build images
 - Fix negotiate docker API version on docker builder
@@ -138,13 +153,16 @@
 **NOTE:** All version before v0.10.0 are not longer available but its changelog history is kept.
 
 ## [0.9.1]
+
 ### Added
+
 - On promote command multiple tags can be set at once
 - On build command is it possible to override the image name defined on the image tree by --image-name flag
 - Start using https://keepachangelog.com/en/1.0.0/ for formating release notes file
 - Return a non-zero exit code when there is a failure on the application
 
 ### Changed
+
 - Cobra 1.0.0
 - Viper 1.7.1
 - Go-ansible 0.5.1
@@ -153,6 +171,7 @@
 - Use pacakge github.com/apenella/go-common-utils/error to manage errors
 
 ### Fixed
+
 - Fix use of slash on docker tags when docker driver is used
 - Fix promote tag always use the source image tag
 - Fix log_path from default configuration file was ignored
@@ -163,7 +182,6 @@
 - Include a value object for docker image url
 - Fix create complete path when creates a new credentials
 - Fix on ansible-playbook builder do not set persistent_vars and vars as string when add an extravar
-
 
 ## [0.8.1]
 
@@ -290,6 +308,7 @@
 ## [0.1.0]
 
 **features:**
+
 - Get builders command
 - Get images command
   - Return as table format which is the default output
@@ -298,6 +317,7 @@
 ## [0.0]
 
 ### Added
+
 - Build command:
   - Execute ansible-playbooks to build docker images
   - Build isoleted images

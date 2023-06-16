@@ -16,6 +16,7 @@ const (
 	VarMappingImageFromRegistryHostKey         = "image_from_registry_host_key"
 	VarMappingImageFromRegistryNamespaceKey    = "image_from_registry_namespace_key"
 	VarMappingImageFromTagKey                  = "image_from_tag_key"
+	VarMappingImageFullyQualifiedNameKey       = "image_fully_qualified_name_key"
 	VarMappingImageLabelsKey                   = "image_lables_key"
 	VarMappingImageNameKey                     = "image_name_key"
 	VarMappingImageTagKey                      = "image_tag_key"
@@ -35,6 +36,7 @@ const (
 	VarMappingImageFromRegistryHostDefaultValue         = "image_from_registry_host"
 	VarMappingImageFromRegistryNamespaceDefaultValue    = "image_from_registry_namespace"
 	VarMappingImageFromTagDefaultValue                  = "image_from_tag"
+	VarMappingImageFullyQualifiedNameValue              = "image_fully_qualified_name"
 	VarMappingImageLabelsDefaultValue                   = "image_labels"
 	VarMappingImageNameDefaultValue                     = "image_name"
 	VarMappingImageTagDefaultValue                      = "image_tag"
@@ -61,6 +63,7 @@ func New() Varsmap {
 		VarMappingImageFromRegistryHostKey:         VarMappingImageFromRegistryHostDefaultValue,
 		VarMappingImageFromRegistryNamespaceKey:    VarMappingImageFromRegistryNamespaceDefaultValue,
 		VarMappingImageFromTagKey:                  VarMappingImageFromTagDefaultValue,
+		VarMappingImageFullyQualifiedNameKey:       VarMappingImageFullyQualifiedNameValue,
 		VarMappingImageLabelsKey:                   VarMappingImageLabelsDefaultValue,
 		VarMappingImageNameKey:                     VarMappingImageNameDefaultValue,
 		VarMappingImageTagKey:                      VarMappingImageTagDefaultValue,
@@ -155,6 +158,14 @@ func (v Varsmap) Combine(c Varsmap) error {
 		_, existsC = auxC[VarMappingImageFromNameKey]
 		if existsC {
 			auxV[VarMappingImageFromNameKey] = auxC[VarMappingImageFromNameKey]
+		}
+	}
+
+	_, existsV = auxV[VarMappingImageFullyQualifiedNameKey]
+	if !existsV {
+		_, existsC = auxC[VarMappingImageFullyQualifiedNameKey]
+		if existsC {
+			auxV[VarMappingImageFullyQualifiedNameKey] = auxC[VarMappingImageFullyQualifiedNameKey]
 		}
 	}
 
