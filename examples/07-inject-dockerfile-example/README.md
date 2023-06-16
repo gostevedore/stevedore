@@ -18,11 +18,13 @@ This example demonstrates how to create a unified build context using different 
 
 
 ## Requirements
+
 - Docker. _Tested on Docker server 20.10.21 and Docker API 1.41_
 - Docker's Compose plugin or `docker-compose`. _Tested on Docker Compose version v2.17.3_
 - `make` utility. _Tested on version 4.3-4.1build1_
 
 ## Stack
+
 The stack required to run this example is defined in a [Docker Compose file](./docker-compose.yml). The stack consists of four services: a Docker Registry, a Docker Registry authorization, a Git server and a Stevedore service.
 
 The Docker registry is used to store the Docker images built by Stevedore during the example execution.
@@ -30,9 +32,11 @@ The Git server service is used to store the source code of the applications that
 The Stevedore service is built from a container which is defined in that [Dockerfile](stack/stevedore/Dockerfile).
 
 ## Usage
+
 The example comes with a Makefile that can help you execute common actions, like starting the stack to run the example or attaching to a container in the stack to perform specific tasks.
 
 Find below the available Makefile targets, as well as its description:
+
 ```sh
 ❯ make help
  Example basic-example:
@@ -47,15 +51,19 @@ Find below the available Makefile targets, as well as its description:
 ```
 
 To execute the entire example, including starting and cleaning the stack, run the `run` target.
+
 ```sh
 ❯ make run
 ```
 
 ## Example Execution Insights
+
 Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes Docker images using Stevedore, and then cleans the stack up.
 
 ### Starting the Stack
+
 When the run starts, it generates an SSH key pair.
+
 ```sh
 ❯ make run
  [07-inject-dockerfile-example] Create SSH keys
@@ -67,6 +75,7 @@ When the run starts, it generates an SSH key pair.
 ```
 
 Once the SSH key pair is generated, the services are started.
+
 ```sh
 Starting the stack to run 07-inject-dockerfile-example
 
@@ -143,6 +152,7 @@ Starting the stack to run 07-inject-dockerfile-example
 ```
 
 And finally, it generates a `known_hosts` file based on the SSH keys.
+
 ```sh
  [07-inject-dockerfile-example] Create known_hosts file
 # gitserver.stevedore.test:22 SSH-2.0-OpenSSH_9.0
@@ -153,7 +163,9 @@ And finally, it generates a `known_hosts` file based on the SSH keys.
 ```
 
 ### Waiting for Dockerd to be Ready
+
 Before starting the execution of the Stevedore command, it is important to ensure that the Docker daemon (dockerd) is ready. The stevedore service Docker image includes a script, [wait-for-dockerd.sh]((./stack/stevedore/wait-for-dockerd.sh)), which can be used to ensure the readiness of the Docker daemon.
+
 ```sh
  Run example 07-inject-dockerfile-example
 
@@ -164,6 +176,7 @@ Before starting the execution of the Stevedore command, it is important to ensur
 ```
 
 ### Getting Credentials
+
 To obtain the credentials, use the command: `stevedore get credentials`.
 
 ```sh
@@ -175,6 +188,7 @@ ssh_gitserver.stevedore.test   Private key file  private_key_file=/root/.ssh/id_
 ```
 
 ### Getting Images
+
 To view the images in tree format, run `stevedore get images --tree`.
 
 ```sh
@@ -190,10 +204,12 @@ To view the images in tree format, run `stevedore get images --tree`.
 ```
 
 ### Building images
+
 In this section, you can explore the output of the Docker image builds for `base` images and the applications `app1`, `app2` and `app3`. The image definitions for these applications reside in the [./image](./images) folder, the applications' source code is achieved from the Git server, however, the Dockerfile injected is defined in the [./images-src](./images-src/build/Dockerfile) folder.
 Note that each Docker image is built independently of one another.
 
 The example utilizes the command `stevedore build base --build-on-cascade --push-after-build` to build the images.
+
 ```sh
  [07-inject-dockerfile-example] Build the base image and its descendants, and push the images after build
 registry.stevedore.test/base:busybox-1.35 Step 1/7 : ARG image_from_name
@@ -351,6 +367,7 @@ registry.stevedore.test/app2:v1-base-busybox-1.36 ‣  v1-base-busybox-1.36: dig
 ```
 
 ### Cleaning the stack
+
 ```sh
 Stopping the stack to run 07-inject-dockerfile-example
 
@@ -368,11 +385,13 @@ Stopping the stack to run 07-inject-dockerfile-example
 ## Additional Information
 
 ### Images
+
 In this example, the image definition includes a builder with a list of build contexts. The first Docker build context is a [path context](https://gostevedore.github.io/docs/reference-guide/builder/docker/#path-context), which utilizes a local folder as the Docker build context. The Dockerfile used to build the applications' Docker images is located in this folder.
 
 The second context is a [Git context](https://gostevedore.github.io/docs/reference-guide/builder/docker/#git-context), which utilizes a Git repository as the build context. This feature is available only when using the [docker driver](https://gostevedore.github.io/docs/reference-guide/driver/docker/).
 
 Here you have an example of `app1` image definition.
+
 ```yaml
   app1:
     v1:

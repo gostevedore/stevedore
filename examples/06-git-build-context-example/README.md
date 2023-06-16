@@ -1,4 +1,5 @@
 # Git Build Context Example
+
 This example illustrates how to utilize the [Git build context](https://gostevedore.github.io/docs/reference-guide/builder/docker/#git-context) feature in Stevedore. It demonstrates the ability to specify a Git repository as the build context, allowing you to directly build images from a specific branch, tag, or commit.
 
 - [Git Build Context Example](#git-build-context-example)
@@ -24,11 +25,13 @@ This example illustrates how to utilize the [Git build context](https://gosteved
 
 
 ## Requirements
+
 - Docker. _Tested on Docker server 20.10.21 and Docker API 1.41_
 - Docker's Compose plugin or `docker-compose`. _Tested on Docker Compose version v2.17.3_
 - `make` utility. _Tested on version 4.3-4.1build1_
 
 ## Stack
+
 The stack required to run this example is defined in a [Docker Compose file](./docker-compose.yml). The stack consists of four services: a Docker Registry, a Docker Registry authorization, a Git server and a Stevedore service.
 
 The Docker registry is used to store the Docker images built by Stevedore during the example execution.
@@ -36,9 +39,11 @@ The Git server service is used to store the source code of the applications that
 The Stevedore service is built from a container which is defined in that [Dockerfile](stack/stevedore/Dockerfile).
 
 ## Usage
+
 The example comes with a Makefile that can help you execute common actions, like starting the stack to run the example or attaching to a container in the stack to perform specific tasks.
 
 Find below the available Makefile targets, as well as its description:
+
 ```sh
 ❯ make help
  Example basic-example:
@@ -53,14 +58,17 @@ Find below the available Makefile targets, as well as its description:
 ```
 
 To execute the entire example, including starting and cleaning the stack, run the `run` target.
+
 ```sh
 ❯ make run
 ```
 
 ## Example Execution Insights
+
 Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes Docker images using Stevedore, and then cleans the stack up.
 
 ### Starting the Stack
+
 When the run starts, it generates an SSH key pair.
 ```sh
  [06-git-build-context-example] Create SSH keys
@@ -146,6 +154,7 @@ Starting the stack to run 06-git-build-context-example
 ```
 
 And finally, it generates a `known_hosts` file based on the SSH keys.
+
 ```sh
  [06-git-build-context-example] Create known_hosts file
 # gitserver.stevedore.test:22 SSH-2.0-OpenSSH_9.0
@@ -156,7 +165,9 @@ And finally, it generates a `known_hosts` file based on the SSH keys.
 ```
 
 ### Waiting for Dockerd to be Ready
+
 Before starting the execution of the Stevedore command, it is important to ensure that the Docker daemon (dockerd) is ready. The stevedore service Docker image includes a script, [wait-for-dockerd.sh]((./stack/stevedore/wait-for-dockerd.sh)), which can be used to ensure the readiness of the Docker daemon.
+
 ```sh
  Run example 06-git-build-context-example
 
@@ -166,6 +177,7 @@ Before starting the execution of the Stevedore command, it is important to ensur
 ```
 
 ### Getting images
+
 To view the images in tree format, run `stevedore get images --tree`.
 
 ```sh
@@ -181,6 +193,7 @@ To view the images in tree format, run `stevedore get images --tree`.
 ```
 
 ### Building images
+
 In this section, you can explore the output of the Docker image builds for `base` images and the applications `app1`, `app2` and `app3`. The image definitions for these applications reside in the [./images](./images) folder, and the applications' source code is achieved from the Git server.
 Note that each Docker image is built independently of one another.
 
@@ -329,6 +342,7 @@ registry.stevedore.test/app2:v1-base-busybox-1.36 ‣  v1-base-busybox-1.36: dig
 ```
 
 ### Cleaning the stack
+
 ```sh
 Stopping the stack to run 06-git-build-context-example
 
@@ -345,6 +359,7 @@ Stopping the stack to run 06-git-build-context-example
 ## Additional Information
 
 ### Credentials
+
 In this example, environment variables are used as the [credentials store](https://gostevedore.github.io/docs/reference-guide/credentials/credentials-store/#envvars-storage), specifically the `envvars` storage type in Stevedore.
 
 In addition to the credentials required to access the Docker registry, this example introduces two new credentials for accessing the Git server. The `ssh_gitserver.stevedore.test` credentials contain a reference to a private key that is protected by a password. These credentials enable you to clone Git repositories using SSH keys for authentication. On the other hand, the `https_gitserver.stevedore.test` credentials represent a username-password pair that allows you to authenticate with the Git server using the basic auth method.
@@ -360,9 +375,11 @@ https_gitserver.stevedore.test username-password username=admin
 Both credentials has been created using the Stevedore subcommand [create credentials](https://gostevedore.github.io/docs/reference-guide/cli/#create-credentials).
 
 ### Images
+
 This example uses the `base` Docker images, which defines a shared configuration, as parent images to build the images for the applications `app1`, `app2` and `app3`. What outstands that example is how the Docker images for those applications are built using a Git repository as a Docker build context. This approach allows you to build Docker images from remote resources.
 
 For the `app1` application, the Git repository is accessed using the basic auth through HTTP, and the `https_gitserver.stevedore.test` credentials are used for this case.
+
 ```yaml
 app1:
   v1:
@@ -383,6 +400,7 @@ app1:
 ```
 
 The `app2` utilizes SSH to access to the Git server repositories. The repository is referenced as `git@gitserver.stevedore.test:/git/repos/app2.git`, and the `ssh_gitserver.stevedore.test` credentials contain a reference to an SSH key that allows you to read the application repository.
+
 ```yaml
   app2:
     v1:
@@ -402,19 +420,23 @@ The `app2` utilizes SSH to access to the Git server repositories. The repository
           - busybox-1.35
           - busybox-1.36
 ```
+
 These different approaches showcase the flexibility of using Git repositories as Docker build contexts, allowing for seamless integration of version-controlled source code into the Docker image building process.
 
-
 ### Git Server
+
 The example utilizes a Git server with three repositories, each containing the source code of an individual application, `app1`, `app2` and `app3`. These repositories can be found in the [fixtures](./fixtures/gitserver/repos) folder.
 Access to the Git server is available via the host `gitserver.stevedeore.test`. You can authenticate using either the basic auth method with the credentials user=`admin` and password=`admin` or by utilizing SSH keys. The necessary keys are created automatically executing the `make start` command. It is important to note that the private key is password-protected, with the password set to `password`.
 
 #### Preparing the Git Fixtures Required to Execute the Example
+
 The Git server uses a set of fixed configurations prepared in advance. The [fixtures](./fixtures/) folder contains the pre-configured elements such as the authorization mechanisms and the repositories.
 
 ##### Creating the Basic Auth Password
+
 You can authenticate to the Git server using the basic auth method. 
 The `htpasswd` utility has been used to create the password used in that example. This command creates a password file named `.gitpasswd` with the username `admin` and its corresponding password, which in this case is set as `admin`.
+
 ```sh
 root@6a88123e81cc:/$ htpasswd -c .gitpasswd admin
 New password:
@@ -427,12 +449,15 @@ You can find the resulting `.gitpasswd` file [here](./fixtures/gitserver/repos/.
 An Nginx running within the Git server container that uses the `.gitpasswd` to manage the authorizations.
 
 ##### Creating the SSH Key Pair
+
 Executing the command `/usr/bin/ssh-keygen -t rsa -q -N "password" -f id_rsa -C "apenella@stevedore.test"` you can create an SSH key pair used for authentication in the example. It generates an RSA key pair with a passphrase or `password` and saves the private key in the `id_rsa` file and the public key in the `id_rsa.pub`.
+
 ```sh
 root@6a88123e81cc:/$ /usr/bin/ssh-keygen  -t rsa -q -N "password" -f id_rsa -C "apenella@stevedore.test"
 ```
 
 ##### Creating the known_hosts File
+
 This example creates a `known_hosts` file that enables seamless and secure access to Git repositories, eliminating the need for manual host key verification. By including this file, you can establish a connection to the Git server without encountering any host verification prompts, ensuring a smooth and secure workflow.
 
 ```sh
@@ -445,15 +470,19 @@ gitserver.stevedore.test:22 SSH-2.0-OpenSSH_9.0
 ```
 
 ##### Preparing the Git Repository and the Application's Source Code
+
 The first step involves creating the bare repositories on the Git server and configuring the necessary permissions. This can be accomplished by following these commands:
+
 ```sh
 /git/repos $ git config --global init.defaultBranch main
 /git/repos $ git init --bare /git/repos/app1.git
 /git/repos $ chown -R git:git app1.git/
 ```
+
 The git config `--global init.defaultBranch main` command sets the default branch to `main` for all newly created repositories. The `git init --bare /git/repos/app1.git` command initializes the bare repository for `app1.git` in the desired location. Finally, the `chown -R git:git app1.git/` command assigns the appropriate ownership and permissions to the `app1.git` repository, ensuring proper access control.
 
 Once the empty repository is ready, you can proceed to clone it and start writing the code for the application. Here is an example of the commands to perform these steps:
+
 ```sh
 root@9840c0dae81a:/apps $ git clone git@gitserver.stevedore.test:/git/repos/app1.git
 Cloning into 'app1'...
@@ -482,11 +511,14 @@ Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
 To gitserver.stevedore.test:/git/repos/app1.git
  * [new branch]      main -> main
 ```
+
 The git clone command clones the empty repository from the Git server, prompting you for the passphrase of the SSH key. Once cloned, navigate into the `app1` directory and create a new branch named `main` using the `git checkout -b main` command. Proceed by creating the script `app.sh` with the desired code using a heredoc. Make the script executable with `chmod +x app.sh` and then commit the code by running `git commit -m "Create app1"`.
 Next, push the changes to the repository using `git push origin main`. You are prompted for the passphrase of the SSH key. The output shows the progress of enumerating, counting, and writing objects, indicating the successful push to the main branch of the Git repository.
 
 ##### Clone the application 
+
 To verify that the repository content is as expected, you can clone its content using the following command:
+
 ```sh
 root@9840c0dae81a:/tmp $ git clone http://admin:admin@gitserver.stevedore.test:/git/repos/app1.git
 Cloning into 'app1'...
@@ -496,4 +528,5 @@ remote: Counting objects: 100% (6/6), done.
 remote: Compressing objects: 100% (4/4), done.
 remote: Total 6 (delta 0), reused 0 (delta 0), pack-reused 0
 ```
+
 This command clones the repository into a local directory named `app1`. This confirms that the repository has been successfully cloned.

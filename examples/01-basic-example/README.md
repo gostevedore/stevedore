@@ -1,4 +1,5 @@
 # Basic example
+
 This example aims to introduce you to Stevedore and its basic concepts and commands. It follows the [quickstart guide](https://gostevedore.github.io/docs/getting-started/quickstart/) from the documentation, which serves as a starting point to get familiar with Stevedore. By following this example, you can learn how to create several image definitions into multiple files and a builder, add credentials to the credentials store, and build and promote a Docker image to a Docker registry using Stevedore.
 
 - [Basic example](#basic-example)
@@ -19,19 +20,23 @@ This example aims to introduce you to Stevedore and its basic concepts and comma
     - [Images](#images)
 
 ## Requirements
+
 - Docker. _Tested on Docker server 20.10.21 and Docker API 1.41_
 - Docker's Compose plugin or `docker-compose`. _Tested on Docker Compose version v2.17.3_
 - `make` utility. _Tested on version 4.3-4.1build1_
 
 ## Stack
+
 The stack required to run this example is defined in a [Docker Compose file](./docker-compose.yml). The stack consists of three services: a Docker Registry, a Docker Registry authorization and a Stevedore service. The Docker registry is used to store the Docker images built by Stevedore during the example execution. The Stevedore service is where the example is executed.
 
 The Stevedore service is built from a container which is defined in that [Dockerfile](stack/stevedore/Dockerfile).
 
 ## Usage
+
 The example comes with a Makefile that can help you execute common actions, like starting the stack to run the example or attaching to a container in the stack to perform specific tasks.
 
 Find below the available Makefile targets, as well as its description:
+
 ```sh
 ❯ make help
  Example basic-example:
@@ -46,14 +51,17 @@ Find below the available Makefile targets, as well as its description:
 ```
 
 To execute the entire example, including starting and cleaning the stack, run the `run` target.
+
 ```sh
 ❯ make run
 ```
 
 ## Example Execution Insights
+
 Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes a Docker image using Stevedore, and then cleans the stack up.
 
 ### Starting the stack
+
 ```sh
 Starting the stack to run basic-example
 
@@ -96,6 +104,7 @@ Starting the stack to run basic-example
 ```
 
 ### Getting Credentials
+
 To obtain the credentials, use the command: `stevedore get credentials`.
 
 ```sh
@@ -111,6 +120,7 @@ registry.stevedore.test username-password username=admin
 ```
 
 ### Getting Builders
+
 Use the command `stevedore get builders` to get the builders.
 
 ```sh
@@ -125,6 +135,7 @@ my-app docker
 ```
 
 ### Getting images
+
 To view the images in tree format, run `stevedore get images --tree`.
 
 ```sh
@@ -141,6 +152,7 @@ To view the images in tree format, run `stevedore get images --tree`.
 ```
 
 ### Building images
+
 The example uses the command `stevedore build my-app --push-after-build` to build and automatically promote the images to the Docker registry. Because the three defined images are being built at the same time, the output shows these outputs mixed.
 
 If you review the builder definition, you will notice that the source code for `my-app` is located in the [./builders/apps.yaml](builders/apps.yaml) file. This folder contains the necessary resources required for building the `my-app` Docker image.
@@ -200,6 +212,7 @@ registry.stevedore.test/my-app:2.1.0-busybox1.35 Successfully tagged registry.st
 ```
 
 Here you can see how Stevedore starts to push images automatically.
+
 ```sh
 registry.stevedore.test/my-app:2.1.0-busybox1.35 ‣  The push refers to repository [registry.stevedore.test/my-app]
 registry.stevedore.test/my-app:2.1.0-busybox1.35 ‣  cb6098d4c396:  Pushed
@@ -236,6 +249,7 @@ registry.stevedore.test/my-app:3.2.1-busybox1.36 ‣  3.2.1-busybox1.36: digest:
 ```
 
 ### Cleaning the stack
+
 ```sh
 Stopping the stack to run basic-example
 
@@ -251,22 +265,27 @@ Stopping the stack to run basic-example
 ```
 
 ## Additional information
+
 In addition to the core steps outlined in the example, the following section provides additional information and insights to further enhance your understanding of how this example uses Stevedore.
 
 ### Docker Registry
+
 To illustrate how Stevedore can push Docker images after building them, this example starts a Docker registry. The Docker registry is launched as a Docker Compose service, accompanied by an authentication service. In this example, Cesanta's [docker_auth](https://github.com/cesanta/docker_auth) is utilized.
 
 The Docker registry service is accessible internally through the host `registry.stevedore.test`. To log in to the Docker registry service, you can use the credentials: user=`admin`, password=`admin`. Additionally, the authentication service is accessible through the host `auth.stevedore.test`.
 
 ### Builders
+
 The example uses a [global builder](https://gostevedore.github.io/docs/reference-guide/builder/#global-builder), a builder that can be applied to any image definition.
 
 ### Credentials
+
 The current example uses the credentials [local store](https://gostevedore.github.io/docs/reference-guide/credentials/credentials-store/#local-storage). It is the default backend storage for the credentials which stores them locally, on your local system disk.
 You can see the credentials store configuration on Stevedore's configuration file [./stevedore.yaml](stevedore.yaml), within the example's folder.
 
 The example already provides the `./credentials` folder with the credentials to log in to the Docker registry available.
 Using the command `stevedore get credentials` and the `--show-secrets` flag, you can see all the details about the stored credentials.
+
 ```sh
 /app/examples/01-basic-example # stevedore get credentials --show-secrets
 ID                      TYPE              CREDENTIALS
@@ -274,11 +293,13 @@ registry.stevedore.test username-password username=admin, password=admin
 ```
 
 The credentials already present there were generated by the command:
+
 ```sh
 stevedore create credentials registry.stevedore.test --username admin
 ```
 
 ### Images
+
 The example includes image definitions for different versions of the application `my-app`. These image definitions are being built from the Docker images `busybox:1.35` and `busybox:1.36`. You can find these foundational image definitions in the file [./images/foundational.yaml](images/foundational.yaml).
 
 It is important to note that the foundational image definitions include a persistent label named `created_at`, which is inherited by all images defined below them.

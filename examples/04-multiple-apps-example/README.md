@@ -15,19 +15,23 @@ This example showcases how to define and manage multiple applications in Stevedo
     - [Cleaning the stack](#cleaning-the-stack)
 
 ## Requirements
+
 - Docker. _Tested on Docker server 20.10.21 and Docker API 1.41_
 - Docker's Compose plugin or `docker-compose`. _Tested on Docker Compose version v2.17.3_
 - `make` utility. _Tested on version 4.3-4.1build1_
 
 ## Stack
+
 The stack required to run this example is defined in a [Docker Compose file](./docker-compose.yml). The stack consists of three services: a Docker Registry, a Docker Registry authorization and a Stevedore service. The Docker registry is used to store the Docker images built by Stevedore during the example execution. The Stevedore service is where the example is executed.
 
 The Stevedore service is built from a container which is defined in that [Dockerfile](stack/stevedore/Dockerfile).
 
 ## Usage
+
 The example comes with a Makefile that can help you execute common actions, like starting the stack to run the example or attaching to a container in the stack to perform specific tasks.
 
 Find below the available Makefile targets, as well as its description:
+
 ```sh
 ❯ make help
  Example basic-example:
@@ -42,11 +46,13 @@ Find below the available Makefile targets, as well as its description:
 ```
 
 To execute the entire example, including starting and cleaning the stack, run the `run` target.
+
 ```sh
 ❯ make run
 ```
 
 ## Example Execution Insights
+
 Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes a Docker image using Stevedore, and then cleans the stack up.
 
 ```sh
@@ -91,6 +97,7 @@ Starting the stack to run 04-multiple-apps-example
  ```
 
 ### Getting images
+
 To view the images in tree format, run `stevedore get images --tree`.
 
 ```sh
@@ -110,11 +117,14 @@ To view the images in tree format, run `stevedore get images --tree`.
 ```
 
 ### Building images
+
 In this section, you can explore the output of the Docker image builds for the applications `app1`, `app2` and `app3`. The image definitions for these applications reside in the [./images](./images) folder, while their source code can be found in the [./apps](./apps) folder.
 Note that each application is built independently of one another.
 
 #### app1
+
 To initiate the build process for `app1`, execute the command `stevedore build app1 --push-after-build`.
+
 ```sh
  [04-multiple-apps-example] Build app1 and push images after build
  Waiting for dockerd to be ready...
@@ -148,7 +158,9 @@ registry.stevedore.test/app1:v1-busybox1.35 ‣  v1-busybox1.35: digest: sha256:
 ```
 
 #### app2
+
 To generate the image for app2, use the following command: `stevedore build app2 --push-after-build`. Keep in mind that two separate images of `app2` will be built, each with its respective parent image.
+
 ```sh
  [04-multiple-apps-example] Build app2 and push images after build
  Waiting for dockerd to be ready...
@@ -203,7 +215,9 @@ registry.stevedore.test/app2:v1-busybox1.36 ‣  v1-busybox1.36: digest: sha256:
 ```
 
 #### app3
+
 For `app3`, execute `stevedore build app3 --push-after-build` to trigger the build and image creation.
+
 ```sh
  [04-multiple-apps-example] Build app3 and push images after build
  Waiting for dockerd to be ready...
@@ -237,6 +251,7 @@ registry.stevedore.test/app3:v1-busybox1.36 ‣  v1-busybox1.36: digest: sha256:
 ```
 
 ### Cleaning the stack
+
 ```sh
 Stopping the stack to run 04-multiple-apps-example
 

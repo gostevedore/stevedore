@@ -18,19 +18,23 @@ This example showcases the image promotion feature in Stevedore, demonstrating h
     - [Variables Mapping](#variables-mapping)
 
 ## Requirements
+
 - Docker. _Tested on Docker server 20.10.21 and Docker API 1.41_
 - Docker's Compose plugin or `docker-compose`. _Tested on Docker Compose version v2.17.3_
 - `make` utility. _Tested on version 4.3-4.1build1_
 
 ## Stack
+
 The stack required to run this example is defined in a [Docker Compose file](./docker-compose.yml). The stack consists of three services: a Docker Registry, a Docker Registry authorization and a Stevedore service. The Docker registry is used to store the Docker images built by Stevedore during the example execution. The Stevedore service is where the example is executed.
 
 The Stevedore service is built from a container which is defined in that [Dockerfile](stack/stevedore/Dockerfile).
 
 ## Usage
+
 The example comes with a Makefile that can help you execute common actions, like starting the stack to run the example or attaching to a container in the stack to perform specific tasks.
 
 Find below the available Makefile targets, as well as its description:
+
 ```sh
 ❯ make help
  Example basic-example:
@@ -45,14 +49,17 @@ Find below the available Makefile targets, as well as its description:
 ```
 
 To execute the entire example, including starting and cleaning the stack, run the `run` target.
+
 ```sh
 ❯ make run
 ```
 
 ## Example Execution Insights
+
 Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes a Docker image using Stevedore, and then cleans the stack up.
 
 ### Starting the stack
+
 ```sh
 Starting the stack to run 11-promote-images-example
 
@@ -92,7 +99,9 @@ Starting the stack to run 11-promote-images-example
 ```
 
 ### Waiting for Dockerd to be Ready
+
 Before starting the execution of the Stevedore command, it is important to ensure that the Docker daemon (dockerd) is ready. The stevedore service Docker image includes a script, [wait-for-dockerd.sh](./stack/stevedore/wait-for-dockerd.sh), which can be used to ensure the readiness of the Docker daemon.
+
 ```sh
  Run example 11-promote-images-example
 
@@ -102,7 +111,9 @@ Before starting the execution of the Stevedore command, it is important to ensur
 ```
 
 ### Building the base image
+
 In this example, the command `stevedore build base` creates the `base` Docker image. As a result, the locally available images are `registry.stevedore.test/base:busybox1.35` and `registry.stevedore.test/base:2.4.6`.
+
 ```sh
  [11-promote-images-example] Building base image
 registry.stevedore.test/base:2.4.6 Step 1/7 : ARG image_from_name
@@ -132,8 +143,10 @@ registry.stevedore.test/base:2.4.6 Successfully tagged registry.stevedore.test/b
 ```
 
 ### Promoting the base image
+
 After the images are ready and stored locally, the command `stevedore promote registry.stevedore.test/base:2.4.6 --promote-image-registry-namespace stable` is used to promote the image from the local environment to the Docker registry.
 It is important to note the use of the `--promote-image-registry-namespace stable` flag, which allows updating the registry namespace of the Docker image to `stable` before pushing it to the Docker registry.
+
 ```sh
  [11-promote-images-example] Promoting building image
 registry.stevedore.test/stable/base:2.4.6 ‣  The push refers to repository [registry.stevedore.test/stable/base]
@@ -141,11 +154,14 @@ registry.stevedore.test/stable/base:2.4.6 ‣  1b3060abf396:  Pushed
 registry.stevedore.test/stable/base:2.4.6 ‣  42ef21f45b9a:  Pushed
 registry.stevedore.test/stable/base:2.4.6 ‣  2.4.6: digest: sha256:b074b006d5183fd2075a1a5141f2e2d3d47559b78272512c732ddbe7256ef056 size: 735
 ```
+
 That case can be a starting point of how to manage the lifecycle of the Docker images.
 
 ### Building the app1 image
+
 When building the `app1` Docker image, you have the flexibility to set the desired registry namespace. Even though the `app1` image definition itself does not specify a specific namespace, you can use the `--image-from-namespace` flag to achieve this customization.
 By executing the command `stevedore build app1 --image-version 0.1.0 --image-from-namespace stable --pull-parent-image`, you can utilize the previously promoted image `registry.stevedore.test/stable/base:2.4.6` as the base image for `app1`.
+
 ```sh
  [11-promote-images-example] Building app1 image
 registry.stevedore.test/app1:0.1.0-base2.4.6 Step 1/8 : ARG image_from_name
@@ -166,17 +182,21 @@ registry.stevedore.test/app1:0.1.0-base2.4.6  ‣ sha256:fdbc238604d27d33420392d
 registry.stevedore.test/app1:0.1.0-base2.4.6 Successfully built fdbc238604d2
 registry.stevedore.test/app1:0.1.0-base2.4.6 Successfully tagged registry.stevedore.test/app1:0.1.0-base2.4.6
 ```
+
 Take note of the usage of the `--pull-parent-image` flag, which ensures that the parent image is pulled from the registry before the build process starts.
 
 The resulting image, `registry.stevedore.test/app1:0.1.0-base2.4.6`, is now stored locally and pending promotion.
 
 ### Promoting the app1 image
+
 Finally, to promote the image `registry.stevedore.test/app1:0.1.0-base2.4.6`, you can execute the command `stevedore promote registry.stevedore.test/app1:0.1.0-base2.4.6 --promote-image-tag latest --force-promote-source-image --enable-semver-tags`. This promotion involves several actions:
+
 - The `--promote-image-tag` flag overwrites the source image tag with the specified tag `latest`.
 - The `--force-promote-source-image` flag ensures that the tag of the source image is pushed.
 - The `--enable-semver-tags` flag enables automatic tag generation based on the semantic version.
 
 The output below shows the result of the promotion:
+
 ```sh
  [11-promote-images-example] Promoting app1 image
 registry.stevedore.test/app1:latest ‣  The push refers to repository [registry.stevedore.test/app1]
@@ -200,9 +220,11 @@ registry.stevedore.test/app1:latest ‣  1b3060abf396:  Layer already exists
 registry.stevedore.test/app1:latest ‣  42ef21f45b9a:  Layer already exists
 registry.stevedore.test/app1:latest ‣  latest: digest: sha256:4c935e2e4eb9f50a622017e38c6331483afbd3cb5c96dd8cbd694c4fe93d93c9 size: 942
 ```
+
 As a result, the following tags are automatically created and pushed simultaneously:  `registry.stevedore.test/app1:0.1`, `registry.stevedore.test/app1:0.1.0`, `registry.stevedore.test/app1:0.1.0-base2.4.6`, `registry.stevedore.test/app1:latest`.
 
 ### Cleaning the stack
+
 ```sh
 Stopping the stack to run 11-promote-images-example
 
@@ -216,9 +238,11 @@ Stopping the stack to run 11-promote-images-example
 ## Additional Information
 
 ### Variables Mapping
+
 In this example, the `image_from_fully_qualified_name` variable is used as part of the [variable-mapping](https://gostevedore.github.io/docs/getting-started/concepts/#variables-mapping) feature. This variable provides the fully qualified name of the parent Docker image.
 
 Here is the Dockerfile code used in the example:
+
 ```dockerfile
 ARG image_from_fully_qualified_name
 
