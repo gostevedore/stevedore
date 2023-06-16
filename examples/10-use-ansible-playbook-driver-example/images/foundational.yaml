@@ -1,0 +1,11 @@
+images:
+  ubuntu:
+    "focal":
+      registry: registry.stevedore.test
+      persistent_labels:
+        created_at: "{{ .DateRFC3339Nano }}"
+      builder:
+        driver: ansible-playbook
+        options:
+          inventory: ./ansible-src/ubuntu/inventory/containers.ini
+          playbook: ./ansible-src/ubuntu/site.yml

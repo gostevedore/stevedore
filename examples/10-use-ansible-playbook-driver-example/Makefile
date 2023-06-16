@@ -21,12 +21,11 @@ start: ## Starts the stack required to run the example
 	@echo
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) up --detach --build || { echo " Error starting the stack to run $(EXAMPLE)"; exit 1; }
 
-
 clean: ## Stops the stack required to run the example
 	@echo
 	@echo "$(GREEN)Stopping the stack to run $(EXAMPLE)$(NC)"
 	@echo
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans || true
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) down --volumes --remove-orphans --timeout 2 || true
 
 status: ## Displays the status of the stack
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) ps || true
@@ -35,17 +34,21 @@ follow-logs: ## Shows the stack logs in follow mode
 	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) logs -f
 
 attach: ## Attaches to the Stevedore container
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore sh
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore bash
 
 example: ## Executes the example (requires the stack to be started)
 	@echo
 	@echo "$(GREEN) Run example $(EXAMPLE)$(NC)"
 	@echo
 
-	@echo " [$(EXAMPLE)]$(GREEN) Get images$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore get images || { echo " Error getting images $(EXAMPLE)"; exit 1; }
+	@echo " [$(EXAMPLE)]$(GREEN) Waiting for dockerd$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore /usr/local/bin/wait-for-dockerd.sh || { echo " Error synchronizing $(EXAMPLE)"; exit 1; }
 	@echo
 
-	@echo " [$(EXAMPLE)]$(GREEN) Build my-app and push images after build$(NC)"
-	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) run stevedore stevedore build my-app --image-version example --push-after-build || { echo " Error runnig example $(EXAMPLE)"; exit 1; }
+	@echo " [$(EXAMPLE)]$(GREEN) Building Ubuntu image$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore build ubuntu --ansible-connection-local || { echo " Error building Ubuntu image $(EXAMPLE)"; exit 1; }
+	@echo
+
+	@echo " [$(EXAMPLE)]$(GREEN) Building Ubuntu image$(NC)"
+	@$(DOCKER_COMPOSE_VERSION) -p $(EXAMPLE) exec stevedore stevedore build app1 || { echo " Error building app1 $(EXAMPLE)"; exit 1; }
 	@echo

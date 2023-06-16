@@ -1,7 +1,6 @@
 images:
   app1:
     v1:
-      # name: "{{ .Name }}"
       version: "{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}"
       registry: registry.stevedore.test
       builder:

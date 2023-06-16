@@ -68,8 +68,6 @@ github.com/apenella/go-common-utils/transformer/string v0.0.0-20221227202648-545
 github.com/apenella/go-common-utils/transformer/string v0.0.0-20221227202648-5452d804e940/go.mod h1:jAofiFl0x4kK1BcLL2w6/S8iU1XY47bZquxzaAylciw=
 github.com/apenella/go-data-structures/extendedTree v0.0.0-20221117064317-a3b6d9f69cda h1:QAg0DxOWFSLA2IiPkHbjThLlVofWxZjGhwz0pQPWn2w=
 github.com/apenella/go-data-structures/extendedTree v0.0.0-20221117064317-a3b6d9f69cda/go.mod h1:hAC0LKywVkVMpXDbpKWwE7aeNCYNA1AxokCHR6dCjC4=
-github.com/apenella/go-docker-builder v0.7.7 h1:imJHMJkrLYZhqlSFWhpIBUnebwwjze6WxPlI8235L3k=
-github.com/apenella/go-docker-builder v0.7.7/go.mod h1:sy/5V1swhhruVr8P6SRF8XjvnHD7ZVVKjb2BfRawYmE=
 github.com/apenella/go-docker-builder v0.7.8 h1:kp4jqQPjh+ZqII7MJFq7z6MZzk24gKVZZdJ3MxIV+Iw=
 github.com/apenella/go-docker-builder v0.7.8/go.mod h1:sy/5V1swhhruVr8P6SRF8XjvnHD7ZVVKjb2BfRawYmE=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
