@@ -15,19 +15,23 @@ This example serves as an introduction to the [wildcard version](https://gosteve
     - [Images](#images)
 
 ## Requirements
+
 - Docker. _Tested on Docker server 20.10.21 and Docker API 1.41_
 - Docker's Compose plugin or `docker-compose`. _Tested on Docker Compose version v2.17.3_
 - `make` utility. _Tested on version 4.3-4.1build1_
 
 ## Stack
+
 The stack required to run this example is defined in that [Docker Compose file](./docker-compose.yml). The stack consists of three services: a Docker Registry, a Docker Registry authorization and a Stevedore service. The Docker registry is used to store the Docker images built by Stevedore during the example execution. The Stevedore service is where the example is executed.
 
 The Stevedore service is built from a container which is defined in that [Dockerfile](stack/stevedore/Dockerfile).
 
 ## Usage
+
 The example comes with a Makefile that can help you execute common actions, like starting the stack to run the example or attaching to a container in the stack to perform specific tasks.
 
 Find below the available Makefile targets, as well as its description:
+
 ```sh
 ❯ make help
  Example basic-example:
@@ -42,14 +46,17 @@ Find below the available Makefile targets, as well as its description:
 ```
 
 To execute the entire example, including starting and cleaning the stack, run the `run` target.
+
 ```sh
 ❯ make run
 ```
 
 ## Example Execution Insights
+
 Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes a Docker image using Stevedore, and then cleans the stack up.
 
 ### Starting the stack
+
 ```sh
 Starting the stack to run 02-wildcard-definition-example
 
@@ -92,6 +99,7 @@ Starting the stack to run 02-wildcard-definition-example
 ```
 
 ### Getting images
+
 To view the images, run `stevedore get images`.
 
 ```sh
@@ -117,6 +125,7 @@ When you obtain the images list, you can notice that there is a version for `my-
 For further information on templating image attributes, please refer to the Stevedore [reference guide](https://gostevedore.github.io/docs/reference-guide/image/#templating-image-attributes).
 
 ### Building images
+
 The example uses the command `stevedore build my-app --image-version example --push-after-build` to build and automatically promote the images to the Docker registry.
 
 If you review the builder definition, you will notice that the source code for `my-app` is located in the [./builders/apps.yaml](builders/apps.yaml) file. This folder contains the necessary resources required for building the `my-app` Docker image.
@@ -162,6 +171,7 @@ registry.stevedore.test/my-app:example-busybox1.35 ‣  example-busybox1.35: dig
 Upon executing the build command, the resulting image `registry.stevedore.test/my-app:example-busybox1.35` is successfully created and pushed to the Docker registry.
 
 ### Cleaning the stack
+
 ```sh
 Stopping the stack to run 02-wildcard-definition-example
 
@@ -175,12 +185,15 @@ Stopping the stack to run 02-wildcard-definition-example
 ```
 
 ## Additional information
+
 In addition to the core steps outlined in the example, the following section provides additional information and insights to further enhance your understanding of how this example uses Stevedore.
 
 ### Images
+
 The wildcard version in Stevedore is denoted by the asterisk symbol `*`. In the image definitions, you can use `{{ .Version }}` to represent the version attribute. During the building process, when the `--image-version` flag is specified, all occurrences of `{{ .Version }}` within the image definitions are replaced with the value provided in the `--image-version` flag. This allows you to dynamically set the version of the Docker images based on the command-line input, providing flexibility and customization in your image building process.
 
 Here is an example of how a wildcard version is defined in the Stevedore image definitions:
+
 ```yaml
 images:
   my-app:
@@ -196,8 +209,10 @@ images:
 ```
 
 When you execute the resulting image, you can see the output from the newly created image:
+
 ```sh
 /app/examples/02-wildcard-version-example $ docker run --rm registry.stevedore.test/my-app:example-busybox1.35
 Hey there, I'm example-busybox1.35!
 ```
+
 This demonstrates how the wildcard version allows you to dynamically generate unique version identifiers for your Docker images based on the provided input through the `--image-version` flag.

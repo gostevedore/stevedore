@@ -18,19 +18,23 @@ To accomplish this, the [Docker Compose file](./docker-compose.yml) includes the
 
 
 ## Requirements
+
 - Docker. _Tested on Docker server 20.10.21 and Docker API 1.41_
 - Docker's Compose plugin or `docker-compose`. _Tested on Docker Compose version v2.17.3_
 - `make` utility. _Tested on version 4.3-4.1build1_
 
 ## Stack
+
 The stack required to run this example is defined in that [Docker Compose file](./docker-compose.yml). The stack consists of three services: a Docker Registry, a Docker Registry authorization and a Stevedore service. The Docker registry is used to store the Docker images built by Stevedore during the example execution. The Stevedore service is where the example is executed.
 
 The Stevedore service is built from a container which is defined in that [Dockerfile](stack/stevedore/Dockerfile).
 
 ## Usage
+
 The example comes with a Makefile that can help you execute common actions, like starting the stack to run the example or attaching to a container in the stack to perform specific tasks.
 
 Find below the available Makefile targets, as well as its description:
+
 ```sh
 ❯ make help
  Example basic-example:
@@ -45,14 +49,17 @@ Find below the available Makefile targets, as well as its description:
 ```
 
 To execute the entire example, including starting and cleaning the stack, run the `run` target.
+
 ```sh
 ❯ make run
 ```
 
 ## Example Execution Insights
+
 Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes a Docker image using Stevedore, and then cleans the stack up.
 
 ### Starting the stack
+
 ```sh
 Starting the stack to run 03-envvars-credentials-store-example
 
@@ -95,6 +102,7 @@ Starting the stack to run 03-envvars-credentials-store-example
 ```
 
 ### Getting Credentials
+
 To obtain the credentials, use the command: `stevedore get credentials --show-secrets`.
 
 ```sh
@@ -111,6 +119,7 @@ registry.stevedore.test username-password username=admin, password=admin
 ```
 
 ### Building images
+
 The example uses the command `stevedore build my-app --image-version 3.2.1 --push-after-build` to build and automatically promote the images to the Docker registry.
 
 ```sh
@@ -177,6 +186,7 @@ registry.stevedore.test/my-app:3.2.1-busybox1.36 ‣  3.2.1-busybox1.36: digest:
 ```
 
 ### Cleaning the stack
+
 ```sh
 Stopping the stack to run 03-envvars-credentials-store-example
 
@@ -190,13 +200,17 @@ Stopping the stack to run 03-envvars-credentials-store-example
 ```
 
 ## Additional information
+
 In addition to the core steps outlined in the example, the following section provides additional information and insights to further enhance your understanding of how this example uses Stevedore.
 
 ### Builders
+
 In this example, the image definitions utilize an [inline builder](https://gostevedore.github.io/docs/reference-guide/builder/#in-line-builder) instead of a [global builder](https://gostevedore.github.io/docs/reference-guide/builder/#global-builder). This is achieved by removing the `builders_path` parameter from the Stevedore configuration, within the [./stevedore.yaml](stevedore.yaml) file, as well as removing the `./builders` folder.
 
 ### Credentials
+
 This example utilizes environment variables as the [credentials store](https://gostevedore.github.io/docs/reference-guide/credentials/credentials-store/#envvars-storage). Stevedore recognizes this as the `envvars` storage type. To use this store, the credentials section in the [./stevedore.yaml](stevedore.yaml) file should be configured as follows. However, you can also configure it by setting the `STEVEDORE_CREDENTIALS_STORAGE_TYPE` environment variable.
+
 ```yaml
 credentials:
   storage_type: envvars
@@ -205,7 +219,8 @@ credentials:
 The `envvars` store requires an encryption key, which in this example is set through the environment variable `STEVEDORE_CREDENTIALS_ENCRYPTION_KEY` instead of defining it in the [./stevedore.yaml](stevedore.yaml) file. It's important to note that any [Stevedore's configuration parameter can be set using environment variables](https://gostevedore.github.io/docs/getting-started/configuration/#configuration-from-environment-variables).
 
 The `stevedore create credentials` subcommand is used to create the credentials. When using the `envvars` storage, it does not create the environment variable that contains the credentials. Instead, it returns the environment variable name and its value, which you need to set in your system.
-```
+
+```sh
 /app/examples/03-envvars-credentials-store-example # stevedore create credentials registry.stevedore.test --username admin
 Password: 
  You must create the following environment variable to use the recently created credentials: 

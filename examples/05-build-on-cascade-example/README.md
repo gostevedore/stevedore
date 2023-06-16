@@ -15,19 +15,23 @@ This example demonstrates the concept of building images on a cascade in Stevedo
 
 
 ## Requirements
+
 - Docker. _Tested on Docker server 20.10.21 and Docker API 1.41_
 - Docker's Compose plugin or `docker-compose`. _Tested on Docker Compose version v2.17.3_
 - `make` utility. _Tested on version 4.3-4.1build1_
 
 ## Stack
+
 The stack required to run this example is defined in a [Docker Compose file](./docker-compose.yml). The stack consists of three services: a Docker Registry, a Docker Registry authorization and a Stevedore service. The Docker registry is used to store the Docker images built by Stevedore during the example execution. The Stevedore service is where the example is executed.
 
 The Stevedore service is built from a container which is defined in that [Dockerfile](stack/stevedore/Dockerfile).
 
 ## Usage
+
 The example comes with a Makefile that can help you execute common actions, like starting the stack to run the example or attaching to a container in the stack to perform specific tasks.
 
 Find below the available Makefile targets, as well as its description:
+
 ```sh
 ❯ make help
  Example basic-example:
@@ -42,11 +46,13 @@ Find below the available Makefile targets, as well as its description:
 ```
 
 To execute the entire example, including starting and cleaning the stack, run the `run` target.
+
 ```sh
 ❯ make run
 ```
 
 ## Example Execution Insights
+
 Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes Docker images using Stevedore, and then cleans the stack up.
 
 ```sh
@@ -94,6 +100,7 @@ Starting the stack to run 05-build-on-cascade-example
 ```
 
 ### Getting images
+
 To view the images in a tree format, execute the command `stevedore get images --tree`. This command will display a hierarchical representation of the images. You will observe the `base` images nested under the `busybox` images, along with the `app1`, `app2`, and `app3` images defined from the `base`.
 
 ```sh
@@ -113,6 +120,7 @@ To view the images in a tree format, execute the command `stevedore get images -
 ```
 
 ### Building images
+
 The example utilizes the command `stevedore build base --build-on-cascade --push-after-build` to build the `base` images. This command triggers the automatic building of their descendants once the `base` images are successfully built.
 The promotion of the images to the Docker registry is initiated automatically once each image is ready. Since all three images are being built concurrently, the output may display a mixture of these outputs.
 
@@ -263,6 +271,7 @@ registry.stevedore.test/app2:v1-base-busybox-1.36 ‣  v1-base-busybox-1.36: dig
 ```
 
 ### Cleaning the stack
+
 ```sh
 Stopping the stack to run 05-build-on-cascade-example
 
@@ -276,12 +285,15 @@ Stopping the stack to run 05-build-on-cascade-example
 ```
 
 ## Additional information
+
 In addition to the core steps outlined in the example, the following section provides additional information and insights to further enhance your understanding of how this example uses Stevedore.
 
 ### Images
+
 This example showcases the process of defining a base image that establishes a shared configuration for your images, including the user used to run the containers. As a result, all images derived from this base will inherit and utilize the common configuration.
 
 The following configuration is available by default for all the images created from the `base` image.
+
 ```dockerfile
 # Create a new user
 RUN echo "anonymous:x:10001:10001:,,,:/app:/bin/sh" >> /etc/passwd && \

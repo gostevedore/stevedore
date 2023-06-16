@@ -18,19 +18,23 @@ By default, Stevedore automatically provides the `image_from_name` and `image_fr
 
 
 ## Requirements
+
 - Docker. _Tested on Docker server 20.10.21 and Docker API 1.41_
 - Docker's Compose plugin or `docker-compose`. _Tested on Docker Compose version v2.17.3_
 - `make` utility. _Tested on version 4.3-4.1build1_
 
 ## Stack
+
 The stack required to run this example is defined in a [Docker Compose file](./docker-compose.yml). The stack consists of three services: a Docker Registry, a Docker Registry authorization and a Stevedore service. The Docker registry is used to store the Docker images built by Stevedore during the example execution. The Stevedore service is where the example is executed.
 
 The Stevedore service is built from a container which is defined in that [Dockerfile](stack/stevedore/Dockerfile).
 
 ## Usage
+
 The example comes with a Makefile that can help you execute common actions, like starting the stack to run the example or attaching to a container in the stack to perform specific tasks.
 
 Find below the available Makefile targets, as well as its description:
+
 ```sh
 ❯ make help
  Example basic-example:
@@ -45,14 +49,17 @@ Find below the available Makefile targets, as well as its description:
 ```
 
 To execute the entire example, including starting and cleaning the stack, run the `run` target.
+
 ```sh
 ❯ make run
 ```
 
 ## Example Execution Insights
+
 Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes a Docker image using Stevedore, and then cleans the stack up.
 
 ### Starting the stack
+
 ```sh
 Starting the stack to run 09-custom-variables-mapping-example
 
@@ -92,7 +99,9 @@ Starting the stack to run 09-custom-variables-mapping-example
 ```
 
 ### Waiting for Dockerd to be Ready
+
 Before starting the execution of the Stevedore command, it is important to ensure that the Docker daemon (dockerd) is ready. The stevedore service Docker image includes a script, [wait-for-dockerd.sh](./stack/stevedore/wait-for-dockerd.sh), which can be used to ensure the readiness of the Docker daemon.
+
 ```sh
  Run example 09-custom-variables-mapping-example
 
@@ -102,9 +111,11 @@ Before starting the execution of the Stevedore command, it is important to ensur
 ```
 
 ### Execute Build in dry-run mode
+
 To begin, the example performs a Docker image build in dry-run mode using the following command: `stevedore build my-app --image-version 3.2.1-busybox1.36 --dry-run`. The dry-run mode allows for the exploration of all the parameters utilized during the build process, including the [variables-mapping](https://gostevedore.github.io/docs/getting-started/concepts/#variables-mapping) configuration.
 
 Here is the output generated during the dry-run:
+
 ```sh
  [09-custom-variables-mapping-example] Build my-app and push images after build
 
@@ -163,14 +174,17 @@ Here is the output generated during the dry-run:
 Within the `builder_variables_mapping` block, you can observe the argument names that will be passed to the Docker API for image creation. In this case, the customized arguments are `image_from_name_key: parent_name` and `image_from_tag_key: parent_version`.
 
 Furthermore, in the `parent builder vars mapping` block, you can find the corresponding values that will be passed to the Docker API:
+
 ```yaml
 parent builder vars mapping:
   parent_name: busybox
   parent_version: 1.36
 ```
+
 This demonstrates how the custom variables mapping allows for flexible configuration and customization of build arguments in Stevedore.
 
 After understanding the customization of the variable mapping, you can proceed with the build of the images.
+
 ```sh
  [09-custom-variables-mapping-example] Build my-app and push images after build
 registry.stevedore.test/my-app:3.2.1-busybox1.35 Step 1/7 : ARG parent_name
@@ -231,6 +245,7 @@ registry.stevedore.test/my-app:3.2.1-busybox1.36 ‣  3.2.1-busybox1.36: digest:
 ```
 
 ### Cleaning the stack
+
 ```sh
 Stopping the stack to run 09-custom-variables-mapping-example
 
@@ -242,12 +257,14 @@ Stopping the stack to run 09-custom-variables-mapping-example
 ```
 
 ## Additional information
+
 In addition to the core steps outlined in the example, the following section provides additional information and insights to further enhance your understanding of how this example uses Stevedore.
 
 ### Builder
 The `variables_mapping` parameter in the [builder](https://gostevedore.github.io/docs/reference-guide/builder/) configuration allows you to customize the automatic arguments passed to the Docker API and consumed by the Dockerfile during the image building process. In this example, the `image_from_name_key` and `image_from_tag_key` arguments are customized to `parent_name` and `parent_version`, respectively.
 
 Here is an example of the builder configuration showcasing the customization of the variables mapping:
+
 ```yaml
 my-app:
   driver: docker
@@ -258,9 +275,11 @@ my-app:
     image_from_name_key: parent_name
     image_from_tag_key: parent_version
 ```
+
 This configuration ensures that the customized arguments `parent_name` and `parent_version` are used when communicating with the Docker API during the image building process.
 
 Additionally, the Dockerfile in this example utilizes the customized build arguments `parent_name` and `parent_version`:
+
 ```dockerfile
 ARG parent_name
 ARG parent_version

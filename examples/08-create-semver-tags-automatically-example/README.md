@@ -16,11 +16,13 @@ This example showcases how to use the SemVer specification to create automatical
     - [Stevedore Configuration](#stevedore-configuration)
 
 ## Requirements
+
 - Docker. _Tested on Docker server 20.10.21 and Docker API 1.41_
 - Docker's Compose plugin or `docker-compose`. _Tested on Docker Compose version v2.17.3_
 - `make` utility. _Tested on version 4.3-4.1build1_
 
 ## Stack
+
 The stack required to run this example is defined in a [Docker Compose file](./docker-compose.yml). The stack consists of four services: a Docker Registry, a Docker Registry authorization, a Git server and a Stevedore service.
 
 The Docker registry is used to store the Docker images built by Stevedore during the example execution.
@@ -28,9 +30,11 @@ The Git server service is used to store the source code of the applications that
 The Stevedore service is built from a container which is defined in that [Dockerfile](stack/stevedore/Dockerfile).
 
 ## Usage
+
 The example comes with a Makefile that can help you execute common actions, like starting the stack to run the example or attaching to a container in the stack to perform specific tasks.
 
 Find below the available Makefile targets, as well as its description:
+
 ```sh
 ❯ make help
  Example basic-example:
@@ -45,14 +49,18 @@ Find below the available Makefile targets, as well as its description:
 ```
 
 To execute the entire example, including starting and cleaning the stack, run the `run` target.
+
 ```sh
 ❯ make run
 ```
 ## Example Execution Insights
+
 Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes Docker images using Stevedore, and then cleans the stack up.
 
 ### Starting the Stack
+
 When the run starts, it generates an SSH key pair.
+
 ```sh
  [08-create-semver-tags-automatically-example] Create SSH keys
 [+] Building 0.0s (0/0)
@@ -63,6 +71,7 @@ When the run starts, it generates an SSH key pair.
 ```
 
 Once the SSH key pair is generated, the services are started.
+
 ```sh
 Starting the stack to run 08-create-semver-tags-automatically-example
 
@@ -138,6 +147,7 @@ Starting the stack to run 08-create-semver-tags-automatically-example
 ```
 
 And finally, it generates a `known_hosts` file based on the SSH keys.
+
 ```sh
  [08-create-semver-tags-automatically-example] Create known_hosts file
 # gitserver.stevedore.test:22 SSH-2.0-OpenSSH_9.0
@@ -148,7 +158,9 @@ And finally, it generates a `known_hosts` file based on the SSH keys.
 ```
 
 ### Waiting for Dockerd to be Ready
+
 Before starting the execution of the Stevedore command, it is important to ensure that the Docker daemon (dockerd) is ready. The stevedore service Docker image includes a script, [wait-for-dockerd.sh]((./stack/stevedore/wait-for-dockerd.sh)), which can be used to ensure the readiness of the Docker daemon.
+
 ```sh
  Run example 08-create-semver-tags-automatically-example
 
@@ -160,6 +172,7 @@ Before starting the execution of the Stevedore command, it is important to ensur
 ```
 
 ### Getting Images
+
 To view the images in tree format, run `stevedore get images --tree`.
 
 ```sh
@@ -173,7 +186,9 @@ To view the images in tree format, run `stevedore get images --tree`.
 ```
 
 ### Building images
+
 Before diving into the process of automatically generating tags based on semantic versioning, it is important to first create the `base` image that the `app1` Docker image will be built from.
+
 ```sh
  [08-create-semver-tags-automatically-example] Build the base image, and push the images after build
 registry.stevedore.test/base:busybox-1.35 Step 1/7 : ARG image_from_name
@@ -235,6 +250,7 @@ registry.stevedore.test/base:busybox-1.35 ‣  busybox-1.35: digest: sha256:c33a
 Once the base image is prepared, the process of building the `app1` application can begin. The following command is used for building the application: `stevedore  build app1 --enable-semver-tags --image-version 0.1.2-rc1+$(date -u +"%a%d%m%Y%H%M")`.
 
 It is important to note that the version specified in the command includes the use of the `date` command, making it dynamic. This allows for the inclusion of the current date and time in the version value. In the [image definition](./images/applications.yaml), a wildcard version is used to accommodate dynamic versioning.
+
 ```sh
  [08-create-semver-tags-automatically-example] Build the app1 image, and push the images after build
 registry.stevedore.test/app1:0.1.2-rc1_Wed310520231752 Step 1/8 : ARG image_from_name
@@ -294,6 +310,7 @@ registry.stevedore.test/app1:0.1.2-rc1_Wed310520231752 ‣  0.1.2-rc1_Wed3105202
 ```
 
 ### Cleaning the stack
+
 ```sh
 Stopping the stack to run 08-create-semver-tags-automatically-example
 
@@ -311,12 +328,15 @@ Stopping the stack to run 08-create-semver-tags-automatically-example
 ## Additional Information
 
 ### Stevedore Configuration
+
 When you tag a Docker image with a semantic version compliant value, Stevedore offers the capability to automatically generate additional tags based on semantic versioning. This can be achieved by using the `--enable-semver-tags` flag in either the [build](https://gostevedore.github.io/docs/reference-guide/cli/#build) or [promote](https://gostevedore.github.io/docs/reference-guide/cli/#promote) subcommands.
 
 To define the additional tags to be generated, you can configure a list of templates in the [semantic_version_tags_templates](https://gostevedore.github.io/docs/getting-started/configuration/#semantic_version_tags_templates) parameter of the Stevedore configuration.
 
 Stevedore uses Golang's [text/template](https://pkg.go.dev/text/template) to define the additional tags.
+
 In this example, the following templates are used:
+
 ```yaml
 semantic_version_tags_templates:
 - "{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
@@ -327,6 +347,7 @@ semantic_version_tags_templates:
 ```
 
 These templates result in the generation of the following tags for the `app1` Docker image:
+
 - `registry.stevedore.test/app1:0.1.2-rc1_Wed310520231752` 
 - `registry.stevedore.test/app1:0.1.2` 
 - `registry.stevedore.test/app1:0.1` 
@@ -334,4 +355,3 @@ These templates result in the generation of the following tags for the `app1` Do
 - `registry.stevedore.test/app1:0-PRERELEASE-rc1` 
 - `registry.stevedore.test/app1:0.1-PRERELEASE-rc1-BUILD-Wed310520231752` 
 - `registry.stevedore.test/app1:0.1.2-rc1_Wed310520231752` 
-

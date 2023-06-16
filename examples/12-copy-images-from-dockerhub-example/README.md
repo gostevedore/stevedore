@@ -3,19 +3,23 @@
 This example illustrates how to copy Docker images from Docker Hub to your local Docker registry using Stevedore, allowing you to have a local copy of the desired images for offline or restricted environments.
 
 ## Requirements
+
 - Docker. _Tested on Docker server 20.10.21 and Docker API 1.41_
 - Docker's Compose plugin or `docker-compose`. _Tested on Docker Compose version v2.17.3_
 - `make` utility. _Tested on version 4.3-4.1build1_
 
 ## Stack
+
 The stack required to run this example is defined in a [Docker Compose file](./docker-compose.yml). The stack consists of three services: a Docker Registry, a Docker Registry authorization and a Stevedore service. The Docker registry is used to store the Docker images built by Stevedore during the example execution. The Stevedore service is where the example is executed.
 
 The Stevedore service is built from a container which is defined in that [Dockerfile](stack/stevedore/Dockerfile).
 
 ## Usage
+
 The example comes with a Makefile that can help you execute common actions, like starting the stack to run the example or attaching to a container in the stack to perform specific tasks.
 
 Find below the available Makefile targets, as well as its description:
+
 ```sh
 ❯ make help
  Example basic-example:
@@ -30,14 +34,17 @@ Find below the available Makefile targets, as well as its description:
 ```
 
 To execute the entire example, including starting and cleaning the stack, run the `run` target.
+
 ```sh
 ❯ make run
 ```
 
 ## Example Execution Insights
+
 Below is the expected output for the `make run` command, which starts the Docker stack, gets some information about the Stevedore configuration, builds and promotes a Docker image using Stevedore, and then cleans the stack up.
 
 ### Starting the stack
+
 ```sh
 Starting the stack to run 12-copy-images-from-dockerhub-example
 
@@ -77,7 +84,9 @@ Starting the stack to run 12-copy-images-from-dockerhub-example
 ```
 
 ### Waiting for Dockerd to be Ready
+
 Before starting the execution of the Stevedore command, it is important to ensure that the Docker daemon (dockerd) is ready. The stevedore service Docker image includes a script, [wait-for-dockerd.sh](./stack/stevedore/wait-for-dockerd.sh), which can be used to ensure the readiness of the Docker daemon.
+
 ```sh
  Run example 12-copy-images-from-dockerhub-example
 
@@ -87,6 +96,7 @@ Before starting the execution of the Stevedore command, it is important to ensur
 ```
 
 ### Copying the Busybox Image from DockerHub to a Private Docker Registry
+
 To start, the example demonstrates the process of obtaining the busybox:1.35 image from Docker Hub and copying it to the private registry running in the example's stack. This is achieved by executing the following command:
 `stevedore copy busybox:1.35 --promote-image-registry-host registry.stevedore.test --use-source-image-from-remote --remove-local-images-after-push`
 
@@ -109,10 +119,12 @@ registry.stevedore.test/library/busybox:1.35 untagged:  registry.stevedore.test/
 It is worth noting that when referring to `busybox:1.35`, the image is stored in the hidden `library` Docker Hub namespace, resulting in the image being tagged as `registry.stevedore.test/library/busybox:1.35`.
 
 ### Building the app1 image
+
 Once the copied image is available in the private Docker registry, the next step is to build the `app1` Docker image. You can initiate the build process using the following command:
 `stevedore build app1 --push-after-build --remove-local-images-after-push`
 
 This command not only builds the image but also automatically pushes it to the Docker registry and removes the local images after the push operation.
+
 ```sh
  [12-copy-images-from-dockerhub-example] Build my-app and push images after build
 registry.stevedore.test/app1:v1-busybox1.35 Step 1/8 : ARG image_from_name
@@ -145,6 +157,7 @@ registry.stevedore.test/app1:v1-busybox1.35 deleted:  sha256:c4a5075087f16413362
 ```
 
 ### Cleaning the stack
+
 ```sh
 Stopping the stack to run 12-copy-images-from-dockerhub-example
 
