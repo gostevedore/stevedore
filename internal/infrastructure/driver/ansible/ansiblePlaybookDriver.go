@@ -107,6 +107,12 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *im
 		return errors.New(errContext, "Image name is not defined")
 	}
 
+	imageFullyQualifiedName, err := d.referenceName.GenerateName(i)
+	if err != nil {
+		return errors.New(errContext, "", err)
+	}
+	ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFullyQualifiedNameKey], imageFullyQualifiedName)
+
 	ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageNameKey], i.Name)
 
 	if i.RegistryNamespace != "" {
@@ -207,7 +213,7 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *im
 	d.driver.WithConnectionOptions(ansiblePlaybookConnectionOptions)
 	d.driver.PrepareExecutor(d.writer, o.OutputPrefix)
 
-	err := d.driver.Run(ctx)
+	err = d.driver.Run(ctx)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
