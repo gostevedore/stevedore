@@ -98,30 +98,11 @@
           - LABEL org.label-schema.build-date={{ ansible_date_time.iso8601_micro }}
           - CMD ["/bin/bash"]
 
-    - name: Set image name
-      ansible.builtin.set_fact:
-        commit_image: "{{ image_name }}"
-
-    - name: Set image tag
-      ansible.builtin.set_fact:
-        commit_image: "{{ commit_image }}:{{ image_tag }}"
-      when: image_tag is defined
-
-    - name: Set image registry namespace
-      ansible.builtin.set_fact:
-        commit_image: "{{ image_registry_namespace }}/{{ commit_image }}"
-      when: image_registry_namespace is defined
-
-    - name: Set image registry host
-      ansible.builtin.set_fact:
-        commit_image: "{{ image_registry_host }}/{{ commit_image }}"
-      when: image_registry_host is defined
-
-    - name: "Commit the container builder '{{ image_builder_label }}' to create {{ commit_image }}"
+    - name: "Commit the container builder '{{ image_builder_label }}' to create {{ image_fully_qualified_name }}"
       ansible.builtin.shell: |
         docker commit \
           -c '{{ dockerfile_instructions | join("' -c '") }}' \
-          {{ image_builder_label }} {{ commit_image }}
+          {{ image_builder_label }} {{ image_fully_qualified_name }}
       args:
         executable: /bin/bash
 
