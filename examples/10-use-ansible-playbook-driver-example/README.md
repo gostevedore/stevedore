@@ -191,18 +191,6 @@ ubuntu:focal ──
 ubuntu:focal ── TASK [Extend dockerfile instructions] ******************************************
 ubuntu:focal ── ok: [docker_image_builder]
 ubuntu:focal ──
-ubuntu:focal ── TASK [Set image name] **********************************************************
-ubuntu:focal ── ok: [docker_image_builder]
-ubuntu:focal ──
-ubuntu:focal ── TASK [Set image tag] ***********************************************************
-ubuntu:focal ── ok: [docker_image_builder]
-ubuntu:focal ──
-ubuntu:focal ── TASK [Set image registry namespace] ********************************************
-ubuntu:focal ── skipping: [docker_image_builder]
-ubuntu:focal ──
-ubuntu:focal ── TASK [Set image registry host] *************************************************
-ubuntu:focal ── ok: [docker_image_builder]
-ubuntu:focal ──
 ubuntu:focal ── TASK [Commit the container builder 'builder_ansible-playbook__ubuntu_focal' to create registry.stevedore.test/ubuntu:focal] ***
 ubuntu:focal ── changed: [docker_image_builder]
 ubuntu:focal ──
@@ -211,14 +199,14 @@ ubuntu:focal ── changed: [docker_image_builder]
 ubuntu:focal ──
 ubuntu:focal ── PLAY RECAP *********************************************************************
 ubuntu:focal ── builder_ansible-playbook__ubuntu_focal : ok=6    changed=5    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
-ubuntu:focal ── docker_image_builder       : ok=11   changed=4    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0
+ubuntu:focal ── docker_image_builder       : ok=8    changed=4    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0
 ubuntu:focal ──
 ```
 
 ### Building the app1 image
 
 You can use the previously created base image as `app1` parent image. That `app1` uses the `docker` driver on its image definition.
-When building the `app1` image, the previously created base image (`registry.stevedore.test/app1:v1-ubuntufocal`) is used as the parent image. The `app1` image definition utilizes the `docker` driver demostrating the possibility to use both drives amongst the image definitions.
+When building the `app1` image, the previously created base image (`registry.stevedore.test/app1:v1-ubuntufocal`) is used as the parent image. The `app1` image definition utilizes the `docker` driver demonstrating the possibility to use both drives amongst the image definitions.
 
 ```sh
  [10-use-ansible-playbook-driver-example] Building Ubuntu image
