@@ -1,6 +1,6 @@
 # Stevedore
 
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) ![CI Status](https://github.com/gostevedore/stevedore/actions/workflows/ci.yml/badge.svg)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) ![CI Status](https://github.com/gostevedore/stevedore/actions/workflows/ci.yaml/badge.svg)
 
 ![stevedore-logo](docs/logo/logo_4_stevedore.png "Stevedore logo")
 
