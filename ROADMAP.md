@@ -6,10 +6,10 @@
 - [ ] Build an image as well as all its parent until the root image
 - [ ] Execute the build plan to show the build intentions
 - [ ] Cleanup compatibilities
+- [ ] On the build command, allow the use of variables to render an image definition [#38](https://github.com/gostevedore/stevedore/issues/38)
 
 ## v0.11.1
 
-- [ ] build tries to pull from Docker registry by default
 - [x] Create a variable mapping with the normalized parent image name
 - [x] Fix on promote command, the flags --promote-image-namespace and --promote-image-registry are not marked as deprecated
 - [x] Fix typos on promote command examples
@@ -99,6 +99,7 @@
 
 ## Icebox
 
+- [ ] Build tries to pull from the Docker registry by default: Are needed more details about the issue
 - [ ] ~~Fix container builders must match to [a-zA-Z0-9][a-zA-Z0-9_.-]*~~: Discarted due to lack of context
 - [ ] ~~Promote images defined on the images tree~~: Discarted unclear need
 - [ ] Signing Docker images
