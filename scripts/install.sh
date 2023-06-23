@@ -358,6 +358,8 @@ download_file_cmd "${artefact_url}" "${local_file}"
 extract_artefact "${local_file}" "${source_release_dest_path}"
 install_artefact "${source_release_dest_path}/$(basename "${BINARY_PATH}")" "${BINARY_PATH}"
 
+echo " Installation completed successfully!"
+
 echo
 "${BINARY_PATH}" version
 echo
