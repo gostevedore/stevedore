@@ -14,10 +14,16 @@ builds:
       - linux
       - darwin
     goarch:
+      - '386'
       - amd64
+      - arm
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: '386'
 
 archives:
-  - id: stevedorex
+  - id: stevedore
     builds:
       - stevedore
     format: tar.gz
