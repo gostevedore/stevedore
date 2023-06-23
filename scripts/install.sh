@@ -296,71 +296,68 @@ install_artefact() {
 
     return 0
 }
-
-if [ "$(basename "$0")" = "${INSTALL_SCRIPT}" ]; then
     
-    require_command curl
-    require_command dirname
-    require_command ln
-    require_command mkdir
-    require_command mktemp
-    require_command rm
-    require_command tar
-    require_command uname
+require_command curl
+require_command dirname
+require_command ln
+require_command mkdir
+require_command mktemp
+require_command rm
+require_command tar
+require_command uname
 
-    parse_args "$@"
+parse_args "$@"
 
-    download_dir=$(create_tmp_dir)
-    trap 'cleanup "${download_dir}"' EXIT
+download_dir=$(create_tmp_dir)
+trap 'cleanup "${download_dir}"' EXIT
 
-    arch="$(get_arch)"
-    if [ -z "${arch}" ]; then
-        fail "System's architecture can not be achieved"
-    fi
-    check_arch "${arch}"
-
-    os="$(get_os)"
-    if [ -z "${os}" ]; then
-        fail "Kernel name can not be achieved"
-    fi
-    check_os "${os}"
-
-    if [ -z "${VERSION}" ]; then
-        release=$(fetch_release)
-        if [ -z "${release}" ]; then
-            fail "Release can not be achieved"
-        fi
-    else
-        release=${VERSION}
-    fi
-
-    artefact=$(generate_artefact_name "${release}" "${arch}" "${os}")
-    if [ -z "${artefact}" ]; then
-        fail "Artefact name can not be achieved"
-    fi
-
-    artefact_url=$(fetch_artefact_url "${release}" "${artefact}")
-    if [ -z "${artefact_url}" ]; then
-        fail "Artefact URL name can not be achieved"
-    fi
-
-    source_release_dest_path="${SOURCE_RELEASE_DEST_BASE_PATH}/${release}"
-    if [ -d "${source_release_dest_path}" ] && [ ${FORCE} -eq "0" ] ; then
-        fail "Error installing Stevedore.\n ${source_release_dest_path} already exists.\n\n Remove the directory and reinstall Stevedore. You can also force the installation by using the flag '-f'"
-    fi
-
-    create_dir "${source_release_dest_path}"
-    create_dir "$(dirname "${BINARY_PATH}")"
-
-    echo " Installing Stevedore ${release} using the artefact ${artefact}..."
-    echo " Downloading artefact from ${artefact_url}"
-
-    local_file="${download_dir}/${artefact}"
-    download_file_cmd "${artefact_url}" "${local_file}"
-    extract_artefact "${local_file}" "${source_release_dest_path}"
-    install_artefact "${source_release_dest_path}/$(basename "${BINARY_PATH}")" "${BINARY_PATH}"
-
-    echo
-    "${BINARY_PATH}" version
-    echo
+arch="$(get_arch)"
+if [ -z "${arch}" ]; then
+    fail "System's architecture can not be achieved"
 fi
+check_arch "${arch}"
+
+os="$(get_os)"
+if [ -z "${os}" ]; then
+    fail "Kernel name can not be achieved"
+fi
+check_os "${os}"
+
+if [ -z "${VERSION}" ]; then
+    release=$(fetch_release)
+    if [ -z "${release}" ]; then
+        fail "Release can not be achieved"
+    fi
+else
+    release=${VERSION}
+fi
+
+artefact=$(generate_artefact_name "${release}" "${arch}" "${os}")
+if [ -z "${artefact}" ]; then
+    fail "Artefact name can not be achieved"
+fi
+
+artefact_url=$(fetch_artefact_url "${release}" "${artefact}")
+if [ -z "${artefact_url}" ]; then
+    fail "Artefact URL name can not be achieved"
+fi
+
+source_release_dest_path="${SOURCE_RELEASE_DEST_BASE_PATH}/${release}"
+if [ -d "${source_release_dest_path}" ] && [ ${FORCE} -eq "0" ] ; then
+    fail "Error installing Stevedore.\n ${source_release_dest_path} already exists.\n\n Remove the directory and reinstall Stevedore. You can also force the installation by using the flag '-f'"
+fi
+
+create_dir "${source_release_dest_path}"
+create_dir "$(dirname "${BINARY_PATH}")"
+
+echo " Installing Stevedore ${release} using the artefact ${artefact}..."
+echo " Downloading artefact from ${artefact_url}"
+
+local_file="${download_dir}/${artefact}"
+download_file_cmd "${artefact_url}" "${local_file}"
+extract_artefact "${local_file}" "${source_release_dest_path}"
+install_artefact "${source_release_dest_path}/$(basename "${BINARY_PATH}")" "${BINARY_PATH}"
+
+echo
+"${BINARY_PATH}" version
+echo
