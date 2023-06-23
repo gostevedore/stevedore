@@ -36,7 +36,7 @@ Stevedore also offers a credentials store for easy authentication to Docker regi
 To install Stevedore, use the script provided on the repository:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/gostevedore/stevedore/main/scripts/install.sh | sudo bash -
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/gostevedore/stevedore/main/scripts/install.sh)"
 ```
 
 Alternatively, you can visit the [installation guide](https://gostevedore.github.io/docs/getting-started/install) for other methods.
