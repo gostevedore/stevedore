@@ -97,7 +97,6 @@ notes: ## generate release notes from commits since last tag
 	mv aux RELEASE_NOTES.md
 
 snapshot: ## create a goreleaser snapshot
-# goreleaser --snapshot --skip-publish --rm-dist --release-notes RELEASE_NOTES.md
 	goreleaser --snapshot --skip-publish --clean --release-notes RELEASE_NOTES.md
 
 tag: ## generate a tag on main branch based on the Version file content
