@@ -1,12 +1,19 @@
 # CHANGELOG
 
+## [Unreleased]
+
+### Changed
+
+- Use `sh` instead bash on the installation script
+- The release process creates ARM binaries
+
 ## [v0.11.1]
 
 ### Added
 
 - Included examples
-- New variable mapping named `image_from_fully_qualified_name` that provides the fully qualified name of the parent Docker image as a build argument.
-- New variable mapping named `image_fully_qualified_name` that provides the fully qualified name of current image as a build argument. It is used by the `ansible-plybook` driver.
+- New variable mapping named `image_from_fully_qualified_name` that provides the fully qualified name of the parent Docker image as a build argument
+- New variable mapping named `image_fully_qualified_name` that provides the fully qualified name of current image as a build argument. It is used by the `ansible-plybook` driver
 
 ### Bumped
 
