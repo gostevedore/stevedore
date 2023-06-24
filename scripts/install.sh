@@ -9,10 +9,9 @@ set -e
 GITHUB_API_URL="https://api.github.com"
 OWNER=gostevedore
 REPO=stevedore
-SOURCE_RELEASE_DEST_BASE_PATH=/opt/stevedore
-BINARY_PATH=/usr/local/bin/stevedore
+SOURCE_RELEASE_DEST_BASE_PATH="${HOME}/stevedore"
+BINARY_PATH="${HOME}/bin/stevedore"
 FORCE="0"
-INSTALL_SCRIPT="install.sh"
 
 alternatives() {
     echo "
@@ -354,7 +353,8 @@ download_file_cmd "${artefact_url}" "${local_file}"
 extract_artefact "${local_file}" "${source_release_dest_path}"
 install_artefact "${source_release_dest_path}/$(basename "${BINARY_PATH}")" "${BINARY_PATH}"
 
-echo " Installation completed successfully!"
+echo
+echo " Installation completed successfully! The binary is available in ${BINARY_PATH}."
 
 echo
 "${BINARY_PATH}" version

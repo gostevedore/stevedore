@@ -4,8 +4,9 @@
 
 ### Changed
 
-- Use `sh` instead bash on the installation script
+- The installation script uses `/bin/sh` instead `/bin/bash`
 - The release process creates ARM binaries
+- By default, install the Stevedore binary in $HOME/bin
 
 ## [v0.11.1]
 
