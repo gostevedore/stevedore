@@ -154,14 +154,10 @@ check_arch() {
     shift
 
     case $arch in
+        386) return 0 ;;
+        arm) return 0 ;;
+        arm64) return 0 ;;
         x86_64) return 0 ;;
-        x86) return 0 ;;
-        i686) return 0 ;;
-        i386) return 0 ;;
-        aarch64) return 0 ;;
-        armv5*) return 0 ;;
-        armv6*) return 0 ;;
-        armv7*) return 0 ;;
         *) fail "check_arch: ${arch} is not supported by the installation script."
     esac
 }
