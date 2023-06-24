@@ -34,7 +34,7 @@ cleanup() {
     dir="${1}"
     shift
 
-    echo " Cleanup directory ${dir}..."
+    echo " Cleaning up the directory ${dir}..."
 
     if ! rm -rf "${dir}";
     then
@@ -261,7 +261,6 @@ extract_artefact() {
         fail "extract_artefact: ${dest} does not exist."
     fi
 
-    echo " Extracting artefact to ${dest}... " 
     if ! tar -zxf "${source}" -C "${dest}";
     then
         fail "extract_artefact: Error extracting artefact from ${source} to ${dest}."
@@ -346,15 +345,18 @@ create_dir "${source_release_dest_path}"
 create_dir "$(dirname "${BINARY_PATH}")"
 
 echo " Installing Stevedore ${release} using the artefact ${artefact}..."
-echo " Downloading artefact from ${artefact_url}"
-
+echo "  - downloading artefact from ${artefact_url} to ${local_file}"
 local_file="${download_dir}/${artefact}"
 download_file_cmd "${artefact_url}" "${local_file}"
+
+echo "  - extracting artefact from ${local_file}} to ${dest}"
 extract_artefact "${local_file}" "${source_release_dest_path}"
+
+echo "  - creating symbolic link from ${source_release_dest_path}/$(basename "${BINARY_PATH}") to ${BINARY_PATH}"
 install_artefact "${source_release_dest_path}/$(basename "${BINARY_PATH}")" "${BINARY_PATH}"
 
 echo
-echo " Installation completed successfully! The binary is available in ${BINARY_PATH}."
+echo " Installation completed successfully!"
 
 echo
 "${BINARY_PATH}" version
