@@ -121,7 +121,6 @@ Executing busybox-1.35.0-r17.trigger
 OK: 43 MiB in 61 packages
 ```
 
-
 ```sh
 /app/test/client/stevedore # cd /tmp
 /tmp # git clone git@gitserver:/git/repos/app2.git
