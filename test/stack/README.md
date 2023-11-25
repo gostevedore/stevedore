@@ -1,33 +1,52 @@
 # Notes for Stevedore functional test
 
+- [Notes for Stevedore functional test](#notes-for-stevedore-functional-test)
+  - [SSL](#ssl)
+    - [Generate wildcard self-signed certificate from scratch](#generate-wildcard-self-signed-certificate-from-scratch)
+      - [Generate private key and csr](#generate-private-key-and-csr)
+      - [Generate certificate](#generate-certificate)
+  - [Docker registry](#docker-registry)
+    - [docker-hub.stevedore.test](#docker-hubstevedoretest)
+      - [How to load a preload docker image](#how-to-load-a-preload-docker-image)
+    - [registry.stevedore.test](#registrystevedoretest)
+  - [Git](#git)
+    - [Users](#users)
+    - [How to create a bare repository](#how-to-create-a-bare-repository)
+    - [How to clone a gitserver repositories](#how-to-clone-a-gitserver-repositories)
+
 ## SSL
 
 ### Generate wildcard self-signed certificate from scratch
 
 #### Generate private key and csr
+
 ```sh
 openssl req -newkey rsa:2048 -nodes -keyout stevedore.test.key -out stevedore.test.csr -config stevedore.test.cnf
 ```
 
 #### Generate certificate
+
 ```sh
 openssl x509 -signkey stevedore.test.key -in stevedore.test.csr -req -days 365 -out stevedore.test.crt -extensions req_ext -extfile stevedore.test.cnf
 ```
 
-
 ## Docker registry
 
 ### docker-hub.stevedore.test
+
 `docker-hub.stevedore.test` is the docker-registry which uses the dataset located at `files/docker-hub-storage`. On that dataset are preloaded those images that are used during Stevedore functional test
 
 
 #### How to load a preload docker image
+
 - Start testing stack
+
 ```sh
 make attach-client
 ```
 
 - Download `alpine:3.16` from docker-hub registry
+
 ```sh
 /app/test/client/stevedore # docker pull alpine:3.16
 3.16: Pulling from library/alpine
@@ -41,6 +60,7 @@ alpine       3.16      9c6f07244728   6 weeks ago   5.54MB
 ```
 
 - Tag `alpine:3.16` image to `docker-hub.stevedore.test:5000/library/alpine:3.16`
+
 ```sh
 /app/test/client/stevedore # docker tag alpine:3.16 docker-hub.stevedore.test:5000/library/alpine:3.16
 /app/test/client/stevedore # docker images
@@ -51,6 +71,7 @@ alpine                                          3.16      9c6f07244728   6 weeks
 ```
 
 - Push the image `docker-hub.stevedore.test:5000/library/alpine:3.16` 
+
 ```sh
 /app/test/client/stevedore # docker push docker-hub.stevedore.test:5000/library/alpine:3.16
 The push refers to repository [docker-hub.stevedore.test:5000/library/alpine]
@@ -60,6 +81,7 @@ The push refers to repository [docker-hub.stevedore.test:5000/library/alpine]
 ```
 
 ### registry.stevedore.test
+
 `registry.stevedore.test` is the docker registry used during functional test to push and validate the images.
 
 ## Git
@@ -72,12 +94,15 @@ To access by SSH, use the ssh key pair located at `files/ssl`. To private key is
 HTTP access requires authorization to be used. User: `admin` Password: `admin`
 
 ### How to create a bare repository
+
 - Start testing stack
+
 ```sh
 make start
 ```
 
 - Attach to git container
+
 ```sh
 docker compose exec gitserver sh
 ```
@@ -91,6 +116,7 @@ Initialized empty Git repository in /git/repos/app2.git/
 ```
 
 - Set permission properly to the new bare repository
+
 ```sh
 /git/repos # chown -R git:git app2.git/
 ```
@@ -98,6 +124,7 @@ Initialized empty Git repository in /git/repos/app2.git/
 ### How to clone a gitserver repositories
 
 You must be authorized before clone or update any repository on gitserver. The `client` container is provided by a key pair, on `root` user, that are allowed to manage git repositories.
+
 ```sh
 /app/test/client/stevedore # ls -l ~/.ssh/
 total 12
@@ -107,6 +134,7 @@ total 12
 ```
 
 - Install git package on `client` because it is not installed by default
+
 ```sh
 /app/test/client/stevedore # apk --update add git
 fetch https://dl-cdn.alpinelinux.org/alpine/v3.16/main/x86_64/APKINDEX.tar.gz
@@ -133,4 +161,3 @@ remote: Total 14 (delta 2), reused 0 (delta 0), pack-reused 0
 Receiving objects: 100% (14/14), done.
 Resolving deltas: 100% (2/2), done.
 ```
-
