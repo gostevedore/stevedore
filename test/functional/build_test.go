@@ -9,14 +9,14 @@ import (
 )
 
 type BuildFunctionalTestsSuite struct {
-	FunctionalTestsSuite
+	*FunctionalTestsSuite
 }
 
 func NewBuildFunctionalTestsSuite(opts ...OptionsFunc) *BuildFunctionalTestsSuite {
 
 	functional := NewTestSuite(opts...)
 	s := &BuildFunctionalTestsSuite{
-		*functional,
+		functional,
 	}
 
 	return s
