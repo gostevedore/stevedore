@@ -9,7 +9,7 @@ require (
 	github.com/apenella/go-common-utils/error v0.0.0-20221227202648-5452d804e940
 	github.com/apenella/go-common-utils/transformer/string v0.0.0-20221227202648-5452d804e940
 	github.com/apenella/go-data-structures/extendedTree v0.0.0-20221117064317-a3b6d9f69cda
-	github.com/apenella/go-docker-builder v0.7.9
+	github.com/apenella/go-docker-builder v0.7.8
 	github.com/aws/aws-sdk-go-v2 v1.23.1
 	github.com/aws/aws-sdk-go-v2/config v1.25.5
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.4
@@ -18,7 +18,7 @@ require (
 	github.com/docker/distribution v2.8.3+incompatible
 	github.com/docker/docker v20.10.24+incompatible
 	github.com/go-git/go-git/v5 v5.10.0
-	github.com/gruntwork-io/terratest v0.46.7
+	github.com/gruntwork-io/terratest v0.46.3
 	github.com/ryanuber/columnize v2.1.2+incompatible
 	github.com/spf13/afero v1.10.0
 	github.com/spf13/cobra v1.8.0
@@ -79,6 +79,7 @@ require (
 	github.com/sagikazarmark/locafero v0.3.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
+	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/skeema/knownhosts v1.2.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
