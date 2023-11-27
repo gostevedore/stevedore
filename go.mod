@@ -16,7 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/sts v1.25.4
 	github.com/docker/distribution v2.8.3+incompatible
-	github.com/docker/docker v24.0.7+incompatible
+	github.com/docker/docker v20.10.24+incompatible
 	github.com/go-git/go-git/v5 v5.10.0
 	github.com/gruntwork-io/terratest v0.46.7
 	github.com/ryanuber/columnize v2.1.2+incompatible
