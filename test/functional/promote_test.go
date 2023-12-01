@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/docker"
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -25,7 +26,7 @@ func NewPromoteFunctionalTestsSuite(opts ...OptionsFunc) *PromoteFunctionalTests
 func (s *PromoteFunctionalTestsSuite) SetupTest() {
 	s.TearDownTest()
 
-	err := s.stack.Execute("up -d registry")
+	err := s.stack.Execute("up --detach registry")
 	if err != nil {
 		s.T().Log(err)
 		s.T().Fail()
@@ -47,31 +48,31 @@ func (s *PromoteFunctionalTestsSuite) TestPromoteImage() {
 		s.T().Skip("functional test are skipped in short mode")
 	}
 
-	err = s.stack.Execute("exec -w /app/test/stack/client/stevedore stevedore stevedore promote docker-hub.stevedore.test:5000/library/ubuntu:latest --promote-image-registry-host registry.stevedore.test --promote-image-tag 1.2.3 --force-promote-source-image --use-source-image-from-remote --enable-semver-tags --remove-local-images-after-push")
+	err = s.stack.Execute("exec --workdir /app/test/stack/client/stevedore stevedore stevedore promote docker-hub.stevedore.test:5000/library/ubuntu:latest --promote-image-registry-host registry.stevedore.test --promote-image-tag 1.2.3 --force-promote-source-image --use-source-image-from-remote --enable-semver-tags --remove-local-images-after-push")
 	if err != nil {
 		s.T().Log(err)
 		s.T().Fail()
 	}
 
-	err = s.stack.Execute("exec -w /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/library/ubuntu:latest")
+	err = s.stack.Execute("exec --workdir /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/library/ubuntu:latest")
 	if err != nil {
 		s.T().Log(err)
 		s.T().Fail()
 	}
 
-	err = s.stack.Execute("exec -w /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/library/ubuntu:1.2.3")
+	err = s.stack.Execute("exec --workdir /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/library/ubuntu:1.2.3")
 	if err != nil {
 		s.T().Log(err)
 		s.T().Fail()
 	}
 
-	err = s.stack.Execute("exec -w /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/library/ubuntu:1.2")
+	err = s.stack.Execute("exec --workdir /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/library/ubuntu:1.2")
 	if err != nil {
 		s.T().Log(err)
 		s.T().Fail()
 	}
 
-	err = s.stack.Execute("exec -w /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/library/ubuntu:1")
+	err = s.stack.Execute("exec --workdir /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/library/ubuntu:1")
 	if err != nil {
 		s.T().Log(err)
 		s.T().Fail()
@@ -81,7 +82,7 @@ func (s *PromoteFunctionalTestsSuite) TestPromoteImage() {
 func promoteSetupSuiteFunc(t *testing.T, stack *DockerComposeStack) error {
 	var err error
 
-	err = stack.DownAndUp("-d gitserver docker-hub")
+	err = stack.DownAndUp("--detach gitserver docker-hub")
 	return err
 }
 
@@ -96,6 +97,7 @@ func TestPromoteFunctionalTests(t *testing.T) {
 		WorkingDir:  ".",
 		ProjectName: strings.ToLower(t.Name()),
 	}
+	options.Logger = logger.New(&quiteLogger{})
 
 	project := NewDockerComposeProject(options)
 	command := NewDockerComposeCommand(t, project)
@@ -106,9 +108,8 @@ func TestPromoteFunctionalTests(t *testing.T) {
 		WithStackPreUpAction("run --rm openssh -t rsa -q -N password -f id_rsa -C \"apenella@stevedore.test\""),
 		WithStackPreUpAction("run --rm openssl req -newkey rsa:2048 -nodes -keyout stevedore.test.key -out stevedore.test.csr -config /root/ssl/stevedore.test.cnf"),
 		WithStackPreUpAction("run --rm openssl x509 -signkey stevedore.test.key -in stevedore.test.csr -req -days 365 -out stevedore.test.crt -extensions req_ext -extfile /root/ssl/stevedore.test.cnf"),
-		WithStackPostUpAction("up -d stevedore"),
-		// fixed timeout, try to improve by checking the status of dockerd with while !nc -vz localhost 2376; do sleep 1s;done
-		WithStackPostUpAction("exec stevedore sleep 10s"),
+		WithStackPostUpAction("up --detach stevedore"),
+		WithStackPostUpAction("exec stevedore /usr/local/bin/wait-for-dockerd.sh"),
 		WithStackPostUpAction("exec stevedore stevedore copy ubuntu:latest --use-source-image-from-remote --promote-image-registry-host docker-hub.stevedore.test:5000"),
 	)
 

@@ -10,12 +10,12 @@ images:
         driver: docker
         options:
           context:
-            - path: app1
+            - path: apps/app1
       parents:
         ubuntu:
           - latest
           - "20.04"
-        scratch:
+        busybox:
           - latest
         alpine:
           - "3.16"
