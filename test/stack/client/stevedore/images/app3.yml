@@ -8,7 +8,7 @@ images:
         driver: docker
         options:
           context:
-            - path: app3
+            - path: apps/app3
       parents:
         busybox:
           - latest
@@ -20,7 +20,7 @@ images:
         driver: docker
         options:
           context:
-            - path: app3
+            - path: apps/app3
       vars:
         message: "{{ .Name }} {{ .Version }}"
       parents:
@@ -36,7 +36,7 @@ images:
         driver: docker
         options:
           context:
-            - path: app-extend
+            - path: apps/app-extend
       parents:
         app3:
           - "1.2.3"

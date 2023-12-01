@@ -2,9 +2,11 @@ package functional
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/fatih/color"
 	"github.com/gruntwork-io/terratest/modules/docker"
 	"github.com/stretchr/testify/require"
 )
@@ -14,6 +16,7 @@ type DockerComposeProject struct {
 }
 
 func NewDockerComposeProject(options *docker.Options) *DockerComposeProject {
+
 	return &DockerComposeProject{
 		options: options,
 	}
@@ -40,7 +43,7 @@ func (c *DockerComposeCommand) Execute(cmd string) (string, error) {
 	}
 
 	cmds := strings.Split(cmd, " ")
-
+	fmt.Println("  -", cmd)
 	result, err = docker.RunDockerComposeE(c.testing, c.project.options, cmds...)
 	if err != nil {
 		return "", err
@@ -116,24 +119,30 @@ func (s *DockerComposeStack) Up(options ...string) error {
 		return errors.New("Docker-compose stack requires command")
 	}
 
+	color.Green(" Pre-up actions")
 	for _, action := range s.PreUpAction {
 		_, err := s.command.Execute(action)
 		if err != nil {
 			return err
 		}
 	}
+	fmt.Println()
 
+	color.Green(" Execute up")
 	_, err := s.command.Execute(strings.Join(append([]string{"up"}, options...), " "))
 	if err != nil {
 		return err
 	}
+	fmt.Println()
 
+	color.Green(" Post-up actions")
 	for _, action := range s.PostUpAction {
 		_, err := s.command.Execute(action)
 		if err != nil {
 			return err
 		}
 	}
+	fmt.Println()
 
 	return nil
 }
@@ -161,24 +170,30 @@ func (s *DockerComposeStack) Down(options ...string) error {
 		return errors.New("Docker-compose stack requires command")
 	}
 
+	color.Green(" Pre-down actions")
 	for _, action := range s.PreDownAction {
 		_, err := s.command.Execute(action)
 		if err != nil {
 			return err
 		}
 	}
+	fmt.Println()
 
-	_, err := s.command.Execute(strings.Join(append([]string{"down -v --remove-orphans"}, options...), " "))
+	color.Green(" Execute down")
+	_, err := s.command.Execute(strings.Join(append([]string{"down --volumes --remove-orphans --timeout 3"}, options...), " "))
 	if err != nil {
 		return err
 	}
+	fmt.Println()
 
+	color.Green(" Post-down actions")
 	for _, action := range s.PostDownAction {
 		_, err := s.command.Execute(action)
 		if err != nil {
 			return err
 		}
 	}
+	fmt.Println()
 
 	return nil
 }

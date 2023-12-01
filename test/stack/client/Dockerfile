@@ -1,6 +1,6 @@
 # Based on https://github.com/timberio/docker-client/blob/master/Dockerfile
 ARG GOLANG_VERSION="1.19"
-ARG DOCKER_VERSION="20.10"
+ARG DOCKER_VERSION="24.0"
 
 FROM golang:${GOLANG_VERSION}-alpine AS golang
 
@@ -27,6 +27,7 @@ WORKDIR $GOPATH
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
 COPY test/stack/client/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY test/stack/client/wait-for-dockerd.sh /usr/local/bin/wait-for-dockerd.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["go","version"]

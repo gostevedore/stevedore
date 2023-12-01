@@ -70,7 +70,7 @@ alpine                                          3.16      9c6f07244728   6 weeks
 /app/test/client/stevedore #
 ```
 
-- Push the image `docker-hub.stevedore.test:5000/library/alpine:3.16` 
+- Push the image `docker-hub.stevedore.test:5000/library/alpine:3.16`
 
 ```sh
 /app/test/client/stevedore # docker push docker-hub.stevedore.test:5000/library/alpine:3.16

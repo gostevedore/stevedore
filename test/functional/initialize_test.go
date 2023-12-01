@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/docker"
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -25,7 +26,7 @@ func NewInitializeFunctionalTestsSuite(opts ...OptionsFunc) *InitializeFunctiona
 func (s *InitializeFunctionalTestsSuite) SetupTest() {
 	s.TearDownTest()
 
-	err := s.stack.Execute("up -d registry")
+	err := s.stack.Execute("up --detach registry")
 	if err != nil {
 		s.T().Log(err)
 		s.T().Fail()
@@ -40,7 +41,7 @@ func (s *InitializeFunctionalTestsSuite) TearDownTest() {
 	}
 }
 
-func (s *InitializeFunctionalTestsSuite) TestPromoteImage() {
+func (s *InitializeFunctionalTestsSuite) TestInitialize() {
 	var err error
 
 	if testing.Short() {
@@ -57,7 +58,7 @@ func (s *InitializeFunctionalTestsSuite) TestPromoteImage() {
 func initializeSetupSuiteFunc(t *testing.T, stack *DockerComposeStack) error {
 	var err error
 
-	err = stack.DownAndUp("-d stevedore")
+	err = stack.Execute("run --detach --rm --entrypoint sleep stevedore infinity")
 	return err
 }
 
@@ -72,6 +73,7 @@ func TestInitializeFunctionalTests(t *testing.T) {
 		WorkingDir:  ".",
 		ProjectName: strings.ToLower(t.Name()),
 	}
+	options.Logger = logger.New(&quiteLogger{})
 
 	project := NewDockerComposeProject(options)
 	command := NewDockerComposeCommand(t, project)
