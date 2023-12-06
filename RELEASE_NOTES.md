@@ -23,6 +23,9 @@
 
 ### Changed
 
+- By default, install the Stevedore binary in $HOME/bin
+- Do not use Golang Docker images as base images in the testing applications
+- Implement retry mechanism in the functional tests
 - The installation script uses `/bin/sh` instead `/bin/bash`
 - The release process creates ARM binaries
-- By default, install the Stevedore binary in $HOME/bin
+- Use Docker 24.0 in the examples and tests
