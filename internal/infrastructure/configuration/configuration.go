@@ -150,6 +150,7 @@ func DefaultConfig() *Configuration {
 	config.Concurrency = defaultConcurrency
 	config.EnableSemanticVersionTags = DefaultEnableSemanticVersionTags
 	config.ImagesPath = filepath.Join(DefaultConfigFolder, DefaultImagesPath)
+	config.LogPathFile = DefaultLogPathFile
 	config.LogWriter = io.Discard
 	config.PushImages = DefaultPushImages
 	config.SemanticVersionTagsTemplates = []string{DefaultSemanticVersionTagsTemplates}

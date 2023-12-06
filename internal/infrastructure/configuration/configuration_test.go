@@ -3,7 +3,6 @@ package configuration
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"log"
 	"os/user"
 	"path/filepath"
@@ -110,6 +109,7 @@ func TestDefaultConfig(t *testing.T) {
 		Concurrency:                  defaultConcurrency,
 		EnableSemanticVersionTags:    DefaultEnableSemanticVersionTags,
 		ImagesPath:                   filepath.Join(DefaultConfigFolder, DefaultImagesPath),
+		LogPathFile:                  DefaultLogPathFile,
 		LogWriter:                    io.Discard,
 		PushImages:                   DefaultPushImages,
 		SemanticVersionTagsTemplates: []string{DefaultSemanticVersionTagsTemplates},
@@ -215,21 +215,21 @@ func TestNew(t *testing.T) {
 
 			},
 			res: &Configuration{
-				ImagesPath:                   filepath.Join(".", "stevedore.yaml"),
-				BuildersPath:                 filepath.Join(".", "stevedore.yaml"),
-				LogPathFile:                  "",
-				Concurrency:                  concurrencyValue(),
-				PushImages:                   false,
-				LogWriter:                    ioutil.Discard,
-				EnableSemanticVersionTags:    false,
-				SemanticVersionTagsTemplates: []string{"{{ .Major }}.{{ .Minor }}.{{ .Patch }}"},
+				BuildersPath: filepath.Join(".", "stevedore.yaml"),
+				Concurrency:  concurrencyValue(),
 				Credentials: &CredentialsConfiguration{
-					StorageType:      "local",
-					LocalStoragePath: "credentials",
-					Format:           "json",
 					EncryptionKey:    "",
+					Format:           "json",
+					LocalStoragePath: "credentials",
+					StorageType:      "local",
 				},
-				configFile: "stevedore.yaml",
+				EnableSemanticVersionTags:    false,
+				ImagesPath:                   filepath.Join(".", "stevedore.yaml"),
+				LogPathFile:                  "",
+				LogWriter:                    io.Discard,
+				PushImages:                   false,
+				SemanticVersionTagsTemplates: []string{"{{ .Major }}.{{ .Minor }}.{{ .Patch }}"},
+				configFile:                   "stevedore.yaml",
 			},
 			err: &errors.Error{},
 		},
@@ -299,7 +299,7 @@ func TestNew(t *testing.T) {
 				LogPathFile:                  "",
 				Concurrency:                  8,
 				PushImages:                   false,
-				LogWriter:                    ioutil.Discard,
+				LogWriter:                    io.Discard,
 				EnableSemanticVersionTags:    false,
 				SemanticVersionTagsTemplates: []string{"{{ .Major }}.{{ .Minor }}.{{ .Patch }}"},
 				Credentials: &CredentialsConfiguration{
@@ -332,7 +332,7 @@ func TestNew(t *testing.T) {
 				assert.Equal(t, test.res.Credentials, c.Credentials, "assert Credentials")
 				assert.Equal(t, test.res.EnableSemanticVersionTags, c.EnableSemanticVersionTags, "assert EnableSemanticVersionTags")
 				assert.Equal(t, test.res.ImagesPath, c.ImagesPath, "assert ImagesPath")
-				assert.Equal(t, test.res.LogWriter, c.LogWriter, "assert LogWriter")
+				assert.Equal(t, test.res.LogPathFile, c.LogPathFile, "assert LogPathFile")
 				assert.Equal(t, test.res.LogWriter, c.LogWriter, "assert LogWriter")
 				assert.Equal(t, test.res.PushImages, c.PushImages, "assert PushImages")
 				assert.Equal(t, test.res.SemanticVersionTagsTemplates, c.SemanticVersionTagsTemplates, "assert SemanticVersionTagsTemplates")

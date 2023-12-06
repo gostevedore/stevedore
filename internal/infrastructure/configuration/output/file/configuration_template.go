@@ -1,7 +1,5 @@
 package file
 
-//
-
 const (
 	configurationTemplate string = `#
 # Stevedore is a Docker images factory, a tool that helps you to manage bunches of Docker image builds in just one command. It is not an alternative to Dockerfile or Buildkit, but a way to improve your building and promote experience
