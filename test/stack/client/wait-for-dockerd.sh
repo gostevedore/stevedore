@@ -1,6 +1,6 @@
 #!/bin/sh
 
-round=20
+round=10
 # while ! nc -z localhost 2376; do
 while ! docker info > /dev/null 2>&1 ; do
     if [ $round -eq 0 ]; then

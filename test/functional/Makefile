@@ -9,7 +9,7 @@ prepare-images: start
 	docker compose -p stevedore-functional-test-manual run stevedore /prepare-images
 
 cleanup: cleanup-certs ## cleanup example environment
-	docker compose -p stevedore-functional-test-manual down -v --remove-orphans
+	docker compose -p stevedore-functional-test-manual down -v --remove-orphans --timeout 3
 
 generate-keys: cleanup-keys ## generate an ssh key pair required to autheneticate to git server
 	@docker compose -p stevedore-functional-test-manual run --rm openssh -t rsa -q -N "password" -f id_rsa -C "apenella@stevedore.test"

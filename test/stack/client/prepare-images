@@ -22,13 +22,20 @@ _pull_and_tag_ubuntu_version() {
     docker push docker-hub.stevedore.test:5000/library/ubuntu:${UBUNTU_VERSION}
 }
 
-_pull_and_tag_ubuntu_latest() {
-    docker pull ubuntu:latest
-    docker tag ubuntu:latest docker-hub.stevedore.test:5000/library/ubuntu:latest
-    docker push docker-hub.stevedore.test:5000/library/ubuntu:latest
+_pull_and_tag_alpine_latest() {
+    docker pull alpine:latest
+    docker tag alpine:latest docker-hub.stevedore.test:5000/library/alpine:latest
+    docker push docker-hub.stevedore.test:5000/library/alpine:latest
 }
+
+# _pull_and_tag_ubuntu_latest() {
+#     docker pull ubuntu:latest
+#     docker tag ubuntu:latest docker-hub.stevedore.test:5000/library/ubuntu:latest
+#     docker push docker-hub.stevedore.test:5000/library/ubuntu:latest
+# }
 
 _pull_and_tag_alpine &
 _pull_and_tag_busybox &
 _pull_and_tag_ubuntu_version &
-_pull_and_tag_ubuntu_latest
+_pull_and_tag_alpine_latest
+# _pull_and_tag_ubuntu_latest

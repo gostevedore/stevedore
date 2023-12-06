@@ -36,7 +36,6 @@ openssl x509 -signkey stevedore.test.key -in stevedore.test.csr -req -days 365 -
 
 `docker-hub.stevedore.test` is the docker-registry which uses the dataset located at `files/docker-hub-storage`. On that dataset are preloaded those images that are used during Stevedore functional test
 
-
 #### How to load a preload docker image
 
 - Start testing stack
