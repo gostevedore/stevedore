@@ -28,8 +28,6 @@ images:
       parents:
         root:
           - latest
-
-  ubuntu:
     latest:
       version: "{{ .Version }}"
       registry: docker-hub.stevedore.test:5000
@@ -39,6 +37,8 @@ images:
       parents:
         root:
           - latest
+
+  ubuntu:
     "20.04":
       version: "{{ .Version }}"
       registry: docker-hub.stevedore.test:5000

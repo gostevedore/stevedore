@@ -13,9 +13,9 @@ images:
             - path: apps/app1
       parents:
         ubuntu:
-          - latest
           - "20.04"
         busybox:
           - latest
         alpine:
+          - latest
           - "3.16"
