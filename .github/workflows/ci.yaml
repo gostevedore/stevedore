@@ -10,29 +10,40 @@ on:
     - main
 
 jobs:
-  Test:
-    strategy:
-      matrix:
-        os: 
-        - ubuntu-latest
-        #- macOS-latest
-    runs-on: ${{ matrix.os }}
-
+  setup:
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-    
-    - uses: actions/setup-go@v4
-      with:
-        go-version: '1.19'
-        cache-dependency-path: |
-          go.sum
-          go.sum
 
+    # That block is not needed anymore because the actions are executed inside a container
+    # - uses: actions/setup-go@v4
+    #   with:
+    #     go-version: '1.19'
+    #     cache-dependency-path: |
+    #       go.sum
+    #       go.sum
+
+  static-analysis:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute go vet
+        run: |
+          make vet
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    needs: static-analysis
+    steps:
     - name: Run unit tests
       run: |
         make unit-tests
 
+  functional-tests:
+    runs-on: ubuntu-latest
+    needs: static-analysis
+    steps:
     - name: Run functional tests
       run: |
         make functional-tests
