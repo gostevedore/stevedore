@@ -107,7 +107,7 @@ vet: ## Executes the go vet
 	@echo
 	@echo "$(COLOR_GREEN) Executing go vet $(COLOR_END)"
 	@echo
-	@$(DOCKER_COMPOSE_BINARY)--project-name stevedore-go-vet run --build ci go vet $(LDFLAGS) ./...
+	@$(DOCKER_COMPOSE_BINARY) --project-name stevedore-go-vet run --build --entrypoint go ci vet $(LDFLAGS) ./...
 
 golint: ## Executes golint
 	@echo
