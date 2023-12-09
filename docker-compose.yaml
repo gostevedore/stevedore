@@ -1,0 +1,21 @@
+
+services:
+  ci:
+    # env_file:
+    #   - .env
+    build:
+      context: .
+      dockerfile: build/Dockerfile
+      args:
+        - GOLANG_VERSION=${GOLANG_VERSION}
+        - DOCKER_VERSION=${DOCKER_VERSION}
+        - GO_TOOL_ERRCHECK_VERSION=${GO_TOOL_ERRCHECK_VERSION}
+        - GO_TOOL_GOLANGCI_LINT_VERSION=${GO_TOOL_GOLANGCI_LINT_VERSION}
+        - GO_TOOL_GOLINT_VERSION=${GO_TOOL_GOLINT_VERSION}
+        - GO_TOOL_GOSEC_VERSION=${GO_TOOL_GOSEC_VERSION}
+        - GO_TOOL_STATICCHECK_VERSION=${GO_TOOL_STATICCHECK_VERSION}
+    privileged: true
+    command:
+      - tail
+      - -f
+      - /dev/null
