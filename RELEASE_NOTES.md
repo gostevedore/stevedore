@@ -5,7 +5,7 @@
 ### Bumped
 
 - Bump up github.com/Masterminds/semver/v3 from v3.2.0 to v3.2.1
-- Bump up github.com/apenella/go-docker-builder from v0.7.8 to v0.7.9. It fixes an error when creating the build context having symbolic links.
+- Bump up github.com/apenella/go-docker-builder from v0.7.8 to v0.8.0. It fixes an error when creating the build context having symbolic links.
 - Bump up github.com/aws/aws-sdk-go-v2 from v1.17.2 to v1.23.1
 - Bump up github.com/aws/aws-sdk-go-v2/config from v1.18.4 to v1.25.5
 - Bump up github.com/aws/aws-sdk-go-v2/credentials from v1.13.4 to v1.16.4
@@ -24,8 +24,9 @@
 ### Changed
 
 - By default, install the Stevedore binary in $HOME/bin
-- Do not use Golang Docker images as base images in the testing applications
+- Do not use Golang applications on functional tests
 - Implement retry mechanism in the functional tests
+- Isolate the test execution from the executer by running functional and unit test inside a Docker container
 - The installation script uses `/bin/sh` instead `/bin/bash`
 - The release process creates ARM binaries
 - Use Docker 24.0 in the examples and tests

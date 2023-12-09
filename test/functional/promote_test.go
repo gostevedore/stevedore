@@ -100,7 +100,7 @@ func (s *PromoteFunctionalTestsSuite) TestPromoteImage() {
 
 func TestPromoteFunctionalTests(t *testing.T) {
 
-	t.Parallel()
+	// t.Parallel()
 
 	options := &docker.Options{
 		WorkingDir:  "../functional",

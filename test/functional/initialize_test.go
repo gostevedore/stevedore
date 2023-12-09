@@ -80,7 +80,7 @@ func (s *InitializeFunctionalTestsSuite) TestInitialize() {
 // TestInitializeFunctionalTests is the entrypoint to execute the test suite that runs the functional tests for initialize command
 func TestInitializeFunctionalTests(t *testing.T) {
 
-	t.Parallel()
+	// t.Parallel()
 
 	options := &docker.Options{
 		WorkingDir:     "../functional",

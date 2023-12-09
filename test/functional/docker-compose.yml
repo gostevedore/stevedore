@@ -88,6 +88,9 @@ services:
     build:
       context: ../..
       dockerfile: test/stack/client/Dockerfile
+      args:
+        - GOLANG_VERSION=${GOLANG_VERSION}
+        - DOCKER_VERSION=${DOCKER_VERSION}
     working_dir: /stevedore
     command:
       - tail
