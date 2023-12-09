@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Include go vet exection in the CI workflow
+
 ### Bumped
 
 - Bump up github.com/Masterminds/semver/v3 from v3.2.0 to v3.2.1

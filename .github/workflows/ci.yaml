@@ -10,11 +10,11 @@ on:
     - main
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+  # setup:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Checkout repository
+  #     uses: actions/checkout@v4
 
     # That block is not needed anymore because the actions are executed inside a container
     # - uses: actions/setup-go@v4
@@ -25,7 +25,6 @@ jobs:
     #       go.sum
 
   static-analysis:
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
