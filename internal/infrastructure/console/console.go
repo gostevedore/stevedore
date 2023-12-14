@@ -171,12 +171,19 @@ func (c *Console) ReadPassword(prompt string) (string, error) {
 	go func() {
 		for range sigch {
 			c.Warn("Interrupted")
-			term.Restore(stdin, oldState)
+			err := term.Restore(stdin, oldState)
+			if err != nil {
+				c.Warn(err)
+			}
 			os.Exit(0)
 		}
 	}()
 
-	c.Write([]byte(prompt))
+	_, err = c.Write([]byte(prompt))
+	if err != nil {
+		return "", err
+	}
+
 	password, err := term.ReadPassword(stdin)
 	if err != nil {
 		return "", err
