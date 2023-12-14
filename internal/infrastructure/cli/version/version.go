@@ -34,7 +34,11 @@ func versionHandler(ctx context.Context) command.CobraRunEFunc {
 		cons := console.NewConsole(os.Stdout, nil)
 		r = domainrelease.NewRelease()
 		p = release.NewOutput(cons)
-		p.Print(r)
+		err := p.Print(r)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	}
 }
