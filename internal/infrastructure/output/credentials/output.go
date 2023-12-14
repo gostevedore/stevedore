@@ -45,7 +45,10 @@ func (o *Output) Print(credentials []*credentials.Credential) error {
 		}
 	}
 
-	o.write.PrintTable(content)
+	err := o.write.PrintTable(content)
+	if err != nil {
+		return errors.New(errContext, "error printing credentials.", err)
+	}
 
 	return nil
 }
