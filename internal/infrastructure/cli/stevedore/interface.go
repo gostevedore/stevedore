@@ -17,7 +17,7 @@ type CompatibilityReporter interface {
 // Logger interface to log errors
 type Logger interface {
 	ReloadWithWriter(w io.Writer)
-	Sync()
+	Sync() error
 	Info(msg ...interface{})
 	Warn(msg ...interface{})
 	Error(msg ...interface{})

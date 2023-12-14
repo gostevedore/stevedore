@@ -50,8 +50,8 @@ func (l *Logger) ReloadWithWriter(w io.Writer) {
 	l.logger = logger.Sugar()
 }
 
-func (l *Logger) Sync() {
-	l.logger.Sync()
+func (l *Logger) Sync() error {
+	return l.logger.Sync()
 }
 
 func generateEncoderEncoder(encoderType string) zapcore.Encoder {
