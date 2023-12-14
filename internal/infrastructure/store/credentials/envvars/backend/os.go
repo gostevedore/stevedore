@@ -12,13 +12,13 @@ func NewOSEnvvarsBackend() *OSEnvvarsBackend {
 }
 
 // Setenv sets the value of the environment variable named by the key. It returns an error, if any
-func (b *OSEnvvarsBackend) Setenv(key, value string) {
-	os.Setenv(key, value)
+func (b *OSEnvvarsBackend) Setenv(key, value string) error {
+	return os.Setenv(key, value)
 }
 
 // Unsetenv unsets a single environment variable
-func (b *OSEnvvarsBackend) Unsetenv(key string) {
-	os.Unsetenv(key)
+func (b *OSEnvvarsBackend) Unsetenv(key string) error {
+	return os.Unsetenv(key)
 }
 
 // Getenv retrieves the value of the environment variable named by the key. It returns the value, which will be empty if the variable is not present. To distinguish between an empty value and an unset value, use LookupEnv
