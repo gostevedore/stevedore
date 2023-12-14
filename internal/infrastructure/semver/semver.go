@@ -54,20 +54,22 @@ func Validate(version string) bool {
 // VersionTree return semver versions from v and based on list templates. example: from 1.2.3 --> [1, 1.2, 1.2.3]. It returns an error when a template could not be parsed
 func (v *SemVer) VersionTree(listTmpl []string) ([]string, error) {
 
-	res := []string{}
+	versionList := []string{}
 
-	tmpl := template.New("listVersion")
-	for _, t := range listTmpl {
+	templateListVersions := template.New("listVersion")
+	for _, templateItem := range listTmpl {
 		buff := &bytes.Buffer{}
-		tx, err := tmpl.Parse(t)
+		template, err := templateListVersions.Parse(templateItem)
 		if err != nil {
-			return nil, errors.New("(semver::ListVersion)", fmt.Sprintf("Error parsing '%s'", t), err)
+			return nil, errors.New("(semver::ListVersion)", fmt.Sprintf("Error parsing '%s'", templateItem), err)
 		}
-		tx.Execute(io.Writer(buff), v)
-		res = append(res, buff.String())
+
+		// error is not being managed because is preferred to skip it and continue with the remaining templates
+		_ = template.Execute(io.Writer(buff), v)
+		versionList = append(versionList, buff.String())
 	}
 
-	return res, nil
+	return versionList, nil
 }
 
 // String return *SemVer in string format
