@@ -22,8 +22,8 @@ func NewCommand(ctx context.Context, config *configuration.Configuration, rootCm
 	# ~/.bashrc or ~/.profile
 	. <(stevedore completion)
 	`,
-		Run: func(cmd *cobra.Command, args []string) {
-			rootCmd.Command.GenBashCompletion(cons)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return rootCmd.Command.GenBashCompletion(cons)
 		},
 	}
 
