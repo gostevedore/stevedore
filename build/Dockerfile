@@ -44,8 +44,5 @@ RUN go install honnef.co/go/tools/cmd/staticcheck@${GO_TOOL_STATICCHECK_VERSION}
 COPY build/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY build/wait-for-dockerd.sh /usr/local/bin/wait-for-dockerd.sh
 
-COPY . .
-RUN go mod download
-
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 HEALTHCHECK --interval=15s --timeout=2s --start-period=5s --retries=3 CMD docker info || exit 1
