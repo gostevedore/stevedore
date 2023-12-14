@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"os"
 
 	"github.com/gostevedore/stevedore/internal/infrastructure/cli/stevedore"
@@ -16,6 +17,7 @@ import (
 
 func main() {
 	log := logger.New()
+	log.ReloadWithWriter(io.Discard)
 	defer log.Sync()
 
 	fs := afero.NewOsFs()
