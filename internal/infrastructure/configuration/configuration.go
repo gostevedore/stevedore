@@ -235,8 +235,8 @@ func New(fs afero.Fs, loader ConfigurationLoader, compatibility Compatibilitier)
 	// Set the default config folder as last default option
 	loader.AddConfigPath(DefaultConfigFolder)
 
-	// when configuration is created no error is shown if readinconfig files. It will use the defaults
-	loader.ReadInConfig()
+	// The errors is not checked here because it throws an error when initializing a new configuration and no configuration file exists yet. The error is checked later on the LoadFromFile method
+	_ = loader.ReadInConfig()
 
 	logWriter, err = createLogWriter(fs, loader.GetString(LogPathFileKey))
 	if err != nil {
