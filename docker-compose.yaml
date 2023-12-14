@@ -1,8 +1,6 @@
 
 services:
   ci:
-    # env_file:
-    #   - .env
     build:
       context: .
       dockerfile: build/Dockerfile
@@ -15,6 +13,8 @@ services:
         - GO_TOOL_GOSEC_VERSION=${GO_TOOL_GOSEC_VERSION}
         - GO_TOOL_STATICCHECK_VERSION=${GO_TOOL_STATICCHECK_VERSION}
     privileged: true
+    volumes:
+      - .:/usr/src/app
     command:
       - tail
       - -f
