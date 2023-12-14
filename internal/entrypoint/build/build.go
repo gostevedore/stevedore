@@ -593,10 +593,25 @@ func (e *Entrypoint) createBuildDriverFactory(credentialsFactory repository.Auth
 		return nil, errors.New(errContext, "", err)
 	}
 
-	factory.Register(image.AnsiblePlaybookDriverName, ansiblePlaybookDriver)
-	factory.Register(image.DockerDriverName, dockerDriver)
-	factory.Register(image.DefaultDriverName, defaultDriver)
-	factory.Register(image.DryRunDriverName, dryRunDriver)
+	err = factory.Register(image.AnsiblePlaybookDriverName, ansiblePlaybookDriver)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
+	err = factory.Register(image.DockerDriverName, dockerDriver)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
+	err = factory.Register(image.DefaultDriverName, defaultDriver)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
+
+	err = factory.Register(image.DryRunDriverName, dryRunDriver)
+	if err != nil {
+		return nil, errors.New(errContext, "", err)
+	}
 
 	return factory, nil
 }
