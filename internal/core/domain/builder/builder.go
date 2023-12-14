@@ -33,10 +33,7 @@ func NewBuilder(name, driver string, options *BuilderOptions, varmap varsmap.Var
 		options = &BuilderOptions{}
 	}
 
-	if varmap != nil {
-		// Combine existing values in varmap with those comming from a new varsmap
-		varmap.Combine(varsmap.New())
-	} else {
+	if varmap == nil {
 		varmap = varsmap.New()
 	}
 
@@ -109,4 +106,21 @@ func (b *Builder) WithOptions(options *BuilderOptions) {
 // WithVarMapping sets the variable mapping of the builder
 func (b *Builder) WithVarMapping(mapping varsmap.Varsmap) {
 	b.VarMapping = mapping
+}
+
+// CombineVarsmap combines the current varsmap with a new one
+func (b *Builder) CombineVarsmap(mapping varsmap.Varsmap) error {
+
+	if mapping == nil {
+		return nil
+	}
+
+	err := mapping.Combine(b.VarMapping)
+	if err != nil {
+		return err
+	}
+
+	b.VarMapping = mapping
+
+	return nil
 }

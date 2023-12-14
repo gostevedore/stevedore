@@ -81,51 +81,6 @@ func TestNewBuilder(t *testing.T) {
 				varsmap.VarMappingRegistryNamespaceKey:             "OtherVarMappingRegistryNamespace",
 			},
 		},
-		{
-			desc:   "Testing create a new builder combining varmap",
-			name:   "builder",
-			driver: "ansible-playbook",
-			res: &Builder{
-				Name:    "builder",
-				Driver:  "ansible-playbook",
-				Options: &BuilderOptions{},
-				VarMapping: varsmap.Varsmap{
-					varsmap.VarMappingImageBuilderLabelKey:             "OtherVarMappingImageBuilderLabel",
-					varsmap.VarMappingImageBuilderNameKey:              "OtherVarMappingImageBuilderName",
-					varsmap.VarMappingImageBuilderRegistryHostKey:      "OtherVarMappingImageBuilderRegistryHost",
-					varsmap.VarMappingImageBuilderRegistryNamespaceKey: "OtherVarMappingImageBuilderRegistryNamespace",
-					varsmap.VarMappingImageBuilderTagKey:               "OtherVarMappingImageBuilderTag",
-					varsmap.VarMappingImageExtraTagsKey:                "OtherVarMappingImageExtraTags",
-					varsmap.VarMappingImageFromFullyQualifiedNameKey:   "OtherVarMappingImageFromFullyQualifiedNameKey",
-					varsmap.VarMappingImageFromNameKey:                 "OtherVarMappingImageFromName",
-					varsmap.VarMappingImageFromRegistryHostKey:         "OtherVarMappingImageFromRegistryHost",
-					varsmap.VarMappingImageFromRegistryNamespaceKey:    "OtherVarMappingImageFromRegistryNamespace",
-					varsmap.VarMappingImageFromTagKey:                  "OtherVarMappingImageFromTag",
-					varsmap.VarMappingImageFullyQualifiedNameKey:       "OtherVarMappingImageFullyQualifiedNameKey",
-					varsmap.VarMappingImageLabelsKey:                   "image_labels",
-					varsmap.VarMappingImageNameKey:                     "image_name",
-					varsmap.VarMappingImageTagKey:                      "image_tag",
-					varsmap.VarMappingPullParentImageKey:               "pull_parent_image",
-					varsmap.VarMappingPushImagetKey:                    "push_image",
-					varsmap.VarMappingRegistryHostKey:                  "image_registry_host",
-					varsmap.VarMappingRegistryNamespaceKey:             "image_registry_namespace",
-				},
-			},
-			varsmap: varsmap.Varsmap{
-				varsmap.VarMappingImageBuilderLabelKey:             "OtherVarMappingImageBuilderLabel",
-				varsmap.VarMappingImageBuilderNameKey:              "OtherVarMappingImageBuilderName",
-				varsmap.VarMappingImageBuilderRegistryHostKey:      "OtherVarMappingImageBuilderRegistryHost",
-				varsmap.VarMappingImageBuilderRegistryNamespaceKey: "OtherVarMappingImageBuilderRegistryNamespace",
-				varsmap.VarMappingImageBuilderTagKey:               "OtherVarMappingImageBuilderTag",
-				varsmap.VarMappingImageExtraTagsKey:                "OtherVarMappingImageExtraTags",
-				varsmap.VarMappingImageFromFullyQualifiedNameKey:   "OtherVarMappingImageFromFullyQualifiedNameKey",
-				varsmap.VarMappingImageFromNameKey:                 "OtherVarMappingImageFromName",
-				varsmap.VarMappingImageFromRegistryHostKey:         "OtherVarMappingImageFromRegistryHost",
-				varsmap.VarMappingImageFromRegistryNamespaceKey:    "OtherVarMappingImageFromRegistryNamespace",
-				varsmap.VarMappingImageFromTagKey:                  "OtherVarMappingImageFromTag",
-				varsmap.VarMappingImageFullyQualifiedNameKey:       "OtherVarMappingImageFullyQualifiedNameKey",
-			},
-		},
 	}
 
 	for _, test := range tests {
@@ -262,19 +217,6 @@ options:
 							},
 						},
 					},
-					// Context: []*DockerDriverContextOptions{
-					// 	{
-					// 		Git: &DockerDriverGitContextOptions{
-					// 			Path:       "path",
-					// 			Repository: "repository",
-					// 			Reference:  "reference",
-					// 			Auth: &DockerDriverGitContextAuthOptions{
-					// 				Username: "username",
-					// 				Password: "password",
-					// 			},
-					// 		},
-					// 	},
-					// },
 					Dockerfile: "Dockerfile.test",
 				},
 				VarMapping: varsmap.New(),
@@ -384,19 +326,6 @@ options:
 							},
 						},
 					},
-					// Context: []*DockerDriverContextOptions{
-					// 	{
-					// 		Git: &DockerDriverGitContextOptions{
-					// 			Path:       "path",
-					// 			Repository: "repository",
-					// 			Reference:  "reference",
-					// 			Auth: &DockerDriverGitContextAuthOptions{
-					// 				Username: "username",
-					// 				Password: "password",
-					// 			},
-					// 		},
-					// 	},
-					// },
 					Dockerfile: "Dockerfile.test",
 				},
 				VarMapping: varsmap.New(),
@@ -460,4 +389,87 @@ func TestWithVarMapping(t *testing.T) {
 	varsmap := varsmap.New()
 	builder.WithVarMapping(varsmap)
 	assert.Equal(t, varsmap, builder.VarMapping)
+}
+
+func TestCombineVarsmap(t *testing.T) {
+
+	tests := []struct {
+		desc    string
+		builder *Builder
+		data    varsmap.Varsmap
+		res     *Builder
+		err     error
+	}{
+		{
+			desc: "Testing combine varsmap with empty varsmap",
+			data: nil,
+			builder: &Builder{
+				VarMapping: varsmap.New(),
+			},
+			res: &Builder{
+				VarMapping: varsmap.New(),
+			},
+			err: &errors.Error{},
+		},
+
+		{
+			desc: "Testing combine a varsmap",
+			data: varsmap.Varsmap{
+				varsmap.VarMappingImageBuilderLabelKey:             "OtherVarMappingImageBuilderLabel",
+				varsmap.VarMappingImageBuilderNameKey:              "OtherVarMappingImageBuilderName",
+				varsmap.VarMappingImageBuilderRegistryHostKey:      "OtherVarMappingImageBuilderRegistryHost",
+				varsmap.VarMappingImageBuilderRegistryNamespaceKey: "OtherVarMappingImageBuilderRegistryNamespace",
+				varsmap.VarMappingImageBuilderTagKey:               "OtherVarMappingImageBuilderTag",
+				varsmap.VarMappingImageExtraTagsKey:                "OtherVarMappingImageExtraTags",
+				varsmap.VarMappingImageFromFullyQualifiedNameKey:   "OtherVarMappingImageFromFullyQualifiedNameKey",
+				varsmap.VarMappingImageFromNameKey:                 "OtherVarMappingImageFromName",
+				varsmap.VarMappingImageFromRegistryHostKey:         "OtherVarMappingImageFromRegistryHost",
+				varsmap.VarMappingImageFromRegistryNamespaceKey:    "OtherVarMappingImageFromRegistryNamespace",
+				varsmap.VarMappingImageFromTagKey:                  "OtherVarMappingImageFromTag",
+				varsmap.VarMappingImageFullyQualifiedNameKey:       "OtherVarMappingImageFullyQualifiedNameKey",
+			},
+			builder: &Builder{
+				VarMapping: varsmap.New(),
+			},
+			res: &Builder{
+				VarMapping: varsmap.Varsmap{
+					varsmap.VarMappingImageBuilderLabelKey:             "OtherVarMappingImageBuilderLabel",
+					varsmap.VarMappingImageBuilderNameKey:              "OtherVarMappingImageBuilderName",
+					varsmap.VarMappingImageBuilderRegistryHostKey:      "OtherVarMappingImageBuilderRegistryHost",
+					varsmap.VarMappingImageBuilderRegistryNamespaceKey: "OtherVarMappingImageBuilderRegistryNamespace",
+					varsmap.VarMappingImageBuilderTagKey:               "OtherVarMappingImageBuilderTag",
+					varsmap.VarMappingImageExtraTagsKey:                "OtherVarMappingImageExtraTags",
+					varsmap.VarMappingImageFromFullyQualifiedNameKey:   "OtherVarMappingImageFromFullyQualifiedNameKey",
+					varsmap.VarMappingImageFromNameKey:                 "OtherVarMappingImageFromName",
+					varsmap.VarMappingImageFromRegistryHostKey:         "OtherVarMappingImageFromRegistryHost",
+					varsmap.VarMappingImageFromRegistryNamespaceKey:    "OtherVarMappingImageFromRegistryNamespace",
+					varsmap.VarMappingImageFromTagKey:                  "OtherVarMappingImageFromTag",
+					varsmap.VarMappingImageFullyQualifiedNameKey:       "OtherVarMappingImageFullyQualifiedNameKey",
+					varsmap.VarMappingImageLabelsKey:                   "image_labels",
+					varsmap.VarMappingImageNameKey:                     "image_name",
+					varsmap.VarMappingImageTagKey:                      "image_tag",
+					varsmap.VarMappingPullParentImageKey:               "pull_parent_image",
+					varsmap.VarMappingPushImagetKey:                    "push_image",
+					varsmap.VarMappingRegistryHostKey:                  "image_registry_host",
+					varsmap.VarMappingRegistryNamespaceKey:             "image_registry_namespace",
+				},
+			},
+			err: &errors.Error{},
+		},
+	}
+
+	for _, test := range tests {
+
+		t.Run(test.desc, func(t *testing.T) {
+			t.Log(test.desc)
+
+			err := test.builder.CombineVarsmap(test.data)
+			if err != nil {
+				assert.Equal(t, test.err, err)
+			} else {
+				assert.Equal(t, test.res, test.builder)
+			}
+		})
+	}
+
 }
