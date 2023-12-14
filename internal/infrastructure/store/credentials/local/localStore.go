@@ -228,7 +228,7 @@ func (s *LocalStore) All() ([]*credentials.Credential, error) {
 	var credential *credentials.Credential
 	credentials := []*credentials.Credential{}
 
-	afero.Walk(s.fs, s.path, func(path string, info os.FileInfo, err error) error {
+	err := afero.Walk(s.fs, s.path, func(path string, info os.FileInfo, err error) error {
 
 		errContext := "(store::credentials::local::All::walk)"
 
@@ -244,6 +244,9 @@ func (s *LocalStore) All() ([]*credentials.Credential, error) {
 
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	return credentials, nil
 }
