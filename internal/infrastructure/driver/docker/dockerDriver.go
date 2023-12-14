@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 
@@ -94,14 +95,16 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *image
 	// add docker build arguments: Persistent vars contains the variables defined by the user on execution time and has precedences over vars and the persistent vars defined on the image
 	if len(i.PersistentVars) > 0 {
 		for varName, varValue := range i.PersistentVars {
-			d.driver.AddBuildArgs(varName, varValue.(string))
+			// AddBuildArgs returns an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+			_ = d.driver.AddBuildArgs(varName, varValue.(string))
 		}
 	}
 
 	// add docker build arguments: Vars contains the variables defined by the user on execution time and has precedences over the default values
 	if len(i.Vars) > 0 {
 		for varName, varValue := range i.Vars {
-			d.driver.AddBuildArgs(varName, varValue.(string))
+			// AddBuildArgs returns an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+			_ = d.driver.AddBuildArgs(varName, varValue.(string))
 		}
 	}
 
@@ -116,19 +119,23 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *image
 			if err != nil {
 				return errors.New(errContext, "", err)
 			}
-			d.driver.AddTags(imageTaggedName)
+			// AddTags returns an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+			_ = d.driver.AddTags(imageTaggedName)
 		}
 	}
 
 	if len(i.PersistentLabels) > 0 {
 		for label, value := range i.PersistentLabels {
-			d.driver.AddLabel(label, value)
+			// AddLabel returns an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+			_ = d.driver.AddLabel(label, value)
 		}
 	}
 
+	// Parent labels has precedence over image labels
 	if len(i.Labels) > 0 {
 		for label, value := range i.Labels {
-			d.driver.AddLabel(label, value)
+			// AddLabel returns an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+			_ = d.driver.AddLabel(label, value)
 		}
 	}
 
@@ -138,31 +145,48 @@ func (d *DockerDriver) Build(ctx context.Context, i *image.Image, options *image
 		if err != nil {
 			return errors.New(errContext, "", err)
 		}
-		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromFullyQualifiedNameKey], parentFullyQualifiedName)
+		// AddBuildArgs returns an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+		_ = d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromFullyQualifiedNameKey], parentFullyQualifiedName)
 	}
 
 	if i.Parent != nil && i.Parent.RegistryNamespace != "" {
-		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromRegistryNamespaceKey], i.Parent.RegistryNamespace)
+		// AddBuildArgs returns an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+		_ = d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromRegistryNamespaceKey], i.Parent.RegistryNamespace)
 	}
 
 	if i.Parent != nil && i.Parent.Name != "" {
-		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromNameKey], i.Parent.Name)
+		// AddBuildArgs returns an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+		_ = d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromNameKey], i.Parent.Name)
 	}
 
 	if i.Parent != nil && i.Parent.Version != "" {
-		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromTagKey], i.Parent.Version)
+		// AddBuildArgs returns an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+		_ = d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromTagKey], i.Parent.Version)
 	}
 
 	// add docker build arguments: map de command flag options to build argurments
 	if i.Parent != nil && i.Parent.RegistryHost != "" {
-		d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromRegistryHostKey], i.Parent.RegistryHost)
-		d.driver.AddAuth(options.PullAuthUsername, options.PullAuthPassword, i.Parent.RegistryHost)
+		// AddBuildArgs returns an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+		_ = d.driver.AddBuildArgs(options.BuilderVarMappings[varsmap.VarMappingImageFromRegistryHostKey], i.Parent.RegistryHost)
+
+		err = d.driver.AddAuth(options.PullAuthUsername, options.PullAuthPassword, i.Parent.RegistryHost)
+		if err != nil {
+			return errors.New(errContext, fmt.Sprintf("error adding the auth configuration for registry '%s'", i.Parent.RegistryHost), err)
+		}
 	}
-	d.driver.AddAuth(options.PushAuthUsername, options.PushAuthPassword, i.RegistryHost)
+
+	err = d.driver.AddAuth(options.PushAuthUsername, options.PushAuthPassword, i.RegistryHost)
+	if err != nil {
+		return errors.New(errContext, fmt.Sprintf("error adding the auth configuration for registry '%s'", i.RegistryHost), err)
+	}
 
 	if options.PushImageAfterBuild {
 		d.driver.WithPushAfterBuild()
-		d.driver.AddPushAuth(options.PushAuthUsername, options.PushAuthPassword)
+
+		err = d.driver.AddPushAuth(options.PushAuthUsername, options.PushAuthPassword)
+		if err != nil {
+			return errors.New(errContext, "error adding the auth configuration to push the image to the registry", err)
+		}
 	}
 
 	if options.PullParentImage {
