@@ -111,18 +111,23 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *im
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
-	ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFullyQualifiedNameKey], imageFullyQualifiedName)
 
-	ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageNameKey], i.Name)
+	// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+	_ = ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFullyQualifiedNameKey], imageFullyQualifiedName)
+
+	// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+	_ = ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageNameKey], i.Name)
 
 	if i.RegistryNamespace != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingRegistryNamespaceKey], i.RegistryNamespace)
+		// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+		_ = ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingRegistryNamespaceKey], i.RegistryNamespace)
 		builderName = strings.Join([]string{builderName, i.RegistryNamespace}, "_")
 	}
 
 	builderName = strings.Join([]string{builderName, i.Name}, "_")
 	if i.Version != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageTagKey], i.Version)
+		// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+		_ = ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageTagKey], i.Version)
 		builderName = strings.Join([]string{builderName, i.Version}, "_")
 	}
 
@@ -134,39 +139,46 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *im
 		ansiblePlaybookOptions.Limit = o.AnsibleLimit
 	}
 
-	ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageBuilderLabelKey], builderName)
+	// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+	_ = ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageBuilderLabelKey], builderName)
 
 	if i.RegistryHost != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingRegistryHostKey], i.RegistryHost)
+		// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+		_ = ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingRegistryHostKey], i.RegistryHost)
 	}
 
 	// Persistent vars contains the variables defined by the user on execution time and has precedences over vars and the persistent vars defined on the image
 	if len(i.PersistentVars) > 0 {
 		for varName, varValue := range i.PersistentVars {
-			ansiblePlaybookOptions.AddExtraVar(varName, varValue)
+			// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+			_ = ansiblePlaybookOptions.AddExtraVar(varName, varValue)
 		}
 	}
 
 	// Vars contains the variables defined by the user on execution time and has precedences over the default values
 	if len(i.Vars) > 0 {
 		for varName, varValue := range i.Vars {
-			ansiblePlaybookOptions.AddExtraVar(varName, varValue)
+			// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+			_ = ansiblePlaybookOptions.AddExtraVar(varName, varValue)
 		}
 	}
 
 	if len(i.Tags) > 0 {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], i.Tags)
+		// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+		_ = ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], i.Tags)
 	}
 
 	// Persistent labels contains the variables defined by the user on execution time and has precedences over labels and the persistent vars defined on the image
 	if len(i.PersistentLabels) > 0 {
 		for varName, varValue := range i.PersistentLabels {
-			ansiblePlaybookOptions.AddExtraVar(varName, varValue)
+			// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+			_ = ansiblePlaybookOptions.AddExtraVar(varName, varValue)
 		}
 	}
 
 	if len(i.Labels) > 0 {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], i.Labels)
+		// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+		_ = ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageExtraTagsKey], i.Labels)
 	}
 
 	if o.OutputPrefix == "" {
@@ -181,28 +193,33 @@ func (d *AnsiblePlaybookDriver) Build(ctx context.Context, i *image.Image, o *im
 		if err != nil {
 			return errors.New(errContext, "", err)
 		}
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromFullyQualifiedNameKey], parentFullyQualifiedName)
+		// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+		_ = ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromFullyQualifiedNameKey], parentFullyQualifiedName)
 	}
 
 	if i.Parent != nil && i.Parent.Name != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromNameKey], i.Parent.Name)
-
+		// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+		_ = ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromNameKey], i.Parent.Name)
 	}
 
 	if i.Parent != nil && i.Parent.RegistryNamespace != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromRegistryNamespaceKey], i.Parent.RegistryNamespace)
+		// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+		_ = ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromRegistryNamespaceKey], i.Parent.RegistryNamespace)
 	}
 
 	if i.Parent != nil && i.Parent.RegistryHost != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromRegistryHostKey], i.Parent.RegistryHost)
+		// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+		_ = ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromRegistryHostKey], i.Parent.RegistryHost)
 	}
 
 	if i.Parent != nil && i.Parent.Version != "" {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromTagKey], i.Parent.Version)
+		// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+		_ = ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingImageFromTagKey], i.Parent.Version)
 	}
 
 	if !o.PushImageAfterBuild {
-		ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingPushImagetKey], false)
+		// AddExtraVar return an error when the value exists, however we preferred to deal the situation by ignoring the error and continue with the execution without overwriting the value
+		_ = ansiblePlaybookOptions.AddExtraVar(o.BuilderVarMappings[varsmap.VarMappingPushImagetKey], false)
 	}
 
 	// TODO:
