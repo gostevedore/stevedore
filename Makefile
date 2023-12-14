@@ -101,7 +101,6 @@ functional-tests: ## Executes the functional tests found in the folder ./test/fu
 	@echo "$(COLOR_GREEN)  stopping up the testing stack...$(COLOR_END)"
 	$(DOCKER_COMPOSE_BINARY) --project-name stevedore-functional-tests down --volumes --remove-orphans --timeout 3; \
 	exit $$RC
-# @go test ${GO_TEST_OPTS} ./test/functional/...
 
 vet: ## Executes the go vet
 	@echo
@@ -131,13 +130,16 @@ errcheck: ## Executes errcheck
 	@echo
 	@echo "$(COLOR_GREEN) Executing errcheck$(COLOR_END)"
 	@echo
-	@$(DOCKER_COMPOSE_BINARY) --project-name stevedore-errcheck run --build ci errcheck ./internal/...
+	@$(DOCKER_COMPOSE_BINARY) --project-name stevedore-errcheck run --build --entrypoint errcheck ci -ignoretests -ignorepkg fmt ./internal/...
 
 golangci-lint: ## Executes golangci-lint
 	@echo
 	@echo "$(COLOR_GREEN) Executing golangci-lint$(COLOR_END)"
 	@echo
 	@$(DOCKER_COMPOSE_BINARY) --project-name stevedore-golangci-lint run --build ci golangci-lint run ./internal
+
+attach-stevedore:
+	$(DOCKER_COMPOSE_BINARY) run --build --entrypoint sh --volumes ${PWD}:/app --workdir /app ci
 
 #
 # build the binary
