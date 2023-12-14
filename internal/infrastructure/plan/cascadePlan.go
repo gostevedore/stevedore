@@ -37,37 +37,50 @@ func (p *CascadePlan) Plan(name string, versions []string) ([]*Step, error) {
 	}
 
 	for _, image := range images {
-		steps = append(steps, p.plan(image, nil, p.depth)...)
+		plannedSteps, err := p.plan(image, nil, p.depth)
+		if err != nil {
+			return nil, errors.New(errContext, "", err)
+		}
+		steps = append(steps, plannedSteps...)
 	}
 
 	return steps, nil
 }
 
-func (p *CascadePlan) plan(image *image.Image, parent *Step, depth int) []*Step {
+// plan return a list of steps to build an image on a cascade way
+func (p *CascadePlan) plan(image *image.Image, parent *Step, depth int) ([]*Step, error) {
 	steps := []*Step{}
 	var sync chan struct{}
+	var err error
 
 	// root images does not require to sync
 	if parent != nil {
 		sync = make(chan struct{})
-		parent.Subscribe(sync)
+		err = parent.Subscribe(sync)
+		if err != nil {
+
+		}
 	}
 
 	// not tested
 	if p.images.IsWildcard(image) {
-		return steps
+		return steps, nil
 	}
 
 	step := NewStep(image, image.Name, sync)
 	steps = append(steps, step)
 
 	if depth == 0 {
-		return steps
+		return steps, nil
 	}
 
 	for _, child := range image.Children {
-		steps = append(steps, p.plan(child, step, depth-1)...)
+		plannedSteps, err := p.plan(child, step, depth-1)
+		if err != nil {
+			return nil, errors.New("(plan::Cascade::plan)", "", err)
+		}
+		steps = append(steps, plannedSteps...)
 	}
 
-	return steps
+	return steps, nil
 }
