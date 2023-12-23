@@ -195,7 +195,7 @@ func TestResolveCredentialsProvider(t *testing.T) {
 	}
 }
 
-func TestAWSConfigLoadOption(t *testing.T) {
+func TestGetAWSConfigLoadOptionFuncs(t *testing.T) {
 	tests := []struct {
 		desc       string
 		ecr        *AWSECRToken
@@ -236,7 +236,7 @@ func TestAWSConfigLoadOption(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Log(test.desc)
 
-			options, err := test.ecr.awsConfigLoadOptions(test.credential)
+			options, err := test.ecr.getAWSConfigLoadOptionFuncs(test.credential)
 			if err != nil {
 				assert.Equal(t, test.err.Error(), err.Error())
 			} else {
