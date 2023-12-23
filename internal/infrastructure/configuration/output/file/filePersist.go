@@ -50,23 +50,32 @@ func (h *ConfigurationFilePersist) Options(opts ...OptionsFunc) {
 }
 
 // Write writes the configuration to the writer
-func (o *ConfigurationFilePersist) Write(config *configuration.Configuration) error {
+func (o *ConfigurationFilePersist) Write(config *configuration.Configuration) (err error) {
+	var configFile afero.File
+	//var err error
 
 	errContext := "(configuration::output::ConfigurationFilePersist::Write)"
 
 	// configFile, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	configFile, err := o.fs.OpenFile(o.filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	configFile, err = o.fs.OpenFile(o.filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return errors.New(errContext, fmt.Sprintf("File '%s' could not be opened", o.filePath), err)
 	}
-	defer configFile.Close()
+
+	defer func() {
+		closeFileErr := configFile.Close()
+		if closeFileErr != nil {
+			// here the closeFileErr is appended to the err returned by the function. With that we ensure that the closeFileErr is not lost
+			err = errors.New(errContext, fmt.Sprintf("Error closing file '%s'.", o.filePath), closeFileErr, err)
+		}
+	}()
 
 	err = o.write(configFile, config)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
 
-	return nil
+	return err
 }
 
 func (o *ConfigurationFilePersist) write(write io.Writer, config *configuration.Configuration) error {
