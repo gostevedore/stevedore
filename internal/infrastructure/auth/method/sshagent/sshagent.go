@@ -15,7 +15,7 @@ func NewSSHAgentAuthMethod() *SSHAgentAuthMethod {
 }
 
 // AuthMethodConstructor return a SSHAgentAuthMethod
-func (a *SSHAgentAuthMethod) AuthMethodConstructor(credential *credentials.Credential) (repository.AuthMethodReader, error) {
+func (auth *SSHAgentAuthMethod) AuthMethodConstructor(credential *credentials.Credential) (repository.AuthMethodReader, error) {
 
 	if credential == nil {
 		return nil, nil
@@ -26,13 +26,13 @@ func (a *SSHAgentAuthMethod) AuthMethodConstructor(credential *credentials.Crede
 	}
 
 	if credential.GitSSHUser != "" {
-		a = &SSHAgentAuthMethod{
+		auth = &SSHAgentAuthMethod{
 			GitSSHUser: credential.GitSSHUser,
 		}
 
 	}
 
-	return a, nil
+	return auth, nil
 }
 
 // Name returns the name of the authentication method

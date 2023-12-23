@@ -21,26 +21,26 @@ func NewKeyFileAuthMethod() *KeyFileAuthMethod {
 }
 
 // AuthMethodConstructor creates a new KeyFileAuthMethod from the given credential
-func (a *KeyFileAuthMethod) AuthMethodConstructor(credential *credentials.Credential) (repository.AuthMethodReader, error) {
+func (auth *KeyFileAuthMethod) AuthMethodConstructor(credential *credentials.Credential) (repository.AuthMethodReader, error) {
 
 	if credential == nil {
 		return nil, nil
 	}
 
 	if credential.PrivateKeyFile != "" {
-		a = &KeyFileAuthMethod{
+		auth = &KeyFileAuthMethod{
 			PrivateKeyFile: credential.PrivateKeyFile,
 		}
 
 		if credential.PrivateKeyPassword != "" {
-			a.PrivateKeyPassword = credential.PrivateKeyPassword
+			auth.PrivateKeyPassword = credential.PrivateKeyPassword
 		}
 
 		if credential.GitSSHUser != "" {
-			a.GitSSHUser = credential.GitSSHUser
+			auth.GitSSHUser = credential.GitSSHUser
 		}
 
-		return a, nil
+		return auth, nil
 	} else {
 		return nil, nil
 	}
