@@ -2,6 +2,7 @@ package dispatch
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	errors "github.com/apenella/go-common-utils/error"
@@ -56,7 +57,7 @@ func WithNumWorkers(n int) OptionsFunc {
 }
 
 // Start prepares dispatcher to start workers and dispatch jobs
-func (d *Dispatch) Start(ctx context.Context, opts ...OptionsFunc) error {
+func (d *Dispatch) Start(ctx context.Context, opts ...OptionsFunc) (err error) {
 
 	errContext := "(dispatch::Start)"
 
@@ -82,7 +83,12 @@ func (d *Dispatch) Start(ctx context.Context, opts ...OptionsFunc) error {
 		for i := 0; i < d.NumWorkers; i++ {
 			worker := d.workerFactory.New(d.WorkerPool)
 
-			go worker.Start(ctx)
+			go func() {
+				workerStartErr := worker.Start(ctx)
+				if err != nil {
+					err = fmt.Errorf("%w. error starting worker: %v.", err, workerStartErr)
+				}
+			}()
 		}
 
 		go d.dispatch()
