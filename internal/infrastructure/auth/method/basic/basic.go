@@ -17,19 +17,19 @@ func NewBasicAuthMethod() *BasicAuthMethod {
 }
 
 // AuthMethodConstructor return BasicAuthMethod from the given credential
-func (a *BasicAuthMethod) AuthMethodConstructor(credential *credentials.Credential) (repository.AuthMethodReader, error) {
+func (auth *BasicAuthMethod) AuthMethodConstructor(credential *credentials.Credential) (repository.AuthMethodReader, error) {
 
 	if credential == nil {
 		return nil, nil
 	}
 
 	if credential.Username != "" && credential.Password != "" {
-		a = &BasicAuthMethod{
+		auth = &BasicAuthMethod{
 			Username: credential.Username,
 			Password: credential.Password,
 		}
 
-		return a, nil
+		return auth, nil
 	} else {
 		return nil, nil
 	}
