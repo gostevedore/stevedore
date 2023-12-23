@@ -406,18 +406,10 @@ func (e *Entrypoint) createAuthFactory(conf *configuration.Configuration) (repos
 		return nil, errors.New(errContext, "To create the credentials store in build entrypoint, credentials configuration is required")
 	}
 
-	//storefactory := credentialsstorefactory.NewCredentialsStoreFactory()
 	store, err := e.createCredentialsStore(conf.Credentials)
 	if err != nil {
 		return nil, errors.New(errContext, "", err)
 	}
-	// storefactory.Register(credentials.LocalStore, localstore)
-
-	// // since there is only one store, we can use it directly
-	// store, err := storefactory.Get(credentials.LocalStore)
-	// if err != nil {
-	// 	return nil, errors.New(errContext, "", err)
-	// }
 
 	// create authorization methods
 	basic := authmethodbasic.NewBasicAuthMethod()
