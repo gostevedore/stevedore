@@ -158,20 +158,27 @@ func (c *Console) Read() string {
 }
 
 // ReadPassword read a line from console reader without echo
-func (c *Console) ReadPassword(prompt string) (string, error) {
+func (c *Console) ReadPassword(prompt string) (passwordStr string, err error) {
+	var termState *term.State
+	var password []byte
+
+	passwordStr = ""
 	stdin := int(syscall.Stdin)
-	oldState, err := term.GetState(stdin)
+	termState, err = term.GetState(stdin)
 	if err != nil {
-		return "", err
+		return passwordStr, err
 	}
-	defer term.Restore(stdin, oldState)
+	defer func() {
+		termRestoreErr := term.Restore(stdin, termState)
+		err = fmt.Errorf("%w. error restoring terminal state: %v.", err, termRestoreErr)
+	}()
 
 	sigch := make(chan os.Signal, 1)
 	signal.Notify(sigch, os.Interrupt)
 	go func() {
 		for range sigch {
 			c.Warn("Interrupted")
-			err := term.Restore(stdin, oldState)
+			err := term.Restore(stdin, termState)
 			if err != nil {
 				c.Warn(err)
 			}
@@ -184,9 +191,9 @@ func (c *Console) ReadPassword(prompt string) (string, error) {
 		return "", err
 	}
 
-	password, err := term.ReadPassword(stdin)
+	password, err = term.ReadPassword(stdin)
 	if err != nil {
-		return "", err
+		return passwordStr, err
 	}
 	return string(password), nil
 }
