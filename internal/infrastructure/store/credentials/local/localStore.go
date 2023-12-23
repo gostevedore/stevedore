@@ -97,10 +97,10 @@ func (s *LocalStore) SafeStore(id string, credential *credentials.Credential) er
 }
 
 // Store save a credential in the local store
-func (s *LocalStore) Store(id string, credential *credentials.Credential) error {
+func (s *LocalStore) Store(id string, credential *credentials.Credential) (err error) {
 
-	var err error
 	var formatedCredential string
+	var hashedID string
 	var credentialFile afero.File
 
 	errContext := "(store::credentials::local::Store)"
@@ -121,7 +121,7 @@ func (s *LocalStore) Store(id string, credential *credentials.Credential) error 
 		credential.ID = id
 	}
 
-	hashedID, err := encryption.HashID(id)
+	hashedID, err = encryption.HashID(id)
 	if err != nil {
 		return errors.New(errContext, "", err)
 	}
@@ -132,7 +132,12 @@ func (s *LocalStore) Store(id string, credential *credentials.Credential) error 
 	}
 
 	credentialFile, err = s.fs.OpenFile(filepath.Join(s.path, hashedID), os.O_RDWR|os.O_CREATE, 0600)
-	defer credentialFile.Close()
+	defer func() {
+		credentialFileCloseErr := credentialFile.Close()
+		if credentialFileCloseErr != nil {
+			err = errors.New(errContext, fmt.Sprintf("Error closing file '%s'.", filepath.Join(s.path, hashedID)), credentialFileCloseErr, err)
+		}
+	}()
 
 	err = s.compatibility.CheckCompatibility(credential)
 	if err != nil {
