@@ -21,6 +21,9 @@ func TestExecute(t *testing.T) {
 
 	errContext := "(get::credentials::entrypoint::Execute)"
 
+	filesystem := afero.NewMemMapFs()
+	_ = filesystem.MkdirAll("/credentials", 0755)
+
 	tests := []struct {
 		desc       string
 		entrypoint *Entrypoint
@@ -38,18 +41,35 @@ func TestExecute(t *testing.T) {
 			desc: "Testing execute get credentials entrypoint",
 			entrypoint: NewEntrypoint(
 				WithWriter(console.NewConsole(io.Discard, nil)),
-				WithFileSystem(afero.NewMemMapFs()),
+				WithFileSystem(filesystem),
 				WithCompatibility(compatibility.NewMockCompatibility()),
 			),
 			options: &Options{},
 			conf: &configuration.Configuration{
 				Credentials: &configuration.CredentialsConfiguration{
 					StorageType:      credentials.LocalStore,
-					LocalStoragePath: "./test/credentials",
+					LocalStoragePath: "/credentials",
 					Format:           "json",
 				},
 			},
 			err: &errors.Error{},
+		},
+		{
+			desc: "Testing error executing get credentials entrypoint when credentials configuration file is not defined",
+			entrypoint: NewEntrypoint(
+				WithWriter(console.NewConsole(io.Discard, nil)),
+				WithFileSystem(filesystem),
+				WithCompatibility(compatibility.NewMockCompatibility()),
+			),
+			options: &Options{},
+			conf: &configuration.Configuration{
+				Credentials: &configuration.CredentialsConfiguration{
+					StorageType:      credentials.LocalStore,
+					LocalStoragePath: "/unknown",
+					Format:           "json",
+				},
+			},
+			err: errors.New(errContext, "Error reading credentials file '/unknown'\n open /unknown: file does not exist"),
 		},
 	}
 
@@ -59,7 +79,7 @@ func TestExecute(t *testing.T) {
 
 			err := test.entrypoint.Execute(context.TODO(), test.args, test.conf, test.options)
 			if err != nil {
-				assert.Equal(t, test.err, err)
+				assert.Equal(t, test.err.Error(), err.Error())
 			}
 		})
 	}
