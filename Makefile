@@ -139,7 +139,7 @@ golangci-lint: ## Executes golangci-lint
 	@$(DOCKER_COMPOSE_BINARY) --project-name stevedore-golangci-lint run --build ci golangci-lint run ./internal
 
 attach-stevedore:
-	$(DOCKER_COMPOSE_BINARY) run --build --entrypoint sh --volumes ${PWD}:/app --workdir /app ci
+	$(DOCKER_COMPOSE_BINARY) run --build --volumes ${PWD}:/app --workdir /app ci sh
 
 #
 # build the binary
