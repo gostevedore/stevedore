@@ -10,15 +10,6 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-// import (
-// 	"strings"
-// 	"testing"
-
-// 	"github.com/gruntwork-io/terratest/modules/docker"
-// 	"github.com/gruntwork-io/terratest/modules/logger"
-// 	"github.com/stretchr/testify/suite"
-// )
-
 // PromoteFunctionalTestsSuite is a struct that defines the functional test suite for promote command
 type PromoteFunctionalTestsSuite struct {
 	*helpers.FunctionalTestsSuite
@@ -92,6 +83,32 @@ func (s *PromoteFunctionalTestsSuite) TestPromoteImage() {
 	}
 
 	err = s.Stack.Execute(s.CommandFactory.Command(helpers.ExecCommand).WithCommandArgs("--workdir /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/library/busybox:1"))
+	if err != nil {
+		s.T().Log(err)
+		s.T().Fail()
+	}
+}
+
+func (s *PromoteFunctionalTestsSuite) TestPromoteImageOverwriteSemversTagTemplates() {
+	var err error
+
+	if testing.Short() {
+		s.T().Skip("functional test are skipped in short mode")
+	}
+
+	err = s.Stack.Execute(s.CommandFactory.Command(helpers.ExecCommand).WithCommandArgs("--workdir /app/test/stack/client/stevedore stevedore stevedore promote docker-hub.stevedore.test:5000/library/busybox:latest --use-source-image-from-remote --promote-image-registry-host registry.stevedore.test --promote-image-tag 1.2.3 --force-promote-source-image --use-source-image-from-remote --enable-semver-tags --remove-local-images-after-push --semver-tags-template \"{{ .Major }}_test\" --semver-tags-template \"{{ .Major }}.{{ .Minor }}_test\""))
+	if err != nil {
+		s.T().Log(err)
+		s.T().Fail()
+	}
+
+	err = s.Stack.Execute(s.CommandFactory.Command(helpers.ExecCommand).WithCommandArgs("--workdir /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/library/busybox:1_test"))
+	if err != nil {
+		s.T().Log(err)
+		s.T().Fail()
+	}
+
+	err = s.Stack.Execute(s.CommandFactory.Command(helpers.ExecCommand).WithCommandArgs("--workdir /app/test/stack/client/stevedore stevedore docker pull registry.stevedore.test/library/busybox:1.2_test"))
 	if err != nil {
 		s.T().Log(err)
 		s.T().Fail()

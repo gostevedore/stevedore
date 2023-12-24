@@ -34,10 +34,13 @@ func (h *Handler) Handler(ctx context.Context, options *Options) error {
 	applicationOptions.PromoteSourceImageTag = options.PromoteSourceImageTag
 	applicationOptions.RemoteSourceImage = options.RemoteSourceImage
 	applicationOptions.RemoveTargetImageTags = options.RemoveTargetImageTags
-	applicationOptions.SemanticVersionTagsTemplates = options.SemanticVersionTagsTemplates
 	applicationOptions.TargetImageName = options.TargetImageName
 	applicationOptions.TargetImageRegistryHost = options.TargetImageRegistryHost
 	applicationOptions.TargetImageRegistryNamespace = options.TargetImageRegistryNamespace
+
+	if len(options.SemanticVersionTagsTemplates) > 0 {
+		applicationOptions.SemanticVersionTagsTemplates = append([]string{}, options.SemanticVersionTagsTemplates...)
+	}
 
 	if len(options.TargetImageTags) > 0 {
 		applicationOptions.TargetImageTags = append([]string{}, options.TargetImageTags...)
