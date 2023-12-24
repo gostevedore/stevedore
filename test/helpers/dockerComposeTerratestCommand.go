@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/docker"
+	"github.com/mattn/go-shellwords"
 	"github.com/stretchr/testify/require"
 )
 
@@ -84,7 +85,7 @@ func (c *DockerComposeTerratestCommand) Execute() (string, error) {
 	}
 
 	cmd := []string{c.command}
-	cmd = append(cmd, strings.Split(c.commandArgs, " ")...)
+	cmd = append(cmd, parseArgs(c.commandArgs)...)
 
 	// if c.verbose {
 	fmt.Printf(" - [%s] %s\n", c.options.ProjectName, strings.Join(cmd, " "))
@@ -100,4 +101,23 @@ func (c *DockerComposeTerratestCommand) Execute() (string, error) {
 
 func (c *DockerComposeTerratestCommand) AssertExectedResult(expected, result string) {
 	require.Contains(c.testing, result, expected)
+}
+
+// Custom function to parse command string into arguments
+func parseArgs(command string) []string {
+	// Use the shellwords package to split the command string
+	args, err := shellwords.Parse(command)
+	if err != nil {
+		fmt.Printf("Error parsing command string: %s", err)
+	}
+
+	// If you want to remove empty arguments, you can do that here
+	var cleanedArgs []string
+	for _, arg := range args {
+		if arg != "" {
+			cleanedArgs = append(cleanedArgs, arg)
+		}
+	}
+
+	return cleanedArgs
 }

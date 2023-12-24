@@ -101,6 +101,40 @@ func TestPrepareHandlerOptions(t *testing.T) {
 				RemoteSourceImage:            true,
 			},
 		},
+		{
+			desc:       "Testing prepare handler options overriding semantic version tags templates",
+			entrypoint: &Entrypoint{},
+			args:       []string{"image"},
+			err:        &errors.Error{},
+			configuration: &configuration.Configuration{
+				SemanticVersionTagsTemplates: []string{"template"},
+			},
+			handlerOptions: &handler.Options{
+				DryRun:                       true,
+				EnableSemanticVersionTags:    true,
+				TargetImageName:              "target_image_name",
+				TargetImageRegistryNamespace: "target_image_regsitry_namespace",
+				TargetImageRegistryHost:      "target_image_registry_host",
+				TargetImageTags:              []string{"target_image_tag"},
+				RemoveTargetImageTags:        true,
+				PromoteSourceImageTag:        true,
+				RemoteSourceImage:            true,
+				SemanticVersionTagsTemplates: []string{"template_1", "template_2"},
+			},
+			res: &handler.Options{
+				DryRun:                       true,
+				EnableSemanticVersionTags:    true,
+				SourceImageName:              "image",
+				TargetImageName:              "target_image_name",
+				TargetImageRegistryNamespace: "target_image_regsitry_namespace",
+				TargetImageRegistryHost:      "target_image_registry_host",
+				TargetImageTags:              []string{"target_image_tag"},
+				RemoveTargetImageTags:        true,
+				SemanticVersionTagsTemplates: []string{"template_1", "template_2"},
+				PromoteSourceImageTag:        true,
+				RemoteSourceImage:            true,
+			},
+		},
 	}
 
 	for _, test := range tests {
