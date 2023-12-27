@@ -82,25 +82,21 @@ functional-tests: ## Executes the functional tests found in the folder ./test/fu
 	@RC=0; \
 	for i in $$(seq 1 5); \
 	do $(DOCKER_COMPOSE_BINARY) --project-name stevedore-functional-tests exec ci /usr/local/bin/wait-for-dockerd.sh && RC=0 && break || RC=$$? && $(DOCKER_COMPOSE_BINARY) --project-name stevedore-functional-tests restart ci --timeout 3; \
-	done || { echo " Error starting the CI container"; exit $$RC; }
+	done || ( echo " Error starting the CI container"; exit $$RC )
 	@echo
-
 	@echo "$(COLOR_GREEN)  executing build functional tests...$(COLOR_END)"; \
-	RC=0; \
-	$(DOCKER_COMPOSE_BINARY) --project-name stevedore-functional-tests exec ci go test $(GO_TEST_OPTS) -v -run TestBuildFunctionalTests ./test/functional || RC=1; \
-	echo; \
-
+    RC=0; \
+    $(DOCKER_COMPOSE_BINARY) --project-name stevedore-functional-tests exec ci go test $(GO_TEST_OPTS) -v -run TestBuildFunctionalTests ./test/functional || RC=$$(($$RC + 1)); \
+    echo; \
 	echo "$(COLOR_GREEN)  executing promote functional tests...$(COLOR_END)"; \
-	$(DOCKER_COMPOSE_BINARY) --project-name stevedore-functional-tests exec ci go test $(GO_TEST_OPTS) -v -run TestPromoteFunctionalTests ./test/functional || RC=1; \
-	echo; \
-
+    $(DOCKER_COMPOSE_BINARY) --project-name stevedore-functional-tests exec ci go test $(GO_TEST_OPTS) -v -run TestPromoteFunctionalTests ./test/functional || RC=$$(($$RC + 1)); \
+    echo; \
 	echo "$(COLOR_GREEN)  executing initialize functional tests...$(COLOR_END)"; \
-	$(DOCKER_COMPOSE_BINARY) --project-name stevedore-functional-tests exec ci go test $(GO_TEST_OPTS) -v -run TestInitializeFunctionalTests ./test/functional || RC=1; \
-	echo; \
-
-	@echo "$(COLOR_GREEN)  stopping up the testing stack...$(COLOR_END)"
-	$(DOCKER_COMPOSE_BINARY) --project-name stevedore-functional-tests down --volumes --remove-orphans --timeout 3; \
-	exit $$RC
+    $(DOCKER_COMPOSE_BINARY) --project-name stevedore-functional-tests exec ci go test $(GO_TEST_OPTS) -v -run TestInitializeFunctionalTests ./test/functional || RC=$$(($$RC + 1)); \
+    echo; \
+	echo "$(COLOR_GREEN)  stopping up the testing stack...$(COLOR_END)"; \
+    $(DOCKER_COMPOSE_BINARY) --project-name stevedore-functional-tests down --volumes --remove-orphans --timeout 3 || RC=$$(($$RC + 1)); \
+    exit $$RC
 
 vet: ## Executes the go vet
 	@echo

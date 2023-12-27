@@ -210,7 +210,7 @@ func (s *BuildFunctionalTestsSuite) TestBuildImageWithWildcardVersion() {
 // TestBuildFunctionalTests is the entrypoint to execute the test suite that runs the functional tests for build command
 func TestBuildFunctionalTests(t *testing.T) {
 
-	// t.Parallel()
+	t.Parallel()
 
 	options := &docker.Options{
 		WorkingDir:  "../functional",

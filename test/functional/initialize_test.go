@@ -62,7 +62,7 @@ func (s *InitializeFunctionalTestsSuite) TestInitialize() {
 		s.T().Skip("functional test are skipped in short mode")
 	}
 
-	expectedResult := "b16b71343a6ea31939b4d006b5b1c88d"
+	expectedResult := "6fd4d739c5c98992db8f85c4889308fa"
 	err = s.Stack.Execute(s.CommandFactory.Command(helpers.ExecCommand).WithCommandArgs("stevedore stevedore initialize --builders-path /builders --concurrency 3 --config /stevedore.yaml --credentials-format yaml --credentials-storage-type envvars --enable-semver-tags --force --credentials-encryption-key 12345asdfg --images-path /images --log-path-file /logs --push-images --semver-tags-template '{{ .Major }}'"))
 	if err != nil {
 		s.T().Log(err)
@@ -80,7 +80,7 @@ func (s *InitializeFunctionalTestsSuite) TestInitialize() {
 // TestInitializeFunctionalTests is the entrypoint to execute the test suite that runs the functional tests for initialize command
 func TestInitializeFunctionalTests(t *testing.T) {
 
-	// t.Parallel()
+	t.Parallel()
 
 	options := &docker.Options{
 		WorkingDir:     "../functional",
