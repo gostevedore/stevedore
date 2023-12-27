@@ -56,7 +56,6 @@ We create a configuration file for this guide, but it can be also defined on env
 ```sh
 / $ cd /docker
 /docker $ stevedore initialize --builders-path builders --credentials-storage-type local --generate-credentials-encryption-key --images-path images --log-path-file /dev/null
-2023-02-03 21:57:20     INFO    Executing command 'stevedore [COMMAND] [OPTIONS] initialize'
 ```
 
 After running this command, you can validate the configuration by using the _get configuration_ subcommand.
@@ -88,7 +87,7 @@ Password:
 ```
 
 - Validate that the credentials have been stored.
-- 
+
 ```sh
 /docker $ stevedore get credentials
 ID                      TYPE              CREDENTIALS
