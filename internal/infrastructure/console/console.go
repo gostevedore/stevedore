@@ -165,7 +165,7 @@ func (c *Console) ReadPassword(prompt string) (string, error) {
 	}
 
 	if !term.IsTerminal(int(c.read.(*os.File).Fd())) {
-		return "", fmt.Errorf("%w. input could not be read.", err)
+		return "", fmt.Errorf("input device is not a terminal.")
 	}
 
 	inputFd := int(c.read.(*os.File).Fd())
