@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/signal"
-	"syscall"
+	"strings"
+
+	//"os/signal"
+	//"syscall"
 
 	"github.com/ryanuber/columnize"
+	//"golang.org/x/crypto/ssh/terminal"
 	"golang.org/x/term"
 )
 
@@ -153,47 +156,30 @@ func (c *Console) Read() string {
 	var input string
 
 	fmt.Fscanln(c.read, &input)
-	//fmt.Fscanf(c.read, "%s", &input)
 	return input
 }
 
-// ReadPassword read a line from console reader without echo
-func (c *Console) ReadPassword(prompt string) (passwordStr string, err error) {
-	var termState *term.State
-	var password []byte
+func (c *Console) ReadPassword(prompt string) (string, error) {
+	var err error
+	var bytePassword []byte
 
-	passwordStr = ""
-	stdin := int(syscall.Stdin)
-	termState, err = term.GetState(stdin)
-	if err != nil {
-		return passwordStr, err
-	}
-	defer func() {
-		termRestoreErr := term.Restore(stdin, termState)
-		err = fmt.Errorf("%w. error restoring terminal state: %v.", err, termRestoreErr)
-	}()
-
-	sigch := make(chan os.Signal, 1)
-	signal.Notify(sigch, os.Interrupt)
-	go func() {
-		for range sigch {
-			c.Warn("Interrupted")
-			err := term.Restore(stdin, termState)
-			if err != nil {
-				c.Warn(err)
-			}
-			os.Exit(0)
-		}
-	}()
-
-	_, err = c.Write([]byte(prompt))
-	if err != nil {
-		return "", err
+	_, ok := c.read.(*os.File)
+	if !ok {
+		return "", fmt.Errorf("inappropriate ioctl for device.")
 	}
 
-	password, err = term.ReadPassword(stdin)
-	if err != nil {
-		return passwordStr, err
+	if !term.IsTerminal(int(c.read.(*os.File).Fd())) {
+		return "", fmt.Errorf("%w. input could not be read.", err)
 	}
-	return string(password), nil
+
+	inputFd := int(c.read.(*os.File).Fd())
+
+	fmt.Fprint(c.write, prompt)
+	bytePassword, err = term.ReadPassword(inputFd)
+	if err != nil {
+		return "", fmt.Errorf("%w. error reading password.", err)
+	}
+	password := string(bytePassword)
+
+	return strings.TrimSpace(password), nil
 }
