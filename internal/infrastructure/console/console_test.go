@@ -2,9 +2,12 @@ package console
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"testing"
 
+	"github.com/creack/pty"
+	"github.com/go-errors/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -56,42 +59,66 @@ func TestRead(t *testing.T) {
 }
 
 // TestReadPassword tests function Read
-// func TestReadPassword(t *testing.T) {
-// 	var wbuff bytes.Buffer
-// 	var rbuff bytes.Buffer
+func TestReadPassword(t *testing.T) {
+	var err error
+	var rbuff bytes.Buffer
 
-// 	tests := []struct {
-// 		desc   string
-// 		prompt string
-// 		res    string
-// 		err    error
-// 	}{
-// 		{
-// 			desc:   "Testing read password",
-// 			prompt: "Password: ",
+	// Create a new pseudo-terminal.
+	terminal, tty, err := pty.Open()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer terminal.Close()
+	defer tty.Close()
 
-// 			res: "password",
-// 			err: &errors.Error{},
-// 		},
-// 	}
+	_, err = terminal.Write([]byte("password\n"))
+	if err != nil {
+		t.Error(fmt.Sprintf("[%s] error writing password to test terminal.", t.Name()))
+	}
 
-// 	for _, test := range tests {
-// 		t.Log(test.desc)
+	tests := []struct {
+		desc   string
+		reader io.Reader
+		writer io.Writer
+		prompt string
+		res    string
+		err    error
+	}{
+		{
+			desc:   "Testing error when providing inappropriate ioctl for device to read password",
+			prompt: "Password: ",
+			res:    "password",
+			reader: io.Reader(&rbuff),
+			writer: io.Discard,
+			err:    fmt.Errorf("inappropriate ioctl for device."),
+		},
+		{
+			desc:   "Testing read password",
+			prompt: "Password: ",
+			res:    "password",
+			reader: tty,
+			writer: io.Discard,
+			err:    &errors.Error{},
+		},
+	}
 
-// 		rbuff.WriteString("password\r")
-// 		console := Console{
-// 			read:  io.Reader(&rbuff),
-// 			write: io.Writer(&wbuff),
-// 		}
+	for _, test := range tests {
+		t.Log(test.desc)
 
-// 		res, err := console.ReadPassword(test.prompt)
-// 		if err != nil {
-// 			assert.Equal(t, test.err.Error(), err.Error())
-// 		} else {
-// 			assert.Equal(t, test.res, res)
-// 		}
-// 	}
-// }
+		c := &Console{
+			read:  test.reader,
+			write: test.writer,
+		}
+
+		res, err := c.ReadPassword(test.prompt)
+		if err != nil {
+			assert.Equal(t, test.err, err)
+		} else {
+			t.Log(res)
+			assert.Equal(t, test.res, res)
+		}
+	}
+}
 
 // TestColumnizeLine tests function TestColumnizeLine
 func TestColumnizeLine(t *testing.T) {
