@@ -6,11 +6,7 @@ import (
 	"os"
 	"strings"
 
-	//"os/signal"
-	//"syscall"
-
 	"github.com/ryanuber/columnize"
-	//"golang.org/x/crypto/ssh/terminal"
 	"golang.org/x/term"
 )
 
