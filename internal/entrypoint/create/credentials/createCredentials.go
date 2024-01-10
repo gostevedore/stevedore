@@ -118,6 +118,8 @@ func (e *CreateCredentialsEntrypoint) Execute(
 		return errors.New(errContext, "", err)
 	}
 
+	e.console.Info(fmt.Sprintf("Credentials '%s' successfully created", id))
+
 	return nil
 }
 
