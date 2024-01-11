@@ -2,9 +2,9 @@
 
 ## [undefined]
 
-## Changed
+## Fixed
 
-- Refactored the Console's ReadPassword function. Now it is using the package golang.org/x/term v0.16.0 to read the password from the console.
+- Fixed a bug in Console's ReadPassword function that always returned an error in the defer function. Now it is using the package golang.org/x/term v0.16.0 to read the password from the console.
 
 ## Added
 
