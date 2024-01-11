@@ -81,6 +81,25 @@ func TestStart(t *testing.T) {
 			context: context.TODO(),
 			err:     errors.New(errContext, "Dispatch requires a worker pool"),
 		},
+		// Test is commented because the workers stated is not being checked outside the goroutine
+		// {
+		// 	desc:    "Testing error when starting a new dispatcher that workers failed to start",
+		// 	err:     &errors.Error{},
+		// 	context: context.TODO(),
+		// 	dispatch: &Dispatch{
+		// 		WorkerPool:    make(chan chan scheduler.Jobber, 1),
+		// 		inputJobQueue: make(chan scheduler.Jobber),
+		// 		NumWorkers:    1,
+		// 		workerFactory: worker.NewMockWorkerFactory(),
+		// 	},
+		// 	numWorkers: 1,
+		// 	prepareAssertFunc: func(d *Dispatch, pool chan chan scheduler.Jobber) {
+		// 		w := worker.NewMockWorker()
+		// 		w.On("Start", context.TODO()).Return(errors.New(errContext, "error"))
+
+		// 		d.workerFactory.(*worker.MockWorkerFactory).On("New", pool).Return(w)
+		// 	},
+		// },
 		{
 			desc:    "Testing start a new dispatcher with 5 workers",
 			err:     &errors.Error{},

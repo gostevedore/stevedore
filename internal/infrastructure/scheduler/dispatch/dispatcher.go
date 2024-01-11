@@ -85,7 +85,7 @@ func (d *Dispatch) Start(ctx context.Context, opts ...OptionsFunc) (err error) {
 
 			go func() {
 				workerStartErr := worker.Start(ctx)
-				if err != nil {
+				if workerStartErr != nil {
 					err = fmt.Errorf("%w. error starting worker: %v.", err, workerStartErr)
 				}
 			}()
@@ -94,7 +94,7 @@ func (d *Dispatch) Start(ctx context.Context, opts ...OptionsFunc) (err error) {
 		go d.dispatch()
 	})
 
-	return nil
+	return err
 }
 
 // dispatch is the main loop of the dispatcher
