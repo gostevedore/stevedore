@@ -51,6 +51,7 @@ func (e *CreateCredentialsEntrypoint) Options(opts ...OptionsFunc) {
 	}
 }
 
+// WithConsole sets the console writer/reader for the entrypoint
 func WithConsole(console Consoler) OptionsFunc {
 	return func(e *CreateCredentialsEntrypoint) {
 		e.console = console
@@ -118,7 +119,9 @@ func (e *CreateCredentialsEntrypoint) Execute(
 		return errors.New(errContext, "", err)
 	}
 
-	e.console.Info(fmt.Sprintf("Credentials '%s' successfully created", id))
+	if e.console != nil {
+		e.console.Info(fmt.Sprintf("Credentials '%s' successfully created", id))
+	}
 
 	return nil
 }
