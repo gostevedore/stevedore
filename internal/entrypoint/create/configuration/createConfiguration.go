@@ -19,8 +19,9 @@ type OptionsFunc func(opts *CreateConfigurationEntrypoint)
 
 // CreateConfigurationEntrypoint defines the entrypoint for the application
 type CreateConfigurationEntrypoint struct {
-	fs         afero.Fs
+	console    Consoler
 	encryption EncryptionKeyGenerator
+	fs         afero.Fs
 }
 
 // NewCreateConfigurationEntrypoint returns a new entrypoint
@@ -35,6 +36,13 @@ func NewCreateConfigurationEntrypoint(opts ...OptionsFunc) *CreateConfigurationE
 func (e *CreateConfigurationEntrypoint) Options(opts ...OptionsFunc) {
 	for _, opt := range opts {
 		opt(e)
+	}
+}
+
+// WithConsole sets the writer for the entrypoint
+func WithConsole(console Consoler) OptionsFunc {
+	return func(e *CreateConfigurationEntrypoint) {
+		e.console = console
 	}
 }
 
@@ -82,6 +90,10 @@ func (e *CreateConfigurationEntrypoint) Execute(ctx context.Context, options *Op
 	err = createConfigurationHandler.Handler(ctx, handlerOptions)
 	if err != nil {
 		return errors.New(errContext, "", err)
+	}
+
+	if e.console != nil {
+		e.console.Info("Stevedore configuration successfully created")
 	}
 
 	return nil

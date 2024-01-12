@@ -115,6 +115,7 @@ Stevedore is a Docker images factory, a tool that helps you to manage bunches of
 
 	// Create configuration
 	createConfigurationEntrypoint := createconfigurationentrypoint.NewCreateConfigurationEntrypoint(
+		createconfigurationentrypoint.WithConsole(console),
 		createconfigurationentrypoint.WithFileSystem(fs),
 	)
 	createConfigurationCommand := middleware.Command(ctx, createconfiguration.NewCommand(ctx, createConfigurationEntrypoint), compatibilityReport, log, console, &stevedoreCmdFlagsVars.Debug)
