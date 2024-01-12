@@ -81,7 +81,7 @@ func TestStart(t *testing.T) {
 			context: context.TODO(),
 			err:     errors.New(errContext, "Dispatch requires a worker pool"),
 		},
-		// Test is commented because the workers stated is not being checked outside the goroutine
+		// Test is commented because workers' state is not checked outside the goroutine
 		// {
 		// 	desc:    "Testing error when starting a new dispatcher that workers failed to start",
 		// 	err:     &errors.Error{},
