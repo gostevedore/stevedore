@@ -56,6 +56,7 @@ We create a configuration file for this guide, but it can be also defined on env
 ```sh
 / $ cd /docker
 /docker $ stevedore initialize --builders-path builders --credentials-storage-type local --generate-credentials-encryption-key --images-path images --log-path-file /dev/null
+ Stevedore configuration successfully created
 ```
 
 After running this command, you can validate the configuration by using the _get configuration_ subcommand.
@@ -84,6 +85,7 @@ Since you create a credential using a username and password, Stevedore prompts y
 ```sh
 /docker $ stevedore create credentials registry.stevedore.test --username admin
 Password:
+ Credentials 'registry.stevedore.test' successfully created
 ```
 
 - Validate that the credentials have been stored.

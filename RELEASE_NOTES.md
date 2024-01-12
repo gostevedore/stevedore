@@ -1,6 +1,6 @@
 # RELEASE NOTES
 
-## [undefined]
+## [v0.11.3]
 
 ## Fixed
 
@@ -8,8 +8,9 @@
 
 ## Added
 
-- Included a message to notify the user when a credential is successfully created
-- Included test to read password. It being used the package github.com/kr/pty v1.1.8 to create a pty and read the password from it.
+- Include a message notifying the user when a credential is successfully deleted
+- Include a message notifying the user when a configuration is successfully created
+- Add a unit test to read password. It being used the package github.com/kr/pty v1.1.8 to create a pty and read the password from it.
 
 ## Bumped
 
