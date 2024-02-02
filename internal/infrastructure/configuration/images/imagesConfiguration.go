@@ -389,20 +389,25 @@ func (c *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 			return errors.New(errContext, fmt.Sprintf("Found an invalid image name '%s' defined in file '%s'", name, path))
 		}
 
-		for version, image := range images {
+		for version, imageDefinition := range images {
 			if !isAValidVersion(version) {
 				return errors.New(errContext, fmt.Sprintf("Found an invalid image version '%s' defined in file '%s'", version, path))
 			}
 
-			if image.Name == "" {
-				image.Name = name
+			// When the imageDefinition is not found, is set an empty values. It allow you to define images from DockerHub without an explicit image definition
+			if imageDefinition == nil {
+				imageDefinition = &image.Image{}
 			}
 
-			if image.Version == "" {
-				image.Version = version
+			if imageDefinition.Name == "" {
+				imageDefinition.Name = name
 			}
 
-			err = c.graph.AddImage(name, version, image)
+			if imageDefinition.Version == "" {
+				imageDefinition.Version = version
+			}
+
+			err = c.graph.AddImage(name, version, imageDefinition)
 			// err = t.AddImage(name, version, image)
 			if err != nil {
 				return errors.New(errContext, "", err)
@@ -417,20 +422,25 @@ func (c *ImagesConfiguration) LoadImagesConfigurationFromFile(path string) error
 			return errors.New(errContext, fmt.Sprintf("Found an invalid image name '%s' defined in file '%s'", name, path))
 		}
 
-		for version, image := range images {
+		for version, imageDefinition := range images {
 			if !isAValidVersion(version) {
 				return errors.New(errContext, fmt.Sprintf("Found an invalid image version '%s' defined in file '%s'", version, path))
 			}
 
-			if image.Name == "" {
-				image.Name = name
+			// When the imageDefinition is not found, is set an empty values. It allow you to define images from DockerHub without an explicit image definition
+			if imageDefinition == nil {
+				imageDefinition = &image.Image{}
 			}
 
-			if image.Version == "" {
-				image.Version = version
+			if imageDefinition.Name == "" {
+				imageDefinition.Name = name
 			}
 
-			err = c.graph.AddImage(name, version, image)
+			if imageDefinition.Version == "" {
+				imageDefinition.Version = version
+			}
+
+			err = c.graph.AddImage(name, version, imageDefinition)
 			if err != nil {
 				return errors.New(errContext, "", err)
 			}

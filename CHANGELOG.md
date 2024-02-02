@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [undefined]
+
+## Fixed
+
+- Use an empty image definition when user does not defines an image explicitly
+
 ## [v0.11.3]
 
 ## Fixed
