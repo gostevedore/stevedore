@@ -381,6 +381,16 @@ images_tree:
 		t.Log(err)
 	}
 
+	err = afero.WriteFile(testFs, filepath.Join(baseDir, "noimagedef_file.yaml"), []byte(`
+images:
+  image:
+    version:
+
+`), 0644)
+	if err != nil {
+		t.Log(err)
+	}
+
 	err = afero.WriteFile(testFs, filepath.Join(baseDir, "tab_error_file.yaml"), []byte(`
 images:
 image:
@@ -488,6 +498,25 @@ images:
 				compatibility.NewMockCompatibility(),
 			),
 			err: errors.New(errContext, "Error loading images tree from file '/imagestree/tab_error_file.yaml'\nfound:\n\nimages:\nimage:\n  version:\n\tregistry: registry\n\tnamespace: namespace\n\n yaml: line 5: found character that cannot start any token"),
+		},
+		{
+			desc: "Testing load images tree from file when there is no explicit image definition",
+			//path: filepath.Join(baseDir),
+			path: filepath.Join(baseDir, "noimagedef_file.yaml"),
+			tree: NewImagesConfiguration(
+				testFs,
+				graph.NewMockImagesGraphTemplate(),
+				images.NewMockStore(),
+				render.NewMockImageRender(),
+				compatibility.NewMockCompatibility(),
+			),
+			prepareAssertFunc: func(tree *ImagesConfiguration) {
+				tree.graph.(*graph.MockImagesGraphTemplate).On("AddImage", "image", "version", &image.Image{
+					Name:    "image",
+					Version: "version",
+				}).Return(nil)
+			},
+			err: &errors.Error{},
 		},
 		{
 			desc: "Testing load images tree from file",
