@@ -3,7 +3,7 @@
 - [Notes for Stevedore functional test](#notes-for-stevedore-functional-test)
   - [SSL](#ssl)
     - [Generate wildcard self-signed certificate from scratch](#generate-wildcard-self-signed-certificate-from-scratch)
-      - [Generate private key and csr](#generate-private-key-and-csr)
+      - [Generate private key and CSR](#generate-private-key-and-csr)
       - [Generate certificate](#generate-certificate)
   - [Docker registry](#docker-registry)
     - [docker-hub.stevedore.test](#docker-hubstevedoretest)
@@ -12,13 +12,13 @@
   - [Git](#git)
     - [Users](#users)
     - [How to create a bare repository](#how-to-create-a-bare-repository)
-    - [How to clone a gitserver repositories](#how-to-clone-a-gitserver-repositories)
+    - [How to clone _gitserver_ repositories](#how-to-clone-gitserver-repositories)
 
 ## SSL
 
 ### Generate wildcard self-signed certificate from scratch
 
-#### Generate private key and csr
+#### Generate private key and CSR
 
 ```sh
 openssl req -newkey rsa:2048 -nodes -keyout stevedore.test.key -out stevedore.test.csr -config stevedore.test.cnf
@@ -34,7 +34,7 @@ openssl x509 -signkey stevedore.test.key -in stevedore.test.csr -req -days 365 -
 
 ### docker-hub.stevedore.test
 
-`docker-hub.stevedore.test` is the docker-registry which uses the dataset located at `files/docker-hub-storage`. On that dataset are preloaded those images that are used during Stevedore functional test
+`docker-hub.stevedore.test` is the docker-registry which uses the dataset located at `files/docker-hub-storage`. On that dataset are preloaded those images that are used during the Stevedore functional test
 
 #### How to load a preload docker image
 
@@ -81,14 +81,14 @@ The push refers to repository [docker-hub.stevedore.test:5000/library/alpine]
 
 ### registry.stevedore.test
 
-`registry.stevedore.test` is the docker registry used during functional test to push and validate the images.
+`registry.stevedore.test` is the docker registry used during functional tests to push and validate the images.
 
 ## Git
 
 ### Users
 
 Git could be accessed by HTTP or SSH.
-To access by SSH, use the ssh key pair located at `files/ssl`. To private key is protected by a password, which is `password`.
+To access by SSH, use the SSH key pair located at `files/ssl`. To private key is protected by a password, which is `password`.
 
 HTTP access requires authorization to be used. User: `admin` Password: `admin`
 
@@ -120,9 +120,9 @@ Initialized empty Git repository in /git/repos/app2.git/
 /git/repos # chown -R git:git app2.git/
 ```
 
-### How to clone a gitserver repositories
+### How to clone _gitserver_ repositories
 
-You must be authorized before clone or update any repository on gitserver. The `client` container is provided by a key pair, on `root` user, that are allowed to manage git repositories.
+You must be authorized before cloning or updating any repository on _gitserver_. The _client_ container is provided by a key pair, on `root` user, that is allowed to manage git repositories.
 
 ```sh
 /app/test/client/stevedore # ls -l ~/.ssh/
@@ -132,7 +132,7 @@ total 12
 -rw-------    1 root     root           978 Sep 26 11:12 known_hosts
 ```
 
-- Install git package on `client` because it is not installed by default
+- Install Git package on the _client_ because it is not installed by default
 
 ```sh
 /app/test/client/stevedore # apk --update add git
