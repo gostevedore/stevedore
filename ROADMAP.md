@@ -99,9 +99,11 @@
 
 ## Icebox
 
-- [ ] Build tries to pull from the Docker registry by default: Are needed more details about the issue
-- [ ] ~~Fix container builders must match to [a-zA-Z0-9][a-zA-Z0-9_.-]*~~: Discarted due to lack of context
-- [ ] ~~Promote images defined on the images tree~~: Discarted unclear need
-- [ ] Signing Docker images
-- [ ] Apply Levenshtein distances on the image name to identify which image the user wants to build
-- [ ] Enable builds over HTTP
+- Enable builds over HTTP
+- Allow to generate images in multiple formats
+- Signing Docker images
+- Apply Levenshtein distances on the image name to identify which image the user wants to build
+- Include some mechanism to test the images
+- Build tries to pull from the Docker registry by default: Are needed more details about the issue
+- ~~Fix container builders must match to [a-zA-Z0-9][a-zA-Z0-9_.-]*~~: Discarted due to lack of context
+- ~~Promote images defined on the images tree~~: Discarted unclear need
