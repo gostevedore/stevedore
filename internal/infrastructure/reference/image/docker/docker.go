@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	errors "github.com/apenella/go-common-utils/error"
-	"github.com/docker/distribution/reference"
+	"github.com/distribution/reference"
 	"github.com/gostevedore/stevedore/internal/core/domain/image"
 )
 
