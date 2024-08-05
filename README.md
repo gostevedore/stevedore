@@ -43,7 +43,7 @@ Alternatively, you can visit the [installation guide](https://gostevedore.github
 
 ### Initial setup
 
-- Create a folder structure to store image definitions and builder configurations before building Docker images. 
+- Create a folder structure to store image definitions and builder configurations before building Docker images.
 
 ```sh
 / $ mkdir -p /docker/images /docker/builders
@@ -203,7 +203,7 @@ EOF
 
 The _name_ is set to `{{ .Name }}` which will be replaced by the actual name of the image. The _version_ is set to `{{ .Version }}-{{ .Parent.Name }}{{ .Parent.Version }}` which will be replaced by the actual version of the image and its parent name and version. The _builder_ is set to `my-app`, which is the _global-builder_ previously defined in the `/docker/builders/apps.yaml` file. The _parents_ are set to `busybox:1.35` for `2.1.0` version, `busybox:1.35` and `busybox:1.36` for the `3.2.1` version.
 
-You can use the following comand to ensure that images are already defined.
+You can use the following command to ensure that images are already defined.
 
 ```sh
 / $ cd /docker
