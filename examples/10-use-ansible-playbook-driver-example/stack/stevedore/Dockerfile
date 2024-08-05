@@ -1,6 +1,6 @@
 # Based on https://github.com/timberio/docker-client/blob/master/Dockerfile
-ARG GOLANG_VERSION="1.19"
-ARG DOCKER_VERSION="24.0"
+ARG GOLANG_VERSION="1.22"
+ARG DOCKER_VERSION="27.1"
 
 ## docker dind image is used to copy its entrypoint
 FROM docker:${DOCKER_VERSION}-dind AS dind
