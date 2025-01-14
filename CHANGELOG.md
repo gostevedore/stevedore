@@ -27,7 +27,7 @@
 
 ## [v0.11.4] - 2024-03-26
 
-## Changed
+### Changed
 
 - Bumps github.com/apenella/go-docker-builder from v0.8.3 to v0.8.4
 - Bumps github.com/aws/aws-sdk-go-v2 from v1.24.1 to v1.26.0
@@ -42,23 +42,23 @@
 - Bumps go.uber.org/zap from v1.26.0 to v1.27.0
 - Bumps golang.org/x/term from v0.16.0 to v0.18.0
 
-## Fixed
+### Fixed
 
 - Use an empty image definition when user does not defines an image explicitly
 
 ## [v0.11.3] -2024-01-12
 
-## Fixed
+### Fixed
 
 - Fixed a bug in Console's ReadPassword function that always returned an error in the defer function. Now it is using the package golang.org/x/term v0.16.0 to read the password from the console.
 
-## Added
+### Added
 
 - Include a message notifying the user when a credential is successfully deleted
 - Include a message notifying the user when a configuration is successfully created
 - Add a unit test to read password. It being used the package github.com/kr/pty v1.1.8 to create a pty and read the password from it.
 
-## Bumped
+### Bumped
 
 - Bump github.com/apenella/go-docker-builder from v0.8.1 to v0.8.3.
 - Bump github.com/apenella/go-ansible v1.2.2
