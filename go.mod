@@ -17,7 +17,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.18
 	github.com/creack/pty v1.1.24
 	github.com/distribution/reference v0.6.0
-	github.com/docker/docker v27.1.1+incompatible
+	github.com/docker/docker v28.0.0+incompatible
 	github.com/fatih/color v1.18.0
 	github.com/go-errors/errors v1.5.1
 	github.com/go-git/go-git/v5 v5.14.0
