@@ -2,6 +2,8 @@ module github.com/gostevedore/stevedore
 
 go 1.24.0
 
+toolchain go1.24.9
+
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/apenella/go-ansible v1.2.2

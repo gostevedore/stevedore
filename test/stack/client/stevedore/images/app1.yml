@@ -5,7 +5,7 @@ images:
       namespace: stable
       version: "{{ .Version }}-{{ .Parent.Name }}-{{ .Parent.Version }}"
       vars:
-        golang_version: "1.19"
+        golang_version: "1.24"
       builder:
         driver: docker
         options:

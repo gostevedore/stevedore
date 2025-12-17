@@ -19,7 +19,7 @@ func TestSaveWriteFileExistError(t *testing.T) {
 	testFs := afero.NewMemMapFs()
 	err = afero.WriteFile(testFs, "test.yaml", []byte{}, 0644)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%v", err)
 	}
 
 	output := NewConfigurationFileSafePersist(
@@ -78,12 +78,12 @@ func TestWriteToFile(t *testing.T) {
 
 	expected, err = ioutil.ReadFile("test/stevedore.yaml.golden")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%v", err)
 	}
 
 	err = output.Write(config)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%v", err)
 	}
 
 	a := afero.Afero{
@@ -91,7 +91,7 @@ func TestWriteToFile(t *testing.T) {
 	}
 	content, err = a.ReadFile("test.yaml")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%v", err)
 	}
 
 	// Uncomment to generate new golden file

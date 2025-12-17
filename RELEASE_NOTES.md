@@ -4,7 +4,7 @@
 
 ### Changed
 
-- Bump Go version to 1.23
+- Bump Go version to 1.24
 - Bump github.com/apenella/go-docker-builder from v0.9.0 to v0.10.0.
 - Bump github.com/aws/aws-sdk-go-v2 from v1.30.3 to v1.36.3.
 - Bump github.com/aws/aws-sdk-go-v2/config from v1.27.27 to v1.29.13.
@@ -19,5 +19,5 @@
 - Bump github.com/spf13/afero from v1.11.0 to v1.14.0.
 - Bump github.com/spf13/cobra from v1.8.1 to v1.9.1.
 - Bump github.com/spf13/viper from v1.19.0 to v1.20.1.
-- Bump golang.org/x/crypto from 0.25.0 to 0.31.0.
+- Bump golang.org/x/crypto from 0.25.0 to 0.45.0.
 - Bump golang.org/x/net from 0.27.0 to 0.38.0
