@@ -132,7 +132,7 @@ func TestNew(t *testing.T) {
 
 	user, err := user.Current()
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatal(err.Error())
 	}
 
 	tests := []struct {

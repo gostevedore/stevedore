@@ -39,12 +39,12 @@ func TestWrite(t *testing.T) {
 
 	expected, err = ioutil.ReadFile("test/stevedore.yaml.golden")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%v", err)
 	}
 
 	err = output.Write(config)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%v", err)
 	}
 
 	a := afero.Afero{
@@ -52,7 +52,7 @@ func TestWrite(t *testing.T) {
 	}
 	content, err = a.ReadFile("test.yaml")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%v", err)
 	}
 
 	// Uncomment to generate new golden file
