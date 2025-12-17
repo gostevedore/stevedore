@@ -21,18 +21,18 @@ func NewDryRunPromote(w io.Writer) *DryRunPromote {
 func (p *DryRunPromote) Promote(ctx context.Context, options *image.PromoteOptions) error {
 
 	fmt.Fprintln(p.writer)
-	fmt.Fprintln(p.writer, fmt.Sprintf(" pull_auth_username: %s", options.PullAuthUsername))
-	fmt.Fprintln(p.writer, fmt.Sprintf(" push_auth_username: %s", options.PushAuthUsername))
-	fmt.Fprintln(p.writer, fmt.Sprintf(" remove_local_images_after_push: %t", options.RemoveTargetImageTags))
-	fmt.Fprintln(p.writer, fmt.Sprintf(" source_image_name: %s", options.SourceImageName))
-	fmt.Fprintln(p.writer, fmt.Sprintf(" target_image_name: %s", options.TargetImageName))
+	fmt.Fprintf(p.writer, " pull_auth_username: %s\n", options.PullAuthUsername)
+	fmt.Fprintf(p.writer, " push_auth_username: %s\n", options.PushAuthUsername)
+	fmt.Fprintf(p.writer, " remove_local_images_after_push: %t\n", options.RemoveTargetImageTags)
+	fmt.Fprintf(p.writer, " source_image_name: %s\n", options.SourceImageName)
+	fmt.Fprintf(p.writer, " target_image_name: %s\n", options.TargetImageName)
 	if len(options.TargetImageTags) > 0 {
 		fmt.Fprintln(p.writer, " target_image_tags:")
 		for _, tag := range options.TargetImageTags {
-			fmt.Fprintf(p.writer, fmt.Sprintf("  - %s\n", tag))
+			fmt.Fprintf(p.writer, "  - %s\n", tag)
 		}
 	}
-	fmt.Fprintln(p.writer, fmt.Sprintf(" use_image_from_remote_source: %t", options.RemoteSourceImage))
+	fmt.Fprintf(p.writer, " use_image_from_remote_source: %t\n", options.RemoteSourceImage)
 	fmt.Fprintln(p.writer)
 
 	return nil
