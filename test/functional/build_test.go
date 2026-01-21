@@ -251,9 +251,7 @@ func TestBuildFunctionalTests(t *testing.T) {
 		// Define the function to execute before executing the tests suite
 		helpers.WithSetupSuiteFunc(
 			func() error {
-				var err error
-
-				err = stack.DownAndUp()
+				err := stack.DownAndUp()
 				if err != nil {
 					t.Log(err)
 					t.Fail()
@@ -264,9 +262,7 @@ func TestBuildFunctionalTests(t *testing.T) {
 		),
 		// Define the function to execute after executing the tests suite
 		helpers.WithTearDownSuiteFunc(func() error {
-			var err error
-
-			err = stack.Down()
+			err := stack.Down()
 			if err != nil {
 				t.Log(err)
 				t.Fail()

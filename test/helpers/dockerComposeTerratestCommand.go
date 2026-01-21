@@ -93,7 +93,7 @@ func (c *DockerComposeTerratestCommand) Execute() (string, error) {
 
 	result, err = docker.RunDockerComposeE(c.testing, c.options, cmd...)
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("Docker-compose command failed running '%s'. %s", strings.Join(cmd, " "), err.Error()))
+		return "", fmt.Errorf("Docker-compose command failed running '%s'. %s", strings.Join(cmd, " "), err.Error())
 	}
 
 	return result, nil
