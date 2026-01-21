@@ -93,7 +93,7 @@ func (s *DockerComposeStack) Up() error {
 	for _, command := range s.PreUpCommand {
 		_, err := command.Execute()
 		if err != nil {
-			return errors.New(fmt.Sprintf("Error executing pre-up command: %v. %s", command, err))
+			return fmt.Errorf("Error executing pre-up command: %v. %s", command, err)
 		}
 	}
 	fmt.Println()
