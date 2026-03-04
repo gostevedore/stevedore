@@ -22,7 +22,7 @@ require (
 	github.com/docker/docker v28.0.0+incompatible
 	github.com/fatih/color v1.18.0
 	github.com/go-errors/errors v1.5.1
-	github.com/go-git/go-git/v5 v5.14.0
+	github.com/go-git/go-git/v5 v5.16.5
 	github.com/gruntwork-io/terratest v0.48.2
 	github.com/mattn/go-shellwords v1.0.12
 	github.com/ryanuber/columnize v2.1.2+incompatible
